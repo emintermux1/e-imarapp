@@ -22,6 +22,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   String? verificationId;
 
   @override
+  void dispose() {
+    phone.dispose();
+    otp.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(

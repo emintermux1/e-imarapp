@@ -19,16 +19,17 @@ class _ParcelSearchScreenState extends State<ParcelSearchScreen> {
   final lat = TextEditingController();
   final lng = TextEditingController();
   String? validation;
+  bool validationIsError = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Parsel Sorgula')),
       body: ListView(padding: const EdgeInsets.all(AppSpacing.lg), children: [
-        AppSegmentedControl(values: SearchMode.values, selected: mode, labelBuilder: (m) => m == SearchMode.parcel ? 'Ada / Parsel' : 'Koordinat', onChanged: (value) => setState(() { mode = value; validation = null; })),
+        AppSegmentedControl(values: SearchMode.values, selected: mode, labelBuilder: (m) => m == SearchMode.parcel ? 'Ada / Parsel' : 'Koordinat', onChanged: (value) => setState(() { mode = value; validation = null; validationIsError = false; })),
         const SizedBox(height: 18),
         AnimatedSwitcher(duration: const Duration(milliseconds: 160), child: mode == SearchMode.parcel ? _ParcelForm(block: block, parcel: parcel) : _CoordinateForm(lat: lat, lng: lng)),
-        if (validation != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(validation!, style: const TextStyle(color: AppColors.danger))),
+        if (validation != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(validation!, style: TextStyle(color: validationIsError ? AppColors.danger : AppColors.emerald))),
         const SizedBox(height: 18),
         GradientButton(label: 'Sorgula', icon: Icons.search_rounded, onPressed: _validate),
         const SizedBox(height: 28),
@@ -41,12 +42,19 @@ class _ParcelSearchScreenState extends State<ParcelSearchScreen> {
 
   void _validate() {
     setState(() {
-      if (mode == SearchMode.parcel && (block.text.trim().isEmpty || parcel.text.trim().isEmpty)) validation = 'Ada ve parsel numarası zorunludur.';
-      else if (mode == SearchMode.coordinate) {
+      if (mode == SearchMode.parcel && (block.text.trim().isEmpty || parcel.text.trim().isEmpty)) {
+        validation = 'Ada ve parsel numarası zorunludur.';
+        validationIsError = true;
+      } else if (mode == SearchMode.coordinate) {
         final la = double.tryParse(lat.text.replaceAll(',', '.'));
         final lo = double.tryParse(lng.text.replaceAll(',', '.'));
-        validation = (la == null || lo == null || la < 35.8 || la > 42.2 || lo < 25.5 || lo > 45.0) ? 'Koordinatlar Türkiye sınırları içinde olmalıdır.' : 'Koordinat doğrulandı. Mock parsel sonucu hazır.';
-      } else validation = 'Mock parsel sonucu hazır.';
+        final invalid = la == null || lo == null || la < 35.8 || la > 42.2 || lo < 25.5 || lo > 45.0;
+        validation = invalid ? 'Koordinatlar Türkiye sınırları içinde olmalıdır.' : 'Koordinat doğrulandı. Mock parsel sonucu hazır.';
+        validationIsError = invalid;
+      } else {
+        validation = 'Mock parsel sonucu hazır.';
+        validationIsError = false;
+      }
     });
   }
 }

@@ -18,13 +18,13 @@ Future<void> main() async {
 
     FlutterError.onError = (details) {
       FlutterError.presentError(details);
-      if (config.firebaseEnabled && !kDebugMode) {
+      if (_crashlyticsAvailable(config)) {
         FirebaseCrashlytics.instance.recordFlutterFatalError(details);
       }
     };
 
     PlatformDispatcher.instance.onError = (error, stack) {
-      if (config.firebaseEnabled && !kDebugMode) {
+      if (_crashlyticsAvailable(config)) {
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       }
       return true;
@@ -35,6 +35,8 @@ Future<void> main() async {
     debugPrint('Yakalanmamış hata: $error');
   });
 }
+
+bool _crashlyticsAvailable(AppConfig config) => config.firebaseEnabled && !kDebugMode && Firebase.apps.isNotEmpty;
 
 Future<void> _initializeFirebase(AppConfig config) async {
   if (!config.firebaseEnabled) return;
