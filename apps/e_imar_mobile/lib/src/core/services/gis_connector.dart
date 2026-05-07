@@ -171,12 +171,15 @@ class LiveGisLayerRepository implements GisLayerRepository {
   }
 
   @override
-  String buildRequestUrl(GisLayerDescriptor layer, GisLayerQuery query) {
+  Uri buildRequestUrl(GisLayerDescriptor layer, GisLayerQuery query) {
     return buildGisRequestUrl(layer, query);
   }
 
   @override
-  Future<GisFeatureCollection> fetchFeatures(GisLayerDescriptor layer, GisLayerQuery query) async {
+  Future<GisFeatureCollection> fetchFeatures(
+    GisLayerDescriptor layer,
+    GisLayerQuery query,
+  ) async {
     try {
       final cacheKey = buildCacheKey(layer, query);
 
@@ -205,7 +208,8 @@ class LiveGisLayerRepository implements GisLayerRepository {
       }
 
       final body = response.body!;
-      final isJsonResponse = response.isJson || body.trim().startsWith('{') || body.trim().startsWith('[');
+      final isJsonResponse =
+          response.isJson || body.trim().startsWith('{') || body.trim().startsWith('[');
 
       if (!isJsonResponse) {
         return GisFeatureCollection(features: [], metadata: {
@@ -242,9 +246,9 @@ class LiveGisLayerRepository implements GisLayerRepository {
     }
   }
 
-  Future<_GisHttpResponse> _fetchHttp(String url) async {
+  Future<_GisHttpResponse> _fetchHttp(Uri url) async {
     final response = await _dio.get<String>(
-      url,
+      url.toString(),
       options: Options(responseType: ResponseType.plain),
     );
 
@@ -256,7 +260,11 @@ class LiveGisLayerRepository implements GisLayerRepository {
   }
 
   @override
-  Future<String> fetchGeoJson(GisLayerDescriptor layer, {required double latitude, required double longitude}) async {
+  Future<String> fetchGeoJson(
+    GisLayerDescriptor layer, {
+    required double latitude,
+    required double longitude,
+  }) async {
     const padding = 0.03;
     final query = GisLayerQuery(
       bbox: GisBoundingBox(
