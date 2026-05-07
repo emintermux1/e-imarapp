@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/tokens.dart';
-import '../../../../core/widgets/widgets.dart';
+import '../../../core/theme/tokens.dart';
+import '../../../core/widgets/widgets.dart';
 import '../domain/notification_item.dart';
 
 class NotificationCard extends StatelessWidget {

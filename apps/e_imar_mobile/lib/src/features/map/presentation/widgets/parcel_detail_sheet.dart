@@ -118,11 +118,11 @@ void _toggleFollow(BuildContext context) {
 
 void _runUserAction(
   BuildContext context, {
-  required Future<void> Function(WidgetRef ref, ScaffoldMessengerState messenger) action,
+  required Future<void> Function(ProviderContainer container, ScaffoldMessengerState messenger) action,
 }) {
-  final ref = ProviderScope.containerOf(context);
+  final container = ProviderScope.containerOf(context);
   final messenger = ScaffoldMessenger.of(context);
-  action(ref, messenger).catchError((_) {
+  action(container, messenger).catchError((_) {
     messenger.showSnackBar(const SnackBar(content: Text('İşlem şu anda tamamlanamadı. Lütfen tekrar deneyin.')));
   });
 }
