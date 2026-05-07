@@ -1,13 +1,8 @@
-import 'package:isar/isar.dart';
+import '../../features/map/domain/parcel.dart';
 
-import '../../../features/map/domain/parcel.dart';
-
-part 'isar_parcel.g.dart';
-
-@Collection()
 class IsarParcel {
   IsarParcel({
-    this.id = Isar.autoIncrement,
+    int? id,
     required this.city,
     required this.district,
     required this.neighborhood,
@@ -25,16 +20,14 @@ class IsarParcel {
     this.isFavorite = false,
     this.isFollowed = false,
     this.cachedAt,
-  }) : blockPlusParcel = '$block|$parcel';
+  })  : id = id ?? _nextId++,
+        blockPlusParcel = '$block|$parcel';
 
-  Id id = Isar.autoIncrement;
+  static int _nextId = 1;
 
-  @Index(type: IndexType.value)
+  int id;
   late String blockPlusParcel;
-
-  @Index()
   String district;
-
   String block;
   String parcel;
   String city;
@@ -48,13 +41,8 @@ class IsarParcel {
   String coverageRatio;
   double roadFrontage;
   DateTime? lastAccessed;
-
-  @Index()
   bool isFavorite;
-
-  @Index()
   bool isFollowed;
-
   DateTime? cachedAt;
 
   ParcelDetail toParcelDetail() {
@@ -73,6 +61,23 @@ class IsarParcel {
       coverageRatio: coverageRatio,
       roadFrontage: roadFrontage,
     );
+  }
+
+  void updateFromParcelDetail(ParcelDetail d) {
+    city = d.city;
+    district = d.district;
+    neighborhood = d.neighborhood;
+    block = d.block;
+    parcel = d.parcel;
+    titleType = d.titleType;
+    zoningStatus = d.zoningStatus;
+    taks = d.taks;
+    kaks = d.kaks;
+    emsal = d.emsal;
+    floorLimit = d.floorLimit;
+    coverageRatio = d.coverageRatio;
+    roadFrontage = d.roadFrontage;
+    blockPlusParcel = '$block|$parcel';
   }
 
   static IsarParcel fromParcelDetail(ParcelDetail d) {

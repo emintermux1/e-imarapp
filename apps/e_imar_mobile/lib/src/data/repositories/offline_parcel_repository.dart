@@ -1,186 +1,126 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
-import 'package:isar_flutter_libs/isar_flutter_libs.dart';
-// ignore: depend_on_referenced_packages
-import 'package:path_provider/path_provider.dart' as pp;
 
-import '../../../features/map/domain/parcel.dart';
+import '../../features/map/domain/parcel.dart';
 import '../models/isar_parcel.dart';
 
-Isar? _isarInstance;
+final InMemoryParcelStore _parcelStore = InMemoryParcelStore();
 
-Future<Isar> initializeIsar() async {
-  if (_isarInstance != null && _isarInstance!.isOpen) return _isarInstance!;
-  await Isar.initializeIsarCore(download: true);
-  final dir = await pp.getApplicationDocumentsDirectory();
-  _isarInstance = await Isar.open([IsarParcelSchema], directory: dir.path, inspector: kDebugMode);
-  return _isarInstance!;
-}
+Future<InMemoryParcelStore> initializeIsar() async => _parcelStore;
 
-final isarInstanceProvider = Provider<Future<Isar>>((ref) => initializeIsar());
+final isarInstanceProvider = Provider<Future<InMemoryParcelStore>>((ref) => initializeIsar());
 
 final offlineParcelRepositoryProvider = Provider<OfflineParcelRepository>((ref) {
   return OfflineParcelRepository(ref.watch(isarInstanceProvider));
 });
 
+class InMemoryParcelStore {
+  final List<IsarParcel> parcels = [];
+}
+
 class OfflineParcelRepository {
-  const OfflineParcelRepository(this._isarFuture);
+  const OfflineParcelRepository(this._storeFuture);
 
-  final Future<Isar> _isarFuture;
+  final Future<InMemoryParcelStore> _storeFuture;
 
-  Future<Isar> get db => _isarFuture;
+  Future<InMemoryParcelStore> get db => _storeFuture;
 
   Future<IsarParcel?> _byBlockParcel(String block, String parcel) async {
-    final isar = await db;
-    return isar.isarParcels
-        .where()
-        .blockPlusParcelEqualTo('$block|$parcel')
-        .findFirst();
+    final store = await db;
+    for (final entity in store.parcels) {
+      if (entity.block == block && entity.parcel == parcel) return entity;
+    }
+    return null;
   }
 
   Future<void> saveParcel(ParcelDetail parcel) async {
-    final isar = await db;
+    final store = await db;
     final existing = await _byBlockParcel(parcel.block, parcel.parcel);
     final now = DateTime.now();
 
-    await isar.writeTxn(() async {
-      if (existing != null) {
-        existing.city = parcel.city;
-        existing.district = parcel.district;
-        existing.neighborhood = parcel.neighborhood;
-        existing.titleType = parcel.titleType;
-        existing.zoningStatus = parcel.zoningStatus;
-        existing.taks = parcel.taks;
-        existing.kaks = parcel.kaks;
-        existing.emsal = parcel.emsal;
-        existing.floorLimit = parcel.floorLimit;
-        existing.coverageRatio = parcel.coverageRatio;
-        existing.roadFrontage = parcel.roadFrontage;
-        existing.cachedAt = now;
-        existing.blockPlusParcel = '${parcel.block}|${parcel.parcel}';
-        await isar.isarParcels.put(existing);
-      } else {
-        final entity = IsarParcel.fromParcelDetail(parcel)
+    if (existing != null) {
+      existing.updateFromParcelDetail(parcel);
+      existing.cachedAt = now;
+      existing.lastAccessed = now;
+    } else {
+      store.parcels.add(
+        IsarParcel.fromParcelDetail(parcel)
           ..cachedAt = now
-          ..lastAccessed = now;
-        await isar.isarParcels.put(entity);
-      }
-    });
+          ..lastAccessed = now,
+      );
+    }
   }
 
   Future<ParcelDetail?> getParcel(String block, String parcel) async {
     final entity = await _byBlockParcel(block, parcel);
     if (entity == null) return null;
-    final isar = await db;
-    await isar.writeTxn(() async {
-      entity.lastAccessed = DateTime.now();
-      await isar.isarParcels.put(entity);
-    });
+    entity.lastAccessed = DateTime.now();
     return entity.toParcelDetail();
   }
 
   Future<List<ParcelDetail>> getByDistrict(String district) async {
-    final isar = await db;
-    final entities = await isar.isarParcels
-        .where()
-        .districtEqualTo(district)
-        .findAll();
-    return entities.map((e) => e.toParcelDetail()).toList();
+    final store = await db;
+    return store.parcels.where((e) => e.district == district).map((e) => e.toParcelDetail()).toList(growable: false);
   }
 
   Future<List<ParcelDetail>> getFavorites() async {
-    final isar = await db;
-    final entities = await isar.isarParcels
-        .where()
-        .isFavoriteEqualTo(true)
-        .findAll();
-    return entities.map((e) => e.toParcelDetail()).toList();
+    final store = await db;
+    return store.parcels.where((e) => e.isFavorite).map((e) => e.toParcelDetail()).toList(growable: false);
   }
 
   Future<List<ParcelDetail>> getFollowed() async {
-    final isar = await db;
-    final entities = await isar.isarParcels
-        .where()
-        .isFollowedEqualTo(true)
-        .findAll();
-    return entities.map((e) => e.toParcelDetail()).toList();
+    final store = await db;
+    return store.parcels.where((e) => e.isFollowed).map((e) => e.toParcelDetail()).toList(growable: false);
   }
 
   Future<List<ParcelDetail>> getRecent(int limit) async {
-    final isar = await db;
-    final entities = await isar.isarParcels
-        .where()
-        .lastAccessedIsNotNull()
-        .sortByLastAccessedDesc()
-        .limit(limit)
-        .findAll();
-    return entities.map((e) => e.toParcelDetail()).toList();
+    final store = await db;
+    final entities = store.parcels.where((e) => e.lastAccessed != null).toList(growable: false)
+      ..sort((a, b) => b.lastAccessed!.compareTo(a.lastAccessed!));
+    return entities.take(limit).map((e) => e.toParcelDetail()).toList(growable: false);
   }
 
   Future<void> toggleFavorite(String block, String parcel) async {
     final entity = await _byBlockParcel(block, parcel);
     if (entity == null) return;
-    final isar = await db;
-    await isar.writeTxn(() async {
-      entity.isFavorite = !entity.isFavorite;
-      await isar.isarParcels.put(entity);
-    });
+    entity.isFavorite = !entity.isFavorite;
   }
 
   Future<void> toggleFollow(String block, String parcel) async {
     final entity = await _byBlockParcel(block, parcel);
     if (entity == null) return;
-    final isar = await db;
-    await isar.writeTxn(() async {
-      entity.isFollowed = !entity.isFollowed;
-      await isar.isarParcels.put(entity);
-    });
+    entity.isFollowed = !entity.isFollowed;
   }
 
   Future<List<ParcelDetail>> search(String query) async {
-    final isar = await db;
+    final store = await db;
     final lowerQuery = query.toLowerCase();
-    final results = <IsarParcel>[];
-    final seen = <int>{};
-
-    void addAll(List<IsarParcel> list) {
-      for (final e in list) {
-        if (seen.add(e.id)) results.add(e);
-      }
-    }
-
-    addAll(await isar.isarParcels.where().neighborhoodContains(lowerQuery, caseSensitive: false).findAll());
-    addAll(await isar.isarParcels.where().districtContains(lowerQuery, caseSensitive: false).findAll());
-    addAll(await isar.isarParcels.where().blockContains(lowerQuery, caseSensitive: false).findAll());
-    addAll(await isar.isarParcels.where().parcelContains(lowerQuery, caseSensitive: false).findAll());
-
-    return results.map((e) => e.toParcelDetail()).toList();
+    return store.parcels
+        .where((e) => e.neighborhood.toLowerCase().contains(lowerQuery) || e.district.toLowerCase().contains(lowerQuery) || e.block.toLowerCase().contains(lowerQuery) || e.parcel.toLowerCase().contains(lowerQuery))
+        .map((e) => e.toParcelDetail())
+        .toList(growable: false);
   }
 
   Future<bool> get isEmpty async {
-    final isar = await db;
-    return isar.isarParcels.count() == 0;
+    final store = await db;
+    return store.parcels.isEmpty;
   }
 
   Future<int> get count async {
-    final isar = await db;
-    return isar.isarParcels.count();
+    final store = await db;
+    return store.parcels.length;
   }
 
   Future<void> pruneStaleParcels() async {
-    final isar = await db;
+    final store = await db;
     final cutoff = DateTime.now().subtract(const Duration(days: 90));
-    await isar.writeTxn(() async {
-      await isar.isarParcels.where().cachedAtBefore(cutoff).deleteAll();
-    });
+    store.parcels.removeWhere((e) => e.cachedAt != null && e.cachedAt!.isBefore(cutoff));
   }
 
   Future<void> deleteAll() async {
-    final isar = await db;
-    await isar.writeTxn(() => isar.isarParcels.clear());
+    final store = await db;
+    store.parcels.clear();
   }
 }
 
@@ -207,27 +147,28 @@ Future<void> seedInitialParcelData(OfflineParcelRepository repo) async {
     bool isFavorite = false,
     bool isFollowed = false,
   }) async {
-    final isar = await repo.db;
-    final entity = IsarParcel(
-      city: city,
-      district: district,
-      neighborhood: neighborhood,
-      block: block,
-      parcel: parcel,
-      titleType: titleType,
-      zoningStatus: zoningStatus,
-      taks: taks,
-      kaks: kaks,
-      emsal: emsal,
-      floorLimit: floorLimit,
-      coverageRatio: coverageRatio,
-      roadFrontage: roadFrontage,
-      isFavorite: isFavorite,
-      isFollowed: isFollowed,
-      cachedAt: now.subtract(Duration(days: rng.nextInt(14))),
-      lastAccessed: now.subtract(Duration(days: rng.nextInt(7))),
+    final store = await repo.db;
+    store.parcels.add(
+      IsarParcel(
+        city: city,
+        district: district,
+        neighborhood: neighborhood,
+        block: block,
+        parcel: parcel,
+        titleType: titleType,
+        zoningStatus: zoningStatus,
+        taks: taks,
+        kaks: kaks,
+        emsal: emsal,
+        floorLimit: floorLimit,
+        coverageRatio: coverageRatio,
+        roadFrontage: roadFrontage,
+        isFavorite: isFavorite,
+        isFollowed: isFollowed,
+        cachedAt: now.subtract(Duration(days: rng.nextInt(14))),
+        lastAccessed: now.subtract(Duration(days: rng.nextInt(7))),
+      ),
     );
-    await isar.writeTxn(() => isar.isarParcels.put(entity));
   }
 
   await seed(city: 'İstanbul', district: 'Kadıköy', neighborhood: 'Fenerbahçe', block: '1247', parcel: '18', titleType: 'Arsa', zoningStatus: 'Konut + Ticaret', taks: 0.35, kaks: 1.75, emsal: 1.75, floorLimit: 8, coverageRatio: '%35', roadFrontage: 28.4, isFavorite: true, isFollowed: true);
