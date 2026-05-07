@@ -202,7 +202,7 @@ class MockGisLayerRepository implements GisLayerRepository {
       );
 }
 
-const officialRiskLayerPresets = <GisLayerDescriptor>[
+final officialRiskLayerPresets = <GisLayerDescriptor>[
   GisLayerDescriptor(
     id: 'afad-earthquake-hazard',
     name: 'Deprem Tehlike Haritası',

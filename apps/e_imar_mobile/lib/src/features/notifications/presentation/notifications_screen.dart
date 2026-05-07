@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/tokens.dart';
-import '../../../../core/widgets/widgets.dart';
+import '../../../core/theme/tokens.dart';
+import '../../../core/widgets/widgets.dart';
 import '../data/mock_notifications_source.dart';
 import 'notification_card.dart';
 
