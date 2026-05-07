@@ -6,8 +6,10 @@ import '../../features/analysis/presentation/analysis_screen.dart';
 import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/emsal/presentation/emsal_calculator_screen.dart';
 import '../../features/favorites/presentation/favorites_screen.dart';
+import '../../features/map/domain/parcel.dart';
 import '../../features/map/presentation/home_map_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
+import '../../features/reports/presentation/parcel_report_preview_screen.dart';
 import '../../features/search/presentation/parcel_search_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
@@ -25,6 +27,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: ParcelDetailRoute.path, name: ParcelDetailRoute.name, pageBuilder: _slidePage(const HomeMapScreen(openParcelOnStart: true))),
       GoRoute(path: EmsalRoute.path, name: EmsalRoute.name, pageBuilder: _slidePage(const EmsalCalculatorScreen())),
       GoRoute(path: AnalysisRoute.path, name: AnalysisRoute.name, pageBuilder: _slidePage(const AnalysisScreen())),
+      GoRoute(path: ParcelReportRoute.path, name: ParcelReportRoute.name, pageBuilder: (context, state) => _slidePage(ParcelReportPreviewScreen(parcel: state.extra is ParcelDetail ? state.extra! as ParcelDetail : ParcelDetail.sample))(context, state)),
       GoRoute(path: FavoritesRoute.path, name: FavoritesRoute.name, pageBuilder: _slidePage(const FavoritesScreen())),
       GoRoute(path: SettingsRoute.path, name: SettingsRoute.name, pageBuilder: _slidePage(const SettingsScreen())),
     ],
@@ -62,5 +65,6 @@ abstract final class SearchRoute { static const path = '/search'; static const n
 abstract final class ParcelDetailRoute { static const path = '/parcel-detail'; static const name = 'parcel-detail'; }
 abstract final class EmsalRoute { static const path = '/emsal'; static const name = 'emsal'; }
 abstract final class AnalysisRoute { static const path = '/analysis'; static const name = 'analysis'; }
+abstract final class ParcelReportRoute { static const path = '/parcel-report'; static const name = 'parcel-report'; }
 abstract final class FavoritesRoute { static const path = '/favorites'; static const name = 'favorites'; }
 abstract final class SettingsRoute { static const path = '/settings'; static const name = 'settings'; }
