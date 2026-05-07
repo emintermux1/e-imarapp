@@ -20,7 +20,7 @@ import '../../core/performance/motion.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: SplashRoute.path,
+    initialLocation: AuthRoute.path,
     routes: [
       GoRoute(
           path: SplashRoute.path,
@@ -45,8 +45,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: ParcelDetailRoute.path,
           name: ParcelDetailRoute.name,
-          pageBuilder:
-              _slidePage(const HomeMapScreen(openParcelOnStart: true))),
+          pageBuilder: (context, state) => _slidePage(HomeMapScreen(
+                openParcelOnStart: true,
+                selectedParcel: state.extra is ParcelDetail
+                    ? state.extra! as ParcelDetail
+                    : ParcelDetail.sample,
+              ))(context, state)),
       GoRoute(
           path: EmsalRoute.path,
           name: EmsalRoute.name,

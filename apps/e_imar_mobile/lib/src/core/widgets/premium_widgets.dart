@@ -31,15 +31,14 @@ class GlassCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final color = switch (variant) {
       GlassVariant.dark => AppColors.glassDark,
-      GlassVariant.light => AppColors.glassLight,
-      GlassVariant.elevated => (isDark ? Colors.white : AppColors.deepGreen)
-          .withValues(alpha: isDark ? .12 : .08),
-      GlassVariant.subtle => (isDark ? Colors.white : AppColors.deepGreen)
-          .withValues(alpha: isDark ? .075 : .055),
+      GlassVariant.light => Colors.white,
+      GlassVariant.elevated =>
+        isDark ? Colors.white.withValues(alpha: .10) : Colors.white,
+      GlassVariant.subtle =>
+        isDark ? Colors.white.withValues(alpha: .07) : Colors.white,
     };
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: .13)
-        : Colors.white.withValues(alpha: .72);
+    final borderColor =
+        isDark ? Colors.white.withValues(alpha: .13) : AppColors.outlineLight;
     final content = Material(
       color: color,
       shape: RoundedRectangleBorder(
@@ -57,7 +56,7 @@ class GlassCard extends StatelessWidget {
       decoration: BoxDecoration(
           borderRadius: radius,
           boxShadow: variant == GlassVariant.elevated
-              ? AppShadows.medium(Colors.black)
+              ? AppShadows.soft(Colors.black)
               : null),
       child: ClipRRect(
           borderRadius: radius,
@@ -92,9 +91,8 @@ class PremiumHeader extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                    gradient: AppGradients.premium,
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: AppShadows.glow(AppColors.emerald)),
+                    color: AppColors.deepGreen,
+                    borderRadius: BorderRadius.circular(18)),
                 child: Icon(icon, color: Colors.white, size: 27)),
           if (icon != null) const SizedBox(width: 14),
           Expanded(
@@ -287,7 +285,7 @@ class GradientButton extends StatelessWidget {
           gradient: enabled ? AppGradients.premium : null,
           color: enabled ? null : AppColors.slate.withValues(alpha: .18),
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          boxShadow: enabled ? AppShadows.glow(AppColors.emerald) : null),
+          boxShadow: null),
       child: FilledButton.icon(
         style: FilledButton.styleFrom(
             backgroundColor: Colors.transparent,
@@ -475,7 +473,7 @@ class AppSegmentedControl<T> extends StatelessWidget {
                 onTap: () => onChanged(value),
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                      gradient: value == selected ? AppGradients.premium : null,
+                      color: value == selected ? AppColors.deepGreen : null,
                       borderRadius: BorderRadius.circular(AppRadius.pill)),
                   child: Padding(
                       padding: const EdgeInsets.symmetric(

@@ -5,8 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
-import '../data/mock_auth_repository.dart';
-import '../domain/auth_repository.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -16,10 +14,12 @@ class AuthScreen extends ConsumerStatefulWidget {
 }
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
+  static const previewOtp = '246810';
   bool loading = false;
-  final phone = TextEditingController();
+  final phone = TextEditingController(text: '+90 555 000 34 34');
   final otp = TextEditingController();
-  String? verificationId;
+  bool otpSent = false;
+  String? helper;
 
   @override
   void dispose() {
@@ -31,184 +31,220 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: DecoratedBox(
-        decoration: BoxDecoration(
-            gradient: Theme.of(context).brightness == Brightness.dark
-                ? AppGradients.heroMap
-                : AppGradients.sandSurface),
-        child: SafeArea(
-          child:
-              ListView(padding: const EdgeInsets.all(AppSpacing.lg), children: [
-            const SizedBox(height: 18),
-            _BrandHero(),
-            const SizedBox(height: 24),
+      backgroundColor: AppColors.porcelain,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          children: [
+            const SizedBox(height: 10),
+            const _CivicHeader(),
+            const SizedBox(height: 20),
             GlassCard(
-                variant: GlassVariant.elevated,
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+              variant: GlassVariant.light,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Önizleme girişi',
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Bu web önizlemede gerçek kimlik doğrulaması kapalıdır. Çalışan demo yolu ile parsel sorgusunu deneyebilirsiniz.',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: AppColors.slate, height: 1.35),
+                  ),
+                  const SizedBox(height: 16),
+                  GradientButton(
+                    label: 'Önizleme ile devam et',
+                    icon: Icons.login_rounded,
+                    onPressed: loading ? null : _continuePreview,
+                  ),
+                  const SizedBox(height: 16),
+                  const _UnavailableAuthButton(
+                    icon: Icons.g_mobiledata_rounded,
+                    label: 'Google ile giriş',
+                  ),
+                  const SizedBox(height: 8),
+                  const _UnavailableAuthButton(
+                    icon: Icons.apple_rounded,
+                    label: 'Apple ile giriş',
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Google ve Apple web önizlemede bağlı değil; bu yüzden devre dışı gösterilir.',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: AppColors.slate),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            GlassCard(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
                     children: [
-                      Text('Güvenli giriş',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.w900)),
-                      const SizedBox(height: 8),
+                      const Icon(Icons.sms_rounded, color: AppColors.emerald),
+                      const SizedBox(width: 8),
                       Text(
-                          'Parsel portföyün, raporların ve çalışma taleplerin tek premium hesapta.',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(color: AppColors.slate)),
-                      const SizedBox(height: 16),
-                      _AuthButton(
-                          icon: Icons.g_mobiledata_rounded,
-                          label: 'Google ile devam et',
-                          onTap: () =>
-                              _signIn((repo) => repo.signInWithGoogle())),
-                      const SizedBox(height: 10),
-                      _AuthButton(
-                          icon: Icons.apple_rounded,
-                          label: 'Apple ile devam et',
-                          onTap: () =>
-                              _signIn((repo) => repo.signInWithApple())),
-                      const SizedBox(height: 18),
-                      Row(children: [
-                        Expanded(
-                            child: Divider(
-                                color: AppColors.slate.withValues(alpha: .2))),
-                        Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Text('veya telefon',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelMedium
-                                    ?.copyWith(color: AppColors.slate))),
-                        Expanded(
-                            child: Divider(
-                                color: AppColors.slate.withValues(alpha: .2)))
-                      ]),
-                      const SizedBox(height: 16),
-                      TextField(
-                          controller: phone,
-                          keyboardType: TextInputType.phone,
-                          decoration: const InputDecoration(
-                              labelText: 'Telefon',
-                              hintText: '+90 5xx xxx xx xx',
-                              prefixIcon: Icon(Icons.phone_rounded))),
-                      const SizedBox(height: 10),
-                      if (verificationId != null)
-                        TextField(
-                            controller: otp,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                                labelText: 'OTP',
-                                hintText: '123456',
-                                prefixIcon: Icon(Icons.sms_rounded))),
-                      const SizedBox(height: 12),
-                      GradientButton(
-                          label: verificationId == null
-                              ? 'Kod Gönder'
-                              : 'Telefonla Giriş Yap',
-                          icon: Icons.lock_open_rounded,
-                          onPressed: loading ? null : _phoneAction),
-                    ])),
-            const SizedBox(height: 18),
-            GlassCard(
-                child: Wrap(spacing: 8, runSpacing: 8, children: const [
-              StatusBadge(
-                  label: 'KVKK hazır altyapı',
-                  tone: BadgeTone.success,
-                  icon: Icons.privacy_tip_rounded),
-              StatusBadge(
-                  label: 'Firebase fail-soft',
-                  tone: BadgeTone.info,
-                  icon: Icons.cloud_done_rounded),
-              StatusBadge(
-                  label: 'Mock güvenli mod',
-                  tone: BadgeTone.neutral,
-                  icon: Icons.verified_user_rounded),
-            ])),
-          ]),
+                        'Telefon OTP önizlemesi',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w900),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: phone,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Telefon',
+                      hintText: '+90 5xx xxx xx xx',
+                      prefixIcon: Icon(Icons.phone_rounded),
+                    ),
+                  ),
+                  if (otpSent) ...[
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: otp,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Doğrulama kodu',
+                        hintText: previewOtp,
+                        helperText: 'Önizleme kodu: $previewOtp',
+                        prefixIcon: Icon(Icons.password_rounded),
+                      ),
+                    ),
+                  ],
+                  if (helper != null) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      helper!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: helper!.contains('hatalı')
+                                ? AppColors.danger
+                                : AppColors.slate,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: loading ? null : _phonePreviewAction,
+                    icon: Icon(otpSent
+                        ? Icons.verified_user_rounded
+                        : Icons.send_rounded),
+                    label: Text(otpSent
+                        ? 'Telefonla devam et'
+                        : 'Önizleme kodu gönder'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            const InsightCard(
+              title: 'Önizleme kapsamı',
+              message:
+                  'Veriler örnektir. Parsel seçimi, imar özeti, analiz ve rapor akışı çalışır; resmi başvuru entegrasyonu bu sürümde yoktur.',
+              icon: Icons.info_outline_rounded,
+              color: AppColors.info,
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Future<void> _signIn(
-      Future<AuthUser> Function(AuthRepository repo) action) async {
+  Future<void> _continuePreview() async {
     setState(() => loading = true);
-    try {
-      await action(ref.read(authRepositoryProvider));
-      if (mounted) context.go(HomeRoute.path);
-    } finally {
-      if (mounted) setState(() => loading = false);
-    }
+    await Future<void>.delayed(const Duration(milliseconds: 180));
+    if (!mounted) return;
+    context.go(HomeRoute.path);
   }
 
-  Future<void> _phoneAction() async {
-    final repo = ref.read(authRepositoryProvider);
-    setState(() => loading = true);
-    try {
-      if (verificationId == null) {
-        verificationId = await repo.sendPhoneOtp(phone.text.trim());
-      } else {
-        await repo.verifyPhoneOtp(
-            verificationId: verificationId!, smsCode: otp.text.trim());
-        if (mounted) context.go(HomeRoute.path);
-      }
-    } finally {
-      if (mounted) setState(() => loading = false);
+  void _phonePreviewAction() {
+    if (!otpSent) {
+      setState(() {
+        otpSent = true;
+        otp.text = previewOtp;
+        helper = 'Kod gönderildi gibi gösterildi. Önizleme kodu: $previewOtp';
+      });
+      return;
     }
+    if (otp.text.trim() != previewOtp) {
+      setState(
+          () => helper = 'Doğrulama kodu hatalı. Önizleme kodu: $previewOtp');
+      return;
+    }
+    context.go(HomeRoute.path);
   }
 }
 
-class _BrandHero extends StatelessWidget {
+class _CivicHeader extends StatelessWidget {
+  const _CivicHeader();
+
   @override
-  Widget build(BuildContext context) =>
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(
-            width: 66,
-            height: 66,
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 58,
+            height: 58,
             decoration: BoxDecoration(
-                gradient: AppGradients.premium,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: AppShadows.glow(AppColors.emerald)),
-            child: const Center(
-                child: Text('E',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.w900)))),
-        const SizedBox(height: 18),
-        Text('E-İmar',
+              color: AppColors.deepGreen,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(Icons.account_balance_rounded,
+                color: Colors.white, size: 30),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'E-İmar Önizleme',
             style: Theme.of(context)
                 .textTheme
                 .displaySmall
-                ?.copyWith(fontWeight: FontWeight.w900, height: 1.0)),
-        const SizedBox(height: 6),
-        Text('İmar ve Emsal Sorgu',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.slate, fontWeight: FontWeight.w700)),
-      ]);
+                ?.copyWith(fontWeight: FontWeight.w900, height: 1.0),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Ada/parsel sorgu, imar durumu ve rapor akışı',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.slate,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ],
+      );
 }
 
-class _AuthButton extends StatelessWidget {
-  const _AuthButton(
-      {required this.icon, required this.label, required this.onTap});
+class _UnavailableAuthButton extends StatelessWidget {
+  const _UnavailableAuthButton({required this.icon, required this.label});
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) => OutlinedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon),
-      label: Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
-      style: OutlinedButton.styleFrom(
+        onPressed: null,
+        icon: Icon(icon),
+        label: Text('$label — önizlemede kapalı'),
+        style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 15),
-          backgroundColor: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white.withValues(alpha: .04)
-              : Colors.white.withValues(alpha: .72),
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadius.pill))));
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+          ),
+        ),
+      );
 }

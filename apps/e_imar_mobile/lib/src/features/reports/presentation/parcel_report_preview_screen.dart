@@ -30,7 +30,7 @@ class _ParcelReportPreviewScreenState extends State<ParcelReportPreviewScreen> {
     final reportBytes = _generatedReport;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Premium Parsel Raporu')),
+      appBar: AppBar(title: const Text('Parsel Raporu')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
@@ -79,7 +79,7 @@ class _ParcelReportPreviewScreenState extends State<ParcelReportPreviewScreen> {
                                 fontWeight: FontWeight.w700)),
                     const SizedBox(height: 16),
                     Text(
-                        'Tek sayfalık yatırım özeti, imar metrikleri, piyasa/risk istihbaratı yer tutucuları ve hukuki uyarılarla müşteriye sunuma hazır premium PDF akışı.',
+                        'Tek sayfalık imar özeti, TAKS/KAKS metrikleri, risk notları ve resmi doğrulama uyarılarıyla çalışan önizleme raporu.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Colors.white.withValues(alpha: .84))),
                   ]),
@@ -138,18 +138,18 @@ class _ParcelReportPreviewScreenState extends State<ParcelReportPreviewScreen> {
                   children: [
                 const _SectionTitle(
                     icon: Icons.insights_rounded,
-                    title: 'Risk ve Piyasa İstihbaratı'),
+                    title: 'Risk ve Plan Notları'),
                 const SizedBox(height: 12),
                 const _InsightRow(
                     icon: Icons.shield_rounded,
                     label: 'Risk özeti',
                     value:
-                        'Deprem, taşkın ve zemin katmanları için premium analiz alanı ayrıldı.'),
+                        'Deprem, taşkın ve zemin başlıkları örnek risk özeti olarak gösterilir.'),
                 const _InsightRow(
                     icon: Icons.trending_up_rounded,
-                    label: 'Piyasa sinyali',
+                    label: 'Plan notu',
                     value:
-                        'Yakın çevre değer trendleri ve arz/talep göstergeleri mock veriyle temsil edilir.'),
+                        'Yakın çevre ve plan koşulları önizleme verisiyle temsil edilir.'),
                 const _InsightRow(
                     icon: Icons.auto_graph_rounded,
                     label: 'Yatırım notu',
@@ -221,8 +221,7 @@ class _ParcelReportPreviewScreenState extends State<ParcelReportPreviewScreen> {
       _isGenerating = false;
     });
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content:
-            Text('Premium PDF raporu hazır: ${_formatBytes(bytes.length)}')));
+        content: Text('PDF raporu hazır: ${_formatBytes(bytes.length)}')));
   }
 
   Map<String, Object?> _reportMetrics(ParcelDetail parcel) => {
@@ -238,7 +237,7 @@ class _ParcelReportPreviewScreenState extends State<ParcelReportPreviewScreen> {
         'Yapılaşma': parcel.coverageRatio,
         'Yol Cephesi': '${parcel.roadFrontage.toStringAsFixed(1)} m',
         'Risk Özeti':
-            'Deprem, taşkın ve zemin katmanları için premium analiz yer tutucusu',
+            'Deprem, taşkın ve zemin başlıkları için örnek analiz alanı',
         'Piyasa İstihbaratı':
             'Yakın çevre değer trendleri mock veriyle temsil edilir',
       };
@@ -378,7 +377,7 @@ const _sections = [
   'İmar durumu, TAKS/KAKS/Emsal metrikleri',
   'Yapılaşma potansiyeli ve cephe göstergeleri',
   'Risk analizi alanları için yönetici özeti',
-  'Piyasa istihbaratı ve yatırım notları',
+  'Plan notları ve etüt hatırlatmaları',
   'Yasal uyarı ve veri doğrulama hatırlatmaları',
 ];
 
