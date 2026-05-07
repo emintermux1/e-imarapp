@@ -110,10 +110,10 @@ class _ParcelSearchScreenState extends ConsumerState<ParcelSearchScreen> {
       } else if (queryController.text.trim().isNotEmpty) {
         final repo = ref.read(offlineParcelRepositoryProvider);
         final query = queryController.text.trim();
-        final matches = await repo.search(query);
+        final List<ParcelDetail> matches = await repo.search(query);
         if (matches.isNotEmpty) {
           setState(() {
-            results = matches.map((p) => _SearchResult.cached(p)).toList();
+            results = matches.map(_SearchResult.cached).toList();
           });
         } else {
           setState(() {
@@ -258,7 +258,7 @@ class _SourceBadge extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          color: AppColors.emerald.withOpacity(0.12),
+          color: AppColors.emerald.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(99),
         ),
         child: Text('Çevrimdışı veri', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.emerald)),
@@ -267,7 +267,7 @@ class _SourceBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.warning.withOpacity(0.15),
+        color: AppColors.warning.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(99),
       ),
       child: Text('Mock sonuç', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.warning)),

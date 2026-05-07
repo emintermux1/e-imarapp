@@ -10,18 +10,25 @@ class FavoritesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final repoAsync = ref.watch(offlineParcelRepositoryProvider);
+    final repo = ref.watch(offlineParcelRepositoryProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Çalışma Alanı')),
-      body: repoAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => AppStateView(
-          title: 'Yüklenemedi',
-          message: 'Veritabanı başlatılamadı: $e',
-          icon: Icons.error_outline_rounded,
-        ),
-        data: (repo) => _FavoritesContent(repo: repo),
+      body: FutureBuilder<void>(
+        future: repo.db.then((_) {}),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return AppStateView(
+              title: 'Yüklenemedi',
+              message: 'Veritabanı başlatılamadı: ${snapshot.error}',
+              icon: Icons.error_outline_rounded,
+            );
+          }
+          return _FavoritesContent(repo: repo);
+        },
       ),
     );
   }
@@ -217,7 +224,7 @@ class _ParcelTile extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: AppColors.emerald.withOpacity(0.12),
+                color: AppColors.emerald.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: const Icon(Icons.map_rounded, color: AppColors.emerald, size: 22),
@@ -286,7 +293,7 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.emerald.withOpacity(0.10),
+        color: AppColors.emerald.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(99),
       ),
       child: Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.deepGreen)),
