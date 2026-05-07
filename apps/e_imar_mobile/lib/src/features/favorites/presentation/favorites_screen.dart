@@ -29,7 +29,7 @@ class _WorkspaceBody extends StatelessWidget {
       return AppStateView(
         title: 'Çalışma alanın hazır',
         message: 'Favoriye aldığın parseller, kayıtlı aramalar ve uyarılar burada tek panelde toplanacak.',
-        icon: Icons.workspaces_outline_rounded,
+        icon: Icons.dashboard_outlined,
         action: GradientButton(label: 'Parsel aramaya başla', icon: Icons.search_rounded, onPressed: () {}),
       );
     }

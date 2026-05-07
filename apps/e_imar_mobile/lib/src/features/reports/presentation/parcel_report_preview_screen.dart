@@ -17,7 +17,7 @@ class ParcelReportPreviewScreen extends StatefulWidget {
 }
 
 class _ParcelReportPreviewScreenState extends State<ParcelReportPreviewScreen> {
-  final ParcelReportService _reportService = const PlaceholderParcelReportService();
+  final ParcelReportService _reportService = PremiumParcelReportService();
   Uint8List? _generatedReport;
   bool _isGenerating = false;
 
