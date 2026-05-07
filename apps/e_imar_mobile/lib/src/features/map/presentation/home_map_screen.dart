@@ -56,7 +56,7 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
                   _QuickAction(label: 'Parsel Sorgula', subtitle: 'Ada, parsel, koordinat', icon: Icons.grid_on_rounded, onTap: () => context.push(SearchRoute.path)),
                   _QuickAction(label: 'Emsal Hesapla', subtitle: 'Proje potansiyeli', icon: Icons.calculate_rounded, onTap: () => context.push(EmsalRoute.path)),
                   _QuickAction(label: 'Risk Analizi', subtitle: 'Isı haritası mock', icon: Icons.shield_rounded, onTap: () => context.push(AnalysisRoute.path)),
-                  _QuickAction(label: 'Fiyat Tahmini', subtitle: 'Fintech değerleme', icon: Icons.payments_rounded, onTap: () {}),
+                  _QuickAction(label: 'Fiyat Tahmini', subtitle: 'Fintech değerleme', icon: Icons.payments_rounded, onTap: () => context.push(AiValuationRoute.path)),
                   _QuickAction(label: '3D Görünüm', subtitle: 'Kütle simülasyonu', icon: Icons.view_in_ar_rounded, onTap: () {}),
                 ]),
               ),
