@@ -4,6 +4,7 @@ import '../../../core/services/ai_services.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../map/domain/parcel.dart';
+import '../../valuation/domain/valuation_models.dart';
 
 class AiValuationScreen extends StatelessWidget {
   const AiValuationScreen({super.key, this.parcel = ParcelDetail.sample, this.aiService = const MockParcelAiService()});
@@ -64,7 +65,7 @@ class _AiValuationViewModel {
   String get parcelLabel => '${parcel.neighborhood} ${parcel.block}/${parcel.parcel}';
 
   static Future<_AiValuationViewModel> load({required ParcelDetail parcel, required ParcelAiService aiService, required String parcelId, required String zoningSummary}) async {
-    final insights = await aiService.analyzeParcel(parcelId: parcelId, zoningSummary: zoningSummary);
+    final insights = await aiService.analyzeParcelLegacy(parcelId: parcelId, zoningSummary: zoningSummary);
     final pricePerSquareMeter = await aiService.estimatePricePerSquareMeter(district: parcel.district, zoningStatus: parcel.zoningStatus);
     const parcelArea = 1240.0;
     return _AiValuationViewModel(
