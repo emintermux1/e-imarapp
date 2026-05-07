@@ -63,7 +63,6 @@ Future<void> _initializeIsarAndSeed(AppConfig config) async {
   try {
     final isar = await initializeIsar();
     final repo = OfflineParcelRepository(Future.value(isar));
-    await seedInitialParcelData(repo);
     await repo.pruneStaleParcels();
   } catch (error, stack) {
     debugPrint('Isar başlatma hatası: $error\n$stack');

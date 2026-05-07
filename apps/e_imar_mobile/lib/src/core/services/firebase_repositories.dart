@@ -38,8 +38,8 @@ abstract interface class NotificationRepository {
   Future<void> markAsRead(String notificationId);
 }
 
-final mockUserDataRepositoryProvider =
-    Provider<MockUserDataRepository>((_) => MockUserDataRepository());
+final unavailableUserDataRepositoryProvider =
+    Provider<UnavailableUserDataRepository>((_) => const UnavailableUserDataRepository());
 
 final userProfileRepositoryProvider = Provider<UserProfileRepository>(
   (ref) => _userDataRepository<UserProfileRepository>(ref),
@@ -60,7 +60,7 @@ final notificationRepositoryProvider = Provider<NotificationRepository>(
 T _userDataRepository<T>(Ref ref) {
   final Object repository = Firebase.apps.isNotEmpty
       ? FirebaseUserDataRepository()
-      : ref.watch(mockUserDataRepositoryProvider);
+      : ref.watch(unavailableUserDataRepositoryProvider);
   return repository as T;
 }
 
@@ -324,67 +324,53 @@ class FirebaseUserDataRepository
   }
 }
 
-class MockUserDataRepository
+class UnavailableUserDataRepository
     implements
         UserProfileRepository,
         FavoritesRepository,
         SavedSearchRepository,
         FollowedParcelRepository,
         NotificationRepository {
-  final _favorites = <String>[];
-  final _searches = <String>[];
-  final _followed = <String>[];
+  const UnavailableUserDataRepository();
+
+  static const _message =
+      'Kullanıcı veri deposu için Firebase oturumu ve Firestore yapılandırması gerekir.';
 
   @override
-  Future<void> addFavorite(String parcelId) async {
-    if (!_favorites.contains(parcelId)) {
-      _favorites.add(parcelId);
-    }
-  }
+  Future<void> addFavorite(String parcelId) async => throw const UserDataException(_message);
 
   @override
-  Future<List<String>> favorites() async => List.unmodifiable(_favorites);
+  Future<List<String>> favorites() async => throw const UserDataException(_message);
 
   @override
-  Future<void> removeFavorite(String parcelId) async =>
-      _favorites.remove(parcelId);
+  Future<void> removeFavorite(String parcelId) async => throw const UserDataException(_message);
 
   @override
-  Future<List<String>> recentSearches() async => List.unmodifiable(_searches);
+  Future<List<String>> recentSearches() async => throw const UserDataException(_message);
 
   @override
-  Future<void> saveSearch(String query) async {
-    if (query.trim().isNotEmpty) {
-      _searches.add(query.trim());
-    }
-  }
+  Future<void> saveSearch(String query) async => throw const UserDataException(_message);
 
   @override
-  Future<List<String>> followedParcels() async => List.unmodifiable(_followed);
+  Future<List<String>> followedParcels() async => throw const UserDataException(_message);
 
   @override
-  Future<void> followParcel(String parcelId) async {
-    if (!_followed.contains(parcelId)) {
-      _followed.add(parcelId);
-    }
-  }
+  Future<void> followParcel(String parcelId) async => throw const UserDataException(_message);
 
   @override
-  Future<void> unfollowParcel(String parcelId) async =>
-      _followed.remove(parcelId);
+  Future<void> unfollowParcel(String parcelId) async => throw const UserDataException(_message);
 
   @override
-  Future<UserProfile?> currentProfile() async =>
-      const UserProfile(id: 'mock-user', displayName: 'E-İmar Kullanıcısı');
+  Future<UserProfile?> currentProfile() async => throw const UserDataException(_message);
 
   @override
-  Future<void> saveProfile(UserProfile profile) async {}
+  Future<void> saveProfile(UserProfile profile) async => throw const UserDataException(_message);
 
   @override
-  Future<void> markAsRead(String notificationId) async {}
+  Future<void> markAsRead(String notificationId) async => throw const UserDataException(_message);
 
   @override
-  Future<void> registerDeviceToken(String token) async {}
+  Future<void> registerDeviceToken(String token) async => throw const UserDataException(_message);
 }
 
 String _safeDocId(String value) => value.trim().replaceAll('/', '_');
