@@ -3,13 +3,26 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/parcel.dart';
+import 'historical_timeline_slider.dart';
+import 'mock_3d_parcel_preview.dart';
+import 'risk_layer_toggles.dart';
 
-class ParcelDetailSheet extends StatelessWidget {
+class ParcelDetailSheet extends StatefulWidget {
   const ParcelDetailSheet({required this.parcel, super.key});
   final ParcelDetail parcel;
 
   @override
+  State<ParcelDetailSheet> createState() => _ParcelDetailSheetState();
+}
+
+class _ParcelDetailSheetState extends State<ParcelDetailSheet> {
+  bool _showTimeline = false;
+  bool _showRiskPanel = false;
+  bool _show3d = false;
+
+  @override
   Widget build(BuildContext context) {
+    final parcel = widget.parcel;
     final metrics = [
       ('TAKS', parcel.taks.toStringAsFixed(2), Icons.square_foot_rounded),
       ('KAKS', parcel.kaks.toStringAsFixed(2), Icons.layers_rounded),
@@ -40,6 +53,9 @@ class ParcelDetailSheet extends StatelessWidget {
           const SizedBox(height: 16),
           const _RiskStrip(),
           const SizedBox(height: 16),
+          if (_showTimeline) ...[HistoricalTimelineSlider(), const SizedBox(height: 16)],
+          if (_showRiskPanel) ...[RiskLayerToggles(), const SizedBox(height: 16)],
+          if (_show3d) ...[Mock3dParcelPreview(parcel: widget.parcel), const SizedBox(height: 16)],
           const InsightCard(title: 'AI değer artışı', message: 'Bölgede son 2 yılda yüksek değer artışı ve düşük arz baskısı görülüyor.', icon: Icons.trending_up_rounded, color: AppColors.emerald),
           const SizedBox(height: 10),
           const InsightCard(title: 'Proje potansiyeli', message: 'Bu arsaya tahmini 24 dairelik butik proje kurgusu yapılabilir.', icon: Icons.auto_awesome_rounded, color: AppColors.lime),
@@ -48,13 +64,16 @@ class ParcelDetailSheet extends StatelessWidget {
           const SizedBox(height: 18),
           Text('Hızlı işlemler', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
           const SizedBox(height: 10),
-          GridView.count(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: 3, childAspectRatio: 1.02, crossAxisSpacing: 10, mainAxisSpacing: 10, children: const [
+          GridView.count(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: 3, childAspectRatio: 1.02, crossAxisSpacing: 10, mainAxisSpacing: 10, children: [
             _ActionTile(label: 'Favoriye Ekle', icon: Icons.favorite_border_rounded),
             _ActionTile(label: 'Analizi Gör', icon: Icons.analytics_rounded),
             _ActionTile(label: 'PDF', icon: Icons.picture_as_pdf_rounded),
             _ActionTile(label: 'Paylaş', icon: Icons.ios_share_rounded),
             _ActionTile(label: 'Google Earth', icon: Icons.public_rounded),
             _ActionTile(label: 'Koordinat', icon: Icons.my_location_rounded),
+            _ActionTile(label: 'Zaman Tüneli', icon: Icons.history_rounded, onTap: () => setState(() => _showTimeline = !_showTimeline)),
+            _ActionTile(label: 'Risk Paneli', icon: Icons.shield_rounded, onTap: () => setState(() => _showRiskPanel = !_showRiskPanel)),
+            _ActionTile(label: '3D Önizleme', icon: Icons.view_in_ar_rounded, onTap: () => setState(() => _show3d = !_show3d)),
           ]),
         ]),
       ),
@@ -73,9 +92,10 @@ class _RiskStrip extends StatelessWidget {
 }
 
 class _ActionTile extends StatelessWidget {
-  const _ActionTile({required this.label, required this.icon});
+  const _ActionTile({required this.label, required this.icon, this.onTap});
   final String label;
   final IconData icon;
+  final VoidCallback? onTap;
   @override
-  Widget build(BuildContext context) => GlassCard(padding: const EdgeInsets.all(10), onTap: () {}, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: AppColors.emerald), const SizedBox(height: 8), Text(label, textAlign: TextAlign.center, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800))]));
+  Widget build(BuildContext context) => GlassCard(padding: const EdgeInsets.all(10), onTap: onTap ?? () {}, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: AppColors.emerald), const SizedBox(height: 8), Text(label, textAlign: TextAlign.center, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800))]));
 }

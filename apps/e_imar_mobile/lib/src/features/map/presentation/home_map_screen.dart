@@ -8,6 +8,8 @@ import '../../../core/config/app_config.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../domain/parcel.dart';
+import 'widgets/map_controls_panel.dart';
+import 'widgets/mock_3d_parcel_preview.dart';
 import 'widgets/mock_map_canvas.dart';
 import 'widgets/parcel_detail_sheet.dart';
 
@@ -21,6 +23,11 @@ class HomeMapScreen extends ConsumerStatefulWidget {
 
 class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTickerProviderStateMixin {
   int tab = 0;
+  bool _showTimeline = false;
+  bool _showRiskPanel = false;
+  bool _show3dPreview = false;
+  HistoricalTimelineState? _timelineState;
+  List<RiskLayerToggle> _riskToggles = RiskLayerToggle.defaults;
 
   @override
   void initState() {
@@ -45,8 +52,30 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
               const SizedBox(height: 12),
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Spacer(),
-                _LayerStack(onMap: () {}, onTerrain: () {}, onThreeD: () {}),
+                MapControlsPanel(
+                  onTimelineOpened: () => setState(() => _showTimeline = !_showTimeline),
+                  onRiskPanelOpened: () => setState(() => _showRiskPanel = !_showRiskPanel),
+                  onLayerChanged: (_) {},
+                ),
               ]),
+              if (_showTimeline) Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: FloatingTimelineSheet(
+                  onDissmiss: () => setState(() => _showTimeline = false),
+                  onYearChanged: (s) => _timelineState = s,
+                ),
+              ),
+              if (_showRiskPanel) Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: FloatingRiskSheet(
+                  onDismiss: () => setState(() => _showRiskPanel = false),
+                  onTogglesChanged: (t) => _riskToggles = t,
+                ),
+              ),
+              if (_show3dPreview) Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Mock3dParcelPreview(parcel: ParcelDetail.sample),
+              ),
               const Spacer(),
               _ParcelPreview(onTap: _openParcel),
               const SizedBox(height: 12),
@@ -57,7 +86,7 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
                   _QuickAction(label: 'Emsal Hesapla', subtitle: 'Proje potansiyeli', icon: Icons.calculate_rounded, onTap: () => context.push(EmsalRoute.path)),
                   _QuickAction(label: 'Risk Analizi', subtitle: 'Isı haritası mock', icon: Icons.shield_rounded, onTap: () => context.push(AnalysisRoute.path)),
                   _QuickAction(label: 'Fiyat Tahmini', subtitle: 'Fintech değerleme', icon: Icons.payments_rounded, onTap: () {}),
-                  _QuickAction(label: '3D Görünüm', subtitle: 'Kütle simülasyonu', icon: Icons.view_in_ar_rounded, onTap: () {}),
+                  _QuickAction(label: '3D Görünüm', subtitle: 'Kütle simülasyonu', icon: Icons.view_in_ar_rounded, onTap: () => setState(() => _show3dPreview = !_show3dPreview)),
                 ]),
               ),
               const SizedBox(height: 80),
@@ -129,37 +158,6 @@ class _StatusRail extends StatelessWidget {
         SizedBox(width: 8),
         StatusBadge(label: '24° açık', tone: BadgeTone.warning, icon: Icons.wb_sunny_rounded),
       ]));
-}
-
-class _LayerStack extends StatelessWidget {
-  const _LayerStack({required this.onMap, required this.onTerrain, required this.onThreeD});
-  final VoidCallback onMap;
-  final VoidCallback onTerrain;
-  final VoidCallback onThreeD;
-  @override
-  Widget build(BuildContext context) => GlassCard(
-        padding: const EdgeInsets.all(6),
-        borderRadius: AppRadius.md,
-        child: Column(children: [
-          _LayerButton(icon: Icons.satellite_alt_rounded, label: 'Uydu', selected: true, onTap: onMap),
-          _LayerButton(icon: Icons.terrain_rounded, label: 'Arazi', selected: false, onTap: onTerrain),
-          _LayerButton(icon: Icons.view_in_ar_rounded, label: '3D', selected: false, onTap: onThreeD),
-        ]),
-      );
-}
-
-class _LayerButton extends StatelessWidget {
-  const _LayerButton({required this.icon, required this.label, required this.selected, required this.onTap});
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) => InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Container(width: 58, padding: const EdgeInsets.symmetric(vertical: 9), decoration: BoxDecoration(color: selected ? AppColors.emerald.withOpacity(.18) : Colors.transparent, borderRadius: BorderRadius.circular(16)), child: Column(children: [Icon(icon, size: 20, color: selected ? AppColors.emerald : null), const SizedBox(height: 3), Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w800))])),
-      );
 }
 
 class _ParcelPreview extends StatelessWidget {
