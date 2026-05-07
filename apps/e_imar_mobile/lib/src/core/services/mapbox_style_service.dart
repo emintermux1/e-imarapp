@@ -9,7 +9,8 @@ class MapboxStyleService {
   MapboxStyleService._();
 
   static String styleUrl(MapboxStylePreset preset) => switch (preset) {
-        MapboxStylePreset.satellite => 'mapbox://styles/mapbox/satellite-streets-v12',
+        MapboxStylePreset.satellite =>
+          'mapbox://styles/mapbox/satellite-streets-v12',
         MapboxStylePreset.streets => 'mapbox://styles/mapbox/streets-v12',
         MapboxStylePreset.light => 'mapbox://styles/mapbox/light-v11',
         MapboxStylePreset.dark => 'mapbox://styles/mapbox/dark-v11',
@@ -18,7 +19,8 @@ class MapboxStyleService {
   static MapboxStylePreset current = MapboxStylePreset.satellite;
 }
 
-final mapboxStyleProvider = StateProvider<MapboxStylePreset>((_) => MapboxStyleService.current);
+final mapboxStyleProvider =
+    StateProvider<MapboxStylePreset>((_) => MapboxStyleService.current);
 
 class MapboxCameraHelper {
   MapboxCameraHelper._();
@@ -29,7 +31,8 @@ class MapboxCameraHelper {
     _map = map;
   }
 
-  static Future<void> animateTo(double lat, double lng, {double zoom = 15, double bearing = 0, double pitch = 0}) async {
+  static Future<void> animateTo(double lat, double lng,
+      {double zoom = 15, double bearing = 0, double pitch = 0}) async {
     final map = _map;
     if (map == null) return;
     await map.flyTo(
@@ -62,7 +65,13 @@ class ParcelHitTestHelper {
     final neighborhoods = isKadikoy
         ? const ['Fenerbahçe', 'Caddebostan', 'Göztepe', 'Erenköy', 'Suadiye']
         : const ['Levent', 'Etiler', 'Bebek', 'Arnavutköy', 'Ortaköy'];
-    final zoningStatuses = const ['Konut', 'Konut + Ticaret', 'Ticaret', 'Sanayi', 'Turizm'];
+    final zoningStatuses = const [
+      'Konut',
+      'Konut + Ticaret',
+      'Ticaret',
+      'Sanayi',
+      'Turizm'
+    ];
     final titleTypes = const ['Arsa', 'Arsa', 'Arsa', 'Bina', 'Konut'];
 
     final block = (1000 + rng.nextInt(500)).toString();

@@ -20,7 +20,8 @@ class HomeMapScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeMapScreen> createState() => _HomeMapScreenState();
 }
 
-class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTickerProviderStateMixin {
+class _HomeMapScreenState extends ConsumerState<HomeMapScreen>
+    with SingleTickerProviderStateMixin {
   int tab = 0;
   Offset? _tapScreenPosition;
   int _pulseGeneration = 0;
@@ -28,7 +29,8 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
   @override
   void initState() {
     super.initState();
-    if (widget.openParcelOnStart) WidgetsBinding.instance.addPostFrameCallback((_) => _openParcel());
+    if (widget.openParcelOnStart)
+      WidgetsBinding.instance.addPostFrameCallback((_) => _openParcel());
   }
 
   @override
@@ -49,22 +51,36 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(14),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               _SearchBar(onTap: () => context.push(SearchRoute.path)),
               const SizedBox(height: 12),
               Wrap(spacing: 8, runSpacing: 8, children: [
-                FloatingActionPill(label: 'Yakınımda Ara', icon: Icons.near_me_rounded, onTap: () {}),
-                FloatingActionPill(label: 'Uydu', icon: Icons.satellite_alt_rounded, onTap: () => _onStyleSwitch(MapboxStylePreset.satellite)),
-                FloatingActionPill(label: 'Arazi', icon: Icons.terrain_rounded, onTap: () => _onStyleSwitch(MapboxStylePreset.streets)),
-                FloatingActionPill(label: '3D', icon: Icons.view_in_ar_rounded, onTap: () {}),
+                FloatingActionPill(
+                    label: 'Yakınımda Ara',
+                    icon: Icons.near_me_rounded,
+                    onTap: () {}),
+                FloatingActionPill(
+                    label: 'Uydu',
+                    icon: Icons.satellite_alt_rounded,
+                    onTap: () => _onStyleSwitch(MapboxStylePreset.satellite)),
+                FloatingActionPill(
+                    label: 'Arazi',
+                    icon: Icons.terrain_rounded,
+                    onTap: () => _onStyleSwitch(MapboxStylePreset.streets)),
+                FloatingActionPill(
+                    label: '3D', icon: Icons.view_in_ar_rounded, onTap: () {}),
               ]),
               const Spacer(),
               SizedBox(
                 height: 96,
                 child: ListView(scrollDirection: Axis.horizontal, children: [
-                  _QuickAction('Parsel Sorgula', Icons.grid_on_rounded, () => context.push(SearchRoute.path)),
-                  _QuickAction('Emsal Hesapla', Icons.calculate_rounded, () => context.push(EmsalRoute.path)),
-                  _QuickAction('Risk Analizi', Icons.shield_rounded, () => context.push(AnalysisRoute.path)),
+                  _QuickAction('Parsel Sorgula', Icons.grid_on_rounded,
+                      () => context.push(SearchRoute.path)),
+                  _QuickAction('Emsal Hesapla', Icons.calculate_rounded,
+                      () => context.push(EmsalRoute.path)),
+                  _QuickAction('Risk Analizi', Icons.shield_rounded,
+                      () => context.push(AnalysisRoute.path)),
                   _QuickAction('Fiyat Tahmini', Icons.payments_rounded, () {}),
                   _QuickAction('3D Görünüm', Icons.view_in_ar_rounded, () {}),
                 ]),
@@ -76,7 +92,10 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
         Positioned(
           right: 16,
           bottom: 184,
-          child: FloatingActionButton.small(heroTag: 'loc', onPressed: () {}, child: const Icon(Icons.my_location_rounded)),
+          child: FloatingActionButton.small(
+              heroTag: 'loc',
+              onPressed: () {},
+              child: const Icon(Icons.my_location_rounded)),
         ),
         if (_tapScreenPosition != null)
           Positioned(
@@ -94,8 +113,11 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
                     height: 56,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.danger.withOpacity(1.0 - value), width: 2.5),
-                      color: AppColors.warning.withOpacity((1.0 - value) * 0.35),
+                      border: Border.all(
+                          color: AppColors.danger.withOpacity(1.0 - value),
+                          width: 2.5),
+                      color:
+                          AppColors.warning.withOpacity((1.0 - value) * 0.35),
                     ),
                     child: Center(
                       child: Container(
@@ -103,7 +125,8 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
                         height: 14 + value * 12,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.danger.withOpacity(1.0 - value * 0.6),
+                          color:
+                              AppColors.danger.withOpacity(1.0 - value * 0.6),
                         ),
                       ),
                     ),
@@ -126,9 +149,12 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
         },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.map_rounded), label: 'Harita'),
-          NavigationDestination(icon: Icon(Icons.analytics_rounded), label: 'Analiz'),
-          NavigationDestination(icon: Icon(Icons.favorite_rounded), label: 'Favoriler'),
-          NavigationDestination(icon: Icon(Icons.settings_rounded), label: 'Ayarlar'),
+          NavigationDestination(
+              icon: Icon(Icons.analytics_rounded), label: 'Analiz'),
+          NavigationDestination(
+              icon: Icon(Icons.favorite_rounded), label: 'Favoriler'),
+          NavigationDestination(
+              icon: Icon(Icons.settings_rounded), label: 'Ayarlar'),
         ],
       ),
     );
@@ -139,7 +165,8 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
     final lng = context.point.coordinates.lng.toDouble();
     final parcel = ParcelHitTestHelper.hitTest(lat, lng);
     setState(() {
-      _tapScreenPosition = Offset(context.touchPosition.x.toDouble(), context.touchPosition.y.toDouble());
+      _tapScreenPosition = Offset(context.touchPosition.x.toDouble(),
+          context.touchPosition.y.toDouble());
       _pulseGeneration++;
     });
     _openParcelWithParcel(parcel);
@@ -257,12 +284,16 @@ class _QuickAction extends StatelessWidget {
           padding: const EdgeInsets.only(right: 10),
           child: GlassCard(
             onTap: onTap,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Icon(icon, color: AppColors.emerald),
               const Spacer(),
               Text(
                 label,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w800),
               ),
             ]),
           ),

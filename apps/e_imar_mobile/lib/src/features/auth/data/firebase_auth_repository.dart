@@ -11,8 +11,7 @@ class FirebaseAuthRepository implements AuthRepository {
   FirebaseAuthRepository({
     firebase_auth.FirebaseAuth? firebaseAuth,
     GoogleSignIn? googleSignIn,
-  })
-      : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance,
+  })  : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance,
         _googleSignIn = googleSignIn ?? GoogleSignIn();
 
   final firebase_auth.FirebaseAuth _firebaseAuth;
@@ -42,7 +41,8 @@ class FirebaseAuthRepository implements AuthRepository {
     } on firebase_auth.FirebaseAuthException catch (error) {
       throw AuthException(_firebaseAuthMessage(error));
     } catch (_) {
-      throw const AuthException('Google girişi sırasında beklenmeyen bir hata oluştu.');
+      throw const AuthException(
+          'Google girişi sırasında beklenmeyen bir hata oluştu.');
     }
   }
 
@@ -57,7 +57,8 @@ class FirebaseAuthRepository implements AuthRepository {
       );
       final idToken = appleCredential.identityToken;
       if (idToken == null || idToken.isEmpty) {
-        throw const AuthException('Apple kimlik doğrulama belirteci alınamadı.');
+        throw const AuthException(
+            'Apple kimlik doğrulama belirteci alınamadı.');
       }
 
       final rawNonce = _appleRawNonce();
@@ -90,7 +91,8 @@ class FirebaseAuthRepository implements AuthRepository {
     } on firebase_auth.FirebaseAuthException catch (error) {
       throw AuthException(_firebaseAuthMessage(error));
     } catch (_) {
-      throw const AuthException('Apple girişi sırasında beklenmeyen bir hata oluştu.');
+      throw const AuthException(
+          'Apple girişi sırasında beklenmeyen bir hata oluştu.');
     }
   }
 
@@ -158,7 +160,8 @@ class FirebaseAuthRepository implements AuthRepository {
     } on firebase_auth.FirebaseAuthException catch (error) {
       throw AuthException(_firebaseAuthMessage(error));
     } catch (_) {
-      throw const AuthException('Telefon doğrulaması sırasında beklenmeyen bir hata oluştu.');
+      throw const AuthException(
+          'Telefon doğrulaması sırasında beklenmeyen bir hata oluştu.');
     }
   }
 
@@ -169,7 +172,8 @@ class FirebaseAuthRepository implements AuthRepository {
     } on firebase_auth.FirebaseAuthException catch (error) {
       throw AuthException(_firebaseAuthMessage(error));
     } catch (_) {
-      throw const AuthException('Çıkış yapılırken beklenmeyen bir hata oluştu.');
+      throw const AuthException(
+          'Çıkış yapılırken beklenmeyen bir hata oluştu.');
     }
   }
 

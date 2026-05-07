@@ -1,5 +1,9 @@
 class ApartmentTypeMix {
-  const ApartmentTypeMix({required this.label, required this.areaSqm, this.count = 0, this.salePricePerSqm = 38500});
+  const ApartmentTypeMix(
+      {required this.label,
+      required this.areaSqm,
+      this.count = 0,
+      this.salePricePerSqm = 38500});
   final String label;
   final double areaSqm;
   final int count;
@@ -10,16 +14,24 @@ class ApartmentTypeMix {
 }
 
 class FloorBlueprint {
-  const FloorBlueprint({required this.floorNumber, this.apartmentMixes = const []});
+  const FloorBlueprint(
+      {required this.floorNumber, this.apartmentMixes = const []});
   final int floorNumber;
   final List<ApartmentTypeMix> apartmentMixes;
 
   int get totalUnits => apartmentMixes.fold(0, (sum, m) => sum + m.count);
-  double get totalArea => apartmentMixes.fold(0.0, (sum, m) => sum + m.totalArea);
+  double get totalArea =>
+      apartmentMixes.fold(0.0, (sum, m) => sum + m.totalArea);
 }
 
 class EmsalInput {
-  const EmsalInput({required this.landArea, required this.emsal, this.taks, this.floorCount, this.averageUnitArea = 115, this.blueprints = const []});
+  const EmsalInput(
+      {required this.landArea,
+      required this.emsal,
+      this.taks,
+      this.floorCount,
+      this.averageUnitArea = 115,
+      this.blueprints = const []});
   final double landArea;
   final double emsal;
   final double? taks;
@@ -29,7 +41,13 @@ class EmsalInput {
 }
 
 class FloorBreakdown {
-  const FloorBreakdown({required this.floorNumber, required this.constructionArea, required this.unitCount, required this.estimatedCost, required this.salesPotential, this.apartmentMixes = const []});
+  const FloorBreakdown(
+      {required this.floorNumber,
+      required this.constructionArea,
+      required this.unitCount,
+      required this.estimatedCost,
+      required this.salesPotential,
+      this.apartmentMixes = const []});
   final int floorNumber;
   final double constructionArea;
   final int unitCount;
@@ -39,7 +57,14 @@ class FloorBreakdown {
 }
 
 class EmsalResult {
-  const EmsalResult({required this.totalConstructionArea, required this.apartmentCount, required this.estimatedCost, required this.salesPotential, required this.roi, this.tabanAlani, this.floorBreakdowns = const []});
+  const EmsalResult(
+      {required this.totalConstructionArea,
+      required this.apartmentCount,
+      required this.estimatedCost,
+      required this.salesPotential,
+      required this.roi,
+      this.tabanAlani,
+      this.floorBreakdowns = const []});
   final double totalConstructionArea;
   final int apartmentCount;
   final double estimatedCost;
@@ -61,7 +86,8 @@ class EmsalCalculatorService {
   }
 
   int resolveFloorCount(EmsalInput input) {
-    if (input.floorCount != null && input.floorCount! > 0) return input.floorCount!;
+    if (input.floorCount != null && input.floorCount! > 0)
+      return input.floorCount!;
     if (input.taks == null || input.taks! <= 0) return 1;
     final taban = input.landArea * input.taks!;
     final total = input.landArea * input.emsal;
@@ -83,7 +109,8 @@ class EmsalCalculatorService {
     if (useBlueprints) {
       for (final bp in input.blueprints) {
         final floorCost = perFloorArea * costPerSqm;
-        final floorSales = bp.apartmentMixes.fold(0.0, (sum, m) => sum + m.totalSales);
+        final floorSales =
+            bp.apartmentMixes.fold(0.0, (sum, m) => sum + m.totalSales);
         breakdowns.add(FloorBreakdown(
           floorNumber: bp.floorNumber,
           constructionArea: perFloorArea,
@@ -97,7 +124,8 @@ class EmsalCalculatorService {
       }
     } else {
       for (int f = 1; f <= floors; f++) {
-        final floorUnits = (perFloorArea / input.averageUnitArea).floor().clamp(1, 10000);
+        final floorUnits =
+            (perFloorArea / input.averageUnitArea).floor().clamp(1, 10000);
         final floorCost = perFloorArea * costPerSqm;
         final floorSales = perFloorArea * salePerSqm;
         breakdowns.add(FloorBreakdown(
@@ -111,7 +139,9 @@ class EmsalCalculatorService {
       }
     }
 
-    final apartments = totalUnits > 0 ? totalUnits : (total / input.averageUnitArea).floor().clamp(1, 10000);
+    final apartments = totalUnits > 0
+        ? totalUnits
+        : (total / input.averageUnitArea).floor().clamp(1, 10000);
     final cost = total * costPerSqm;
     final sales = useBlueprints ? blueprintSales : total * salePerSqm;
 

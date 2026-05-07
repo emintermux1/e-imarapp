@@ -23,7 +23,9 @@ class EImarApp extends ConsumerWidget {
       darkTheme: amoled ? AppTheme.amoled() : AppTheme.dark(),
       themeMode: themeMode,
       routerConfig: router,
-      builder: (context, child) => ScrollConfiguration(behavior: const _EImarScrollBehavior(), child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => ScrollConfiguration(
+          behavior: const _EImarScrollBehavior(),
+          child: child ?? const SizedBox.shrink()),
     );
   }
 }
@@ -32,5 +34,6 @@ class _EImarScrollBehavior extends ScrollBehavior {
   const _EImarScrollBehavior();
 
   @override
-  ScrollPhysics getScrollPhysics(BuildContext context) => const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+  ScrollPhysics getScrollPhysics(BuildContext context) =>
+      const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
 }
