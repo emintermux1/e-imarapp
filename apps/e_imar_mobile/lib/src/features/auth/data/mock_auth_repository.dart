@@ -20,10 +20,12 @@ class MockAuthRepository implements AuthRepository {
   Stream<AuthUser?> authStateChanges() => _controller.stream;
 
   @override
-  Future<AuthUser> signInWithApple() async => _mock('apple', 'Apple Kullanıcısı');
+  Future<AuthUser> signInWithApple() async =>
+      _mock('apple', 'Apple Kullanıcısı');
 
   @override
-  Future<AuthUser> signInWithGoogle() async => _mock('google', 'Google Kullanıcısı');
+  Future<AuthUser> signInWithGoogle() async =>
+      _mock('google', 'Google Kullanıcısı');
 
   @override
   Future<String> sendPhoneOtp(String phoneNumber) async {

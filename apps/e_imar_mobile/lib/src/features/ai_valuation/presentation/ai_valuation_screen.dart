@@ -4,9 +4,13 @@ import '../../../core/services/ai_services.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../map/domain/parcel.dart';
+import '../../valuation/domain/valuation_models.dart';
 
 class AiValuationScreen extends StatelessWidget {
-  const AiValuationScreen({super.key, this.parcel = ParcelDetail.sample, this.aiService = const MockParcelAiService()});
+  const AiValuationScreen(
+      {super.key,
+      this.parcel = ParcelDetail.sample,
+      this.aiService = const MockParcelAiService()});
 
   final ParcelDetail parcel;
   final ParcelAiService aiService;
@@ -14,16 +18,27 @@ class AiValuationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final parcelId = '${parcel.block}/${parcel.parcel}';
-    final zoningSummary = '${parcel.zoningStatus}, TAKS ${parcel.taks.toStringAsFixed(2)}, KAKS ${parcel.kaks.toStringAsFixed(2)}, ${parcel.floorLimit} kat';
+    final zoningSummary =
+        '${parcel.zoningStatus}, TAKS ${parcel.taks.toStringAsFixed(2)}, KAKS ${parcel.kaks.toStringAsFixed(2)}, ${parcel.floorLimit} kat';
     return Scaffold(
       appBar: AppBar(title: const Text('AI Değerleme')),
       body: FutureBuilder<_AiValuationViewModel>(
-        future: _AiValuationViewModel.load(parcel: parcel, aiService: aiService, parcelId: parcelId, zoningSummary: zoningSummary),
+        future: _AiValuationViewModel.load(
+            parcel: parcel,
+            aiService: aiService,
+            parcelId: parcelId,
+            zoningSummary: zoningSummary),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return const AppStateView(title: 'AI raporu hazırlanıyor', message: 'Mock servis ve deterministik piyasa kanıtları birleştiriliyor.', icon: Icons.auto_awesome_rounded);
+          if (!snapshot.hasData)
+            return const AppStateView(
+                title: 'AI raporu hazırlanıyor',
+                message:
+                    'Mock servis ve deterministik piyasa kanıtları birleştiriliyor.',
+                icon: Icons.auto_awesome_rounded);
           final model = snapshot.data!;
           return ListView(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xl),
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xl),
             children: [
               _HeroSummary(model: model),
               const SizedBox(height: AppSpacing.md),
@@ -47,7 +62,14 @@ class AiValuationScreen extends StatelessWidget {
 }
 
 class _AiValuationViewModel {
-  const _AiValuationViewModel({required this.parcel, required this.insights, required this.pricePerSquareMeter, required this.parcelArea, required this.confidence, required this.comparables, required this.sources});
+  const _AiValuationViewModel(
+      {required this.parcel,
+      required this.insights,
+      required this.pricePerSquareMeter,
+      required this.parcelArea,
+      required this.confidence,
+      required this.comparables,
+      required this.sources});
 
   final ParcelDetail parcel;
   final List<AiParcelInsight> insights;
@@ -61,11 +83,18 @@ class _AiValuationViewModel {
   double get highPricePerSquareMeter => pricePerSquareMeter * 1.14;
   double get lowParcelValue => lowPricePerSquareMeter * parcelArea;
   double get highParcelValue => highPricePerSquareMeter * parcelArea;
-  String get parcelLabel => '${parcel.neighborhood} ${parcel.block}/${parcel.parcel}';
+  String get parcelLabel =>
+      '${parcel.neighborhood} ${parcel.block}/${parcel.parcel}';
 
-  static Future<_AiValuationViewModel> load({required ParcelDetail parcel, required ParcelAiService aiService, required String parcelId, required String zoningSummary}) async {
-    final insights = await aiService.analyzeParcel(parcelId: parcelId, zoningSummary: zoningSummary);
-    final pricePerSquareMeter = await aiService.estimatePricePerSquareMeter(district: parcel.district, zoningStatus: parcel.zoningStatus);
+  static Future<_AiValuationViewModel> load(
+      {required ParcelDetail parcel,
+      required ParcelAiService aiService,
+      required String parcelId,
+      required String zoningSummary}) async {
+    final insights = await aiService.analyzeParcelLegacy(
+        parcelId: parcelId, zoningSummary: zoningSummary);
+    final pricePerSquareMeter = await aiService.estimatePricePerSquareMeter(
+        district: parcel.district, zoningStatus: parcel.zoningStatus);
     const parcelArea = 1240.0;
     return _AiValuationViewModel(
       parcel: parcel,
@@ -74,21 +103,54 @@ class _AiValuationViewModel {
       parcelArea: parcelArea,
       confidence: .78,
       comparables: const [
-        _ComparableListing(title: 'Fenerbahçe arsa benzeri', distance: '450 m', pricePerSquareMeter: 40200, source: 'Partner ilan API taslağı', freshness: 'Son 14 gün', confidence: .74),
-        _ComparableListing(title: 'Konut + ticaret parseli', distance: '1,1 km', pricePerSquareMeter: 37100, source: 'Açık veri rayiç placeholder', freshness: 'Son 30 gün', confidence: .69),
-        _ComparableListing(title: 'Cadde cepheli geliştirme arsası', distance: '1,8 km', pricePerSquareMeter: 41600, source: 'Lisanslı pazar veri sağlayıcı', freshness: 'Son 45 gün', confidence: .72),
+        _ComparableListing(
+            title: 'Fenerbahçe arsa benzeri',
+            distance: '450 m',
+            pricePerSquareMeter: 40200,
+            source: 'Partner ilan API taslağı',
+            freshness: 'Son 14 gün',
+            confidence: .74),
+        _ComparableListing(
+            title: 'Konut + ticaret parseli',
+            distance: '1,1 km',
+            pricePerSquareMeter: 37100,
+            source: 'Açık veri rayiç placeholder',
+            freshness: 'Son 30 gün',
+            confidence: .69),
+        _ComparableListing(
+            title: 'Cadde cepheli geliştirme arsası',
+            distance: '1,8 km',
+            pricePerSquareMeter: 41600,
+            source: 'Lisanslı pazar veri sağlayıcı',
+            freshness: 'Son 45 gün',
+            confidence: .72),
       ],
       sources: const [
-        _MarketSource(name: 'Belediye açık veri entegrasyonu', citation: '[Açık Veri-TR-001]', status: 'Planlanan resmi veri'),
-        _MarketSource(name: 'Lisanslı ilan/partner API', citation: '[Partner API-MLS-024]', status: 'Sözleşmeli ve izinli kullanım'),
-        _MarketSource(name: 'TÜİK bölgesel endeks placeholder', citation: '[Kamu Endeksi-2026-Q1]', status: 'Toplulaştırılmış gösterge'),
+        _MarketSource(
+            name: 'Belediye açık veri entegrasyonu',
+            citation: '[Açık Veri-TR-001]',
+            status: 'Planlanan resmi veri'),
+        _MarketSource(
+            name: 'Lisanslı ilan/partner API',
+            citation: '[Partner API-MLS-024]',
+            status: 'Sözleşmeli ve izinli kullanım'),
+        _MarketSource(
+            name: 'TÜİK bölgesel endeks placeholder',
+            citation: '[Kamu Endeksi-2026-Q1]',
+            status: 'Toplulaştırılmış gösterge'),
       ],
     );
   }
 }
 
 class _ComparableListing {
-  const _ComparableListing({required this.title, required this.distance, required this.pricePerSquareMeter, required this.source, required this.freshness, required this.confidence});
+  const _ComparableListing(
+      {required this.title,
+      required this.distance,
+      required this.pricePerSquareMeter,
+      required this.source,
+      required this.freshness,
+      required this.confidence});
 
   final String title;
   final String distance;
@@ -99,7 +161,8 @@ class _ComparableListing {
 }
 
 class _MarketSource {
-  const _MarketSource({required this.name, required this.citation, required this.status});
+  const _MarketSource(
+      {required this.name, required this.citation, required this.status});
 
   final String name;
   final String citation;
@@ -113,19 +176,42 @@ class _HeroSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(gradient: AppGradients.premium, borderRadius: BorderRadius.circular(AppRadius.xl), boxShadow: AppShadows.glow(AppColors.emerald)),
+        decoration: BoxDecoration(
+            gradient: AppGradients.premium,
+            borderRadius: BorderRadius.circular(AppRadius.xl),
+            boxShadow: AppShadows.glow(AppColors.emerald)),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [const Icon(Icons.auto_awesome_rounded, color: Colors.white), const SizedBox(width: AppSpacing.xs), Text('Premium AI piyasa zekâsı', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Colors.white.withOpacity(.86), fontWeight: FontWeight.w800))]),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              const Icon(Icons.auto_awesome_rounded, color: Colors.white),
+              const SizedBox(width: AppSpacing.xs),
+              Text('Premium AI piyasa zekâsı',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: Colors.white.withValues(alpha: .86),
+                      fontWeight: FontWeight.w800))
+            ]),
             const SizedBox(height: AppSpacing.md),
-            Text(model.parcelLabel, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w900)),
-            Text('${model.parcel.district} / ${model.parcel.city} • ${model.parcel.zoningStatus}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withOpacity(.82))),
+            Text(model.parcelLabel,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Colors.white, fontWeight: FontWeight.w900)),
+            Text(
+                '${model.parcel.district} / ${model.parcel.city} • ${model.parcel.zoningStatus}',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: Colors.white.withValues(alpha: .82))),
             const SizedBox(height: AppSpacing.lg),
             Wrap(spacing: AppSpacing.sm, runSpacing: AppSpacing.sm, children: [
-              _DarkMetric(label: 'Tahmini m²', value: _formatCurrency(model.pricePerSquareMeter)),
-              _DarkMetric(label: 'Güven', value: _formatPercent(model.confidence)),
-              _DarkMetric(label: 'Parsel alanı', value: '${model.parcelArea.toStringAsFixed(0)} m²'),
+              _DarkMetric(
+                  label: 'Tahmini m²',
+                  value: _formatCurrency(model.pricePerSquareMeter)),
+              _DarkMetric(
+                  label: 'Güven', value: _formatPercent(model.confidence)),
+              _DarkMetric(
+                  label: 'Parsel alanı',
+                  value: '${model.parcelArea.toStringAsFixed(0)} m²'),
             ]),
           ]),
         ),
@@ -142,8 +228,23 @@ class _DarkMetric extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: 148,
         padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(color: Colors.white.withOpacity(.12), borderRadius: BorderRadius.circular(AppRadius.lg), border: Border.all(color: Colors.white.withOpacity(.18))),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.white70)), const SizedBox(height: 6), Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w900))]),
+        decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: .12),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border.all(color: Colors.white.withValues(alpha: .18))),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label,
+              style: Theme.of(context)
+                  .textTheme
+                  .labelMedium
+                  ?.copyWith(color: Colors.white70)),
+          const SizedBox(height: 6),
+          Text(value,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(color: Colors.white, fontWeight: FontWeight.w900))
+        ]),
       );
 }
 
@@ -153,13 +254,19 @@ class _ConsentGuardrailCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => GlassCard(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          _SectionTitle(icon: Icons.verified_user_rounded, title: 'AI onayı ve sınırlar'),
+          _SectionTitle(
+              icon: Icons.verified_user_rounded, title: 'AI onayı ve sınırlar'),
           const SizedBox(height: AppSpacing.sm),
-          Text('Bu ekran yalnızca bilgilendirme amaçlıdır; resmi değerleme, ekspertiz raporu veya tapu/imar kararı yerine geçmez. Devam ederek parsel kimliği, imar özeti ve bölgesel piyasa göstergelerinin AI değerlendirmesi için işlenmesini kabul edersiniz.', style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+              'Bu ekran yalnızca bilgilendirme amaçlıdır; resmi değerleme, ekspertiz raporu veya tapu/imar kararı yerine geçmez. Devam ederek parsel kimliği, imar özeti ve bölgesel piyasa göstergelerinin AI değerlendirmesi için işlenmesini kabul edersiniz.',
+              style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: AppSpacing.sm),
-          const _Bullet('Kişisel veri, kimlik bilgisi veya ilan sahibi verisi kullanılmaz.'),
-          const _Bullet('Çıktılar danışman niteliğindedir; yatırım kararı için lisanslı uzman görüşü alınmalıdır.'),
-          const _Bullet('Piyasa kanıtları sadece izinli partner API’leri ve açık veri kaynaklarından gösterilir.'),
+          const _Bullet(
+              'Kişisel veri, kimlik bilgisi veya ilan sahibi verisi kullanılmaz.'),
+          const _Bullet(
+              'Çıktılar danışman niteliğindedir; yatırım kararı için lisanslı uzman görüşü alınmalıdır.'),
+          const _Bullet(
+              'Piyasa kanıtları sadece izinli partner API’leri ve açık veri kaynaklarından gösterilir.'),
         ]),
       );
 }
@@ -173,16 +280,34 @@ class _ValuationRangeCard extends StatelessWidget {
   Widget build(BuildContext context) => Card(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _SectionTitle(icon: Icons.payments_rounded, title: 'Tahmini değer aralığı'),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            _SectionTitle(
+                icon: Icons.payments_rounded, title: 'Tahmini değer aralığı'),
             const SizedBox(height: AppSpacing.md),
             Row(children: [
-              Expanded(child: MetricCard(title: 'm² düşük', value: _formatCurrency(model.lowPricePerSquareMeter), subtitle: 'Muhafazakâr senaryo', icon: Icons.south_west_rounded)),
+              Expanded(
+                  child: MetricCard(
+                      title: 'm² düşük',
+                      value: _formatCurrency(model.lowPricePerSquareMeter),
+                      subtitle: 'Muhafazakâr senaryo',
+                      icon: Icons.south_west_rounded)),
               const SizedBox(width: AppSpacing.sm),
-              Expanded(child: MetricCard(title: 'm² yüksek', value: _formatCurrency(model.highPricePerSquareMeter), subtitle: 'Piyasa üst bandı', icon: Icons.north_east_rounded)),
+              Expanded(
+                  child: MetricCard(
+                      title: 'm² yüksek',
+                      value: _formatCurrency(model.highPricePerSquareMeter),
+                      subtitle: 'Piyasa üst bandı',
+                      icon: Icons.north_east_rounded)),
             ]),
             const SizedBox(height: AppSpacing.sm),
-            MetricCard(title: 'Parsel toplam değer aralığı', value: '${_formatCurrency(model.lowParcelValue)} - ${_formatCurrency(model.highParcelValue)}', subtitle: 'Alan varsayımı: ${model.parcelArea.toStringAsFixed(0)} m² • Resmi değerleme değildir', icon: Icons.real_estate_agent_rounded),
+            MetricCard(
+                title: 'Parsel toplam değer aralığı',
+                value:
+                    '${_formatCurrency(model.lowParcelValue)} - ${_formatCurrency(model.highParcelValue)}',
+                subtitle:
+                    'Alan varsayımı: ${model.parcelArea.toStringAsFixed(0)} m² • Resmi değerleme değildir',
+                icon: Icons.real_estate_agent_rounded),
             const SizedBox(height: AppSpacing.md),
             _ConfidenceBar(value: model.confidence, label: 'Model güven skoru'),
           ]),
@@ -196,11 +321,26 @@ class _InsightSection extends StatelessWidget {
   final List<AiParcelInsight> insights;
 
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  Widget build(BuildContext context) =>
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _SectionTitle(icon: Icons.psychology_rounded, title: 'AI içgörüleri'),
         const SizedBox(height: AppSpacing.sm),
         for (final insight in insights) ...[
-          GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(insight.title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)), const SizedBox(height: 6), Text(insight.summary), const SizedBox(height: AppSpacing.sm), _ConfidenceBar(value: insight.confidence, label: 'İçgörü güveni')])),
+          GlassCard(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text(insight.title,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w900)),
+                const SizedBox(height: 6),
+                Text(insight.summary),
+                const SizedBox(height: AppSpacing.sm),
+                _ConfidenceBar(
+                    value: insight.confidence, label: 'İçgörü güveni')
+              ])),
           const SizedBox(height: AppSpacing.sm),
         ],
       ]);
@@ -215,15 +355,24 @@ class _ComparableListingsCard extends StatelessWidget {
   Widget build(BuildContext context) => Card(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _SectionTitle(icon: Icons.compare_arrows_rounded, title: 'Emsal ilan özetleri'),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            _SectionTitle(
+                icon: Icons.compare_arrows_rounded,
+                title: 'Emsal ilan özetleri'),
             const SizedBox(height: AppSpacing.xs),
-            Text('Temsili kayıtlar scraping içermez; üretimde yalnızca sözleşmeli partner API’leri ve açık veri setleriyle beslenecek alanlardır.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate)),
+            Text(
+                'Temsili kayıtlar scraping içermez; üretimde yalnızca sözleşmeli partner API’leri ve açık veri setleriyle beslenecek alanlardır.',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: AppColors.slate)),
             const SizedBox(height: AppSpacing.md),
-            for (final listing in listings) Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: _ComparableTile(listing: listing),
-            ),
+            for (final listing in listings)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: _ComparableTile(listing: listing),
+              ),
           ]),
         ),
       );
@@ -236,13 +385,33 @@ class _ComparableTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(color: AppColors.emerald.withOpacity(.07), borderRadius: BorderRadius.circular(AppRadius.lg), border: Border.all(color: AppColors.emerald.withOpacity(.14))),
+        decoration: BoxDecoration(
+            color: AppColors.emerald.withValues(alpha: .07),
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border:
+                Border.all(color: AppColors.emerald.withValues(alpha: .14))),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Expanded(child: Text(listing.title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900))), Text(_formatCurrency(listing.pricePerSquareMeter), style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900, color: AppColors.forest))]),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Expanded(
+                  child: Text(listing.title,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w900))),
+              Text(_formatCurrency(listing.pricePerSquareMeter),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900, color: AppColors.forest))
+            ]),
             const SizedBox(height: 6),
-            Text('${listing.distance} • ${listing.freshness} • ${listing.source}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate)),
+            Text(
+                '${listing.distance} • ${listing.freshness} • ${listing.source}',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: AppColors.slate)),
             const SizedBox(height: AppSpacing.sm),
             _ConfidenceBar(value: listing.confidence, label: 'Emsal güveni'),
           ]),
@@ -258,9 +427,17 @@ class _SourcePlaceholdersCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => GlassCard(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          _SectionTitle(icon: Icons.source_rounded, title: 'Kaynak ve atıf yer tutucuları'),
+          _SectionTitle(
+              icon: Icons.source_rounded,
+              title: 'Kaynak ve atıf yer tutucuları'),
           const SizedBox(height: AppSpacing.sm),
-          for (final source in sources) ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.link_rounded, color: AppColors.emerald), title: Text(source.name), subtitle: Text('${source.citation} • ${source.status}')),
+          for (final source in sources)
+            ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading:
+                    const Icon(Icons.link_rounded, color: AppColors.emerald),
+                title: Text(source.name),
+                subtitle: Text('${source.citation} • ${source.status}')),
         ]),
       );
 }
@@ -272,13 +449,20 @@ class _GovernanceCard extends StatelessWidget {
   Widget build(BuildContext context) => Card(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _SectionTitle(icon: Icons.policy_rounded, title: 'Denetim, limit ve gizlilik'),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            _SectionTitle(
+                icon: Icons.policy_rounded,
+                title: 'Denetim, limit ve gizlilik'),
             const SizedBox(height: AppSpacing.sm),
-            const _Bullet('Her AI talebi zaman damgası, parsel referansı ve model sürümüyle denetim günlüğüne yazılacak şekilde tasarlanır.'),
-            const _Bullet('Kötüye kullanımı önlemek için hesap ve cihaz bazlı oran limiti uygulanır; yoğun kullanımda bekleme süresi gösterilir.'),
-            const _Bullet('Ham ilan metni saklanmaz; yalnızca izinli, toplulaştırılmış ve kaynak atıflı piyasa göstergeleri gösterilir.'),
-            const _Bullet('Bu mock ekranda dış API çağrısı, scraping veya gizli anahtar yoktur.'),
+            const _Bullet(
+                'Her AI talebi zaman damgası, parsel referansı ve model sürümüyle denetim günlüğüne yazılacak şekilde tasarlanır.'),
+            const _Bullet(
+                'Kötüye kullanımı önlemek için hesap ve cihaz bazlı oran limiti uygulanır; yoğun kullanımda bekleme süresi gösterilir.'),
+            const _Bullet(
+                'Ham ilan metni saklanmaz; yalnızca izinli, toplulaştırılmış ve kaynak atıflı piyasa göstergeleri gösterilir.'),
+            const _Bullet(
+                'Bu mock ekranda dış API çağrısı, scraping veya gizli anahtar yoktur.'),
           ]),
         ),
       );
@@ -291,7 +475,16 @@ class _SectionTitle extends StatelessWidget {
   final String title;
 
   @override
-  Widget build(BuildContext context) => Row(children: [Icon(icon, color: AppColors.emerald), const SizedBox(width: AppSpacing.xs), Expanded(child: Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)))]);
+  Widget build(BuildContext context) => Row(children: [
+        Icon(icon, color: AppColors.emerald),
+        const SizedBox(width: AppSpacing.xs),
+        Expanded(
+            child: Text(title,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w900)))
+      ]);
 }
 
 class _Bullet extends StatelessWidget {
@@ -302,7 +495,9 @@ class _Bullet extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(top: 6),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('• '), Expanded(child: Text(text))]),
+        child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [const Text('• '), Expanded(child: Text(text))]),
       );
 }
 
@@ -313,10 +508,29 @@ class _ConfidenceBar extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [Expanded(child: Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.slate))), Text(_formatPercent(value), style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900))]),
+  Widget build(BuildContext context) =>
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Expanded(
+              child: Text(label,
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelMedium
+                      ?.copyWith(color: AppColors.slate))),
+          Text(_formatPercent(value),
+              style: Theme.of(context)
+                  .textTheme
+                  .labelLarge
+                  ?.copyWith(fontWeight: FontWeight.w900))
+        ]),
         const SizedBox(height: 6),
-        ClipRRect(borderRadius: BorderRadius.circular(AppRadius.pill), child: LinearProgressIndicator(value: value.clamp(0, 1).toDouble(), minHeight: 8, backgroundColor: AppColors.slate.withOpacity(.14), color: AppColors.emerald)),
+        ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: LinearProgressIndicator(
+                value: value.clamp(0, 1).toDouble(),
+                minHeight: 8,
+                backgroundColor: AppColors.slate.withValues(alpha: .14),
+                color: AppColors.emerald)),
       ]);
 }
 

@@ -28,7 +28,9 @@ class _UserHub extends StatelessWidget {
               unselectedLabelStyle:
                   TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
               tabs: [
-                Tab(text: 'Favori', icon: Icon(Icons.favorite_rounded, size: 20)),
+                Tab(
+                    text: 'Favori',
+                    icon: Icon(Icons.favorite_rounded, size: 20)),
                 Tab(
                   text: 'Aramalar',
                   icon: Icon(Icons.manage_search_rounded, size: 20),
@@ -78,10 +80,8 @@ class _FavoriteParcelsTab extends StatelessWidget {
           ? null
           : Text(
               '${parcels.length} parsel',
-              style: Theme.of(context)
-                  .textTheme
-                  .labelLarge
-                  ?.copyWith(color: AppColors.emerald, fontWeight: FontWeight.w800),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: AppColors.emerald, fontWeight: FontWeight.w800),
             ),
       child: parcels.isEmpty
           ? const _InlineEmptyState(
@@ -296,11 +296,13 @@ class _ParcelCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    _StatusBadge(label: parcel.status, color: AppColors.emerald),
+                    _StatusBadge(
+                        label: parcel.status, color: AppColors.emerald),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Text(parcel.note, style: Theme.of(context).textTheme.bodyMedium),
+                Text(parcel.note,
+                    style: Theme.of(context).textTheme.bodyMedium),
                 const SizedBox(height: AppSpacing.sm),
                 Wrap(
                   spacing: 7,
@@ -319,7 +321,8 @@ class _ParcelCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
-                    Icon(Icons.update_rounded, size: 16, color: AppColors.slate),
+                    Icon(Icons.update_rounded,
+                        size: 16, color: AppColors.slate),
                     const SizedBox(width: 5),
                     Text(
                       parcel.updatedAt,
@@ -349,7 +352,8 @@ class _SavedSearchTile extends StatelessWidget {
         icon: Icons.saved_search_rounded,
         title: search.title,
         subtitle: '${search.filters} • ${search.resultCount} sonuç',
-        trailing: _StatusBadge(label: search.frequency, color: AppColors.emerald),
+        trailing:
+            _StatusBadge(label: search.frequency, color: AppColors.emerald),
       );
 }
 
@@ -426,7 +430,7 @@ class _InlineEmptyState extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.slate.withOpacity(.08),
+          color: AppColors.slate.withValues(alpha: .08),
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: Row(
@@ -458,12 +462,11 @@ class _SoftIcon extends StatelessWidget {
         width: compact ? 38 : 44,
         height: compact ? 38 : 44,
         decoration: BoxDecoration(
-          color: AppColors.emerald.withOpacity(.14),
-          borderRadius: BorderRadius.circular(
-              compact ? AppRadius.sm : AppRadius.md),
+          color: AppColors.emerald.withValues(alpha: .14),
+          borderRadius:
+              BorderRadius.circular(compact ? AppRadius.sm : AppRadius.md),
         ),
-        child: Icon(icon,
-            color: AppColors.emerald, size: compact ? 20 : 23),
+        child: Icon(icon, color: AppColors.emerald, size: compact ? 20 : 23),
       );
 }
 
@@ -482,9 +485,9 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(darkText ? .85 : .16),
+          color: color.withValues(alpha: darkText ? .85 : .16),
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(color: color.withOpacity(.28)),
+          border: Border.all(color: color.withValues(alpha: .28)),
         ),
         child: Text(
           label,
@@ -553,8 +556,7 @@ class _UserHubMockData {
         riskColor: AppColors.sky,
         valueBadge: '+%23 değer',
         updatedAt: '2 gün önce',
-        note:
-            'Kıyı kenar çizgisi ve plan notu güncellemesi için işaretlendi.',
+        note: 'Kıyı kenar çizgisi ve plan notu güncellemesi için işaretlendi.',
       ),
     ],
     savedSearches: [

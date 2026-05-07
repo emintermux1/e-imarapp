@@ -1,8 +1,24 @@
 enum GisLayerKind { wms, wfs, geoJson }
 
-enum RiskLayer { deprem, fayHatti, heyelan, sel, zeminTipi, tarimAlani, sitAlani }
+enum RiskLayer {
+  deprem,
+  fayHatti,
+  heyelan,
+  sel,
+  zeminTipi,
+  tarimAlani,
+  sitAlani
+}
 
-enum RiskLayerCategory { seismic, geology, hydrology, soil, landUse, heritage, planning }
+enum RiskLayerCategory {
+  seismic,
+  geology,
+  hydrology,
+  soil,
+  landUse,
+  heritage,
+  planning
+}
 
 enum GisQueryFormat { geoJson, json, png }
 
@@ -39,7 +55,11 @@ class GisLayerDescriptor {
 }
 
 class GisBoundingBox {
-  const GisBoundingBox({required this.west, required this.south, required this.east, required this.north});
+  const GisBoundingBox(
+      {required this.west,
+      required this.south,
+      required this.east,
+      required this.north});
 
   final double west;
   final double south;
@@ -48,7 +68,9 @@ class GisBoundingBox {
 
   String toCommaSeparated() => '$west,$south,$east,$north';
 
-  String toWms130Bbox(String crs) => crs.toUpperCase() == 'EPSG:4326' ? '$south,$west,$north,$east' : toCommaSeparated();
+  String toWms130Bbox(String crs) => crs.toUpperCase() == 'EPSG:4326'
+      ? '$south,$west,$north,$east'
+      : toCommaSeparated();
 }
 
 class GisPoint {
@@ -59,7 +81,14 @@ class GisPoint {
 }
 
 class GisLayerQuery {
-  const GisLayerQuery({this.bounds, this.point, this.srs = 'EPSG:4326', this.width = 768, this.height = 768, this.format = GisQueryFormat.geoJson, this.extraParameters = const {}});
+  const GisLayerQuery(
+      {this.bounds,
+      this.point,
+      this.srs = 'EPSG:4326',
+      this.width = 768,
+      this.height = 768,
+      this.format = GisQueryFormat.geoJson,
+      this.extraParameters = const {}});
 
   final GisBoundingBox? bounds;
   final GisPoint? point;
@@ -121,9 +150,14 @@ class GisLayerQuery {
   }
 
   static GisBoundingBox _pointBounds(GisPoint? point) {
-    final center = point ?? const GisPoint(latitude: 41.0082, longitude: 28.9784);
+    final center =
+        point ?? const GisPoint(latitude: 41.0082, longitude: 28.9784);
     const delta = .015;
-    return GisBoundingBox(west: center.longitude - delta, south: center.latitude - delta, east: center.longitude + delta, north: center.latitude + delta);
+    return GisBoundingBox(
+        west: center.longitude - delta,
+        south: center.latitude - delta,
+        east: center.longitude + delta,
+        north: center.latitude + delta);
   }
 
   static String _mimeType(GisQueryFormat format) => switch (format) {
@@ -141,15 +175,26 @@ class GisFeatureCollection {
 
   factory GisFeatureCollection.fromGeoJson(Map<String, Object?> json) {
     final rawFeatures = json['features'];
-    final features = rawFeatures is List ? rawFeatures.whereType<Map>().map((item) => GisFeature.fromGeoJson(Map<String, Object?>.from(item))).toList(growable: false) : const <GisFeature>[];
+    final features = rawFeatures is List
+        ? rawFeatures
+            .whereType<Map>()
+            .map((item) =>
+                GisFeature.fromGeoJson(Map<String, Object?>.from(item)))
+            .toList(growable: false)
+        : const <GisFeature>[];
     return GisFeatureCollection(features: features, rawGeoJson: json);
   }
 
-  factory GisFeatureCollection.raw(Map<String, Object?> json) => GisFeatureCollection(features: const [], rawGeoJson: json);
+  factory GisFeatureCollection.raw(Map<String, Object?> json) =>
+      GisFeatureCollection(features: const [], rawGeoJson: json);
 }
 
 class GisFeature {
-  const GisFeature({required this.id, required this.geometryType, required this.properties, this.geometry});
+  const GisFeature(
+      {required this.id,
+      required this.geometryType,
+      required this.properties,
+      this.geometry});
 
   final String? id;
   final String? geometryType;
@@ -163,7 +208,8 @@ class GisFeature {
       id: json['id']?.toString(),
       geometryType: geometry is Map ? geometry['type']?.toString() : null,
       geometry: geometry is Map ? Map<String, Object?>.from(geometry) : null,
-      properties: properties is Map ? Map<String, Object?>.from(properties) : const {},
+      properties:
+          properties is Map ? Map<String, Object?>.from(properties) : const {},
     );
   }
 }
@@ -171,20 +217,25 @@ class GisFeature {
 abstract interface class GisLayerRepository {
   Future<List<GisLayerDescriptor>> availableLayers();
   Uri buildRequestUrl(GisLayerDescriptor layer, GisLayerQuery query);
-  Future<GisFeatureCollection> fetchFeatures(GisLayerDescriptor layer, GisLayerQuery query);
+  Future<GisFeatureCollection> fetchFeatures(
+      GisLayerDescriptor layer, GisLayerQuery query);
 }
 
 class MockGisLayerRepository implements GisLayerRepository {
   const MockGisLayerRepository();
 
   @override
-  Future<List<GisLayerDescriptor>> availableLayers() async => officialRiskLayerPresets;
+  Future<List<GisLayerDescriptor>> availableLayers() async =>
+      officialRiskLayerPresets;
 
   @override
-  Uri buildRequestUrl(GisLayerDescriptor layer, GisLayerQuery query) => query.buildUrl(layer);
+  Uri buildRequestUrl(GisLayerDescriptor layer, GisLayerQuery query) =>
+      query.buildUrl(layer);
 
   @override
-  Future<GisFeatureCollection> fetchFeatures(GisLayerDescriptor layer, GisLayerQuery query) async => GisFeatureCollection(
+  Future<GisFeatureCollection> fetchFeatures(
+          GisLayerDescriptor layer, GisLayerQuery query) async =>
+      GisFeatureCollection(
         features: [
           GisFeature(
             id: '${layer.id}-mock',
@@ -202,14 +253,16 @@ class MockGisLayerRepository implements GisLayerRepository {
       );
 }
 
-const officialRiskLayerPresets = <GisLayerDescriptor>[
+final officialRiskLayerPresets = <GisLayerDescriptor>[
   GisLayerDescriptor(
     id: 'afad-earthquake-hazard',
     name: 'Deprem Tehlike Haritası',
     kind: GisLayerKind.geoJson,
-    endpoint: Uri.parse('https://example.afad.gov.tr/gis/earthquake-hazard.geojson'),
+    endpoint:
+        Uri.parse('https://example.afad.gov.tr/gis/earthquake-hazard.geojson'),
     sourceAuthority: 'AFAD',
-    attribution: 'Afet ve Acil Durum Yönetimi Başkanlığı deprem tehlike verisi esas alınacaktır.',
+    attribution:
+        'Afet ve Acil Durum Yönetimi Başkanlığı deprem tehlike verisi esas alınacaktır.',
     opacity: .74,
     defaultVisible: true,
     category: RiskLayerCategory.seismic,
@@ -222,7 +275,8 @@ const officialRiskLayerPresets = <GisLayerDescriptor>[
     kind: GisLayerKind.wfs,
     endpoint: Uri.parse('https://example.mta.gov.tr/geoserver/fay/ows'),
     sourceAuthority: 'MTA',
-    attribution: 'Maden Tetkik ve Arama Genel Müdürlüğü diri fay haritası referans alınacaktır.',
+    attribution:
+        'Maden Tetkik ve Arama Genel Müdürlüğü diri fay haritası referans alınacaktır.',
     opacity: .88,
     defaultVisible: true,
     category: RiskLayerCategory.geology,
@@ -236,7 +290,8 @@ const officialRiskLayerPresets = <GisLayerDescriptor>[
     kind: GisLayerKind.wms,
     endpoint: Uri.parse('https://example.bel.tr/geoserver/afet/wms'),
     sourceAuthority: 'Belediye / İl Afet Envanteri',
-    attribution: 'Yerel yönetim WMS/WFS afet duyarlılık katmanları beklenmektedir.',
+    attribution:
+        'Yerel yönetim WMS/WFS afet duyarlılık katmanları beklenmektedir.',
     opacity: .68,
     defaultVisible: false,
     category: RiskLayerCategory.geology,
@@ -250,7 +305,8 @@ const officialRiskLayerPresets = <GisLayerDescriptor>[
     kind: GisLayerKind.wms,
     endpoint: Uri.parse('https://example.bel.tr/geoserver/hidroloji/wms'),
     sourceAuthority: 'Belediye / DSİ entegrasyonu',
-    attribution: 'Taşkın sınırı ve dere koruma bandı için resmi belediye veya DSİ servisleri kullanılacaktır.',
+    attribution:
+        'Taşkın sınırı ve dere koruma bandı için resmi belediye veya DSİ servisleri kullanılacaktır.',
     opacity: .64,
     defaultVisible: false,
     category: RiskLayerCategory.hydrology,
@@ -264,7 +320,8 @@ const officialRiskLayerPresets = <GisLayerDescriptor>[
     kind: GisLayerKind.wfs,
     endpoint: Uri.parse('https://example.bel.tr/geoserver/jeoloji/ows'),
     sourceAuthority: 'Belediye Jeolojik Etüt',
-    attribution: 'Mikrobölgeleme ve jeolojik-jeoteknik etüt verileri resmi kurumdan alınacaktır.',
+    attribution:
+        'Mikrobölgeleme ve jeolojik-jeoteknik etüt verileri resmi kurumdan alınacaktır.',
     opacity: .7,
     defaultVisible: true,
     category: RiskLayerCategory.soil,
@@ -276,9 +333,11 @@ const officialRiskLayerPresets = <GisLayerDescriptor>[
     id: 'tkgm-agricultural-protection',
     name: 'Tarım Alanı',
     kind: GisLayerKind.geoJson,
-    endpoint: Uri.parse('https://example.tkgm.gov.tr/gis/agricultural-protection.geojson'),
+    endpoint: Uri.parse(
+        'https://example.tkgm.gov.tr/gis/agricultural-protection.geojson'),
     sourceAuthority: 'TKGM / Tarım ve Orman Bakanlığı',
-    attribution: 'Kadastro ve tarımsal koruma kararları resmi servis doğrulaması ile gösterilecektir.',
+    attribution:
+        'Kadastro ve tarımsal koruma kararları resmi servis doğrulaması ile gösterilecektir.',
     opacity: .58,
     defaultVisible: false,
     category: RiskLayerCategory.landUse,
@@ -291,7 +350,8 @@ const officialRiskLayerPresets = <GisLayerDescriptor>[
     kind: GisLayerKind.wfs,
     endpoint: Uri.parse('https://example.e-plan.gov.tr/geoserver/koruma/ows'),
     sourceAuthority: 'e-Plan / Kültür Varlıkları',
-    attribution: 'Plan kararları ve koruma sınırları ilgili resmi portaldan lisanslı olarak alınacaktır.',
+    attribution:
+        'Plan kararları ve koruma sınırları ilgili resmi portaldan lisanslı olarak alınacaktır.',
     opacity: .72,
     defaultVisible: false,
     category: RiskLayerCategory.heritage,
@@ -305,7 +365,8 @@ const officialRiskLayerPresets = <GisLayerDescriptor>[
     kind: GisLayerKind.wms,
     endpoint: Uri.parse('https://example.e-plan.gov.tr/geoserver/imar/wms'),
     sourceAuthority: 'e-Plan / Belediye',
-    attribution: 'Plan paftaları ve notları resmi e-Plan veya belediye servislerinden doğrulanacaktır.',
+    attribution:
+        'Plan paftaları ve notları resmi e-Plan veya belediye servislerinden doğrulanacaktır.',
     opacity: .78,
     defaultVisible: false,
     category: RiskLayerCategory.planning,

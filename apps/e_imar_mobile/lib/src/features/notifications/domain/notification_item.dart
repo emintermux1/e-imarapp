@@ -1,4 +1,10 @@
-enum NotificationType { zoningChange, priceChange, newListing, riskChange, aiSuggestion }
+enum NotificationType {
+  zoningChange,
+  priceChange,
+  newListing,
+  riskChange,
+  aiSuggestion
+}
 
 class NotificationItem {
   const NotificationItem({

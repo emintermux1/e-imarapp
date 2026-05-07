@@ -1,7 +1,9 @@
 sealed class AppResult<T> {
   const AppResult();
 
-  R when<R>({required R Function(T value) success, required R Function(AppFailure failure) failure}) {
+  R when<R>(
+      {required R Function(T value) success,
+      required R Function(AppFailure failure) failure}) {
     return switch (this) {
       AppSuccess<T>(:final value) => success(value),
       AppFailureResult<T>(:final error) => failure(error),

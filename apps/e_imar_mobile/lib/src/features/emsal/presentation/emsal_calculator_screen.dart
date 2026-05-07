@@ -42,7 +42,9 @@ class _EmsalCalculatorScreenState extends State<EmsalCalculatorScreen> {
       appBar: AppBar(title: const Text('Emsal Hesapla')),
       body: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: Theme.of(context).brightness == Brightness.dark ? null : AppGradients.sandSurface,
+          gradient: Theme.of(context).brightness == Brightness.dark
+              ? null
+              : AppGradients.sandSurface,
         ),
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -59,9 +61,9 @@ class _EmsalCalculatorScreenState extends State<EmsalCalculatorScreen> {
             ),
             if (r != null) ...[
               const SizedBox(height: 18),
-              _ResultsSection(result: r!),
+              _ResultsSection(result: r),
               const SizedBox(height: 18),
-              _FloorBreakdownSection(result: r!),
+              _FloorBreakdownSection(result: r),
               const SizedBox(height: 18),
               _AssumptionsSection(),
               const SizedBox(height: 24),
@@ -84,8 +86,8 @@ class _EmsalCalculatorScreenState extends State<EmsalCalculatorScreen> {
     setState(() => result = const EmsalCalculatorService().calculate(input));
   }
 
-  double _d(String value, double fallback) => double.tryParse(value.replaceAll(',', '.')) ?? fallback;
-  String _money(double value) => '₺${(value / 1000000).toStringAsFixed(1)}M';
+  double _d(String value, double fallback) =>
+      double.tryParse(value.replaceAll(',', '.')) ?? fallback;
 }
 
 class _EquationHero extends StatelessWidget {
@@ -105,7 +107,10 @@ class _EquationHero extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const StatusBadge(label: 'Fintech hesaplayıcı', tone: BadgeTone.info, icon: Icons.lock_rounded),
+              const StatusBadge(
+                  label: 'Fintech hesaplayıcı',
+                  tone: BadgeTone.info,
+                  icon: Icons.lock_rounded),
               const SizedBox(height: 18),
               Text(
                 '${area.isEmpty ? '5000' : area}m² + E:${emsal.isEmpty ? '1.5' : emsal}',
@@ -118,7 +123,10 @@ class _EquationHero extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 'İnşaat alanı, daire adedi, maliyet ve ROI potansiyelini tek ekranda gör.',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.white.withOpacity(.78)),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(color: Colors.white.withValues(alpha: .78)),
               ),
             ],
           ),
@@ -150,7 +158,10 @@ class _InputCard extends StatelessWidget {
           children: [
             Text(
               'Proje girdileri',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 14),
             Row(
@@ -227,7 +238,8 @@ class _ResultsSection extends StatelessWidget {
         ValueScoreCard(
           score: result.roi.clamp(0, 99).round(),
           title: 'Brüt ROI Potansiyeli',
-          subtitle: '%${result.roi.toStringAsFixed(1)} mock varsayım • finansman ve ruhsat dahil değil',
+          subtitle:
+              '%${result.roi.toStringAsFixed(1)} mock varsayım • finansman ve ruhsat dahil değil',
         ),
         const SizedBox(height: 14),
         if (result.tabanAlani != null && result.tabanAlani! > 0) ...[
@@ -239,10 +251,11 @@ class _ResultsSection extends StatelessWidget {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: AppColors.mint.withOpacity(.14),
+                    color: AppColors.mint.withValues(alpha: .14),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(Icons.foundation_rounded, color: AppColors.mint, size: 21),
+                  child: const Icon(Icons.foundation_rounded,
+                      color: AppColors.mint, size: 21),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -251,11 +264,17 @@ class _ResultsSection extends StatelessWidget {
                     children: [
                       Text(
                         'Taban Alanı (TAKS)',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w900),
                       ),
                       Text(
                         '${result.tabanAlani!.toStringAsFixed(0)} m² taban oturumu (TAKS × arsa alanı)',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: AppColors.slate),
                       ),
                     ],
                   ),
@@ -318,7 +337,10 @@ class _FloorBreakdownSection extends StatelessWidget {
             children: [
               Text(
                 'Kat Bazında Kırılım',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w900),
               ),
               const Spacer(),
               StatusBadge(
@@ -372,7 +394,10 @@ class _FloorTile extends StatelessWidget {
                 const SizedBox(width: 10),
                 Text(
                   '. Kat',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const Spacer(),
                 Text(
@@ -391,12 +416,14 @@ class _FloorTile extends StatelessWidget {
                 const SizedBox(width: 16),
                 _FloorMetric(
                   label: 'Maliyet',
-                  value: '₺${(breakdown.estimatedCost / 1000000).toStringAsFixed(1)}M',
+                  value:
+                      '₺${(breakdown.estimatedCost / 1000000).toStringAsFixed(1)}M',
                 ),
                 const SizedBox(width: 16),
                 _FloorMetric(
                   label: 'Satış',
-                  value: '₺${(breakdown.salesPotential / 1000000).toStringAsFixed(1)}M',
+                  value:
+                      '₺${(breakdown.salesPotential / 1000000).toStringAsFixed(1)}M',
                 ),
               ],
             ),
@@ -408,7 +435,8 @@ class _FloorTile extends StatelessWidget {
                 children: breakdown.apartmentMixes
                     .where((m) => m.count > 0)
                     .map((m) => StatusBadge(
-                          label: '${m.count}× ${m.label} (${m.areaSqm.toStringAsFixed(0)}m²)',
+                          label:
+                              '${m.count}× ${m.label} (${m.areaSqm.toStringAsFixed(0)}m²)',
                           tone: BadgeTone.info,
                         ))
                     .toList(),
@@ -437,7 +465,10 @@ class _FloorMetric extends StatelessWidget {
           ),
           Text(
             value,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
+            style: Theme.of(context)
+                .textTheme
+                .labelLarge
+                ?.copyWith(fontWeight: FontWeight.w900),
           ),
         ],
       );
@@ -450,7 +481,10 @@ class _AssumptionsSection extends StatelessWidget {
         children: [
           Text(
             'Varsayımlar',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 10),
           GlassCard(
@@ -465,7 +499,7 @@ class _AssumptionsSection extends StatelessWidget {
                 const SizedBox(height: 6),
                 _AssumptionRow(label: 'Veri kaynağı', value: 'Mock / Faz 2'),
                 const SizedBox(height: 10),
-            const InsightCard(
+                const InsightCard(
                   title: 'Fintech notu',
                   message:
                       'Gelir, maliyet ve satış potansiyeli mock katsayılarla hesaplanır; gerçek piyasa entegrasyonu Faz 2 kapsamındadır. Finansman, ruhsat harçları ve KDV dahil değildir.',
@@ -488,9 +522,17 @@ class _AssumptionRow extends StatelessWidget {
   Widget build(BuildContext context) => Row(
         children: [
           Expanded(
-            child: Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.slate)),
+            child: Text(label,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: AppColors.slate)),
           ),
-          Text(value, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800)),
+          Text(value,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(fontWeight: FontWeight.w800)),
         ],
       );
 }
@@ -513,7 +555,8 @@ class _StudyCtaSection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: AppShadows.glow(AppColors.emerald),
                   ),
-                  child: const Icon(Icons.description_rounded, color: Colors.white, size: 26),
+                  child: const Icon(Icons.description_rounded,
+                      color: Colors.white, size: 26),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -522,12 +565,18 @@ class _StudyCtaSection extends StatelessWidget {
                     children: [
                       Text(
                         'Etüt Hazırlama',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w900),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Profesyonel fizibilite raporu ve imar durumu etüdü talebi oluşturun.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate, height: 1.3),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: AppColors.slate, height: 1.3),
                       ),
                     ],
                   ),
@@ -538,7 +587,8 @@ class _StudyCtaSection extends StatelessWidget {
             GradientButton(
               label: 'Etüt Talebi Oluştur',
               icon: Icons.arrow_forward_rounded,
-              onPressed: () => Navigator.of(context).pushNamed('/study-request'),
+              onPressed: () =>
+                  Navigator.of(context).pushNamed('/study-request'),
             ),
           ],
         ),
