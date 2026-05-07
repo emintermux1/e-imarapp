@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
-  static const ink = Color(0xFF071410);
-  static const deepGreen = Color(0xFF12324A);
-  static const forest = Color(0xFF155E75);
-  static const emerald = Color(0xFF087EA4);
-  static const mint = Color(0xFF7DD3FC);
+  static const ink = Color(0xFF141013);
+  static const civicRed = Color(0xFFB11226);
+  static const deepRed = Color(0xFF6F0B19);
+  static const ruby = Color(0xFFD4213D);
+  static const blush = Color(0xFFFFE8EA);
+  static const deepGreen = Color(0xFF3A1720);
+  static const forest = Color(0xFF7C1324);
+  static const emerald = Color(0xFFB11226);
+  static const mint = Color(0xFFFFB4BE);
   static const lime = Color(0xFF0F766E);
   static const sand = Color(0xFFF2F4F7);
   static const porcelain = Color(0xFFF8FAFC);
@@ -59,7 +63,11 @@ abstract final class AppRadius {
 
 abstract final class AppGradients {
   static const premium = LinearGradient(
-      colors: [AppColors.deepGreen, AppColors.forest],
+      colors: [AppColors.deepRed, AppColors.civicRed, AppColors.ruby],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight);
+  static const civicRed = LinearGradient(
+      colors: [Color(0xFF6F0B19), Color(0xFFB11226), Color(0xFFD4213D)],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight);
   static const emeraldGlow = RadialGradient(
@@ -99,7 +107,7 @@ abstract final class AppGradients {
     1
   ], begin: Alignment.topLeft, end: Alignment.bottomRight);
   static const score = LinearGradient(
-      colors: [Color(0xFF12324A), Color(0xFF087EA4), Color(0xFF0F766E)],
+      colors: [Color(0xFF6F0B19), Color(0xFFB11226), Color(0xFF8A2B36)],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight);
 }

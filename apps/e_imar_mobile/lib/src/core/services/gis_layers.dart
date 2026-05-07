@@ -330,14 +330,13 @@ final officialRiskLayerPresets = <GisLayerDescriptor>[
     layerName: 'jeoloji:zemin_sinifi',
   ),
   GisLayerDescriptor(
-    id: 'tkgm-agricultural-protection',
+    id: 'gateway-restricted-land-use',
     name: 'Tarım Alanı',
     kind: GisLayerKind.geoJson,
-    endpoint: Uri.parse(
-        'https://example.tkgm.gov.tr/gis/agricultural-protection.geojson'),
-    sourceAuthority: 'TKGM / Tarım ve Orman Bakanlığı',
+    endpoint: Uri.parse('/providers'),
+    sourceAuthority: 'Kısıtlı sağlayıcı / E-İmar Gateway',
     attribution:
-        'Kadastro ve tarımsal koruma kararları resmi servis doğrulaması ile gösterilecektir.',
+        'Kadastro ve tarımsal koruma kararları yalnızca yetkili sunucu adaptörü ve sağlayıcı durumu üzerinden gösterilecektir.',
     opacity: .58,
     defaultVisible: false,
     category: RiskLayerCategory.landUse,

@@ -46,10 +46,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           path: ParcelDetailRoute.path,
           name: ParcelDetailRoute.name,
           pageBuilder: (context, state) => _slidePage(HomeMapScreen(
-                openParcelOnStart: true,
-                selectedParcel: state.extra is ParcelDetail
-                    ? state.extra! as ParcelDetail
-                    : ParcelDetail.sample,
+                openParcelOnStart: state.extra is ParcelDetail,
+                selectedParcel:
+                    state.extra is ParcelDetail ? state.extra! as ParcelDetail : null,
               ))(context, state)),
       GoRoute(
           path: EmsalRoute.path,
@@ -69,7 +68,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           pageBuilder: (context, state) => _slidePage(ParcelReportPreviewScreen(
               parcel: state.extra is ParcelDetail
                   ? state.extra! as ParcelDetail
-                  : ParcelDetail.sample))(context, state)),
+                  : ParcelDetail.sample.copyWith(
+                      unavailableReason:
+                          'Rapor için önce gerçek gateway veya kayıtlı parsel sonucu seçin.')))(context, state)),
       GoRoute(
           path: FavoritesRoute.path,
           name: FavoritesRoute.name,

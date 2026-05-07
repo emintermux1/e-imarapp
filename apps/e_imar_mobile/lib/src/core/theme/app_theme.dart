@@ -6,8 +6,8 @@ abstract final class AppTheme {
   static ThemeData light() => _theme(
       Brightness.light,
       const ColorScheme.light(
-          primary: AppColors.deepGreen,
-          secondary: AppColors.emerald,
+          primary: AppColors.civicRed,
+          secondary: AppColors.ruby,
           surface: AppColors.porcelain,
           onSurface: AppColors.ink,
           tertiary: AppColors.sand,
@@ -15,7 +15,7 @@ abstract final class AppTheme {
   static ThemeData dark() => _theme(
       Brightness.dark,
       const ColorScheme.dark(
-          primary: AppColors.emerald,
+          primary: AppColors.ruby,
           secondary: AppColors.mint,
           surface: AppColors.surfaceDark,
           onSurface: Color(0xFFF2F8F4),
@@ -24,7 +24,7 @@ abstract final class AppTheme {
   static ThemeData amoled() => _theme(
       Brightness.dark,
       const ColorScheme.dark(
-          primary: AppColors.emerald,
+          primary: AppColors.ruby,
           secondary: AppColors.mint,
           surface: AppColors.surfaceAmoled,
           onSurface: Color(0xFFF2F8F4),
@@ -83,7 +83,7 @@ abstract final class AppTheme {
             borderSide: BorderSide(color: outline.withValues(alpha: .75))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
-            borderSide: const BorderSide(color: AppColors.emerald, width: 1.5)),
+            borderSide: const BorderSide(color: AppColors.civicRed, width: 1.5)),
         errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
             borderSide: const BorderSide(color: AppColors.danger)),
@@ -119,7 +119,7 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
         backgroundColor:
             isDark ? const Color(0xE607100D) : const Color(0xEFFFFFFB),
-        indicatorColor: AppColors.emerald.withValues(alpha: isDark ? .22 : .16),
+        indicatorColor: AppColors.civicRed.withValues(alpha: isDark ? .24 : .14),
         labelTextStyle: WidgetStateProperty.resolveWith((states) =>
             textTheme.labelSmall?.copyWith(
                 fontWeight: states.contains(WidgetState.selected)
@@ -130,7 +130,7 @@ abstract final class AppTheme {
                     : AppColors.slate)),
         iconTheme: WidgetStateProperty.resolveWith((states) => IconThemeData(
             color: states.contains(WidgetState.selected)
-                ? AppColors.emerald
+                ? AppColors.civicRed
                 : AppColors.slate)),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(

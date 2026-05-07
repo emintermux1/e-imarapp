@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router/app_router.dart';
-import '../../../core/services/firebase_repositories.dart';
+import '../../../core/services/gateway_api.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../../data/repositories/offline_parcel_repository.dart';
 import '../../map/domain/parcel.dart';
 
-enum SearchMode { parcel, coordinate }
+enum SearchMode { admin, titleDeed, coordinate }
 
 class ParcelSearchScreen extends ConsumerStatefulWidget {
   const ParcelSearchScreen({super.key});
@@ -18,18 +20,37 @@ class ParcelSearchScreen extends ConsumerStatefulWidget {
 }
 
 class _ParcelSearchScreenState extends ConsumerState<ParcelSearchScreen> {
-  SearchMode mode = SearchMode.parcel;
-  final block = TextEditingController(text: '1247');
-  final parcel = TextEditingController(text: '18');
-  final lat = TextEditingController(text: '40.9758');
-  final lng = TextEditingController(text: '29.0436');
-  String? validation;
-  bool validationIsError = false;
+  SearchMode mode = SearchMode.admin;
+  bool loading = false;
+  ProviderUnavailableState? unavailable;
+  List<ProviderDescriptor> providers = const [];
+  List<ParcelDetail> recent = const [];
+
+  final city = TextEditingController(text: 'İstanbul');
+  final district = TextEditingController();
+  final neighborhood = TextEditingController();
+  final block = TextEditingController();
+  final parcel = TextEditingController();
+  final deedCity = TextEditingController(text: 'İstanbul');
+  final deedQuery = TextEditingController();
+  final lat = TextEditingController();
+  final lng = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitial());
+  }
 
   @override
   void dispose() {
+    city.dispose();
+    district.dispose();
+    neighborhood.dispose();
     block.dispose();
     parcel.dispose();
+    deedCity.dispose();
+    deedQuery.dispose();
     lat.dispose();
     lng.dispose();
     super.dispose();
@@ -37,392 +58,284 @@ class _ParcelSearchScreenState extends ConsumerState<ParcelSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isParcel = mode == SearchMode.parcel;
+    final gatewayConfigured = ref.watch(gatewayApiProvider).isConfigured;
     return Scaffold(
-      appBar: AppBar(title: const Text('Parsel Sorgula')),
-      body: ListView(padding: const EdgeInsets.all(AppSpacing.lg), children: [
-        PremiumHeader(
-          title: 'Ada / parsel ile sorgu',
-          subtitle:
-              'Önizleme verisi çevrimdışı örnek kayıttır. Ada/parsel seçin, imar durumu ve risk özetini açın.',
-          icon: Icons.account_balance_rounded,
-          badge: 'Önizleme verisi',
-        ),
-        const SizedBox(height: 16),
-        Text('Hızlı örnek parseller',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w900)),
-        const SizedBox(height: 10),
-        for (final item in _PreviewParcel.presets)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _ParcelResultTile(
-              item: item,
-              onTap: () => _openParcel(item.parcel),
-            ),
+      appBar: AppBar(title: const Text('Parsel keşfi')),
+      body: RefreshIndicator(
+        onRefresh: _loadInitial,
+        child: ListView(padding: const EdgeInsets.fromLTRB(18, 8, 18, 28), children: [
+          PremiumHeader(
+            title: 'Türkiye geneli kaynak odaklı sorgu',
+            subtitle: gatewayConfigured
+                ? 'Sorgular veri geçidi üzerinden sağlayıcı sözleşmesine göre çalışır. TKGM ve kısıtlı kaynaklar istemciden doğrudan çağrılmaz.'
+                : 'Veri geçidi yapılandırılmadığı için canlı parsel sonucu üretilmez.',
+            icon: Icons.travel_explore_rounded,
+            badge: gatewayConfigured ? 'Gateway hazır' : 'Gateway gerekli',
           ),
-        const SizedBox(height: 12),
-        AppSegmentedControl(
-          values: SearchMode.values,
-          selected: mode,
-          labelBuilder: (m) =>
-              m == SearchMode.parcel ? 'Ada / Parsel' : 'Koordinat',
-          onChanged: (value) => setState(() {
-            mode = value;
-            validation = null;
-            validationIsError = false;
-          }),
-        ),
-        const SizedBox(height: 16),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 160),
-          child: isParcel
-              ? _ParcelForm(block: block, parcel: parcel)
-              : _CoordinateForm(lat: lat, lng: lng),
-        ),
-        if (validation != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: _ValidationBanner(
-              message: validation!,
-              isError: validationIsError,
-            ),
+          const SizedBox(height: 14),
+          if (providers.isNotEmpty) _ProviderStrip(providers: providers),
+          if (providers.isNotEmpty) const SizedBox(height: 14),
+          AppSegmentedControl<SearchMode>(
+            values: SearchMode.values,
+            selected: mode,
+            labelBuilder: (value) => switch (value) {
+              SearchMode.admin => 'Ada/Parsel',
+              SearchMode.titleDeed => 'Tapu',
+              SearchMode.coordinate => 'Koordinat',
+            },
+            onChanged: (value) => setState(() {
+              mode = value;
+              unavailable = null;
+            }),
           ),
-        const SizedBox(height: 16),
-        GradientButton(
-          label:
-              isParcel ? 'Parsel detayını aç' : 'Koordinattan örnek parseli aç',
-          icon: Icons.search_rounded,
-          onPressed: _validateAndOpen,
-        ),
-      ]),
+          const SizedBox(height: 14),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            child: switch (mode) {
+              SearchMode.admin => _AdminForm(city: city, district: district, neighborhood: neighborhood, block: block, parcel: parcel),
+              SearchMode.titleDeed => _TitleDeedForm(city: deedCity, query: deedQuery),
+              SearchMode.coordinate => _CoordinateForm(lat: lat, lng: lng),
+            },
+          ),
+          if (unavailable != null) ...[
+            const SizedBox(height: 12),
+            _UnavailableBanner(state: unavailable!),
+          ],
+          const SizedBox(height: 14),
+          GradientButton(label: loading ? 'Kaynaklar sorgulanıyor' : 'Gateway üzerinden sorgula', icon: Icons.route_rounded, onPressed: loading ? null : _submit),
+          if (recent.isNotEmpty) ...[
+            const SizedBox(height: 22),
+            Text('Son görüntülenenler', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+            const SizedBox(height: 10),
+            ...recent.map((parcel) => _RecentParcelTile(parcel: parcel, onTap: () => _open(parcel))),
+          ],
+        ]),
+      ),
     );
   }
 
-  void _validateAndOpen() {
-    ParcelDetail selected = ParcelDetail.sample;
-    var isError = false;
-    var message = 'Parsel bulundu. Detay ekranı açılıyor.';
+  Future<void> _loadInitial() async {
+    final api = ref.read(gatewayApiProvider);
+    final cached = await ref.read(offlineParcelRepositoryProvider).getRecent(8);
+    if (mounted) setState(() => recent = cached);
+    if (!api.isConfigured) return;
+    try {
+      final loaded = await api.providers();
+      if (mounted) setState(() => providers = loaded);
+    } catch (_) {}
+  }
 
-    if (mode == SearchMode.parcel) {
-      final blockText = block.text.trim();
-      final parcelText = parcel.text.trim();
-      if (blockText.isEmpty || parcelText.isEmpty) {
-        isError = true;
-        message = 'Ada ve parsel numarası zorunludur.';
-      } else {
-        selected = _matchParcel(blockText, parcelText);
-      }
-    } else {
-      final la = double.tryParse(lat.text.replaceAll(',', '.'));
-      final lo = double.tryParse(lng.text.replaceAll(',', '.'));
-      final invalid = la == null ||
-          lo == null ||
-          la < 35.8 ||
-          la > 42.2 ||
-          lo < 25.5 ||
-          lo > 45.0;
-      if (invalid) {
-        isError = true;
-        message = 'Koordinatlar Türkiye sınırları içinde olmalıdır.';
-      } else {
-        message = 'Koordinat doğrulandı. Yakın örnek parsel açılıyor.';
-      }
-    }
-
+  Future<void> _submit() async {
     setState(() {
-      validation = message;
-      validationIsError = isError;
+      loading = true;
+      unavailable = null;
     });
-    if (isError) return;
-    _saveQuery(selected);
-    _openParcel(selected);
-  }
-
-  ParcelDetail _matchParcel(String blockText, String parcelText) {
-    return _PreviewParcel.presets.map((item) => item.parcel).firstWhere(
-          (item) => item.block == blockText && item.parcel == parcelText,
-          orElse: () => ParcelDetail(
-            city: 'İstanbul',
-            district: 'Kadıköy',
-            neighborhood: 'Fenerbahçe',
-            block: blockText,
-            parcel: parcelText,
-            titleType: 'Arsa',
-            zoningStatus: 'Konut Alanı',
-            taks: .35,
-            kaks: 1.75,
-            emsal: 1.75,
-            floorLimit: 8,
-            coverageRatio: '%35',
-            roadFrontage: 24,
-            yearApproved: 2024,
-            constructionArea: 2100,
-            unitCount: 20,
-          ),
+    try {
+      final api = ref.read(gatewayApiProvider);
+      final ParcelLookupResult result;
+      if (mode == SearchMode.admin) {
+        _require(city.text, 'İl');
+        _require(district.text, 'İlçe');
+        _require(neighborhood.text, 'Mahalle');
+        _require(block.text, 'Ada');
+        _require(parcel.text, 'Parsel');
+        result = await api.lookupByAdmin(
+          city: city.text.trim(),
+          district: district.text.trim(),
+          neighborhood: neighborhood.text.trim(),
+          block: block.text.trim(),
+          parcel: parcel.text.trim(),
         );
+      } else if (mode == SearchMode.coordinate) {
+        final latitude = double.tryParse(lat.text.replaceAll(',', '.'));
+        final longitude = double.tryParse(lng.text.replaceAll(',', '.'));
+        if (latitude == null || longitude == null) throw const _SearchValidation('Enlem ve boylam sayısal olmalıdır.');
+        if (latitude < 35.8 || latitude > 42.2 || longitude < 25.5 || longitude > 45.0) {
+          throw const _SearchValidation('Koordinat Türkiye sınırları içinde olmalıdır.');
+        }
+        result = await api.lookupByPoint(latitude: latitude, longitude: longitude, city: city.text.trim().isEmpty ? null : city.text.trim());
+      } else {
+        _require(deedCity.text, 'İl');
+        _require(deedQuery.text, 'Tapu sorgu girdisi');
+        result = ParcelLookupResult.unavailable(
+          title: 'Tapu odaklı arama beklemede',
+          message: 'Tapu/bağımsız bölüm girdileri için gateway sözleşmesi hazır olduğunda bu form aynı provider-driven sonuç modelini kullanacak. İstemci TKGM çağrısı yapmaz ve sonuç uydurmaz.',
+          code: 'unsupported_operation',
+          providers: providers,
+        );
+      }
+      if (!mounted) return;
+      setState(() {
+        providers = result.providers.isEmpty ? providers : result.providers;
+        unavailable = result.unavailable;
+      });
+      if (result.parcel != null) await _open(result.parcel!);
+    } on _SearchValidation catch (error) {
+      if (mounted) setState(() => unavailable = ProviderUnavailableState(title: 'Eksik veya hatalı giriş', message: error.message, code: 'bad_request'));
+    } catch (error) {
+      if (mounted) setState(() => unavailable = ProviderUnavailableState(title: 'Sorgu tamamlanamadı', message: '$error'));
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
   }
 
-  void _openParcel(ParcelDetail selected) {
+  void _require(String value, String label) {
+    if (value.trim().isEmpty) throw _SearchValidation('$label alanı zorunludur.');
+  }
+
+  Future<void> _open(ParcelDetail selected) async {
+    await ref.read(offlineParcelRepositoryProvider).saveParcel(selected);
+    if (!mounted) return;
     context.push(ParcelDetailRoute.path, extra: selected);
   }
-
-  void _saveQuery(ParcelDetail selected) {
-    final query =
-        '${selected.city} / ${selected.district} / ${selected.neighborhood} ${selected.block}/${selected.parcel}';
-    final repo = ref.read(savedSearchRepositoryProvider);
-    repo.saveSearch(query).catchError((_) {});
-  }
 }
 
-class _PreviewParcel {
-  const _PreviewParcel({required this.parcel, required this.note});
-  final ParcelDetail parcel;
-  final String note;
-
-  static const presets = [
-    _PreviewParcel(
-      parcel: ParcelDetail.sample,
-      note: 'Konut + ticaret • TAKS 0.35 • KAKS 1.75',
-    ),
-    _PreviewParcel(
-      parcel: ParcelDetail(
-        city: 'Ankara',
-        district: 'Çankaya',
-        neighborhood: 'Alacaatlı',
-        block: '8912',
-        parcel: '4',
-        titleType: 'Arsa',
-        zoningStatus: 'Konut Alanı',
-        taks: .30,
-        kaks: 1.20,
-        emsal: 1.20,
-        floorLimit: 6,
-        coverageRatio: '%30',
-        roadFrontage: 32.5,
-        yearApproved: 2023,
-        constructionArea: 1840,
-        unitCount: 18,
-      ),
-      note: 'Konut alanı • plan yılı 2023 • 6 kat',
-    ),
-    _PreviewParcel(
-      parcel: ParcelDetail(
-        city: 'İzmir',
-        district: 'Urla',
-        neighborhood: 'Kuşçular',
-        block: '312',
-        parcel: '9',
-        titleType: 'Tarla',
-        zoningStatus: 'Gelişme Alanı',
-        taks: .20,
-        kaks: .50,
-        emsal: .50,
-        floorLimit: 2,
-        coverageRatio: '%20',
-        roadFrontage: 18.2,
-        yearApproved: 2022,
-        constructionArea: 620,
-        unitCount: 4,
-      ),
-      note: 'Gelişme alanı • düşük yoğunluk • 2 kat',
-    ),
-  ];
+class _SearchValidation implements Exception {
+  const _SearchValidation(this.message);
+  final String message;
 }
 
-class _ParcelResultTile extends StatelessWidget {
-  const _ParcelResultTile({required this.item, required this.onTap});
-  final _PreviewParcel item;
-  final VoidCallback onTap;
+class _ProviderStrip extends StatelessWidget {
+  const _ProviderStrip({required this.providers});
+  final List<ProviderDescriptor> providers;
 
   @override
   Widget build(BuildContext context) => GlassCard(
-        onTap: onTap,
         padding: const EdgeInsets.all(14),
-        child: Row(children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.emerald.withValues(alpha: .12),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child:
-                const Icon(Icons.grid_view_rounded, color: AppColors.emerald),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(
-                '${item.parcel.city} / ${item.parcel.district} / ${item.parcel.neighborhood}',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleSmall
-                    ?.copyWith(fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                '${item.parcel.block}/${item.parcel.parcel} • ${item.note}',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: AppColors.slate),
-              ),
-            ]),
-          ),
-          const Icon(Icons.chevron_right_rounded),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Sağlayıcı durumu', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 8),
+          Wrap(spacing: 6, runSpacing: 6, children: providers.map((p) => StatusBadge(label: '${p.displayName} • ${p.status}', tone: _toneForStatus(p.status))).toList()),
         ]),
       );
 }
 
-class _ParcelForm extends StatelessWidget {
-  const _ParcelForm({required this.block, required this.parcel});
-  final TextEditingController block;
-  final TextEditingController parcel;
+class _AdminForm extends StatelessWidget {
+  const _AdminForm({required this.city, required this.district, required this.neighborhood, required this.block, required this.parcel});
+  final TextEditingController city, district, neighborhood, block, parcel;
 
   @override
   Widget build(BuildContext context) => GlassCard(
-        key: const ValueKey('parcel'),
+        key: const ValueKey('admin'),
         padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Parsel bilgileri',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 12),
-          const _Selector(
-              label: 'İl',
-              value: 'İstanbul',
-              icon: Icons.location_city_rounded),
-          const SizedBox(height: 10),
-          const _Selector(
-              label: 'İlçe', value: 'Kadıköy', icon: Icons.apartment_rounded),
-          const SizedBox(height: 10),
-          const _Selector(
-              label: 'Mahalle', value: 'Fenerbahçe', icon: Icons.map_rounded),
+        child: Column(children: [
+          _Input(controller: city, label: 'İl', icon: Icons.location_city_rounded, textCapitalization: TextCapitalization.words),
           const SizedBox(height: 10),
           Row(children: [
-            Expanded(
-              child: TextField(
-                controller: block,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Ada',
-                  helperText: 'Örn. 1247',
-                  prefixIcon: Icon(Icons.grid_view_rounded),
-                ),
-              ),
-            ),
+            Expanded(child: _Input(controller: district, label: 'İlçe', icon: Icons.apartment_rounded, textCapitalization: TextCapitalization.words)),
             const SizedBox(width: 10),
-            Expanded(
-              child: TextField(
-                controller: parcel,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Parsel',
-                  helperText: 'Örn. 18',
-                  prefixIcon: Icon(Icons.crop_square_rounded),
-                ),
-              ),
-            ),
+            Expanded(child: _Input(controller: neighborhood, label: 'Mahalle', icon: Icons.holiday_village_rounded, textCapitalization: TextCapitalization.words)),
           ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: _Input(controller: block, label: 'Ada', icon: Icons.grid_view_rounded, keyboardType: TextInputType.number)),
+            const SizedBox(width: 10),
+            Expanded(child: _Input(controller: parcel, label: 'Parsel', icon: Icons.crop_square_rounded, keyboardType: TextInputType.number)),
+          ]),
+        ]),
+      );
+}
+
+class _TitleDeedForm extends StatelessWidget {
+  const _TitleDeedForm({required this.city, required this.query});
+  final TextEditingController city, query;
+
+  @override
+  Widget build(BuildContext context) => GlassCard(
+        key: const ValueKey('deed'),
+        padding: const EdgeInsets.all(16),
+        child: Column(children: [
+          _Input(controller: city, label: 'İl', icon: Icons.location_city_rounded, textCapitalization: TextCapitalization.words),
+          const SizedBox(height: 10),
+          _Input(controller: query, label: 'Tapu odaklı sorgu girdisi', icon: Icons.fact_check_rounded, hint: 'Yevmiye, cilt/sayfa veya yetkili gateway girdisi'),
+          const SizedBox(height: 10),
+          const InsightCard(
+            title: 'Kısıtlı veri ilkesi',
+            message: 'Tapu/TKGM kaynakları yalnızca yetkili sunucu adaptörüyle çözümlenir. Mobil istemci doğrudan TKGM çağrısı yapmaz.',
+            icon: Icons.gpp_good_rounded,
+            color: AppColors.civicRed,
+          ),
         ]),
       );
 }
 
 class _CoordinateForm extends StatelessWidget {
   const _CoordinateForm({required this.lat, required this.lng});
-  final TextEditingController lat;
-  final TextEditingController lng;
+  final TextEditingController lat, lng;
 
   @override
   Widget build(BuildContext context) => GlassCard(
         key: const ValueKey('coordinate'),
         padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Koordinat girişi',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 12),
-          Row(children: [
-            Expanded(
-              child: TextField(
-                controller: lat,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Enlem',
-                  prefixIcon: Icon(Icons.north_rounded),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: TextField(
-                controller: lng,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Boylam',
-                  prefixIcon: Icon(Icons.east_rounded),
-                ),
-              ),
-            ),
-          ]),
-          const SizedBox(height: 10),
-          const InsightCard(
-            title: 'Önizleme sınırı',
-            message:
-                'Koordinat akışı doğrulama yapar ve en yakın örnek parsele götürür.',
-            icon: Icons.rule_rounded,
-            color: AppColors.info,
-          ),
-        ]),
-      );
-}
-
-class _ValidationBanner extends StatelessWidget {
-  const _ValidationBanner({required this.message, required this.isError});
-  final String message;
-  final bool isError;
-
-  @override
-  Widget build(BuildContext context) => GlassCard(
-        padding: const EdgeInsets.all(12),
         child: Row(children: [
-          Icon(isError ? Icons.error_rounded : Icons.check_circle_rounded,
-              color: isError ? AppColors.danger : AppColors.emerald),
+          Expanded(child: _Input(controller: lat, label: 'Enlem', icon: Icons.north_rounded, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true))),
           const SizedBox(width: 10),
-          Expanded(
-            child: Text(message,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(fontWeight: FontWeight.w700)),
-          ),
+          Expanded(child: _Input(controller: lng, label: 'Boylam', icon: Icons.east_rounded, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true))),
         ]),
       );
 }
 
-class _Selector extends StatelessWidget {
-  const _Selector(
-      {required this.label, required this.value, required this.icon});
+class _Input extends StatelessWidget {
+  const _Input({required this.controller, required this.label, required this.icon, this.hint, this.keyboardType, this.textCapitalization = TextCapitalization.none});
+  final TextEditingController controller;
   final String label;
-  final String value;
   final IconData icon;
+  final String? hint;
+  final TextInputType? keyboardType;
+  final TextCapitalization textCapitalization;
 
   @override
-  Widget build(BuildContext context) => TextFormField(
-        initialValue: value,
-        readOnly: true,
-        decoration: InputDecoration(
-          labelText: label,
-          helperText: 'Önizleme sabit seçimi',
-          prefixIcon: Icon(icon),
+  Widget build(BuildContext context) => TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        textCapitalization: textCapitalization,
+        inputFormatters: keyboardType == TextInputType.number ? [FilteringTextInputFormatter.digitsOnly] : null,
+        decoration: InputDecoration(labelText: label, hintText: hint, prefixIcon: Icon(icon)),
+      );
+}
+
+class _UnavailableBanner extends StatelessWidget {
+  const _UnavailableBanner({required this.state});
+  final ProviderUnavailableState state;
+
+  @override
+  Widget build(BuildContext context) => InsightCard(
+        title: state.title,
+        message: [state.message, if (state.providerId != null) 'Sağlayıcı: ${state.providerId}', if (state.code != null) 'Kod: ${state.code}'].join('\n'),
+        icon: Icons.info_outline_rounded,
+        color: state.code == 'bad_request' ? AppColors.warning : AppColors.civicRed,
+      );
+}
+
+class _RecentParcelTile extends StatelessWidget {
+  const _RecentParcelTile({required this.parcel, required this.onTap});
+  final ParcelDetail parcel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: GlassCard(
+          onTap: onTap,
+          padding: const EdgeInsets.all(14),
+          child: Row(children: [
+            Container(width: 42, height: 42, decoration: BoxDecoration(color: AppColors.civicRed.withValues(alpha: .12), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.bookmark_rounded, color: AppColors.civicRed)),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('${parcel.neighborhood} ${parcel.block}/${parcel.parcel}', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900)),
+              Text('${parcel.displayAddress} • ${parcel.sourceName}', maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate)),
+            ])),
+            const Icon(Icons.chevron_right_rounded),
+          ]),
         ),
       );
 }
+
+BadgeTone _toneForStatus(String status) => switch (status) {
+      'live' => BadgeTone.success,
+      'metadata_only' => BadgeTone.info,
+      'permission_required' => BadgeTone.warning,
+      'not_configured' => BadgeTone.warning,
+      'disabled' => BadgeTone.neutral,
+      _ => BadgeTone.neutral,
+    };

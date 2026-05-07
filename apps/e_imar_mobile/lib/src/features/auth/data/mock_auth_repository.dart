@@ -7,50 +7,32 @@ import '../domain/auth_repository.dart';
 import 'firebase_auth_repository.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((_) {
-  if (Firebase.apps.isNotEmpty) {
-    return FirebaseAuthRepository();
-  }
-  return MockAuthRepository();
+  if (Firebase.apps.isNotEmpty) return FirebaseAuthRepository();
+  return const UnavailableAuthRepository();
 });
 
-class MockAuthRepository implements AuthRepository {
-  final _controller = StreamController<AuthUser?>.broadcast();
+class UnavailableAuthRepository implements AuthRepository {
+  const UnavailableAuthRepository();
+
+  static const _message =
+      'Firebase kimlik doğrulama yapılandırması bulunamadı. Gerçek oturum için Firebase seçeneklerini ve telefon sağlayıcısını etkinleştirin.';
 
   @override
-  Stream<AuthUser?> authStateChanges() => _controller.stream;
+  Stream<AuthUser?> authStateChanges() => const Stream<AuthUser?>.empty();
 
   @override
-  Future<AuthUser> signInWithApple() async =>
-      _mock('apple', 'Apple Kullanıcısı');
+  Future<AuthUser> signInWithApple() async => throw const AuthException(_message);
 
   @override
-  Future<AuthUser> signInWithGoogle() async =>
-      _mock('google', 'Google Kullanıcısı');
+  Future<AuthUser> signInWithGoogle() async => throw const AuthException(_message);
 
   @override
-  Future<String> sendPhoneOtp(String phoneNumber) async {
-    await Future<void>.delayed(const Duration(milliseconds: 420));
-    return 'mock-verification-$phoneNumber';
-  }
+  Future<String> sendPhoneOtp(String phoneNumber) async => throw const AuthException(_message);
 
   @override
-  Future<AuthUser> verifyPhoneOtp({
-    required String verificationId,
-    required String smsCode,
-  }) async {
-    if (verificationId.trim().isEmpty || smsCode.trim().isEmpty) {
-      throw const AuthException('Doğrulama kodunu girin.');
-    }
-    return _mock('phone', 'Telefon Kullanıcısı');
-  }
+  Future<AuthUser> verifyPhoneOtp({required String verificationId, required String smsCode}) async =>
+      throw const AuthException(_message);
 
   @override
-  Future<void> signOut() async => _controller.add(null);
-
-  Future<AuthUser> _mock(String id, String name) async {
-    await Future<void>.delayed(const Duration(milliseconds: 360));
-    final user = AuthUser(id: 'mock-$id', displayName: name);
-    _controller.add(user);
-    return user;
-  }
+  Future<void> signOut() async {}
 }
