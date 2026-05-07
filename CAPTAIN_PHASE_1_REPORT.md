@@ -13,6 +13,14 @@
 - Added emsal calculator with separated domain service and UI outputs for construction area, apartment count, estimated cost, ROI, and sales potential using mock assumptions.
 - Added GIS, AI, PDF, Firebase user/favorites/search/follow/notification repository abstractions and secure-by-default Firestore/Storage rules.
 
+## Phase 1.1 design polish note
+
+- Refined the UI language toward premium deep emerald/black/sand with semantic surfaces, adaptive glass, richer map/risk tokens, and elevated gradients.
+- Upgraded shared components for premium headers, readable glass variants, status/risk badges, AI insight cards, investment score cards, and denser metric tiles.
+- Reworked the home map into a flagship map layout with command search, live data badges, stacked layer controls, premium quick actions, selected parcel preview, and a deterministic cinematic mock map with parcel mesh, roads, risk heat, glow, and vignette.
+- Redesigned parcel detail, parcel/coordinate search, emsal calculator, onboarding, and auth with stronger hierarchy, Turkish UX copy, trust badges, fintech-style results, and real-estate intelligence cues.
+- Remaining visual next steps: tune real Mapbox style layers, add device screenshot QA, validate typography on small Android devices, and replace mock visual states with live GIS/confidence signals when integrations arrive.
+
 ## Known placeholders
 
 - Firebase configuration uses safe placeholder options and only initializes when a non-placeholder project id is supplied.
