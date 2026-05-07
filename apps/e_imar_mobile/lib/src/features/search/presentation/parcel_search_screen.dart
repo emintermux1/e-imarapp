@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/services/firebase_repositories.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 
 enum SearchMode { parcel, coordinate }
 
-class ParcelSearchScreen extends StatefulWidget {
+class ParcelSearchScreen extends ConsumerStatefulWidget {
   const ParcelSearchScreen({super.key});
 
   @override
-  State<ParcelSearchScreen> createState() => _ParcelSearchScreenState();
+  ConsumerState<ParcelSearchScreen> createState() => _ParcelSearchScreenState();
 }
 
-class _ParcelSearchScreenState extends State<ParcelSearchScreen> {
+class _ParcelSearchScreenState extends ConsumerState<ParcelSearchScreen> {
   SearchMode mode = SearchMode.parcel;
   final block = TextEditingController();
   final parcel = TextEditingController();
@@ -47,30 +49,98 @@ class _ParcelSearchScreenState extends State<ParcelSearchScreen> {
           const SizedBox(height: 16),
           GradientButton(label: isParcel ? 'Parseli Sorgula' : 'Koordinatı Doğrula', icon: Icons.search_rounded, onPressed: _validate),
           const SizedBox(height: 28),
-          Row(children: [Text('Son aramalar', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)), const Spacer(), const StatusBadge(label: 'Mock', tone: BadgeTone.neutral)]),
-          const SizedBox(height: 10),
-          for (final item in const [('İstanbul / Kadıköy / Fenerbahçe', '1247/18 • yatırım skoru 86'), ('Ankara / Çankaya / Alacaatlı', '8912/4 • konut gelişim alanı'), ('İzmir / Urla / Kuşçular', 'Koordinat • sahil etkisi')]) Padding(padding: const EdgeInsets.only(bottom: 10), child: GlassCard(onTap: () {}, padding: const EdgeInsets.all(13), child: Row(children: [Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.emerald.withOpacity(.12), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.history_rounded, color: AppColors.emerald)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(item.$1, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900)), const SizedBox(height: 3), Text(item.$2, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate))])), const Icon(Icons.chevron_right_rounded)]))),
+          _RecentSearchesSection(),
         ]),
       ),
     );
   }
 
   void _validate() {
+    String query;
     setState(() {
       if (mode == SearchMode.parcel && (block.text.trim().isEmpty || parcel.text.trim().isEmpty)) {
         validation = 'Ada ve parsel numarası zorunludur.';
         validationIsError = true;
+        return;
       } else if (mode == SearchMode.coordinate) {
         final la = double.tryParse(lat.text.replaceAll(',', '.'));
         final lo = double.tryParse(lng.text.replaceAll(',', '.'));
         final invalid = la == null || lo == null || la < 35.8 || la > 42.2 || lo < 25.5 || lo > 45.0;
         validation = invalid ? 'Koordinatlar Türkiye sınırları içinde olmalıdır.' : 'Koordinat doğrulandı. Mock parsel sonucu hazır.';
         validationIsError = invalid;
+        if (invalid) return;
+        query = 'Koordinat: $la, $lo';
       } else {
         validation = 'Mock parsel sonucu hazır.';
         validationIsError = false;
+        query = '${block.text.trim()}/${parcel.text.trim()}';
       }
     });
+    ref.read(savedSearchRepositoryProvider).saveSearch(query);
+  }
+}
+
+class _RecentSearchesSection extends ConsumerWidget {
+  const _RecentSearchesSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final repo = ref.watch(savedSearchRepositoryProvider);
+    return FutureBuilder<List<String>>(
+      future: repo.recentSearches(),
+      builder: (context, snapshot) {
+        final items = snapshot.data;
+        final loading = snapshot.connectionState == ConnectionState.waiting;
+        if (loading && items == null) {
+          return const SizedBox.shrink();
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Text('Son aramalar', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+              const Spacer(),
+              StatusBadge(
+                label: snapshot.hasError ? 'Hata' : 'Canlı',
+                tone: snapshot.hasError ? BadgeTone.warning : BadgeTone.success,
+              ),
+            ]),
+            const SizedBox(height: 10),
+            if (snapshot.hasError)
+              AppStateView(
+                title: 'Yüklenemedi',
+                message: 'Kayıtlı aramalar alınamadı.',
+                icon: Icons.cloud_off_rounded,
+              )
+            else if (items == null || items.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 14),
+                child: Center(
+                  child: Text(
+                    'Henüz arama kaydı yok. İlk sorgunuzu yapın.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.slate),
+                  ),
+                ),
+              )
+            else
+              for (final item in items)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: GlassCard(
+                    onTap: () {},
+                    padding: const EdgeInsets.all(13),
+                    child: Row(children: [
+                      Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.emerald.withOpacity(.12), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.history_rounded, color: AppColors.emerald)),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(item, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900))),
+                      const Icon(Icons.chevron_right_rounded),
+                    ]),
+                  ),
+                ),
+          ],
+        );
+      },
+    );
   }
 }
 

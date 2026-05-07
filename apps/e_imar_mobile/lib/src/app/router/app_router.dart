@@ -7,6 +7,7 @@ import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/emsal/presentation/emsal_calculator_screen.dart';
 import '../../features/favorites/presentation/favorites_screen.dart';
 import '../../features/map/presentation/home_map_screen.dart';
+import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/search/presentation/parcel_search_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
@@ -27,6 +28,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AnalysisRoute.path, name: AnalysisRoute.name, pageBuilder: _slidePage(const AnalysisScreen())),
       GoRoute(path: FavoritesRoute.path, name: FavoritesRoute.name, pageBuilder: _slidePage(const FavoritesScreen())),
       GoRoute(path: SettingsRoute.path, name: SettingsRoute.name, pageBuilder: _slidePage(const SettingsScreen())),
+      GoRoute(path: NotificationsRoute.path, name: NotificationsRoute.name, pageBuilder: _slidePage(const NotificationsScreen())),
     ],
   );
 });
@@ -64,3 +66,4 @@ abstract final class EmsalRoute { static const path = '/emsal'; static const nam
 abstract final class AnalysisRoute { static const path = '/analysis'; static const name = 'analysis'; }
 abstract final class FavoritesRoute { static const path = '/favorites'; static const name = 'favorites'; }
 abstract final class SettingsRoute { static const path = '/settings'; static const name = 'settings'; }
+abstract final class NotificationsRoute { static const path = '/notifications'; static const name = 'notifications'; }

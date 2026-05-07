@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/services/firebase_repositories.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/parcel.dart';
 
-class ParcelDetailSheet extends StatelessWidget {
+class ParcelDetailSheet extends ConsumerWidget {
   const ParcelDetailSheet({required this.parcel, super.key});
   final ParcelDetail parcel;
 
+  String get _parcelId => '${parcel.block}/${parcel.parcel}';
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final metrics = [
       ('TAKS', parcel.taks.toStringAsFixed(2), Icons.square_foot_rounded),
       ('KAKS', parcel.kaks.toStringAsFixed(2), Icons.layers_rounded),
@@ -48,13 +52,13 @@ class ParcelDetailSheet extends StatelessWidget {
           const SizedBox(height: 18),
           Text('Hızlı işlemler', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
           const SizedBox(height: 10),
-          GridView.count(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: 3, childAspectRatio: 1.02, crossAxisSpacing: 10, mainAxisSpacing: 10, children: const [
-            _ActionTile(label: 'Favoriye Ekle', icon: Icons.favorite_border_rounded),
-            _ActionTile(label: 'Analizi Gör', icon: Icons.analytics_rounded),
-            _ActionTile(label: 'PDF', icon: Icons.picture_as_pdf_rounded),
-            _ActionTile(label: 'Paylaş', icon: Icons.ios_share_rounded),
-            _ActionTile(label: 'Google Earth', icon: Icons.public_rounded),
-            _ActionTile(label: 'Koordinat', icon: Icons.my_location_rounded),
+          GridView.count(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: 3, childAspectRatio: 1.02, crossAxisSpacing: 10, mainAxisSpacing: 10, children: [
+            _FavoriteActionTile(parcelId: _parcelId),
+            _FollowActionTile(parcelId: _parcelId),
+            const _ActionTile(label: 'Analizi Gör', icon: Icons.analytics_rounded),
+            const _ActionTile(label: 'PDF', icon: Icons.picture_as_pdf_rounded),
+            const _ActionTile(label: 'Paylaş', icon: Icons.ios_share_rounded),
+            const _ActionTile(label: 'Google Earth', icon: Icons.public_rounded),
           ]),
         ]),
       ),
@@ -73,9 +77,62 @@ class _RiskStrip extends StatelessWidget {
 }
 
 class _ActionTile extends StatelessWidget {
-  const _ActionTile({required this.label, required this.icon});
+  const _ActionTile({required this.label, required this.icon, this.onTap});
   final String label;
   final IconData icon;
+  final VoidCallback? onTap;
   @override
-  Widget build(BuildContext context) => GlassCard(padding: const EdgeInsets.all(10), onTap: () {}, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: AppColors.emerald), const SizedBox(height: 8), Text(label, textAlign: TextAlign.center, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800))]));
+  Widget build(BuildContext context) => GlassCard(onTap: onTap, padding: const EdgeInsets.all(10), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: AppColors.emerald), const SizedBox(height: 8), Text(label, textAlign: TextAlign.center, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800))]));
+}
+
+class _FavoriteActionTile extends ConsumerWidget {
+  const _FavoriteActionTile({required this.parcelId});
+  final String parcelId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final repo = ref.watch(favoritesRepositoryProvider);
+    return _ActionTile(
+      label: 'Favoriye Ekle',
+      icon: Icons.favorite_border_rounded,
+      onTap: () async {
+        try {
+          await repo.addFavorite(parcelId);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Favorilere eklendi.'), duration: Duration(seconds: 1)));
+          }
+        } catch (_) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Favori eklenemedi. Lütfen tekrar deneyin.')));
+          }
+        }
+      },
+    );
+  }
+}
+
+class _FollowActionTile extends ConsumerWidget {
+  const _FollowActionTile({required this.parcelId});
+  final String parcelId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final repo = ref.watch(followedParcelRepositoryProvider);
+    return _ActionTile(
+      label: 'Takip Et',
+      icon: Icons.visibility_rounded,
+      onTap: () async {
+        try {
+          await repo.followParcel(parcelId);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Parsel takibe alındı.'), duration: Duration(seconds: 1)));
+          }
+        } catch (_) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Takip başlatılamadı. Lütfen tekrar deneyin.')));
+          }
+        }
+      },
+    );
+  }
 }
