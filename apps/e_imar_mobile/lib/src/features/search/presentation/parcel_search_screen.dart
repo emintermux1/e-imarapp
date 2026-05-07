@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/services/firebase_repositories.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
 
 enum SearchMode { parcel, coordinate }
 
-class ParcelSearchScreen extends StatefulWidget {
+class ParcelSearchScreen extends ConsumerStatefulWidget {
   const ParcelSearchScreen({super.key});
 
   @override
-  State<ParcelSearchScreen> createState() => _ParcelSearchScreenState();
+  ConsumerState<ParcelSearchScreen> createState() => _ParcelSearchScreenState();
 }
 
-class _ParcelSearchScreenState extends State<ParcelSearchScreen> {
+class _ParcelSearchScreenState extends ConsumerState<ParcelSearchScreen> {
   SearchMode mode = SearchMode.parcel;
   final block = TextEditingController();
   final parcel = TextEditingController();
@@ -71,6 +73,19 @@ class _ParcelSearchScreenState extends State<ParcelSearchScreen> {
         validationIsError = false;
       }
     });
+    _saveQuery();
+  }
+
+  void _saveQuery() {
+    if (validationIsError) return;
+    String query;
+    if (mode == SearchMode.parcel) {
+      query = 'İstanbul / Kadıköy / Fenerbahçe ${block.text.trim()}/${parcel.text.trim()}';
+    } else {
+      query = 'Koordinat: ${lat.text.trim()}, ${lng.text.trim()}';
+    }
+    final repo = ref.read(savedSearchRepositoryProvider);
+    repo.saveSearch(query).catchError((_) {});
   }
 }
 

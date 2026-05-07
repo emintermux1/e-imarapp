@@ -7,6 +7,7 @@ import '../../features/analysis/presentation/analysis_screen.dart';
 import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/emsal/presentation/emsal_calculator_screen.dart';
 import '../../features/favorites/presentation/favorites_screen.dart';
+import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/map/domain/parcel.dart';
 import '../../features/map/presentation/home_map_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
@@ -31,6 +32,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AnalysisRoute.path, name: AnalysisRoute.name, pageBuilder: _slidePage(const AnalysisScreen())),
       GoRoute(path: ParcelReportRoute.path, name: ParcelReportRoute.name, pageBuilder: (context, state) => _slidePage(ParcelReportPreviewScreen(parcel: state.extra is ParcelDetail ? state.extra! as ParcelDetail : ParcelDetail.sample))(context, state)),
       GoRoute(path: FavoritesRoute.path, name: FavoritesRoute.name, pageBuilder: _slidePage(const FavoritesScreen())),
+      GoRoute(path: NotificationsRoute.path, name: NotificationsRoute.name, pageBuilder: _slidePage(const NotificationsScreen())),
       GoRoute(path: SettingsRoute.path, name: SettingsRoute.name, pageBuilder: _slidePage(const SettingsScreen())),
     ],
   );
@@ -70,4 +72,5 @@ abstract final class AiValuationRoute { static const path = '/ai-valuation'; sta
 abstract final class AnalysisRoute { static const path = '/analysis'; static const name = 'analysis'; }
 abstract final class ParcelReportRoute { static const path = '/parcel-report'; static const name = 'parcel-report'; }
 abstract final class FavoritesRoute { static const path = '/favorites'; static const name = 'favorites'; }
+abstract final class NotificationsRoute { static const path = '/notifications'; static const name = 'notifications'; }
 abstract final class SettingsRoute { static const path = '/settings'; static const name = 'settings'; }
