@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../core/services/firebase_repositories.dart';
+import '../../../../core/services/pdf_report_service.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/parcel.dart';
@@ -50,13 +51,54 @@ class ParcelDetailSheet extends StatelessWidget {
           const SizedBox(height: 10),
           const InsightCard(title: 'Dikkat notu', message: 'Ruhsat, terk ve plan notları gerçek entegrasyonla teyit edilmelidir.', icon: Icons.gpp_maybe_rounded, color: AppColors.warning),
           const SizedBox(height: 18),
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            IconActionChip(label: 'Favoriye Ekle', icon: Icons.favorite_border_rounded, onTap: () => _toggleFavorite(context)),
-            const IconActionChip(label: 'Analizi Gör', icon: Icons.analytics_rounded),
-            IconActionChip(label: 'Premium Rapor', icon: Icons.picture_as_pdf_rounded, onTap: () => context.push(ParcelReportRoute.path, extra: parcel)),
-            IconActionChip(label: 'Takibe Al', icon: Icons.visibility_rounded, onTap: () => _toggleFollow(context)),
-            const IconActionChip(label: 'Google Earth', icon: Icons.public_rounded),
-            const IconActionChip(label: 'Koordinat', icon: Icons.my_location_rounded),
+          Text('Hızlı işlemler', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+          const SizedBox(height: 10),
+          GridView.count(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: 3, childAspectRatio: 1.02, crossAxisSpacing: 10, mainAxisSpacing: 10, children: [
+            _ActionTile(
+              label: 'Favoriye Ekle',
+              icon: Icons.favorite_border_rounded,
+              onTap: () => _toggleFavorite(context),
+            ),
+            const _ActionTile(label: 'Analizi Gör', icon: Icons.analytics_rounded),
+            _ActionTile(
+              label: 'PDF',
+              icon: Icons.picture_as_pdf_rounded,
+              onTap: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                try {
+                  final bytes = await const PremiumParcelReportService().generateParcelReport(
+                    parcelTitle: '${parcel.neighborhood} ${parcel.block}/${parcel.parcel}',
+                    metrics: {
+                      'city': parcel.city,
+                      'district': parcel.district,
+                      'neighborhood': parcel.neighborhood,
+                      'block': parcel.block,
+                      'parcel': parcel.parcel,
+                      'titleType': parcel.titleType,
+                      'zoningStatus': parcel.zoningStatus,
+                      'TAKS': parcel.taks,
+                      'KAKS': parcel.kaks,
+                      'Emsal': parcel.emsal,
+                      'Kat': parcel.floorLimit,
+                      'Yapılaşma': parcel.coverageRatio,
+                      'Yol Cephesi': parcel.roadFrontage,
+                    },
+                  );
+                  messenger.showSnackBar(
+                    SnackBar(content: Text('PDF rapor hazırlandı (${bytes.lengthInBytes} bayt). Paylaşım akışı sonraki fazda eklenecek.')),
+                  );
+                } catch (_) {
+                  messenger.showSnackBar(const SnackBar(content: Text('PDF raporu şu anda hazırlanamadı. Lütfen daha sonra tekrar deneyin.')));
+                }
+              },
+            ),
+            _ActionTile(
+              label: 'Takibe Al',
+              icon: Icons.visibility_rounded,
+              onTap: () => _toggleFollow(context),
+            ),
+            const _ActionTile(label: 'Google Earth', icon: Icons.public_rounded),
+            const _ActionTile(label: 'Koordinat', icon: Icons.my_location_rounded),
           ]),
         ]),
       ),
@@ -72,6 +114,15 @@ class _RiskStrip extends StatelessWidget {
         const SizedBox(height: 10),
         const Wrap(spacing: 8, runSpacing: 8, children: [RiskChip(label: 'Deprem', level: 44), RiskChip(label: 'Likidite', level: 26), RiskChip(label: 'Plan', level: 18)]),
       ]));
+}
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({required this.label, required this.icon, this.onTap});
+  final String label;
+  final IconData icon;
+  final VoidCallback? onTap;
+  @override
+  Widget build(BuildContext context) => GlassCard(padding: const EdgeInsets.all(10), onTap: onTap ?? () {}, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: AppColors.emerald), const SizedBox(height: 8), Text(label, textAlign: TextAlign.center, style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800))]));
 }
 
 void _toggleFavorite(BuildContext context) {

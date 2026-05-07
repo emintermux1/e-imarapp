@@ -25,7 +25,7 @@ Added favorite/follow toggle hooks:
 - "Takibe Al" calls `followedParcelRepositoryProvider` to follow/unfollow with snackbar feedback
 - Both actions use `ProviderScope.containerOf(context)` to resolve Riverpod refs from a non-ConsumerWidget context
 - Fail-soft: errors display a generic snackbar without crashing
-- Preserves current main Wrap layout with `ParcelReportRoute` navigation
+
 
 ### `apps/e_imar_mobile/lib/src/features/search/presentation/parcel_search_screen.dart`
 - Converted from `StatefulWidget` to `ConsumerStatefulWidget` for Riverpod access

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/ai_valuation/presentation/ai_valuation_screen.dart';
 import '../../features/analysis/presentation/analysis_screen.dart';
 import '../../features/auth/presentation/auth_screen.dart';
+import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/emsal/presentation/emsal_calculator_screen.dart';
 import '../../features/favorites/presentation/favorites_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
