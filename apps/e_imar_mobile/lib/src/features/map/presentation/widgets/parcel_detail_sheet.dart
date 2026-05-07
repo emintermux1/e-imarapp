@@ -7,6 +7,8 @@ import '../../../../core/services/firebase_repositories.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/parcel.dart';
+import 'historical_timeline_slider.dart';
+import 'mock_3d_parcel_preview.dart';
 
 class ParcelDetailSheet extends StatelessWidget {
   const ParcelDetailSheet({required this.parcel, super.key});
@@ -36,13 +38,17 @@ class ParcelDetailSheet extends StatelessWidget {
             const StatusBadge(label: 'Güven %94', tone: BadgeTone.success, icon: Icons.verified_rounded),
           ]),
           const SizedBox(height: 12),
-          Wrap(spacing: 8, runSpacing: 8, children: [StatusBadge(label: parcel.zoningStatus, tone: BadgeTone.info, icon: Icons.account_balance_rounded), const StatusBadge(label: 'İmara uygun', tone: BadgeTone.success, icon: Icons.check_circle_rounded), const StatusBadge(label: 'Mock veri', tone: BadgeTone.neutral, icon: Icons.hub_rounded)]),
+          Wrap(spacing: 8, runSpacing: 8, children: [StatusBadge(label: parcel.zoningStatus, tone: BadgeTone.info, icon: Icons.account_balance_rounded), const StatusBadge(label: 'İmara uygun', tone: BadgeTone.success, icon: Icons.check_circle_rounded), StatusBadge(label: 'Plan yılı: ${parcel.yearApproved}', tone: BadgeTone.neutral, icon: Icons.calendar_today_rounded)]),
           const SizedBox(height: 18),
           const ValueScoreCard(score: 86, title: 'Yatırım Skoru', subtitle: 'Merkezi konum, güçlü cephe ve emsal potansiyeli ile premium aday.'),
           const SizedBox(height: 16),
           GridView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: metrics.length, gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 1.62, crossAxisSpacing: 10, mainAxisSpacing: 10), itemBuilder: (_, i) => MetricCard(title: metrics[i].$1, value: metrics[i].$2, icon: metrics[i].$3)),
           const SizedBox(height: 16),
           const _RiskStrip(),
+          const SizedBox(height: 16),
+          Mock3dParcelPreview(parcel: parcel),
+          const SizedBox(height: 16),
+          HistoricalTimelineSlider(),
           const SizedBox(height: 16),
           const InsightCard(title: 'AI değer artışı', message: 'Bölgede son 2 yılda yüksek değer artışı ve düşük arz baskısı görülüyor.', icon: Icons.trending_up_rounded, color: AppColors.emerald),
           const SizedBox(height: 10),
