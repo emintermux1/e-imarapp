@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
+  // Primary palette - deep emerald / teal / cyan-blue spectrum
   static const ink = Color(0xFF071410);
   static const deepGreen = Color(0xFF08271F);
   static const forest = Color(0xFF0F3D2F);
@@ -15,12 +16,17 @@ abstract final class AppColors {
   static const warning = Color(0xFFF6B84B);
   static const sky = Color(0xFF74C7EC);
 
+  // Premium accent colors - cyan-blue glow spectrum
+  static const teal = Color(0xFF14B8A6);
+  static const cyan = Color(0xFF06B6D4);
+  static const cyanGlow = Color(0xFF22D3EE);
+
   static const surfaceLight = Color(0xFFFFFFFF);
   static const surfaceWarm = Color(0xFFFBF7EF);
-  static const surfaceDark = Color(0xFF0C1713);
+  static const surfaceDark = Color(0xFF0A1410);
   static const surfaceAmoled = Color(0xFF000000);
-  static const glassLight = Color(0xDDFDFBF6);
-  static const glassDark = Color(0xB30D1D17);
+  static const glassLight = Color(0xE8FDFBF6);
+  static const glassDark = Color(0xCC0D1D17);
   static const outlineLight = Color(0xFFE4E0D4);
   static const outlineDark = Color(0xFF254239);
   static const overlayScrim = Color(0x66040A08);
