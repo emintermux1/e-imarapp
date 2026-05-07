@@ -1,54 +1,34 @@
+import 'dart:convert';
+
 enum GisLayerKind { wms, wfs, geoJson }
+
+enum GisQueryFormat { wms, wfs, geoJson }
+
+enum RiskLayerCategory { jeofizik, jeolojik, idari, cevresel }
 
 enum RiskLayer { deprem, fayHatti, heyelan, sel, zeminTipi, tarimAlani, sitAlani }
 
-enum RiskLayerCategory { seismic, geology, hydrology, soil, landUse, heritage, planning }
-
-enum GisQueryFormat { geoJson, json, png }
-
-class GisLayerDescriptor {
-  const GisLayerDescriptor({
-    required this.id,
-    required this.name,
-    required this.kind,
-    required this.endpoint,
-    required this.sourceAuthority,
-    required this.attribution,
-    required this.opacity,
-    required this.defaultVisible,
-    required this.category,
-    required this.cacheTtl,
-    this.riskLayer,
-    this.layerName,
+class GisBoundingBox {
+  const GisBoundingBox({
+    required this.minLng,
+    required this.minLat,
+    required this.maxLng,
+    required this.maxLat,
   });
 
-  final String id;
-  final String name;
-  final GisLayerKind kind;
-  final Uri endpoint;
-  final String sourceAuthority;
-  final String attribution;
-  final double opacity;
-  final bool defaultVisible;
-  final RiskLayerCategory category;
-  final Duration cacheTtl;
-  final RiskLayer? riskLayer;
-  final String? layerName;
+  final double minLng;
+  final double minLat;
+  final double maxLng;
+  final double maxLat;
 
-  bool get isRiskLayer => riskLayer != null;
-}
+  String toBboxString() => '$minLng,$minLat,$maxLng,$maxLat';
 
-class GisBoundingBox {
-  const GisBoundingBox({required this.west, required this.south, required this.east, required this.north});
-
-  final double west;
-  final double south;
-  final double east;
-  final double north;
-
-  String toCommaSeparated() => '$west,$south,$east,$north';
-
-  String toWms130Bbox(String crs) => crs.toUpperCase() == 'EPSG:4326' ? '$south,$west,$north,$east' : toCommaSeparated();
+  static const turkeyBounds = GisBoundingBox(
+    minLng: 25.5,
+    minLat: 35.8,
+    maxLng: 45.0,
+    maxLat: 42.2,
+  );
 }
 
 class GisPoint {
@@ -59,257 +39,297 @@ class GisPoint {
 }
 
 class GisLayerQuery {
-  const GisLayerQuery({this.bounds, this.point, this.srs = 'EPSG:4326', this.width = 768, this.height = 768, this.format = GisQueryFormat.geoJson, this.extraParameters = const {}});
+  const GisLayerQuery({
+    required this.bbox,
+    required this.srs,
+    this.format = GisQueryFormat.geoJson,
+    this.maxFeatures = 500,
+  });
 
-  final GisBoundingBox? bounds;
-  final GisPoint? point;
+  final GisBoundingBox bbox;
   final String srs;
-  final int width;
-  final int height;
   final GisQueryFormat format;
-  final Map<String, String> extraParameters;
+  final int maxFeatures;
 
-  Uri buildUrl(GisLayerDescriptor layer) => switch (layer.kind) {
-        GisLayerKind.wms => buildWmsUrl(layer),
-        GisLayerKind.wfs => buildWfsUrl(layer),
-        GisLayerKind.geoJson => buildGeoJsonUrl(layer),
-      };
-
-  Uri buildWmsUrl(GisLayerDescriptor layer) {
-    final bbox = bounds ?? _pointBounds(point);
-    return layer.endpoint.replace(queryParameters: {
-      ...layer.endpoint.queryParameters,
-      'service': 'WMS',
-      'request': 'GetMap',
-      'version': '1.3.0',
-      'layers': layer.layerName ?? layer.id,
-      'styles': '',
-      'crs': srs,
-      'bbox': bbox.toWms130Bbox(srs),
-      'width': '$width',
-      'height': '$height',
-      'format': _mimeType(GisQueryFormat.png),
-      'transparent': 'true',
-      ...extraParameters,
-    });
-  }
-
-  Uri buildWfsUrl(GisLayerDescriptor layer) {
-    final bbox = bounds ?? _pointBounds(point);
-    return layer.endpoint.replace(queryParameters: {
-      ...layer.endpoint.queryParameters,
-      'service': 'WFS',
-      'request': 'GetFeature',
-      'version': '2.0.0',
-      'typeNames': layer.layerName ?? layer.id,
-      'srsName': srs,
-      'bbox': '${bbox.toCommaSeparated()},$srs',
-      'outputFormat': _mimeType(format),
-      ...extraParameters,
-    });
-  }
-
-  Uri buildGeoJsonUrl(GisLayerDescriptor layer) {
-    final bbox = bounds ?? _pointBounds(point);
-    return layer.endpoint.replace(queryParameters: {
-      ...layer.endpoint.queryParameters,
-      'bbox': bbox.toCommaSeparated(),
-      'srs': srs,
-      'format': _mimeType(GisQueryFormat.geoJson),
-      ...extraParameters,
-    });
-  }
-
-  static GisBoundingBox _pointBounds(GisPoint? point) {
-    final center = point ?? const GisPoint(latitude: 41.0082, longitude: 28.9784);
-    const delta = .015;
-    return GisBoundingBox(west: center.longitude - delta, south: center.latitude - delta, east: center.longitude + delta, north: center.latitude + delta);
-  }
-
-  static String _mimeType(GisQueryFormat format) => switch (format) {
-        GisQueryFormat.geoJson => 'application/geo+json',
-        GisQueryFormat.json => 'application/json',
-        GisQueryFormat.png => 'image/png',
-      };
-}
-
-class GisFeatureCollection {
-  const GisFeatureCollection({required this.features, this.rawGeoJson});
-
-  final List<GisFeature> features;
-  final Map<String, Object?>? rawGeoJson;
-
-  factory GisFeatureCollection.fromGeoJson(Map<String, Object?> json) {
-    final rawFeatures = json['features'];
-    final features = rawFeatures is List ? rawFeatures.whereType<Map>().map((item) => GisFeature.fromGeoJson(Map<String, Object?>.from(item))).toList(growable: false) : const <GisFeature>[];
-    return GisFeatureCollection(features: features, rawGeoJson: json);
-  }
-
-  factory GisFeatureCollection.raw(Map<String, Object?> json) => GisFeatureCollection(features: const [], rawGeoJson: json);
+  String toBboxString() => bbox.toBboxString();
 }
 
 class GisFeature {
-  const GisFeature({required this.id, required this.geometryType, required this.properties, this.geometry});
+  const GisFeature({
+    required this.id,
+    required this.properties,
+    this.geometry,
+  });
 
-  final String? id;
-  final String? geometryType;
+  final String id;
   final Map<String, Object?> properties;
   final Map<String, Object?>? geometry;
 
-  factory GisFeature.fromGeoJson(Map<String, Object?> json) {
-    final geometry = json['geometry'];
-    final properties = json['properties'];
+  factory GisFeature.fromJson(Map<String, dynamic> json) {
     return GisFeature(
-      id: json['id']?.toString(),
-      geometryType: geometry is Map ? geometry['type']?.toString() : null,
-      geometry: geometry is Map ? Map<String, Object?>.from(geometry) : null,
-      properties: properties is Map ? Map<String, Object?>.from(properties) : const {},
+      id: (json['id'] ?? json['properties']?['id'] ?? '').toString(),
+      properties: Map<String, Object?>.from(json['properties'] as Map? ?? {}),
+      geometry: json['geometry'] is Map ? Map<String, Object?>.from(json['geometry'] as Map) : null,
     );
   }
 }
 
-abstract interface class GisLayerRepository {
-  Future<List<GisLayerDescriptor>> availableLayers();
-  Uri buildRequestUrl(GisLayerDescriptor layer, GisLayerQuery query);
-  Future<GisFeatureCollection> fetchFeatures(GisLayerDescriptor layer, GisLayerQuery query);
+class GisFeatureCollection {
+  const GisFeatureCollection({
+    required this.features,
+    this.crs,
+    this.metadata = const {},
+    this.errorMessage,
+  });
+
+  final List<GisFeature> features;
+  final String? crs;
+  final Map<String, String> metadata;
+  final String? errorMessage;
+
+  bool get hasError => errorMessage != null;
+  bool get isEmpty => features.isEmpty;
+  bool get isNotEmpty => features.isNotEmpty;
+
+  static const empty = GisFeatureCollection(features: []);
+
+  static GisFeatureCollection withError(String message) =>
+      GisFeatureCollection(features: [], errorMessage: message, metadata: {'hata': message});
+
+  factory GisFeatureCollection.fromJson(Map<String, dynamic> json) {
+    final rawFeatures = json['features'] as List<dynamic>? ?? [];
+    final features = rawFeatures
+        .whereType<Map<String, dynamic>>()
+        .map((f) => GisFeature.fromJson(f))
+        .toList(growable: false);
+    return GisFeatureCollection(
+      features: features,
+      crs: json['crs']?['properties']?['name']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'type': 'FeatureCollection',
+        if (crs != null)
+          'crs': {
+            'type': 'name',
+            'properties': {'name': crs},
+          },
+        'features': features
+            .map((f) => {
+                  'type': 'Feature',
+                  'id': f.id,
+                  'properties': f.properties,
+                  if (f.geometry != null) 'geometry': f.geometry,
+                })
+            .toList(growable: false),
+      };
 }
 
-class MockGisLayerRepository implements GisLayerRepository {
-  const MockGisLayerRepository();
+class GisLayerDescriptor {
+  const GisLayerDescriptor({
+    required this.id,
+    required this.name,
+    required this.kind,
+    required this.endpoint,
+    this.riskLayer,
+    this.wmsLayerName,
+    this.wfsTypeName,
+    this.category,
+    this.cacheTtl = const Duration(minutes: 15),
+  });
 
-  @override
-  Future<List<GisLayerDescriptor>> availableLayers() async => officialRiskLayerPresets;
+  final String id;
+  final String name;
+  final GisLayerKind kind;
+  final Uri endpoint;
+  final RiskLayer? riskLayer;
+  final String? wmsLayerName;
+  final String? wfsTypeName;
+  final RiskLayerCategory? category;
+  final Duration cacheTtl;
 
-  @override
-  Uri buildRequestUrl(GisLayerDescriptor layer, GisLayerQuery query) => query.buildUrl(layer);
-
-  @override
-  Future<GisFeatureCollection> fetchFeatures(GisLayerDescriptor layer, GisLayerQuery query) async => GisFeatureCollection(
-        features: [
-          GisFeature(
-            id: '${layer.id}-mock',
-            geometryType: query.bounds == null ? 'Point' : 'Polygon',
-            properties: {
-              'layerId': layer.id,
-              'authority': layer.sourceAuthority,
-              'riskLayer': layer.riskLayer?.name,
-              'mock': true,
-              'requestUrl': buildRequestUrl(layer, query).toString(),
-            },
-          ),
-        ],
-        rawGeoJson: const {'type': 'FeatureCollection', 'features': []},
-      );
+  GisQueryFormat get defaultFormat => switch (kind) {
+        GisLayerKind.wms => GisQueryFormat.wms,
+        GisLayerKind.wfs => GisQueryFormat.wfs,
+        GisLayerKind.geoJson => GisQueryFormat.geoJson,
+      };
 }
 
 const officialRiskLayerPresets = <GisLayerDescriptor>[
   GisLayerDescriptor(
-    id: 'afad-earthquake-hazard',
-    name: 'Deprem Tehlike Haritası',
-    kind: GisLayerKind.geoJson,
-    endpoint: Uri.parse('https://example.afad.gov.tr/gis/earthquake-hazard.geojson'),
-    sourceAuthority: 'AFAD',
-    attribution: 'Afet ve Acil Durum Yönetimi Başkanlığı deprem tehlike verisi esas alınacaktır.',
-    opacity: .74,
-    defaultVisible: true,
-    category: RiskLayerCategory.seismic,
-    cacheTtl: Duration(days: 30),
+    id: 'afad-deprem-tehlike',
+    name: 'Deprem Tehlike Haritası (AFAD)',
+    kind: GisLayerKind.wms,
+    endpoint: Uri.parse('https://tdth.afad.gov.tr/geoserver/ows'),
     riskLayer: RiskLayer.deprem,
+    wmsLayerName: 'tdth:deprem_tehlike',
+    category: RiskLayerCategory.jeofizik,
+    cacheTtl: Duration(hours: 24),
   ),
   GisLayerDescriptor(
-    id: 'mta-active-faults',
-    name: 'Diri Fay Hatları',
+    id: 'mta-diri-fay',
+    name: 'Diri Fay Hatları (MTA)',
     kind: GisLayerKind.wfs,
-    endpoint: Uri.parse('https://example.mta.gov.tr/geoserver/fay/ows'),
-    sourceAuthority: 'MTA',
-    attribution: 'Maden Tetkik ve Arama Genel Müdürlüğü diri fay haritası referans alınacaktır.',
-    opacity: .88,
-    defaultVisible: true,
-    category: RiskLayerCategory.geology,
-    cacheTtl: Duration(days: 90),
+    endpoint: Uri.parse('https://yerbilimleri.mta.gov.tr/geoserver/wfs'),
     riskLayer: RiskLayer.fayHatti,
-    layerName: 'mta:diri_fay',
+    wfsTypeName: 'mta:diri_fay',
+    category: RiskLayerCategory.jeolojik,
+    cacheTtl: Duration(hours: 168),
   ),
   GisLayerDescriptor(
-    id: 'municipality-landslide',
-    name: 'Heyelan Duyarlılığı',
+    id: 'afad-heyelan',
+    name: 'Heyelan Envanteri (AFAD)',
     kind: GisLayerKind.wms,
-    endpoint: Uri.parse('https://example.bel.tr/geoserver/afet/wms'),
-    sourceAuthority: 'Belediye / İl Afet Envanteri',
-    attribution: 'Yerel yönetim WMS/WFS afet duyarlılık katmanları beklenmektedir.',
-    opacity: .68,
-    defaultVisible: false,
-    category: RiskLayerCategory.geology,
-    cacheTtl: Duration(days: 14),
+    endpoint: Uri.parse('https://tdth.afad.gov.tr/geoserver/ows'),
     riskLayer: RiskLayer.heyelan,
-    layerName: 'afet:heyelan_duyarlilik',
+    wmsLayerName: 'tdth:heyelan',
+    category: RiskLayerCategory.jeolojik,
+    cacheTtl: Duration(hours: 168),
   ),
   GisLayerDescriptor(
-    id: 'municipality-flood',
-    name: 'Sel ve Taşkın Alanı',
+    id: 'dsi-sel-tehlike',
+    name: 'Sel ve Taşkın Tehlike Haritası (DSİ)',
     kind: GisLayerKind.wms,
-    endpoint: Uri.parse('https://example.bel.tr/geoserver/hidroloji/wms'),
-    sourceAuthority: 'Belediye / DSİ entegrasyonu',
-    attribution: 'Taşkın sınırı ve dere koruma bandı için resmi belediye veya DSİ servisleri kullanılacaktır.',
-    opacity: .64,
-    defaultVisible: false,
-    category: RiskLayerCategory.hydrology,
-    cacheTtl: Duration(days: 14),
+    endpoint: Uri.parse('https://geoportal.dsi.gov.tr/geoserver/ows'),
     riskLayer: RiskLayer.sel,
-    layerName: 'hidroloji:taskin_alani',
+    wmsLayerName: 'dsi:sel_tehlike',
+    category: RiskLayerCategory.jeofizik,
+    cacheTtl: Duration(hours: 72),
   ),
   GisLayerDescriptor(
-    id: 'municipality-soil-class',
-    name: 'Zemin Tipi',
-    kind: GisLayerKind.wfs,
-    endpoint: Uri.parse('https://example.bel.tr/geoserver/jeoloji/ows'),
-    sourceAuthority: 'Belediye Jeolojik Etüt',
-    attribution: 'Mikrobölgeleme ve jeolojik-jeoteknik etüt verileri resmi kurumdan alınacaktır.',
-    opacity: .7,
-    defaultVisible: true,
-    category: RiskLayerCategory.soil,
-    cacheTtl: Duration(days: 30),
-    riskLayer: RiskLayer.zeminTipi,
-    layerName: 'jeoloji:zemin_sinifi',
-  ),
-  GisLayerDescriptor(
-    id: 'tkgm-agricultural-protection',
-    name: 'Tarım Alanı',
-    kind: GisLayerKind.geoJson,
-    endpoint: Uri.parse('https://example.tkgm.gov.tr/gis/agricultural-protection.geojson'),
-    sourceAuthority: 'TKGM / Tarım ve Orman Bakanlığı',
-    attribution: 'Kadastro ve tarımsal koruma kararları resmi servis doğrulaması ile gösterilecektir.',
-    opacity: .58,
-    defaultVisible: false,
-    category: RiskLayerCategory.landUse,
-    cacheTtl: Duration(days: 30),
-    riskLayer: RiskLayer.tarimAlani,
-  ),
-  GisLayerDescriptor(
-    id: 'eplan-protected-sites',
-    name: 'Sit Alanı',
-    kind: GisLayerKind.wfs,
-    endpoint: Uri.parse('https://example.e-plan.gov.tr/geoserver/koruma/ows'),
-    sourceAuthority: 'e-Plan / Kültür Varlıkları',
-    attribution: 'Plan kararları ve koruma sınırları ilgili resmi portaldan lisanslı olarak alınacaktır.',
-    opacity: .72,
-    defaultVisible: false,
-    category: RiskLayerCategory.heritage,
-    cacheTtl: Duration(days: 30),
-    riskLayer: RiskLayer.sitAlani,
-    layerName: 'koruma:sit_alani',
-  ),
-  GisLayerDescriptor(
-    id: 'eplan-zoning-plan',
-    name: 'e-Plan İmar Planı',
+    id: 'mta-zemin',
+    name: 'Jeoloji ve Zemin Sınıflaması (MTA)',
     kind: GisLayerKind.wms,
-    endpoint: Uri.parse('https://example.e-plan.gov.tr/geoserver/imar/wms'),
-    sourceAuthority: 'e-Plan / Belediye',
-    attribution: 'Plan paftaları ve notları resmi e-Plan veya belediye servislerinden doğrulanacaktır.',
-    opacity: .78,
-    defaultVisible: false,
-    category: RiskLayerCategory.planning,
-    cacheTtl: Duration(days: 7),
-    layerName: 'imar:plan_pafta',
+    endpoint: Uri.parse('https://yerbilimleri.mta.gov.tr/geoserver/wms'),
+    riskLayer: RiskLayer.zeminTipi,
+    wmsLayerName: 'mta:jeoloji',
+    category: RiskLayerCategory.jeolojik,
+    cacheTtl: Duration(hours: 720),
+  ),
+  GisLayerDescriptor(
+    id: 'tobb-tarim',
+    name: 'Tarım Alanları (TOBB Arazi Sınıflandırma)',
+    kind: GisLayerKind.wms,
+    endpoint: Uri.parse('https://cbsservis.tobb.org.tr/geoserver/wms'),
+    riskLayer: RiskLayer.tarimAlani,
+    wmsLayerName: 'tobb:tarim_arazi',
+    category: RiskLayerCategory.cevresel,
+    cacheTtl: Duration(hours: 720),
+  ),
+  GisLayerDescriptor(
+    id: 'kultur-sit',
+    name: 'Sit Alanları (Kültür ve Turizm Bakanlığı)',
+    kind: GisLayerKind.wfs,
+    endpoint: Uri.parse('https://korumakurullari.ktb.gov.tr/geoserver/wfs'),
+    riskLayer: RiskLayer.sitAlani,
+    wfsTypeName: 'ktb:sit_alanlari',
+    category: RiskLayerCategory.idari,
+    cacheTtl: Duration(hours: 720),
+  ),
+  GisLayerDescriptor(
+    id: 'cevre-arazi-ortusu',
+    name: 'Arazi Örtüsü (CORINE Uyarlı)',
+    kind: GisLayerKind.geoJson,
+    endpoint: Uri.parse('https://land.copernicus.eu/api/clc/turkey'),
+    category: RiskLayerCategory.cevresel,
+    cacheTtl: Duration(hours: 8760),
   ),
 ];
+
+String buildWmsRequestUrl(GisLayerDescriptor layer, GisLayerQuery query) {
+  final params = <String, String>{
+    'service': 'WMS',
+    'version': '1.3.0',
+    'request': 'GetMap',
+    'layers': layer.wmsLayerName ?? layer.id,
+    'styles': '',
+    'crs': query.srs,
+    'bbox': query.toBboxString(),
+    'width': '1024',
+    'height': '1024',
+    'format': 'image/png',
+    'transparent': 'true',
+  };
+  return '${layer.endpoint}?${Uri(queryParameters: params).query}';
+}
+
+String buildWfsRequestUrl(GisLayerDescriptor layer, GisLayerQuery query) {
+  final params = <String, String>{
+    'service': 'WFS',
+    'version': '2.0.0',
+    'request': 'GetFeature',
+    'typeNames': layer.wfsTypeName ?? layer.id,
+    'srsName': query.srs,
+    'bbox': '${query.toBboxString()},${query.srs}',
+    'outputFormat': 'application/json',
+    'count': query.maxFeatures.toString(),
+  };
+  return '${layer.endpoint}?${Uri(queryParameters: params).query}';
+}
+
+String buildGeoJsonRequestUrl(GisLayerDescriptor layer, GisLayerQuery query) {
+  return '${layer.endpoint}?bbox=${query.toBboxString()}&limit=${query.maxFeatures}';
+}
+
+String buildGisRequestUrl(GisLayerDescriptor layer, GisLayerQuery query) {
+  final format = query.format;
+  return switch (format) {
+    GisQueryFormat.wms => buildWmsRequestUrl(layer, query),
+    GisQueryFormat.wfs => buildWfsRequestUrl(layer, query),
+    GisQueryFormat.geoJson => buildGeoJsonRequestUrl(layer, query),
+  };
+}
+
+abstract interface class GisLayerRepository {
+  Future<List<GisLayerDescriptor>> availableLayers();
+  Future<GisFeatureCollection> fetchFeatures(GisLayerDescriptor layer, GisLayerQuery query);
+  String buildRequestUrl(GisLayerDescriptor layer, GisLayerQuery query);
+
+  Future<String> fetchGeoJson(GisLayerDescriptor layer, {required double latitude, required double longitude}) async {
+    const query = GisLayerQuery(bbox: GisBoundingBox(minLng: 0, minLat: 0, maxLng: 0, maxLat: 0), srs: 'EPSG:4326');
+    final collection = await fetchFeatures(layer, query);
+    return jsonEncode(collection.toJson());
+  }
+}
+
+class MockGisLayerRepository implements GisLayerRepository {
+  @override
+  Future<List<GisLayerDescriptor>> availableLayers() async => [
+        GisLayerDescriptor(
+          id: 'afad-earthquake',
+          name: 'Deprem Riski',
+          kind: GisLayerKind.geoJson,
+          endpoint: Uri.parse('mock://afad/earthquake'),
+          riskLayer: RiskLayer.deprem,
+          cacheTtl: const Duration(minutes: 15),
+        ),
+        GisLayerDescriptor(
+          id: 'fault-lines',
+          name: 'Fay Hattı',
+          kind: GisLayerKind.wfs,
+          endpoint: Uri.parse('mock://mta/fault-lines'),
+          riskLayer: RiskLayer.fayHatti,
+          cacheTtl: const Duration(minutes: 15),
+        ),
+        GisLayerDescriptor(
+          id: 'municipality-zoning',
+          name: 'Belediye İmar Planı',
+          kind: GisLayerKind.wms,
+          endpoint: Uri.parse('mock://municipality/zoning'),
+          cacheTtl: const Duration(minutes: 15),
+        ),
+      ];
+
+  @override
+  Future<GisFeatureCollection> fetchFeatures(GisLayerDescriptor layer, GisLayerQuery query) async =>
+      const GisFeatureCollection(features: []);
+
+  @override
+  String buildRequestUrl(GisLayerDescriptor layer, GisLayerQuery query) =>
+      buildGisRequestUrl(layer, query);
+
+  @override
+  Future<String> fetchGeoJson(GisLayerDescriptor layer, {required double latitude, required double longitude}) async =>
+      '{"type":"FeatureCollection","features":[]}';
+}
