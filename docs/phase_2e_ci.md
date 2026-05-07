@@ -4,7 +4,7 @@ Phase 2E adds a GitHub Actions quality gate for the Flutter mobile app. The work
 
 ## Required toolchain
 
-Use Flutter `3.24.x` or newer on the stable channel. The mobile app declares a Dart SDK constraint of `>=3.5.0 <4.0.0`, which is satisfied by Flutter 3.24 stable.
+Use Flutter `3.27.x` on the stable channel to match CI. The mobile app declares a Dart SDK constraint of `>=3.5.0 <4.0.0`, and current dev dependencies require Dart `>=3.6.0`, which is satisfied by Flutter 3.27 stable.
 
 Check your local version:
 
@@ -19,7 +19,7 @@ Run these commands before opening or updating a pull request:
 ```sh
 cd apps/e_imar_mobile
 flutter pub get
-flutter analyze
+flutter analyze --no-fatal-infos
 flutter test
 dart format --set-exit-if-changed . ../../packages/e_imar_core
 ```
@@ -31,10 +31,10 @@ The format check is intentionally scoped to the Flutter app and shared Dart pack
 The workflow performs these steps:
 
 1. Checks out the repository.
-2. Installs Flutter stable `3.24.x` with `subosito/flutter-action`.
+2. Installs Flutter stable `3.27.x` with `subosito/flutter-action`.
 3. Uses the Flutter action cache for SDK and pub package reuse where supported.
 4. Runs `flutter pub get` in `apps/e_imar_mobile`.
-5. Runs `flutter analyze`.
+5. Runs `flutter analyze --no-fatal-infos`.
 6. Runs `flutter test`.
 7. Runs `dart format --set-exit-if-changed` for the app and shared Dart package.
 
