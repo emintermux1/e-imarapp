@@ -1,5 +1,10 @@
 class EmsalInput {
-  const EmsalInput({required this.landArea, required this.emsal, this.taks, this.floorCount, this.averageUnitArea = 115});
+  const EmsalInput(
+      {required this.landArea,
+      required this.emsal,
+      this.taks,
+      this.floorCount,
+      this.averageUnitArea = 115});
   final double landArea;
   final double emsal;
   final double? taks;
@@ -8,7 +13,12 @@ class EmsalInput {
 }
 
 class EmsalResult {
-  const EmsalResult({required this.totalConstructionArea, required this.apartmentCount, required this.estimatedCost, required this.salesPotential, required this.roi});
+  const EmsalResult(
+      {required this.totalConstructionArea,
+      required this.apartmentCount,
+      required this.estimatedCost,
+      required this.salesPotential,
+      required this.roi});
   final double totalConstructionArea;
   final int apartmentCount;
   final double estimatedCost;
@@ -26,6 +36,11 @@ class EmsalCalculatorService {
     final salePerSqm = 38500.0;
     final cost = total * costPerSqm;
     final sales = total * salePerSqm;
-    return EmsalResult(totalConstructionArea: total, apartmentCount: apartments, estimatedCost: cost, salesPotential: sales, roi: ((sales - cost) / cost) * 100);
+    return EmsalResult(
+        totalConstructionArea: total,
+        apartmentCount: apartments,
+        estimatedCost: cost,
+        salesPotential: sales,
+        roi: ((sales - cost) / cost) * 100);
   }
 }

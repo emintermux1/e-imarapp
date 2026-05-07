@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/tokens.dart';
-import '../../../../core/widgets/widgets.dart';
+import '../../../core/theme/tokens.dart';
+import '../../../core/widgets/widgets.dart';
 import '../domain/notification_item.dart';
 
 class NotificationCard extends StatelessWidget {
@@ -89,25 +89,25 @@ class NotificationCard extends StatelessWidget {
 
 _TypeMeta _typeMeta(NotificationType type) => switch (type) {
       NotificationType.zoningChange => const _TypeMeta(
-            icon: Icons.description_rounded,
-            color: AppColors.warning,
-          ),
+          icon: Icons.description_rounded,
+          color: AppColors.warning,
+        ),
       NotificationType.priceChange => const _TypeMeta(
-            icon: Icons.trending_up_rounded,
-            color: AppColors.emerald,
-          ),
+          icon: Icons.trending_up_rounded,
+          color: AppColors.emerald,
+        ),
       NotificationType.newListing => const _TypeMeta(
-            icon: Icons.add_home_work_rounded,
-            color: AppColors.info,
-          ),
+          icon: Icons.add_home_work_rounded,
+          color: AppColors.info,
+        ),
       NotificationType.riskChange => const _TypeMeta(
-            icon: Icons.shield_rounded,
-            color: AppColors.riskHigh,
-          ),
+          icon: Icons.shield_rounded,
+          color: AppColors.riskHigh,
+        ),
       NotificationType.aiSuggestion => const _TypeMeta(
-            icon: Icons.auto_awesome_rounded,
-            color: AppColors.lime,
-          ),
+          icon: Icons.auto_awesome_rounded,
+          color: AppColors.lime,
+        ),
     };
 
 class _TypeMeta {

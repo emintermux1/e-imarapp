@@ -30,18 +30,22 @@ Future<void> main() async {
       return true;
     };
 
-    runApp(ProviderScope(overrides: [appConfigProvider.overrideWithValue(config)], child: const EImarApp()));
+    runApp(ProviderScope(
+        overrides: [appConfigProvider.overrideWithValue(config)],
+        child: const EImarApp()));
   }, (error, stack) {
     debugPrint('Yakalanmamış hata: $error');
   });
 }
 
-bool _crashlyticsAvailable(AppConfig config) => config.firebaseEnabled && !kDebugMode && Firebase.apps.isNotEmpty;
+bool _crashlyticsAvailable(AppConfig config) =>
+    config.firebaseEnabled && !kDebugMode && Firebase.apps.isNotEmpty;
 
 Future<void> _initializeFirebase(AppConfig config) async {
   if (!config.firebaseEnabled) return;
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
     if (!kDebugMode) {
       await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
     }

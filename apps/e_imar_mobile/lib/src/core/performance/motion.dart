@@ -21,7 +21,11 @@ class Debouncer {
   Debouncer(this.duration);
   final Duration duration;
   Timer? _timer;
-  void call(VoidCallback callback) { _timer?.cancel(); _timer = Timer(duration, callback); }
+  void call(VoidCallback callback) {
+    _timer?.cancel();
+    _timer = Timer(duration, callback);
+  }
+
   void dispose() => _timer?.cancel();
 }
 
@@ -31,12 +35,16 @@ class Throttler {
   DateTime _last = DateTime.fromMillisecondsSinceEpoch(0);
   void call(VoidCallback callback) {
     final now = DateTime.now();
-    if (now.difference(_last) >= duration) { _last = now; callback(); }
+    if (now.difference(_last) >= duration) {
+      _last = now;
+      callback();
+    }
   }
 }
 
 class SmoothAnimatedSwitcher extends StatelessWidget {
-  const SmoothAnimatedSwitcher({required this.child, this.duration = MotionDurations.fast, super.key});
+  const SmoothAnimatedSwitcher(
+      {required this.child, this.duration = MotionDurations.fast, super.key});
   final Widget child;
   final Duration duration;
 
@@ -47,21 +55,30 @@ class SmoothAnimatedSwitcher extends StatelessWidget {
       reverseDuration: MotionDurations.micro,
       switchInCurve: MotionCurves.emphasized,
       switchOutCurve: MotionCurves.exit,
-      transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: ScaleTransition(scale: Tween(begin: .985, end: 1.0).animate(animation), child: child)),
+      transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+              scale: Tween(begin: .985, end: 1.0).animate(animation),
+              child: child)),
       child: child,
     );
   }
 }
 
 class PerformanceOverlayGate extends StatelessWidget {
-  const PerformanceOverlayGate({required this.child, this.enabled = false, super.key});
+  const PerformanceOverlayGate(
+      {required this.child, this.enabled = false, super.key});
   final Widget child;
   final bool enabled;
 
   @override
   Widget build(BuildContext context) {
     if (!kDebugMode || !enabled) return child;
-    return Stack(children: [child, Positioned(top: 0, left: 0, right: 0, child: PerformanceOverlay.allEnabled())]);
+    return Stack(children: [
+      child,
+      Positioned(
+          top: 0, left: 0, right: 0, child: PerformanceOverlay.allEnabled())
+    ]);
   }
 }
 

@@ -10,10 +10,9 @@ class MockNotificationsSource {
   final _notifications = List<NotificationItem>.unmodifiable(_seed());
   bool _allRead = false;
 
-  List<NotificationItem> get notifications =>
-      _allRead
-          ? _notifications.map((n) => n.copyWith(read: true)).toList()
-          : _notifications;
+  List<NotificationItem> get notifications => _allRead
+      ? _notifications.map((n) => n.copyWith(read: true)).toList()
+      : _notifications;
 
   int get unreadCount => notifications.where((n) => !n.read).length;
 
