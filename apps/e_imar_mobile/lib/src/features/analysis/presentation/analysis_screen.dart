@@ -128,7 +128,7 @@ class _AiExplanationCard extends StatelessWidget {
         variant: GlassVariant.elevated,
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: const [
+          const Row(children: [
             StatusBadge(
                 label: 'AI tarzı açıklama',
                 tone: BadgeTone.info,

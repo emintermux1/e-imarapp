@@ -31,8 +31,9 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen>
   @override
   void initState() {
     super.initState();
-    if (widget.openParcelOnStart)
+    if (widget.openParcelOnStart) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _openParcel());
+    }
   }
 
   @override
@@ -374,7 +375,7 @@ class _StatusRail extends StatelessWidget {
   Widget build(BuildContext context) => SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       clipBehavior: Clip.none,
-      child: Row(children: const [
+      child: const Row(children: [
         StatusBadge(
             label: 'Canlı imar',
             tone: BadgeTone.success,

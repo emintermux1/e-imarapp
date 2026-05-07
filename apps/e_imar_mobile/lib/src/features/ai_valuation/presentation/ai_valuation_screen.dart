@@ -29,12 +29,13 @@ class AiValuationScreen extends StatelessWidget {
             parcelId: parcelId,
             zoningSummary: zoningSummary),
         builder: (context, snapshot) {
-          if (!snapshot.hasData)
+          if (!snapshot.hasData) {
             return const AppStateView(
                 title: 'AI raporu hazırlanıyor',
                 message:
                     'Mock servis ve deterministik piyasa kanıtları birleştiriliyor.',
                 icon: Icons.auto_awesome_rounded);
+          }
           final model = snapshot.data!;
           return ListView(
             padding: const EdgeInsets.fromLTRB(

@@ -24,8 +24,9 @@ class SettingsScreen extends ConsumerWidget {
                 DropdownMenuItem(value: ThemeMode.dark, child: Text('Koyu'))
               ],
               onChanged: (value) {
-                if (value != null)
+                if (value != null) {
                   ref.read(themeModeProvider.notifier).state = value;
+                }
               }),
           SwitchListTile(
               value: amoled,

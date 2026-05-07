@@ -86,12 +86,17 @@ class EmsalCalculatorService {
   }
 
   int resolveFloorCount(EmsalInput input) {
-    if (input.floorCount != null && input.floorCount! > 0)
+    if (input.floorCount != null && input.floorCount! > 0) {
       return input.floorCount!;
-    if (input.taks == null || input.taks! <= 0) return 1;
+    }
+    if (input.taks == null || input.taks! <= 0) {
+      return 1;
+    }
     final taban = input.landArea * input.taks!;
     final total = input.landArea * input.emsal;
-    if (taban <= 0) return 1;
+    if (taban <= 0) {
+      return 1;
+    }
     return (total / taban).ceil().clamp(1, 100);
   }
 

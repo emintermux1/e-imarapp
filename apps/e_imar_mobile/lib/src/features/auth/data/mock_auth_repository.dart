@@ -6,15 +6,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/auth_repository.dart';
 import 'firebase_auth_repository.dart';
 
-final authRepositoryProvider = Provider<AuthRepository>((_) {
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
   if (Firebase.apps.isNotEmpty) {
     return FirebaseAuthRepository();
   }
-  return MockAuthRepository();
+  final mock = MockAuthRepository();
+  ref.onDispose(mock.dispose);
+  return mock;
 });
 
 class MockAuthRepository implements AuthRepository {
   final _controller = StreamController<AuthUser?>.broadcast();
+
+  void dispose() {
+    _controller.close();
+  }
 
   @override
   Stream<AuthUser?> authStateChanges() => _controller.stream;

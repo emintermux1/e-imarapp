@@ -277,7 +277,7 @@ class _Step0Form extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PremiumHeader(
+          const PremiumHeader(
             title: 'Etüt Talebi',
             subtitle: 'Teslim süresi, konum ve arsa bilgilerini giriniz.',
             icon: Icons.edit_note_rounded,
@@ -390,7 +390,7 @@ class _Step1Form extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PremiumHeader(
+          const PremiumHeader(
             title: 'Parsel Detayları',
             subtitle: 'Ada/parsel bilgileri ve talep açıklaması ekleyiniz.',
             icon: Icons.pin_drop_rounded,
@@ -472,7 +472,7 @@ class _Step2Review extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PremiumHeader(
+          const PremiumHeader(
             title: 'Talep Özeti',
             subtitle: 'Bilgileri kontrol edip onaylayınız.',
             icon: Icons.checklist_rounded,

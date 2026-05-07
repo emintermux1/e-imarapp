@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/tokens.dart';
 import '../../../core/widgets/widgets.dart';
@@ -587,8 +588,7 @@ class _StudyCtaSection extends StatelessWidget {
             GradientButton(
               label: 'Etüt Talebi Oluştur',
               icon: Icons.arrow_forward_rounded,
-              onPressed: () =>
-                  Navigator.of(context).pushNamed('/study-request'),
+              onPressed: () => context.push('/study-request'),
             ),
           ],
         ),
