@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 abstract final class AppColors {
   static const ink = Color(0xFF071410);
-  static const deepGreen = Color(0xFF08271F);
-  static const forest = Color(0xFF0F3D2F);
-  static const emerald = Color(0xFF16C784);
-  static const mint = Color(0xFF8AF2C2);
-  static const lime = Color(0xFFC6F66F);
-  static const sand = Color(0xFFF3EEE4);
-  static const porcelain = Color(0xFFF8FAF7);
+  static const deepGreen = Color(0xFF12324A);
+  static const forest = Color(0xFF155E75);
+  static const emerald = Color(0xFF087EA4);
+  static const mint = Color(0xFF7DD3FC);
+  static const lime = Color(0xFF0F766E);
+  static const sand = Color(0xFFF2F4F7);
+  static const porcelain = Color(0xFFF8FAFC);
   static const graphite = Color(0xFF18211D);
   static const slate = Color(0xFF6C7A73);
   static const danger = Color(0xFFE75D5D);
@@ -59,7 +59,7 @@ abstract final class AppRadius {
 
 abstract final class AppGradients {
   static const premium = LinearGradient(
-      colors: [AppColors.deepGreen, AppColors.forest, AppColors.emerald],
+      colors: [AppColors.deepGreen, AppColors.forest],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight);
   static const emeraldGlow = RadialGradient(
@@ -73,7 +73,7 @@ abstract final class AppGradients {
       begin: Alignment.topLeft,
       end: Alignment.bottomRight);
   static const sandSurface = LinearGradient(
-      colors: [Color(0xFFFDF8EF), Color(0xFFF4EFE5), Color(0xFFEAF5EE)],
+      colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC), Color(0xFFEFF6FF)],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight);
   static const heroMap = LinearGradient(colors: [
@@ -99,7 +99,7 @@ abstract final class AppGradients {
     1
   ], begin: Alignment.topLeft, end: Alignment.bottomRight);
   static const score = LinearGradient(
-      colors: [Color(0xFF132F27), Color(0xFF16C784), Color(0xFFC6F66F)],
+      colors: [Color(0xFF12324A), Color(0xFF087EA4), Color(0xFF0F766E)],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight);
 }

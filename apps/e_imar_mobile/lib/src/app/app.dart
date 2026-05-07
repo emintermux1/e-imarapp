@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/app_theme.dart';
 import 'router/app_router.dart';
 
-final themeModeProvider = StateProvider<ThemeMode>((_) => ThemeMode.system);
+final themeModeProvider = StateProvider<ThemeMode>((_) => ThemeMode.light);
 final amoledProvider = StateProvider<bool>((_) => false);
 
 class EImarApp extends ConsumerWidget {
