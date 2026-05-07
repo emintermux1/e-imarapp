@@ -8,7 +8,11 @@ class MoneyAmount {
 }
 
 class ConfidenceInterval {
-  const ConfidenceInterval({required this.low, required this.mid, required this.high, required this.confidence});
+  const ConfidenceInterval(
+      {required this.low,
+      required this.mid,
+      required this.high,
+      required this.confidence});
 
   final MoneyAmount low;
   final MoneyAmount mid;
@@ -17,7 +21,12 @@ class ConfidenceInterval {
 }
 
 class AiCitation {
-  const AiCitation({required this.title, required this.sourceName, required this.note, this.url, this.retrievedAt});
+  const AiCitation(
+      {required this.title,
+      required this.sourceName,
+      required this.note,
+      this.url,
+      this.retrievedAt});
 
   final String title;
   final String sourceName;
@@ -27,7 +36,10 @@ class AiCitation {
 }
 
 class SourceNote {
-  const SourceNote({required this.label, required this.description, required this.citations});
+  const SourceNote(
+      {required this.label,
+      required this.description,
+      required this.citations});
 
   final String label;
   final String description;
@@ -35,7 +47,17 @@ class SourceNote {
 }
 
 class ParcelAnalysisRequest {
-  const ParcelAnalysisRequest({required this.parcelId, required this.city, required this.district, required this.neighborhood, required this.zoningSummary, required this.parcelAreaSquareMeters, this.taks, this.kaks, this.emsal, this.floorLimit});
+  const ParcelAnalysisRequest(
+      {required this.parcelId,
+      required this.city,
+      required this.district,
+      required this.neighborhood,
+      required this.zoningSummary,
+      required this.parcelAreaSquareMeters,
+      this.taks,
+      this.kaks,
+      this.emsal,
+      this.floorLimit});
 
   final String parcelId;
   final String city;
@@ -50,7 +72,15 @@ class ParcelAnalysisRequest {
 }
 
 class ParcelAnalysisResponse {
-  const ParcelAnalysisResponse({required this.provider, required this.summary, required this.insights, required this.riskCaveats, required this.investmentScore, required this.sourceNotes, required this.generatedAt, this.promptBoundaryNote});
+  const ParcelAnalysisResponse(
+      {required this.provider,
+      required this.summary,
+      required this.insights,
+      required this.riskCaveats,
+      required this.investmentScore,
+      required this.sourceNotes,
+      required this.generatedAt,
+      this.promptBoundaryNote});
 
   final AiModelProvider provider;
   final String summary;
@@ -63,7 +93,11 @@ class ParcelAnalysisResponse {
 }
 
 class AiParcelInsight {
-  const AiParcelInsight({required this.title, required this.summary, required this.confidence, this.citations = const []});
+  const AiParcelInsight(
+      {required this.title,
+      required this.summary,
+      required this.confidence,
+      this.citations = const []});
 
   final String title;
   final String summary;
@@ -72,7 +106,14 @@ class AiParcelInsight {
 }
 
 class PriceEstimateRequest {
-  const PriceEstimateRequest({required this.parcelId, required this.city, required this.district, required this.neighborhood, required this.zoningStatus, required this.parcelAreaSquareMeters, this.parcelAnalysis});
+  const PriceEstimateRequest(
+      {required this.parcelId,
+      required this.city,
+      required this.district,
+      required this.neighborhood,
+      required this.zoningStatus,
+      required this.parcelAreaSquareMeters,
+      this.parcelAnalysis});
 
   final String parcelId;
   final String city;
@@ -84,7 +125,18 @@ class PriceEstimateRequest {
 }
 
 class PriceEstimateResponse {
-  const PriceEstimateResponse({required this.provider, required this.estimatedTotalValue, required this.pricePerSquareMeter, required this.confidenceInterval, required this.comparables, required this.marketTrend, required this.aiInsight, required this.investmentScore, required this.riskCaveats, required this.sourceNotes, required this.generatedAt});
+  const PriceEstimateResponse(
+      {required this.provider,
+      required this.estimatedTotalValue,
+      required this.pricePerSquareMeter,
+      required this.confidenceInterval,
+      required this.comparables,
+      required this.marketTrend,
+      required this.aiInsight,
+      required this.investmentScore,
+      required this.riskCaveats,
+      required this.sourceNotes,
+      required this.generatedAt});
 
   final AiModelProvider provider;
   final MoneyAmount estimatedTotalValue;
@@ -100,7 +152,17 @@ class PriceEstimateResponse {
 }
 
 class MarketComparable {
-  const MarketComparable({required this.source, required this.locationLabel, required this.areaSquareMeters, required this.pricePerSquareMeter, required this.totalPrice, required this.distanceMeters, required this.zoningStatus, required this.observedAt, required this.sourceNote, this.confidence = .7});
+  const MarketComparable(
+      {required this.source,
+      required this.locationLabel,
+      required this.areaSquareMeters,
+      required this.pricePerSquareMeter,
+      required this.totalPrice,
+      required this.distanceMeters,
+      required this.zoningStatus,
+      required this.observedAt,
+      required this.sourceNote,
+      this.confidence = .7});
 
   final MarketDataSource source;
   final String locationLabel;
@@ -115,14 +177,21 @@ class MarketComparable {
 }
 
 class InvestmentScore {
-  const InvestmentScore({required this.score, required this.label, required this.drivers});
+  const InvestmentScore(
+      {required this.score, required this.label, required this.drivers});
 
   final int score;
   final String label;
   final List<String> drivers;
 }
 
-enum MarketDataSource { sahibinden, emlakjet, hepsiemlak, municipalityOpenData, manualAppraisal }
+enum MarketDataSource {
+  sahibinden,
+  emlakjet,
+  hepsiemlak,
+  municipalityOpenData,
+  manualAppraisal
+}
 
 extension MarketDataSourceLabel on MarketDataSource {
   String get label => switch (this) {

@@ -8,7 +8,13 @@ import 'risk_layer_toggles.dart';
 enum MapControlMode { timeline, riskLayers, threeD }
 
 class MapControlsPanel extends StatefulWidget {
-  const MapControlsPanel({required this.parcel, super.key, this.activeMode, this.onModeChanged, this.onYearChanged, this.onRiskToggled});
+  const MapControlsPanel(
+      {required this.parcel,
+      super.key,
+      this.activeMode,
+      this.onModeChanged,
+      this.onYearChanged,
+      this.onRiskToggled});
   final ParcelDetail parcel;
   final MapControlMode? activeMode;
   final ValueChanged<MapControlMode>? onModeChanged;
@@ -41,11 +47,15 @@ class _MapControlsPanelState extends State<MapControlsPanel> {
   Widget _buildBody() {
     switch (_mode) {
       case MapControlMode.timeline:
-        return HistoricalTimelineSlider(key: const ValueKey('timeline'), onYearChanged: widget.onYearChanged);
+        return HistoricalTimelineSlider(
+            key: const ValueKey('timeline'),
+            onYearChanged: widget.onYearChanged);
       case MapControlMode.riskLayers:
-        return RiskLayerToggles(key: const ValueKey('risk'), onToggled: widget.onRiskToggled);
+        return RiskLayerToggles(
+            key: const ValueKey('risk'), onToggled: widget.onRiskToggled);
       case MapControlMode.threeD:
-        return Mock3dParcelPreview(key: const ValueKey('3d'), parcel: widget.parcel);
+        return Mock3dParcelPreview(
+            key: const ValueKey('3d'), parcel: widget.parcel);
     }
   }
 

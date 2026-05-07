@@ -27,10 +27,23 @@ class _SplashScreenState extends State<SplashScreen> {
         decoration: const BoxDecoration(gradient: AppGradients.premium),
         child: Center(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(width: 88, height: 88, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .14), borderRadius: BorderRadius.circular(28)), child: const Icon(Icons.map_rounded, color: Colors.white, size: 46)),
+            Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: .14),
+                    borderRadius: BorderRadius.circular(28)),
+                child: const Icon(Icons.map_rounded,
+                    color: Colors.white, size: 46)),
             const SizedBox(height: 22),
-            Text('E-İmar', style: Theme.of(context).textTheme.displaySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w900)),
-            Text('İmar ve Emsal Sorgu', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white70)),
+            Text('E-İmar',
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    color: Colors.white, fontWeight: FontWeight.w900)),
+            Text('İmar ve Emsal Sorgu',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(color: Colors.white70)),
           ]),
         ),
       ),

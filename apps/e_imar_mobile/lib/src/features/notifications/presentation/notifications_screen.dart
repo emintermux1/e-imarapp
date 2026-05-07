@@ -20,8 +20,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final source = ref.watch(mockNotificationsProvider);
-    final notifications =
-        markedAllRead ? source.notifications.map((n) => n.copyWith(read: true)).toList() : source.notifications;
+    final notifications = markedAllRead
+        ? source.notifications.map((n) => n.copyWith(read: true)).toList()
+        : source.notifications;
     final unreadCount = notifications.where((n) => !n.read).length;
 
     return Scaffold(

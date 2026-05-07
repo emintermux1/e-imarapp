@@ -29,7 +29,12 @@ class RiskLayerToggles extends StatefulWidget {
 }
 
 class _RiskLayerTogglesState extends State<RiskLayerToggles> {
-  final _toggles = <String, bool>{for (final e in _toggleEntries) e.riskId: e.riskId == 'deprem' || e.riskId == 'fayHatti' || e.riskId == 'zeminTipi'};
+  final _toggles = <String, bool>{
+    for (final e in _toggleEntries)
+      e.riskId: e.riskId == 'deprem' ||
+          e.riskId == 'fayHatti' ||
+          e.riskId == 'zeminTipi'
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -38,11 +43,25 @@ class _RiskLayerTogglesState extends State<RiskLayerToggles> {
       variant: GlassVariant.elevated,
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Container(width: 36, height: 36, decoration: BoxDecoration(gradient: AppGradients.premium, borderRadius: BorderRadius.circular(12), boxShadow: AppShadows.glow(AppColors.emerald)), child: const Icon(Icons.shield_rounded, color: Colors.white, size: 20)),
+          Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                  gradient: AppGradients.premium,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: AppShadows.glow(AppColors.emerald)),
+              child: const Icon(Icons.shield_rounded,
+                  color: Colors.white, size: 20)),
           const SizedBox(width: 10),
-          Text('Risk Katmanları', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900)),
+          Text('Risk Katmanları',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w900)),
           const Spacer(),
-          Text('${_activeCount}/${_toggleEntries.length}', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.slate, fontWeight: FontWeight.w800)),
+          Text('${_activeCount}/${_toggleEntries.length}',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppColors.slate, fontWeight: FontWeight.w800)),
         ]),
         const SizedBox(height: 14),
         ..._toggleEntries.map((e) => Padding(
@@ -65,7 +84,11 @@ class _RiskLayerTogglesState extends State<RiskLayerToggles> {
 }
 
 class _ToggleRow extends StatelessWidget {
-  const _ToggleRow({required this.icon, required this.label, required this.value, required this.onChanged});
+  const _ToggleRow(
+      {required this.icon,
+      required this.label,
+      required this.value,
+      required this.onChanged});
   final IconData icon;
   final String label;
   final bool value;
@@ -77,9 +100,18 @@ class _ToggleRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       variant: GlassVariant.subtle,
       child: Row(children: [
-        Icon(icon, size: 18, color: value ? AppColors.emerald : AppColors.slate.withValues(alpha: .5)),
+        Icon(icon,
+            size: 18,
+            color: value
+                ? AppColors.emerald
+                : AppColors.slate.withValues(alpha: .5)),
         const SizedBox(width: 10),
-        Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: value ? null : AppColors.slate.withValues(alpha: .6)))),
+        Expanded(
+            child: Text(label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color:
+                        value ? null : AppColors.slate.withValues(alpha: .6)))),
         SizedBox(
           width: 44,
           height: 28,

@@ -58,19 +58,75 @@ abstract final class AppRadius {
 }
 
 abstract final class AppGradients {
-  static const premium = LinearGradient(colors: [AppColors.deepGreen, AppColors.forest, AppColors.emerald], begin: Alignment.topLeft, end: Alignment.bottomRight);
-  static const emeraldGlow = RadialGradient(colors: [Color(0x6616C784), Color(0x0016C784)], radius: .95);
-  static const darkGlass = LinearGradient(colors: [Color(0xD912261E), Color(0x9912211C)], begin: Alignment.topLeft, end: Alignment.bottomRight);
-  static const amoledGlass = LinearGradient(colors: [Color(0xE6000000), Color(0xB3081713)], begin: Alignment.topLeft, end: Alignment.bottomRight);
-  static const sandSurface = LinearGradient(colors: [Color(0xFFFDF8EF), Color(0xFFF4EFE5), Color(0xFFEAF5EE)], begin: Alignment.topLeft, end: Alignment.bottomRight);
-  static const heroMap = LinearGradient(colors: [Color(0xFF020806), Color(0xFF082019), Color(0xFF153E32), Color(0xFF806C45)], stops: [0, .34, .7, 1], begin: Alignment.topLeft, end: Alignment.bottomRight);
-  static const mapMock = LinearGradient(colors: [Color(0xFF061511), Color(0xFF0D2D25), Color(0xFF1B503F), Color(0xFF756944)], stops: [0, .42, .78, 1], begin: Alignment.topLeft, end: Alignment.bottomRight);
-  static const score = LinearGradient(colors: [Color(0xFF132F27), Color(0xFF16C784), Color(0xFFC6F66F)], begin: Alignment.topLeft, end: Alignment.bottomRight);
+  static const premium = LinearGradient(
+      colors: [AppColors.deepGreen, AppColors.forest, AppColors.emerald],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight);
+  static const emeraldGlow = RadialGradient(
+      colors: [Color(0x6616C784), Color(0x0016C784)], radius: .95);
+  static const darkGlass = LinearGradient(
+      colors: [Color(0xD912261E), Color(0x9912211C)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight);
+  static const amoledGlass = LinearGradient(
+      colors: [Color(0xE6000000), Color(0xB3081713)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight);
+  static const sandSurface = LinearGradient(
+      colors: [Color(0xFFFDF8EF), Color(0xFFF4EFE5), Color(0xFFEAF5EE)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight);
+  static const heroMap = LinearGradient(colors: [
+    Color(0xFF020806),
+    Color(0xFF082019),
+    Color(0xFF153E32),
+    Color(0xFF806C45)
+  ], stops: [
+    0,
+    .34,
+    .7,
+    1
+  ], begin: Alignment.topLeft, end: Alignment.bottomRight);
+  static const mapMock = LinearGradient(colors: [
+    Color(0xFF061511),
+    Color(0xFF0D2D25),
+    Color(0xFF1B503F),
+    Color(0xFF756944)
+  ], stops: [
+    0,
+    .42,
+    .78,
+    1
+  ], begin: Alignment.topLeft, end: Alignment.bottomRight);
+  static const score = LinearGradient(
+      colors: [Color(0xFF132F27), Color(0xFF16C784), Color(0xFFC6F66F)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight);
 }
 
 abstract final class AppShadows {
-  static List<BoxShadow> soft(Color color) => [BoxShadow(color: color.withValues(alpha: .10), blurRadius: 28, offset: const Offset(0, 14))];
-  static List<BoxShadow> medium(Color color) => [BoxShadow(color: color.withValues(alpha: .14), blurRadius: 36, offset: const Offset(0, 18))];
-  static List<BoxShadow> elevated(Color color) => [BoxShadow(color: color.withValues(alpha: .18), blurRadius: 46, offset: const Offset(0, 24))];
-  static List<BoxShadow> glow(Color color) => [BoxShadow(color: color.withValues(alpha: .28), blurRadius: 34, offset: const Offset(0, 12))];
+  static List<BoxShadow> soft(Color color) => [
+        BoxShadow(
+            color: color.withValues(alpha: .10),
+            blurRadius: 28,
+            offset: const Offset(0, 14))
+      ];
+  static List<BoxShadow> medium(Color color) => [
+        BoxShadow(
+            color: color.withValues(alpha: .14),
+            blurRadius: 36,
+            offset: const Offset(0, 18))
+      ];
+  static List<BoxShadow> elevated(Color color) => [
+        BoxShadow(
+            color: color.withValues(alpha: .18),
+            blurRadius: 46,
+            offset: const Offset(0, 24))
+      ];
+  static List<BoxShadow> glow(Color color) => [
+        BoxShadow(
+            color: color.withValues(alpha: .28),
+            blurRadius: 34,
+            offset: const Offset(0, 12))
+      ];
 }

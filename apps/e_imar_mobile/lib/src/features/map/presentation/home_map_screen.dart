@@ -21,7 +21,8 @@ class HomeMapScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeMapScreen> createState() => _HomeMapScreenState();
 }
 
-class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTickerProviderStateMixin {
+class _HomeMapScreenState extends ConsumerState<HomeMapScreen>
+    with SingleTickerProviderStateMixin {
   int tab = 0;
   Offset? _tapScreenPosition;
   int _pulseGeneration = 0;
@@ -30,7 +31,8 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
   @override
   void initState() {
     super.initState();
-    if (widget.openParcelOnStart) WidgetsBinding.instance.addPostFrameCallback((_) => _openParcel());
+    if (widget.openParcelOnStart)
+      WidgetsBinding.instance.addPostFrameCallback((_) => _openParcel());
   }
 
   @override
@@ -51,11 +53,14 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               _CommandBar(
                 onTap: () => context.push(SearchRoute.path),
-                onTimeline: () => _controlsKey.currentState?.setMode(MapControlMode.timeline),
-                onRisk: () => _controlsKey.currentState?.setMode(MapControlMode.riskLayers),
+                onTimeline: () =>
+                    _controlsKey.currentState?.setMode(MapControlMode.timeline),
+                onRisk: () => _controlsKey.currentState
+                    ?.setMode(MapControlMode.riskLayers),
               ),
               const SizedBox(height: 10),
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -65,7 +70,8 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
                   selected: style,
                   onMap: () => _onStyleSwitch(MapboxStylePreset.satellite),
                   onTerrain: () => _onStyleSwitch(MapboxStylePreset.streets),
-                  onThreeD: () => _controlsKey.currentState?.setMode(MapControlMode.threeD),
+                  onThreeD: () =>
+                      _controlsKey.currentState?.setMode(MapControlMode.threeD),
                 ),
               ]),
               const SizedBox(height: 10),
@@ -75,19 +81,46 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
               const SizedBox(height: 12),
               SizedBox(
                 height: 104,
-                child: ListView(scrollDirection: Axis.horizontal, clipBehavior: Clip.none, children: [
-                  _QuickAction(label: 'Parsel Sorgula', subtitle: 'Ada, parsel, koordinat', icon: Icons.grid_on_rounded, onTap: () => context.push(SearchRoute.path)),
-                  _QuickAction(label: 'Emsal Hesapla', subtitle: 'Proje potansiyeli', icon: Icons.calculate_rounded, onTap: () => context.push(EmsalRoute.path)),
-                  _QuickAction(label: 'Risk Analizi', subtitle: 'Isı haritası mock', icon: Icons.shield_rounded, onTap: () => context.push(AnalysisRoute.path)),
-                  _QuickAction(label: 'Fiyat Tahmini', subtitle: 'Fintech değerleme', icon: Icons.payments_rounded, onTap: () => context.push(AiValuationRoute.path)),
-                  _QuickAction(label: '3D Görünüm', subtitle: 'Kütle simülasyonu', icon: Icons.view_in_ar_rounded, onTap: () => _controlsKey.currentState?.setMode(MapControlMode.threeD)),
-                ]),
+                child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    clipBehavior: Clip.none,
+                    children: [
+                      _QuickAction(
+                          label: 'Parsel Sorgula',
+                          subtitle: 'Ada, parsel, koordinat',
+                          icon: Icons.grid_on_rounded,
+                          onTap: () => context.push(SearchRoute.path)),
+                      _QuickAction(
+                          label: 'Emsal Hesapla',
+                          subtitle: 'Proje potansiyeli',
+                          icon: Icons.calculate_rounded,
+                          onTap: () => context.push(EmsalRoute.path)),
+                      _QuickAction(
+                          label: 'Risk Analizi',
+                          subtitle: 'Isı haritası mock',
+                          icon: Icons.shield_rounded,
+                          onTap: () => context.push(AnalysisRoute.path)),
+                      _QuickAction(
+                          label: 'Fiyat Tahmini',
+                          subtitle: 'Fintech değerleme',
+                          icon: Icons.payments_rounded,
+                          onTap: () => context.push(AiValuationRoute.path)),
+                      _QuickAction(
+                          label: '3D Görünüm',
+                          subtitle: 'Kütle simülasyonu',
+                          icon: Icons.view_in_ar_rounded,
+                          onTap: () => _controlsKey.currentState
+                              ?.setMode(MapControlMode.threeD)),
+                    ]),
               ),
               const SizedBox(height: 80),
             ]),
           ),
         ),
-        Positioned(right: 16, bottom: 214, child: _MapFab(icon: Icons.my_location_rounded, onTap: () {})),
+        Positioned(
+            right: 16,
+            bottom: 214,
+            child: _MapFab(icon: Icons.my_location_rounded, onTap: () {})),
         if (_tapScreenPosition != null)
           Positioned(
             left: _tapScreenPosition!.dx - 28,
@@ -104,8 +137,12 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
                     height: 56,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.danger.withValues(alpha: 1.0 - value), width: 2.5),
-                      color: AppColors.warning.withValues(alpha: (1.0 - value) * 0.35),
+                      border: Border.all(
+                          color:
+                              AppColors.danger.withValues(alpha: 1.0 - value),
+                          width: 2.5),
+                      color: AppColors.warning
+                          .withValues(alpha: (1.0 - value) * 0.35),
                     ),
                     child: Center(
                       child: Container(
@@ -113,7 +150,8 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
                         height: 14 + value * 12,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.danger.withValues(alpha: 1.0 - value * 0.6),
+                          color: AppColors.danger
+                              .withValues(alpha: 1.0 - value * 0.6),
                         ),
                       ),
                     ),
@@ -136,9 +174,12 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
         },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.map_rounded), label: 'Harita'),
-          NavigationDestination(icon: Icon(Icons.analytics_rounded), label: 'Analiz'),
-          NavigationDestination(icon: Icon(Icons.favorite_rounded), label: 'Favoriler'),
-          NavigationDestination(icon: Icon(Icons.settings_rounded), label: 'Ayarlar'),
+          NavigationDestination(
+              icon: Icon(Icons.analytics_rounded), label: 'Analiz'),
+          NavigationDestination(
+              icon: Icon(Icons.favorite_rounded), label: 'Favoriler'),
+          NavigationDestination(
+              icon: Icon(Icons.settings_rounded), label: 'Ayarlar'),
         ],
       ),
     );
@@ -149,7 +190,8 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
     final lng = context.point.coordinates.lng;
     final parcel = ParcelHitTestHelper.hitTest(lat.toDouble(), lng.toDouble());
     setState(() {
-      _tapScreenPosition = Offset(context.touchPosition.x.toDouble(), context.touchPosition.y.toDouble());
+      _tapScreenPosition = Offset(context.touchPosition.x.toDouble(),
+          context.touchPosition.y.toDouble());
       _pulseGeneration++;
     });
     _openParcelWithParcel(parcel);
@@ -204,11 +246,21 @@ class _MapControlsPanelState extends State<_ControlsRow> {
   Widget _buildBody() {
     switch (_mode) {
       case MapControlMode.timeline:
-        return SizedBox(key: const ValueKey('timeline'), child: MapControlsPanel(parcel: ParcelDetail.sample));
+        return SizedBox(
+            key: const ValueKey('timeline'),
+            child: MapControlsPanel(parcel: ParcelDetail.sample));
       case MapControlMode.riskLayers:
-        return SizedBox(key: const ValueKey('risk'), child: MapControlsPanel(parcel: ParcelDetail.sample, activeMode: MapControlMode.riskLayers));
+        return SizedBox(
+            key: const ValueKey('risk'),
+            child: MapControlsPanel(
+                parcel: ParcelDetail.sample,
+                activeMode: MapControlMode.riskLayers));
       case MapControlMode.threeD:
-        return SizedBox(key: const ValueKey('3d'), child: MapControlsPanel(parcel: ParcelDetail.sample, activeMode: MapControlMode.threeD));
+        return SizedBox(
+            key: const ValueKey('3d'),
+            child: MapControlsPanel(
+                parcel: ParcelDetail.sample,
+                activeMode: MapControlMode.threeD));
     }
   }
 }
@@ -266,7 +318,8 @@ class _MapSurface extends StatelessWidget {
 }
 
 class _CommandBar extends StatelessWidget {
-  const _CommandBar({required this.onTap, required this.onTimeline, required this.onRisk});
+  const _CommandBar(
+      {required this.onTap, required this.onTimeline, required this.onRisk});
   final VoidCallback onTap;
   final VoidCallback onTimeline;
   final VoidCallback onRisk;
@@ -278,9 +331,36 @@ class _CommandBar extends StatelessWidget {
         borderRadius: AppRadius.xl,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
         child: Row(children: [
-          Container(width: 42, height: 42, decoration: BoxDecoration(gradient: AppGradients.premium, borderRadius: BorderRadius.circular(15)), child: const Center(child: Text('E', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 20)))),
+          Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                  gradient: AppGradients.premium,
+                  borderRadius: BorderRadius.circular(15)),
+              child: const Center(
+                  child: Text('E',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 20)))),
           const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('E-İmar', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900)), Text('Ada, parsel, adres veya koordinat ara', maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.slate))])),
+          Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text('E-İmar',
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelLarge
+                        ?.copyWith(fontWeight: FontWeight.w900)),
+                Text('Ada, parsel, adres veya koordinat ara',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: AppColors.slate))
+              ])),
           _RoundIcon(icon: Icons.timeline_rounded, onTap: onTimeline),
           const SizedBox(width: 8),
           _RoundIcon(icon: Icons.shield_rounded, onTap: onRisk),
@@ -291,17 +371,31 @@ class _CommandBar extends StatelessWidget {
 class _StatusRail extends StatelessWidget {
   const _StatusRail();
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(scrollDirection: Axis.horizontal, clipBehavior: Clip.none, child: Row(children: const [
-        StatusBadge(label: 'Canlı imar', tone: BadgeTone.success, icon: Icons.bolt_rounded),
+  Widget build(BuildContext context) => SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      clipBehavior: Clip.none,
+      child: Row(children: const [
+        StatusBadge(
+            label: 'Canlı imar',
+            tone: BadgeTone.success,
+            icon: Icons.bolt_rounded),
         SizedBox(width: 8),
-        StatusBadge(label: 'TKGM mock', tone: BadgeTone.info, icon: Icons.hub_rounded),
+        StatusBadge(
+            label: 'TKGM mock', tone: BadgeTone.info, icon: Icons.hub_rounded),
         SizedBox(width: 8),
-        StatusBadge(label: '120Hz hazır', tone: BadgeTone.neutral, icon: Icons.speed_rounded),
+        StatusBadge(
+            label: '120Hz hazır',
+            tone: BadgeTone.neutral,
+            icon: Icons.speed_rounded),
       ]));
 }
 
 class _LayerStack extends StatelessWidget {
-  const _LayerStack({required this.selected, required this.onMap, required this.onTerrain, required this.onThreeD});
+  const _LayerStack(
+      {required this.selected,
+      required this.onMap,
+      required this.onTerrain,
+      required this.onThreeD});
   final MapboxStylePreset selected;
   final VoidCallback onMap;
   final VoidCallback onTerrain;
@@ -312,15 +406,31 @@ class _LayerStack extends StatelessWidget {
         padding: const EdgeInsets.all(6),
         borderRadius: AppRadius.md,
         child: Column(children: [
-          _LayerButton(icon: Icons.satellite_alt_rounded, label: 'Uydu', selected: selected == MapboxStylePreset.satellite, onTap: onMap),
-          _LayerButton(icon: Icons.terrain_rounded, label: 'Arazi', selected: selected == MapboxStylePreset.streets, onTap: onTerrain),
-          _LayerButton(icon: Icons.view_in_ar_rounded, label: '3D', selected: false, onTap: onThreeD),
+          _LayerButton(
+              icon: Icons.satellite_alt_rounded,
+              label: 'Uydu',
+              selected: selected == MapboxStylePreset.satellite,
+              onTap: onMap),
+          _LayerButton(
+              icon: Icons.terrain_rounded,
+              label: 'Arazi',
+              selected: selected == MapboxStylePreset.streets,
+              onTap: onTerrain),
+          _LayerButton(
+              icon: Icons.view_in_ar_rounded,
+              label: '3D',
+              selected: false,
+              onTap: onThreeD),
         ]),
       );
 }
 
 class _LayerButton extends StatelessWidget {
-  const _LayerButton({required this.icon, required this.label, required this.selected, required this.onTap});
+  const _LayerButton(
+      {required this.icon,
+      required this.label,
+      required this.selected,
+      required this.onTap});
   final IconData icon;
   final String label;
   final bool selected;
@@ -330,7 +440,23 @@ class _LayerButton extends StatelessWidget {
   Widget build(BuildContext context) => InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
-        child: Container(width: 58, padding: const EdgeInsets.symmetric(vertical: 9), decoration: BoxDecoration(color: selected ? AppColors.emerald.withValues(alpha: .18) : Colors.transparent, borderRadius: BorderRadius.circular(16)), child: Column(children: [Icon(icon, size: 20, color: selected ? AppColors.emerald : null), const SizedBox(height: 3), Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w800))])),
+        child: Container(
+            width: 58,
+            padding: const EdgeInsets.symmetric(vertical: 9),
+            decoration: BoxDecoration(
+                color: selected
+                    ? AppColors.emerald.withValues(alpha: .18)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(16)),
+            child: Column(children: [
+              Icon(icon, size: 20, color: selected ? AppColors.emerald : null),
+              const SizedBox(height: 3),
+              Text(label,
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelSmall
+                      ?.copyWith(fontWeight: FontWeight.w800))
+            ])),
       );
 }
 
@@ -344,16 +470,42 @@ class _ParcelPreview extends StatelessWidget {
         variant: GlassVariant.elevated,
         padding: const EdgeInsets.all(14),
         child: Row(children: [
-          Container(width: 48, height: 48, decoration: BoxDecoration(color: AppColors.emerald.withValues(alpha: .14), borderRadius: BorderRadius.circular(18)), child: const Icon(Icons.layers_rounded, color: AppColors.emerald)),
+          Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                  color: AppColors.emerald.withValues(alpha: .14),
+                  borderRadius: BorderRadius.circular(18)),
+              child:
+                  const Icon(Icons.layers_rounded, color: AppColors.emerald)),
           const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Seçili parsel önizlemesi', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900)), const SizedBox(height: 3), Text('Fenerbahçe 1247/18 • detay için haritaya dokun', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate))])),
+          Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text('Seçili parsel önizlemesi',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w900)),
+                const SizedBox(height: 3),
+                Text('Fenerbahçe 1247/18 • detay için haritaya dokun',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: AppColors.slate))
+              ])),
           const Icon(Icons.keyboard_arrow_up_rounded),
         ]),
       );
 }
 
 class _QuickAction extends StatelessWidget {
-  const _QuickAction({required this.label, required this.subtitle, required this.icon, required this.onTap});
+  const _QuickAction(
+      {required this.label,
+      required this.subtitle,
+      required this.icon,
+      required this.onTap});
   final String label;
   final String subtitle;
   final IconData icon;
@@ -369,9 +521,30 @@ class _QuickAction extends StatelessWidget {
             variant: GlassVariant.elevated,
             padding: const EdgeInsets.all(13),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Container(width: 42, height: 42, decoration: BoxDecoration(gradient: AppGradients.premium, borderRadius: BorderRadius.circular(16)), child: Icon(icon, color: Colors.white, size: 22)),
+              Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                      gradient: AppGradients.premium,
+                      borderRadius: BorderRadius.circular(16)),
+                  child: Icon(icon, color: Colors.white, size: 22)),
               const SizedBox(width: 10),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, maxLines: 2, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900, height: 1.05)), const SizedBox(height: 5), Text(subtitle, maxLines: 2, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate, height: 1.2))])),
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text(label,
+                        maxLines: 2,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w900, height: 1.05)),
+                    const SizedBox(height: 5),
+                    Text(subtitle,
+                        maxLines: 2,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: AppColors.slate, height: 1.2))
+                  ])),
             ]),
           ),
         ),
@@ -386,7 +559,13 @@ class _RoundIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) => GestureDetector(
         onTap: onTap,
-        child: Container(width: 36, height: 36, decoration: BoxDecoration(color: AppColors.emerald.withValues(alpha: .12), shape: BoxShape.circle), child: Icon(icon, size: 19, color: AppColors.emerald)),
+        child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+                color: AppColors.emerald.withValues(alpha: .12),
+                shape: BoxShape.circle),
+            child: Icon(icon, size: 19, color: AppColors.emerald)),
       );
 }
 
@@ -396,5 +575,10 @@ class _MapFab extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => GlassCard(onTap: onTap, padding: const EdgeInsets.all(13), borderRadius: AppRadius.pill, variant: GlassVariant.elevated, child: Icon(icon, color: AppColors.emerald));
+  Widget build(BuildContext context) => GlassCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(13),
+      borderRadius: AppRadius.pill,
+      variant: GlassVariant.elevated,
+      child: Icon(icon, color: AppColors.emerald));
 }

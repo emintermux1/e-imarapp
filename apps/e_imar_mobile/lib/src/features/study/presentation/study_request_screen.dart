@@ -14,7 +14,8 @@ class StudyRequestScreen extends StatefulWidget {
 class _StudyRequestScreenState extends State<StudyRequestScreen> {
   int _step = 0;
 
-  final deliveryController = TextEditingController(text: StudyRequest.deliveryOptions.first);
+  final deliveryController =
+      TextEditingController(text: StudyRequest.deliveryOptions.first);
   final cityController = TextEditingController();
   final districtController = TextEditingController();
   final adaController = TextEditingController();
@@ -45,13 +46,17 @@ class _StudyRequestScreenState extends State<StudyRequestScreen> {
   bool _validateStep0() {
     bool ok = true;
     setState(() {
-      _deliveryError = deliveryController.text.isEmpty ? 'Teslim süresi seçiniz' : null;
+      _deliveryError =
+          deliveryController.text.isEmpty ? 'Teslim süresi seçiniz' : null;
       _cityError = cityController.text.trim().isEmpty ? 'İl giriniz' : null;
       if (_cityError != null) ok = false;
-      _districtError = districtController.text.trim().isEmpty ? 'İlçe giriniz' : null;
+      _districtError =
+          districtController.text.trim().isEmpty ? 'İlçe giriniz' : null;
       if (_districtError != null) ok = false;
       final areaVal = double.tryParse(areaController.text.replaceAll(',', '.'));
-      _areaError = (areaVal == null || areaVal <= 0) ? 'Geçerli arsa alanı giriniz' : null;
+      _areaError = (areaVal == null || areaVal <= 0)
+          ? 'Geçerli arsa alanı giriniz'
+          : null;
       if (_areaError != null) ok = false;
     });
     return ok;
@@ -62,9 +67,11 @@ class _StudyRequestScreenState extends State<StudyRequestScreen> {
     setState(() {
       _adaError = adaController.text.trim().isEmpty ? 'Ada giriniz' : null;
       if (_adaError != null) ok = false;
-      _parselError = parselController.text.trim().isEmpty ? 'Parsel giriniz' : null;
+      _parselError =
+          parselController.text.trim().isEmpty ? 'Parsel giriniz' : null;
       if (_parselError != null) ok = false;
-      _descError = descController.text.trim().isEmpty ? 'Açıklama giriniz' : null;
+      _descError =
+          descController.text.trim().isEmpty ? 'Açıklama giriniz' : null;
       if (_descError != null) ok = false;
     });
     return ok;
@@ -109,7 +116,9 @@ class _StudyRequestScreenState extends State<StudyRequestScreen> {
       ),
       body: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: Theme.of(context).brightness == Brightness.dark ? null : AppGradients.sandSurface,
+          gradient: Theme.of(context).brightness == Brightness.dark
+              ? null
+              : AppGradients.sandSurface,
         ),
         child: Column(
           children: [
@@ -160,7 +169,8 @@ class _StepIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
       child: Row(
         children: List.generate(labels.length, (i) {
           final active = i <= current;
@@ -175,7 +185,9 @@ class _StepIndicator extends StatelessWidget {
                       height: 3,
                       margin: const EdgeInsets.symmetric(horizontal: 6),
                       decoration: BoxDecoration(
-                        color: i < current ? AppColors.emerald : AppColors.outlineLight,
+                        color: i < current
+                            ? AppColors.emerald
+                            : AppColors.outlineLight,
                         borderRadius: BorderRadius.circular(99),
                       ),
                     ),
@@ -190,7 +202,8 @@ class _StepIndicator extends StatelessWidget {
 }
 
 class _StepDot extends StatelessWidget {
-  const _StepDot({required this.label, required this.index, required this.active});
+  const _StepDot(
+      {required this.label, required this.index, required this.active});
   final String label;
   final int index;
   final bool active;
@@ -219,7 +232,10 @@ class _StepDot extends StatelessWidget {
                   )
                 : Text(
                     '$index',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppColors.slate),
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelLarge
+                        ?.copyWith(color: AppColors.slate),
                   ),
           ),
         ),
@@ -274,7 +290,10 @@ class _Step0Form extends StatelessWidget {
               children: [
                 Text(
                   'Teslim Süresi',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 10),
                 AppSegmentedControl<String>(
@@ -286,12 +305,17 @@ class _Step0Form extends StatelessWidget {
                 if (deliveryError != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
-                    child: Text(deliveryError!, style: TextStyle(color: AppColors.danger, fontSize: 12)),
+                    child: Text(deliveryError!,
+                        style:
+                            TextStyle(color: AppColors.danger, fontSize: 12)),
                   ),
                 const SizedBox(height: 18),
                 Text(
                   'Konum Bilgileri',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 10),
                 Row(
@@ -322,7 +346,10 @@ class _Step0Form extends StatelessWidget {
                 const SizedBox(height: 18),
                 Text(
                   'Arsa Bilgisi',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 10),
                 TextField(
@@ -376,7 +403,10 @@ class _Step1Form extends StatelessWidget {
               children: [
                 Text(
                   'Ada / Parsel',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 10),
                 Row(
@@ -407,7 +437,10 @@ class _Step1Form extends StatelessWidget {
                 const SizedBox(height: 18),
                 Text(
                   'Açıklama',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 10),
                 TextField(
@@ -415,7 +448,8 @@ class _Step1Form extends StatelessWidget {
                   maxLines: 4,
                   decoration: InputDecoration(
                     labelText: 'Talep açıklaması',
-                    hintText: 'İmar durumu, yapılaşma koşulları, fizibilite beklentileri...',
+                    hintText:
+                        'İmar durumu, yapılaşma koşulları, fizibilite beklentileri...',
                     prefixIcon: const Padding(
                       padding: EdgeInsets.only(bottom: 64),
                       child: Icon(Icons.description_rounded),
@@ -449,15 +483,20 @@ class _Step2Review extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _SummaryRow(label: 'Teslim Süresi', value: request.deliveryTime),
+                _SummaryRow(
+                    label: 'Teslim Süresi', value: request.deliveryTime),
                 const Divider(height: 22),
                 _SummaryRow(label: 'İl', value: request.city),
                 const SizedBox(height: 10),
                 _SummaryRow(label: 'İlçe', value: request.district),
                 const Divider(height: 22),
-                _SummaryRow(label: 'Ada / Parsel', value: '${request.ada} / ${request.parsel}'),
+                _SummaryRow(
+                    label: 'Ada / Parsel',
+                    value: '${request.ada} / ${request.parsel}'),
                 const SizedBox(height: 10),
-                _SummaryRow(label: 'Arsa Alanı', value: '${request.landArea.toStringAsFixed(0)} m²'),
+                _SummaryRow(
+                    label: 'Arsa Alanı',
+                    value: '${request.landArea.toStringAsFixed(0)} m²'),
                 const Divider(height: 22),
                 _SummaryRow(label: 'Açıklama', value: request.description),
               ],
@@ -470,12 +509,16 @@ class _Step2Review extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline_rounded, color: AppColors.info, size: 22),
+                const Icon(Icons.info_outline_rounded,
+                    color: AppColors.info, size: 22),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Talebiniz incelendikten sonra danışmanlarımız en kısa sürede size dönüş yapacaktır. Bu bir ön talep olup bağlayıcı değildir.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate, height: 1.35),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: AppColors.slate, height: 1.35),
                   ),
                 ),
               ],
@@ -496,17 +539,24 @@ class _SummaryRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 110,
-            child: Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.slate, fontWeight: FontWeight.w700)),
+            child: Text(label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.slate, fontWeight: FontWeight.w700)),
           ),
           Expanded(
-            child: Text(value, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800)),
+            child: Text(value,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.w800)),
           ),
         ],
       );
 }
 
 class _BottomBar extends StatelessWidget {
-  const _BottomBar({required this.step, required this.onPrev, required this.onNext});
+  const _BottomBar(
+      {required this.step, required this.onPrev, required this.onNext});
   final int step;
   final VoidCallback onPrev;
   final VoidCallback onNext;
@@ -521,7 +571,8 @@ class _BottomBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg, vertical: AppSpacing.md),
           child: Row(
             children: [
               if (step > 0)
@@ -533,7 +584,9 @@ class _BottomBar extends StatelessWidget {
               const Spacer(),
               GradientButton(
                 label: step == 2 ? 'Onayla ve Gönder' : 'Devam',
-                icon: step == 2 ? Icons.send_rounded : Icons.arrow_forward_rounded,
+                icon: step == 2
+                    ? Icons.send_rounded
+                    : Icons.arrow_forward_rounded,
                 onPressed: onNext,
               ),
             ],

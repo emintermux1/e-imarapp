@@ -4,7 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class UserProfile {
-  const UserProfile({required this.id, required this.displayName, this.avatarUrl});
+  const UserProfile(
+      {required this.id, required this.displayName, this.avatarUrl});
   final String id;
   final String displayName;
   final String? avatarUrl;
@@ -81,8 +82,7 @@ class FirebaseUserDataRepository
   FirebaseUserDataRepository({
     FirebaseFirestore? firestore,
     firebase_auth.FirebaseAuth? firebaseAuth,
-  })
-      : _firestore = firestore ?? FirebaseFirestore.instance,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
@@ -346,7 +346,8 @@ class MockUserDataRepository
   Future<List<String>> favorites() async => List.unmodifiable(_favorites);
 
   @override
-  Future<void> removeFavorite(String parcelId) async => _favorites.remove(parcelId);
+  Future<void> removeFavorite(String parcelId) async =>
+      _favorites.remove(parcelId);
 
   @override
   Future<List<String>> recentSearches() async => List.unmodifiable(_searches);
@@ -369,7 +370,8 @@ class MockUserDataRepository
   }
 
   @override
-  Future<void> unfollowParcel(String parcelId) async => _followed.remove(parcelId);
+  Future<void> unfollowParcel(String parcelId) async =>
+      _followed.remove(parcelId);
 
   @override
   Future<UserProfile?> currentProfile() async =>
