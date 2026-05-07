@@ -62,7 +62,7 @@ class _RateLimiter {
   }
 }
 
-Future<GisFeatureCollection> _parseGeoJsonMainThread(String rawJson) {
+GisFeatureCollection _parseGeoJsonMainThread(String rawJson) {
   try {
     final decoded = jsonDecode(rawJson) as Map<String, dynamic>;
     final type = decoded['type'] as String? ?? '';
