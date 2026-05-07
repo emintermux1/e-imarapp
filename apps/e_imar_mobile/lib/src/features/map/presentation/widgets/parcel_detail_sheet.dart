@@ -112,7 +112,7 @@ void _toggleFollow(BuildContext context) {
 
 void _runUserAction(
   BuildContext context, {
-  required Future<void> Function(WidgetRef ref, ScaffoldMessengerState messenger) action,
+  required Future<void> Function(ProviderContainer ref, ScaffoldMessengerState messenger) action,
 }) {
   final ref = ProviderScope.containerOf(context);
   final messenger = ScaffoldMessenger.of(context);
