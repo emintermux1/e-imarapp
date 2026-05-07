@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/ai_valuation/presentation/ai_valuation_screen.dart';
 import '../../features/analysis/presentation/analysis_screen.dart';
 import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/emsal/presentation/emsal_calculator_screen.dart';
@@ -24,6 +25,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: SearchRoute.path, name: SearchRoute.name, pageBuilder: _slidePage(const ParcelSearchScreen())),
       GoRoute(path: ParcelDetailRoute.path, name: ParcelDetailRoute.name, pageBuilder: _slidePage(const HomeMapScreen(openParcelOnStart: true))),
       GoRoute(path: EmsalRoute.path, name: EmsalRoute.name, pageBuilder: _slidePage(const EmsalCalculatorScreen())),
+      GoRoute(path: AiValuationRoute.path, name: AiValuationRoute.name, pageBuilder: _slidePage(const AiValuationScreen())),
       GoRoute(path: AnalysisRoute.path, name: AnalysisRoute.name, pageBuilder: _slidePage(const AnalysisScreen())),
       GoRoute(path: FavoritesRoute.path, name: FavoritesRoute.name, pageBuilder: _slidePage(const FavoritesScreen())),
       GoRoute(path: SettingsRoute.path, name: SettingsRoute.name, pageBuilder: _slidePage(const SettingsScreen())),
@@ -61,6 +63,7 @@ abstract final class HomeRoute { static const path = '/home'; static const name 
 abstract final class SearchRoute { static const path = '/search'; static const name = 'search'; }
 abstract final class ParcelDetailRoute { static const path = '/parcel-detail'; static const name = 'parcel-detail'; }
 abstract final class EmsalRoute { static const path = '/emsal'; static const name = 'emsal'; }
+abstract final class AiValuationRoute { static const path = '/ai-valuation'; static const name = 'ai-valuation'; }
 abstract final class AnalysisRoute { static const path = '/analysis'; static const name = 'analysis'; }
 abstract final class FavoritesRoute { static const path = '/favorites'; static const name = 'favorites'; }
 abstract final class SettingsRoute { static const path = '/settings'; static const name = 'settings'; }
