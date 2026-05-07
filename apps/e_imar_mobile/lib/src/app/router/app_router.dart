@@ -15,6 +15,7 @@ import '../../features/reports/presentation/parcel_report_preview_screen.dart';
 import '../../features/search/presentation/parcel_search_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
+import '../../features/study/presentation/study_request_screen.dart';
 import '../../core/performance/motion.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -33,6 +34,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: ParcelReportRoute.path, name: ParcelReportRoute.name, pageBuilder: (context, state) => _slidePage(ParcelReportPreviewScreen(parcel: state.extra is ParcelDetail ? state.extra! as ParcelDetail : ParcelDetail.sample))(context, state)),
       GoRoute(path: FavoritesRoute.path, name: FavoritesRoute.name, pageBuilder: _slidePage(const FavoritesScreen())),
       GoRoute(path: NotificationsRoute.path, name: NotificationsRoute.name, pageBuilder: _slidePage(const NotificationsScreen())),
+      GoRoute(path: StudyRequestRoute.path, name: StudyRequestRoute.name, pageBuilder: _slidePage(const StudyRequestScreen())),
       GoRoute(path: SettingsRoute.path, name: SettingsRoute.name, pageBuilder: _slidePage(const SettingsScreen())),
     ],
   );
@@ -74,3 +76,4 @@ abstract final class ParcelReportRoute { static const path = '/parcel-report'; s
 abstract final class FavoritesRoute { static const path = '/favorites'; static const name = 'favorites'; }
 abstract final class NotificationsRoute { static const path = '/notifications'; static const name = 'notifications'; }
 abstract final class SettingsRoute { static const path = '/settings'; static const name = 'settings'; }
+abstract final class StudyRequestRoute { static const path = '/study-request'; static const name = 'study-request'; }
