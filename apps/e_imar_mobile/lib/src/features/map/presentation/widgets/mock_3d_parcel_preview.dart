@@ -122,7 +122,6 @@ class _MockMassingPainter extends CustomPainter {
     canvas.drawPath(plotPath, Paint()..color = AppColors.slate.withValues(alpha: .07)..style = PaintingStyle.fill);
     canvas.drawPath(plotPath, Paint()..color = AppColors.slate.withValues(alpha: .18)..style = PaintingStyle.stroke..strokeWidth = 0.8);
 
-    final bldScale = maxHeight / plotH;
     final bldH = (maxHeight / plotH) * (plotH * 0.78);
     final bldW = plotW * 0.45;
     final bldOrigin = Offset(cx, baseY - plotH * .04);

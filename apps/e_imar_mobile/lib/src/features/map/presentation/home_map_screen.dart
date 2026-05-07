@@ -147,7 +147,7 @@ class _HomeMapScreenState extends ConsumerState<HomeMapScreen> with SingleTicker
   void _onMapTap(mapbox.MapContentGestureContext context) {
     final lat = context.point.coordinates.lat;
     final lng = context.point.coordinates.lng;
-    final parcel = ParcelHitTestHelper.hitTest(lat, lng);
+    final parcel = ParcelHitTestHelper.hitTest(lat.toDouble(), lng.toDouble());
     setState(() {
       _tapScreenPosition = Offset(context.touchPosition.x.toDouble(), context.touchPosition.y.toDouble());
       _pulseGeneration++;
