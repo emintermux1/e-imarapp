@@ -1,10 +1,17 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/auth_repository.dart';
+import 'firebase_auth_repository.dart';
 
-final authRepositoryProvider = Provider<AuthRepository>((_) => MockAuthRepository());
+final authRepositoryProvider = Provider<AuthRepository>((_) {
+  if (Firebase.apps.isNotEmpty) {
+    return FirebaseAuthRepository();
+  }
+  return MockAuthRepository();
+});
 
 class MockAuthRepository implements AuthRepository {
   final _controller = StreamController<AuthUser?>.broadcast();
@@ -25,7 +32,15 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthUser> verifyPhoneOtp({required String verificationId, required String smsCode}) async => _mock('phone', 'Telefon Kullanıcısı');
+  Future<AuthUser> verifyPhoneOtp({
+    required String verificationId,
+    required String smsCode,
+  }) async {
+    if (verificationId.trim().isEmpty || smsCode.trim().isEmpty) {
+      throw const AuthException('Doğrulama kodunu girin.');
+    }
+    return _mock('phone', 'Telefon Kullanıcısı');
+  }
 
   @override
   Future<void> signOut() async => _controller.add(null);
