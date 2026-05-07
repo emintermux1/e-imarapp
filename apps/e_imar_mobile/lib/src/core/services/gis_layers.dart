@@ -18,7 +18,15 @@ enum RiskLayerCategory {
   planning,
 }
 
-enum RiskLayer { deprem, fayHatti, heyelan, sel, zeminTipi, tarimAlani, sitAlani }
+enum RiskLayer {
+  deprem,
+  fayHatti,
+  heyelan,
+  sel,
+  zeminTipi,
+  tarimAlani,
+  sitAlani
+}
 
 class GisBoundingBox {
   const GisBoundingBox({
@@ -47,8 +55,9 @@ class GisBoundingBox {
 
   String toBboxString() => '$minLng,$minLat,$maxLng,$maxLat';
   String toCommaSeparated() => toBboxString();
-  String toWms130Bbox(String crs) =>
-      crs.toUpperCase() == 'EPSG:4326' ? '$minLat,$minLng,$maxLat,$maxLng' : toBboxString();
+  String toWms130Bbox(String crs) => crs.toUpperCase() == 'EPSG:4326'
+      ? '$minLat,$minLng,$maxLat,$maxLng'
+      : toBboxString();
 
   static const turkeyBounds = GisBoundingBox(
     minLng: 25.5,
@@ -126,9 +135,11 @@ class GisFeature {
     final geometry = json['geometry'];
     final properties = json['properties'];
     return GisFeature(
-      id: (json['id'] ?? (properties is Map ? properties['id'] : null))?.toString(),
+      id: (json['id'] ?? (properties is Map ? properties['id'] : null))
+          ?.toString(),
       geometryType: geometry is Map ? geometry['type']?.toString() : null,
-      properties: properties is Map ? Map<String, Object?>.from(properties) : const {},
+      properties:
+          properties is Map ? Map<String, Object?>.from(properties) : const {},
       geometry: geometry is Map ? Map<String, Object?>.from(geometry) : null,
     );
   }
@@ -171,7 +182,8 @@ class GisFeatureCollection {
     final features = rawFeatures is List
         ? rawFeatures
             .whereType<Map>()
-            .map((item) => GisFeature.fromGeoJson(Map<String, Object?>.from(item)))
+            .map((item) =>
+                GisFeature.fromGeoJson(Map<String, Object?>.from(item)))
             .toList(growable: false)
         : const <GisFeature>[];
     return GisFeatureCollection(
@@ -181,7 +193,8 @@ class GisFeatureCollection {
     );
   }
 
-  factory GisFeatureCollection.raw(Map<String, Object?> json) => GisFeatureCollection(
+  factory GisFeatureCollection.raw(Map<String, Object?> json) =>
+      GisFeatureCollection(
         features: const [],
         rawGeoJson: json,
       );
@@ -269,7 +282,8 @@ final officialRiskLayerPresets = List<GisLayerDescriptor>.unmodifiable([
     category: RiskLayerCategory.jeofizik,
     cacheTtl: Duration(hours: 24),
     sourceAuthority: 'AFAD',
-    attribution: 'Afet ve Acil Durum Yönetimi Başkanlığı deprem tehlike verisi.',
+    attribution:
+        'Afet ve Acil Durum Yönetimi Başkanlığı deprem tehlike verisi.',
     opacity: .74,
     defaultVisible: true,
   ),
@@ -415,15 +429,20 @@ Uri buildGeoJsonRequestUrl(GisLayerDescriptor layer, GisLayerQuery query) {
 
 Uri buildGisRequestUrl(GisLayerDescriptor layer, GisLayerQuery query) {
   return switch (query.format) {
-    GisQueryFormat.wms || GisQueryFormat.png => buildWmsRequestUrl(layer, query),
+    GisQueryFormat.wms ||
+    GisQueryFormat.png =>
+      buildWmsRequestUrl(layer, query),
     GisQueryFormat.wfs => buildWfsRequestUrl(layer, query),
-    GisQueryFormat.geoJson || GisQueryFormat.json => buildGeoJsonRequestUrl(layer, query),
+    GisQueryFormat.geoJson ||
+    GisQueryFormat.json =>
+      buildGeoJsonRequestUrl(layer, query),
   };
 }
 
 abstract interface class GisLayerRepository {
   Future<List<GisLayerDescriptor>> availableLayers();
-  Future<GisFeatureCollection> fetchFeatures(GisLayerDescriptor layer, GisLayerQuery query);
+  Future<GisFeatureCollection> fetchFeatures(
+      GisLayerDescriptor layer, GisLayerQuery query);
   Uri buildRequestUrl(GisLayerDescriptor layer, GisLayerQuery query);
 
   Future<String> fetchGeoJson(
@@ -449,10 +468,12 @@ class MockGisLayerRepository implements GisLayerRepository {
   const MockGisLayerRepository();
 
   @override
-  Future<List<GisLayerDescriptor>> availableLayers() async => officialRiskLayerPresets;
+  Future<List<GisLayerDescriptor>> availableLayers() async =>
+      officialRiskLayerPresets;
 
   @override
-  Future<GisFeatureCollection> fetchFeatures(GisLayerDescriptor layer, GisLayerQuery query) async =>
+  Future<GisFeatureCollection> fetchFeatures(
+          GisLayerDescriptor layer, GisLayerQuery query) async =>
       GisFeatureCollection(
         features: [
           GisFeature(

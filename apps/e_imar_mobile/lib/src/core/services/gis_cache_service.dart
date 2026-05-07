@@ -11,11 +11,13 @@ class _CacheEntry {
 }
 
 String buildCacheKey(GisLayerDescriptor layer, GisLayerQuery query) {
-  return Uri.encodeComponent('${layer.id}|${query.toBboxString()}|${query.srs}');
+  return Uri.encodeComponent(
+      '${layer.id}|${query.toBboxString()}|${query.srs}');
 }
 
 class GisCacheService {
-  final LinkedHashMap<String, _CacheEntry> _store = LinkedHashMap<String, _CacheEntry>();
+  final LinkedHashMap<String, _CacheEntry> _store =
+      LinkedHashMap<String, _CacheEntry>();
 
   Future<GisFeatureCollection?> get(String cacheKey) async {
     final entry = _store[cacheKey];
@@ -27,7 +29,8 @@ class GisCacheService {
     return entry.features;
   }
 
-  Future<void> put(String cacheKey, GisFeatureCollection features, Duration ttl) async {
+  Future<void> put(
+      String cacheKey, GisFeatureCollection features, Duration ttl) async {
     _store[cacheKey] = _CacheEntry(
       features: features,
       expiresAt: DateTime.now().add(ttl),

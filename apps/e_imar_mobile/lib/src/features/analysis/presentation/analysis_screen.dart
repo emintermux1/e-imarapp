@@ -45,7 +45,8 @@ class _LayerList extends ConsumerWidget {
             padding: const EdgeInsets.all(14),
             child: AppStateView(
               title: 'Mock GIS katmanları aktif',
-              message: 'Ağ bağlantısı yok — canlı depo yerine mock katmanlar kullanılıyor.',
+              message:
+                  'Ağ bağlantısı yok — canlı depo yerine mock katmanlar kullanılıyor.',
               icon: Icons.cloud_off_rounded,
             ),
           ),
@@ -138,7 +139,10 @@ class _LayerCardState extends ConsumerState<_LayerCard> {
                     children: [
                       Text(
                         layer.name,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                       Text(
                         '$kindLabel • $categoryLabel • TTL: ${layer.cacheTtl.inMinutes}dk',
@@ -156,7 +160,10 @@ class _LayerCardState extends ConsumerState<_LayerCard> {
                 else if (_loading)
                   const Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+                    child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2)),
                   ),
               ],
             ),
@@ -165,7 +172,10 @@ class _LayerCardState extends ConsumerState<_LayerCard> {
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   '⚠ $_error',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.orange),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: Colors.orange),
                 ),
               ),
             if (_features != null && !_features!.hasError)

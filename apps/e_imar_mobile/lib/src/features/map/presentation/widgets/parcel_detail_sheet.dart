@@ -54,10 +54,11 @@ class ParcelDetailSheet extends ConsumerWidget {
                     children: [
                       Text(
                         '${parcel.neighborhood} ${parcel.block}/${parcel.parcel}',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              height: 1.02,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.02,
+                                ),
                       ),
                       const SizedBox(height: 7),
                       Text(
@@ -169,7 +170,8 @@ class ParcelDetailSheet extends ConsumerWidget {
                 IconActionChip(
                   label: 'Premium Rapor',
                   icon: Icons.picture_as_pdf_rounded,
-                  onTap: () => context.push(ParcelReportRoute.path, extra: parcel),
+                  onTap: () =>
+                      context.push(ParcelReportRoute.path, extra: parcel),
                 ),
                 IconActionChip(
                   label: 'Takibe Al',
