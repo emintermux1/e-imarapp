@@ -47,6 +47,8 @@ class GisBoundingBox {
   final double north;
 
   String toCommaSeparated() => '$west,$south,$east,$north';
+
+  String toWms130Bbox(String crs) => crs.toUpperCase() == 'EPSG:4326' ? '$south,$west,$north,$east' : toCommaSeparated();
 }
 
 class GisPoint {
@@ -83,7 +85,7 @@ class GisLayerQuery {
       'layers': layer.layerName ?? layer.id,
       'styles': '',
       'crs': srs,
-      'bbox': bbox.toCommaSeparated(),
+      'bbox': bbox.toWms130Bbox(srs),
       'width': '$width',
       'height': '$height',
       'format': _mimeType(GisQueryFormat.png),
