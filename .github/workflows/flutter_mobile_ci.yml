@@ -1,0 +1,55 @@
+name: Flutter Mobile CI
+
+on:
+  pull_request:
+    paths:
+      - 'apps/e_imar_mobile/**'
+      - 'packages/**'
+      - '.github/workflows/flutter_mobile_ci.yml'
+      - 'pubspec.yaml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/e_imar_mobile/**'
+      - 'packages/**'
+      - '.github/workflows/flutter_mobile_ci.yml'
+      - 'pubspec.yaml'
+
+concurrency:
+  group: flutter-mobile-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Analyze, test, and format
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/e_imar_mobile
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.24.x'
+          cache: true
+
+      - name: Show Flutter version
+        run: flutter --version
+
+      - name: Get packages
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      - name: Check formatting
+        run: dart format --set-exit-if-changed . ../../packages/e_imar_core
