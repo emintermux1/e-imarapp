@@ -31,28 +31,38 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: ListView(padding: const EdgeInsets.all(AppSpacing.lg), children: [
-          const SizedBox(height: 32),
-          Text('E-İmar', style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w900)),
-          Text('İmar ve Emsal Sorgu', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppColors.slate)),
-          const SizedBox(height: 36),
-          GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text('Giriş yap', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-            const SizedBox(height: 16),
-            _AuthButton(icon: Icons.g_mobiledata_rounded, label: 'Google ile devam et', onTap: () => _signIn((repo) => repo.signInWithGoogle())),
-            const SizedBox(height: 10),
-            _AuthButton(icon: Icons.apple_rounded, label: 'Apple ile devam et', onTap: () => _signIn((repo) => repo.signInWithApple())),
+      body: DecoratedBox(
+        decoration: BoxDecoration(gradient: Theme.of(context).brightness == Brightness.dark ? AppGradients.heroMap : AppGradients.sandSurface),
+        child: SafeArea(
+          child: ListView(padding: const EdgeInsets.all(AppSpacing.lg), children: [
             const SizedBox(height: 18),
-            TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Telefon', hintText: '+90 5xx xxx xx xx', prefixIcon: Icon(Icons.phone_rounded))),
-            const SizedBox(height: 10),
-            if (verificationId != null) TextField(controller: otp, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'OTP', hintText: '123456', prefixIcon: Icon(Icons.sms_rounded))),
-            const SizedBox(height: 12),
-            GradientButton(label: verificationId == null ? 'Kod Gönder' : 'Telefonla Giriş Yap', icon: Icons.lock_open_rounded, onPressed: loading ? null : _phoneAction),
-          ])),
-          const SizedBox(height: 18),
-          const AppStateView(title: 'Güvenli geliştirme modu', message: 'Gerçek Firebase anahtarları yoksa giriş akışları mock kullanıcı ile fail-soft çalışır.', icon: Icons.verified_user_rounded),
-        ]),
+            _BrandHero(),
+            const SizedBox(height: 24),
+            GlassCard(variant: GlassVariant.elevated, padding: const EdgeInsets.all(20), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Text('Güvenli giriş', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
+              const SizedBox(height: 8),
+              Text('Parsel portföyün, raporların ve çalışma taleplerin tek premium hesapta.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.slate)),
+              const SizedBox(height: 16),
+              _AuthButton(icon: Icons.g_mobiledata_rounded, label: 'Google ile devam et', onTap: () => _signIn((repo) => repo.signInWithGoogle())),
+              const SizedBox(height: 10),
+              _AuthButton(icon: Icons.apple_rounded, label: 'Apple ile devam et', onTap: () => _signIn((repo) => repo.signInWithApple())),
+              const SizedBox(height: 18),
+              Row(children: [Expanded(child: Divider(color: AppColors.slate.withOpacity(.2))), Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: Text('veya telefon', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.slate))), Expanded(child: Divider(color: AppColors.slate.withOpacity(.2)))]),
+              const SizedBox(height: 16),
+              TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Telefon', hintText: '+90 5xx xxx xx xx', prefixIcon: Icon(Icons.phone_rounded))),
+              const SizedBox(height: 10),
+              if (verificationId != null) TextField(controller: otp, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'OTP', hintText: '123456', prefixIcon: Icon(Icons.sms_rounded))),
+              const SizedBox(height: 12),
+              GradientButton(label: verificationId == null ? 'Kod Gönder' : 'Telefonla Giriş Yap', icon: Icons.lock_open_rounded, onPressed: loading ? null : _phoneAction),
+            ])),
+            const SizedBox(height: 18),
+            GlassCard(child: Wrap(spacing: 8, runSpacing: 8, children: const [
+              StatusBadge(label: 'KVKK hazır altyapı', tone: BadgeTone.success, icon: Icons.privacy_tip_rounded),
+              StatusBadge(label: 'Firebase fail-soft', tone: BadgeTone.info, icon: Icons.cloud_done_rounded),
+              StatusBadge(label: 'Mock güvenli mod', tone: BadgeTone.neutral, icon: Icons.verified_user_rounded),
+            ])),
+          ]),
+        ),
       ),
     );
   }
@@ -83,11 +93,22 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 }
 
+class _BrandHero extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(width: 66, height: 66, decoration: BoxDecoration(gradient: AppGradients.premium, borderRadius: BorderRadius.circular(24), boxShadow: AppShadows.glow(AppColors.emerald)), child: const Center(child: Text('E', style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w900)))),
+        const SizedBox(height: 18),
+        Text('E-İmar', style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w900, height: 1.0)),
+        const SizedBox(height: 6),
+        Text('İmar ve Emsal Sorgu', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppColors.slate, fontWeight: FontWeight.w700)),
+      ]);
+}
+
 class _AuthButton extends StatelessWidget {
   const _AuthButton({required this.icon, required this.label, required this.onTap});
   final IconData icon;
   final String label;
   final VoidCallback onTap;
   @override
-  Widget build(BuildContext context) => OutlinedButton.icon(onPressed: onTap, icon: Icon(icon), label: Text(label), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill))));
+  Widget build(BuildContext context) => OutlinedButton.icon(onPressed: onTap, icon: Icon(icon), label: Text(label, style: const TextStyle(fontWeight: FontWeight.w800)), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15), backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(.04) : Colors.white.withOpacity(.72), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill))));
 }

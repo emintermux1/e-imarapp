@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.1 - Phase 1.1 Design Polish
+
+- Expanded semantic design tokens for premium emerald/black/sand surfaces, glass overlays, map/risk colors, status colors, gradients, and elevation tiers.
+- Upgraded reusable UI primitives with richer glass cards, premium headers, status/risk badges, insight cards, score cards, and metric tiles.
+- Redesigned the map-first home experience with a floating command bar, live status badges, stacked layer controls, cinematic mock map, selected parcel preview, and premium quick actions.
+- Reworked parcel detail, search, emsal calculator, onboarding, and auth screens toward a modern Apple Maps / fintech / real-estate feel while keeping integrations mock/fail-soft.
+- Preserved performance constraints with deterministic non-repainting map painting, RepaintBoundary usage, const-friendly widgets, and no new design dependencies.
+
 ## 0.1.0 - Phase 1 Foundation
 
 - Added monorepo-style Flutter workspace under `apps/e_imar_mobile` and shared package boundary under `packages/e_imar_core`.
