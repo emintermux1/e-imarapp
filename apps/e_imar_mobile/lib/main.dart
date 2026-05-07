@@ -9,12 +9,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
 import 'src/app/app.dart';
 import 'src/core/config/app_config.dart';
+import 'src/data/repositories/offline_parcel_repository.dart';
 
 Future<void> main() async {
   await runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
     final config = AppConfig.fromEnvironment();
-    await _initializeFirebase(config);
+
+    await Future.wait([
+      _initializeFirebase(config),
+      _initializeIsarAndSeed(config),
+    ]);
 
     FlutterError.onError = (details) {
       FlutterError.presentError(details);
@@ -51,5 +56,16 @@ Future<void> _initializeFirebase(AppConfig config) async {
     }
   } catch (error, stack) {
     debugPrint('Firebase devre dışı başlatıldı: $error\n$stack');
+  }
+}
+
+Future<void> _initializeIsarAndSeed(AppConfig config) async {
+  try {
+    final isar = await initializeIsar();
+    final repo = OfflineParcelRepository(Future.value(isar));
+    await seedInitialParcelData(repo);
+    await repo.pruneStaleParcels();
+  } catch (error, stack) {
+    debugPrint('Isar başlatma hatası: $error\n$stack');
   }
 }
