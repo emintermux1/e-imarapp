@@ -91,17 +91,38 @@ class _AiValuationViewModel {
       required ParcelAiService aiService,
       required String parcelId,
       required String zoningSummary}) async {
-    final insights = await aiService.analyzeParcelLegacy(
-        parcelId: parcelId, zoningSummary: zoningSummary);
-    final pricePerSquareMeter = await aiService.estimatePricePerSquareMeter(
-        district: parcel.district, zoningStatus: parcel.zoningStatus);
     const parcelArea = 1240.0;
+    final analysis = await aiService.analyzeParcel(
+      ParcelAnalysisRequest(
+        parcelId: parcelId,
+        city: parcel.city,
+        district: parcel.district,
+        neighborhood: parcel.neighborhood,
+        zoningSummary: zoningSummary,
+        parcelAreaSquareMeters: parcelArea,
+        taks: parcel.taks,
+        kaks: parcel.kaks,
+        emsal: parcel.emsal,
+        floorLimit: parcel.floorLimit,
+      ),
+    );
+    final price = await aiService.estimatePrice(
+      PriceEstimateRequest(
+        parcelId: parcelId,
+        city: parcel.city,
+        district: parcel.district,
+        neighborhood: parcel.neighborhood,
+        zoningStatus: parcel.zoningStatus,
+        parcelAreaSquareMeters: parcelArea,
+        parcelAnalysis: analysis,
+      ),
+    );
     return _AiValuationViewModel(
       parcel: parcel,
-      insights: insights,
-      pricePerSquareMeter: pricePerSquareMeter,
+      insights: analysis.insights,
+      pricePerSquareMeter: price.pricePerSquareMeter.amount,
       parcelArea: parcelArea,
-      confidence: .78,
+      confidence: price.confidenceInterval.confidence,
       comparables: const [
         _ComparableListing(
             title: 'Fenerbahçe arsa benzeri',
