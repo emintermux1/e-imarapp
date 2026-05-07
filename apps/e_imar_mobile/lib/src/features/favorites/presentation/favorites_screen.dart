@@ -80,11 +80,13 @@ class _FavoritesContentState extends ConsumerState<_FavoritesContent> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final hasData = _favorites.isNotEmpty || _followed.isNotEmpty || _recent.isNotEmpty;
+    final hasData =
+        _favorites.isNotEmpty || _followed.isNotEmpty || _recent.isNotEmpty;
     if (!hasData) {
       return AppStateView(
         title: 'Henüz kayıtlı parsel yok',
-        message: 'Haritadan veya arama sonuçlarından parselleri favorilere ekleyerek burada takip edebilirsiniz.',
+        message:
+            'Haritadan veya arama sonuçlarından parselleri favorilere ekleyerek burada takip edebilirsiniz.',
         icon: Icons.favorite_border_rounded,
       );
     }
@@ -95,7 +97,8 @@ class _FavoritesContentState extends ConsumerState<_FavoritesContent> {
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
           if (_favorites.isNotEmpty) ...[
-            _SectionHeader(title: 'Favori Parseller', icon: Icons.favorite_rounded),
+            _SectionHeader(
+                title: 'Favori Parseller', icon: Icons.favorite_rounded),
             const SizedBox(height: 8),
             ..._favorites.map((p) => _ParcelTile(
                   data: p,
@@ -105,7 +108,9 @@ class _FavoritesContentState extends ConsumerState<_FavoritesContent> {
             const SizedBox(height: 20),
           ],
           if (_followed.isNotEmpty) ...[
-            _SectionHeader(title: 'Takip Edilen Parseller', icon: Icons.notifications_active_rounded),
+            _SectionHeader(
+                title: 'Takip Edilen Parseller',
+                icon: Icons.notifications_active_rounded),
             const SizedBox(height: 8),
             ..._followed.map((p) => _ParcelTile(
                   data: p,
@@ -115,7 +120,8 @@ class _FavoritesContentState extends ConsumerState<_FavoritesContent> {
             const SizedBox(height: 20),
           ],
           if (_recent.isNotEmpty) ...[
-            _SectionHeader(title: 'Son Görüntülenenler', icon: Icons.history_rounded),
+            _SectionHeader(
+                title: 'Son Görüntülenenler', icon: Icons.history_rounded),
             const SizedBox(height: 8),
             ..._recent.map((p) => _ParcelTile(
                   data: p,
@@ -157,7 +163,13 @@ class ParcelData {
     required this.roadFrontage,
   });
 
-  final String city, district, neighborhood, block, parcel, titleType, zoningStatus;
+  final String city,
+      district,
+      neighborhood,
+      block,
+      parcel,
+      titleType,
+      zoningStatus;
   final double taks, kaks, emsal, roadFrontage;
   final int floorLimit;
   final String coverageRatio;
@@ -192,7 +204,11 @@ class _SectionHeader extends StatelessWidget {
       children: [
         Icon(icon, color: AppColors.emerald, size: 22),
         const SizedBox(width: 10),
-        Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        Text(title,
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(fontWeight: FontWeight.w800)),
       ],
     );
   }
@@ -226,7 +242,8 @@ class _ParcelTile extends StatelessWidget {
                 color: AppColors.emerald.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-              child: const Icon(Icons.map_rounded, color: AppColors.emerald, size: 22),
+              child: const Icon(Icons.map_rounded,
+                  color: AppColors.emerald, size: 22),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -235,12 +252,18 @@ class _ParcelTile extends StatelessWidget {
                 children: [
                   Text(
                     '${data.neighborhood} ${data.block}/${data.parcel}',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '${data.city} / ${data.district} • ${data.zoningStatus}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: AppColors.slate),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -262,14 +285,16 @@ class _ParcelTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.favorite_rounded, color: AppColors.danger, size: 20),
+                  icon: const Icon(Icons.favorite_rounded,
+                      color: AppColors.danger, size: 20),
                   onPressed: onToggleFavorite,
                   visualDensity: VisualDensity.compact,
                   tooltip: 'Favorilerden çıkar',
                 ),
                 const SizedBox(height: 2),
                 IconButton(
-                  icon: const Icon(Icons.notifications_active_rounded, color: AppColors.warning, size: 20),
+                  icon: const Icon(Icons.notifications_active_rounded,
+                      color: AppColors.warning, size: 20),
                   onPressed: onToggleFollow,
                   visualDensity: VisualDensity.compact,
                   tooltip: 'Takibi bırak',
@@ -295,7 +320,11 @@ class _Badge extends StatelessWidget {
         color: AppColors.emerald.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(99),
       ),
-      child: Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.deepGreen)),
+      child: Text(label,
+          style: Theme.of(context)
+              .textTheme
+              .labelSmall
+              ?.copyWith(color: AppColors.deepGreen)),
     );
   }
 }

@@ -86,7 +86,11 @@ class _AiValuationViewModel {
   String get parcelLabel =>
       '${parcel.neighborhood} ${parcel.block}/${parcel.parcel}';
 
-  static Future<_AiValuationViewModel> load({required ParcelDetail parcel, required ParcelAiService aiService, required String parcelId, required String zoningSummary}) async {
+  static Future<_AiValuationViewModel> load(
+      {required ParcelDetail parcel,
+      required ParcelAiService aiService,
+      required String parcelId,
+      required String zoningSummary}) async {
     const parcelArea = 1240.0;
     final analysis = await aiService.analyzeParcel(
       ParcelAnalysisRequest(
