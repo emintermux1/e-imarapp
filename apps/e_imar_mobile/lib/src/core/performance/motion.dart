@@ -61,7 +61,7 @@ class PerformanceOverlayGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!kDebugMode || !enabled) return child;
-    return Stack(children: [child, const Positioned(top: 0, left: 0, right: 0, child: PerformanceOverlay.allEnabled())]);
+    return Stack(children: [child, Positioned(top: 0, left: 0, right: 0, child: PerformanceOverlay.allEnabled())]);
   }
 }
 
