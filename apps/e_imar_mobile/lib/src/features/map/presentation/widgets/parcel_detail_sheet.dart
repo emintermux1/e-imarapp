@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_router.dart';
+import '../../../../core/services/firebase_repositories.dart';
 import '../../../../core/theme/tokens.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/parcel.dart';
@@ -49,10 +51,10 @@ class ParcelDetailSheet extends StatelessWidget {
           const InsightCard(title: 'Dikkat notu', message: 'Ruhsat, terk ve plan notları gerçek entegrasyonla teyit edilmelidir.', icon: Icons.gpp_maybe_rounded, color: AppColors.warning),
           const SizedBox(height: 18),
           Wrap(spacing: 8, runSpacing: 8, children: [
-            const IconActionChip(label: 'Favoriye Ekle', icon: Icons.favorite_border_rounded),
+            IconActionChip(label: 'Favoriye Ekle', icon: Icons.favorite_border_rounded, onTap: () => _toggleFavorite(context)),
             const IconActionChip(label: 'Analizi Gör', icon: Icons.analytics_rounded),
             IconActionChip(label: 'Premium Rapor', icon: Icons.picture_as_pdf_rounded, onTap: () => context.push(ParcelReportRoute.path, extra: parcel)),
-            const IconActionChip(label: 'Paylaş', icon: Icons.ios_share_rounded),
+            IconActionChip(label: 'Takibe Al', icon: Icons.visibility_rounded, onTap: () => _toggleFollow(context)),
             const IconActionChip(label: 'Google Earth', icon: Icons.public_rounded),
             const IconActionChip(label: 'Koordinat', icon: Icons.my_location_rounded),
           ]),
@@ -70,4 +72,51 @@ class _RiskStrip extends StatelessWidget {
         const SizedBox(height: 10),
         const Wrap(spacing: 8, runSpacing: 8, children: [RiskChip(label: 'Deprem', level: 44), RiskChip(label: 'Likidite', level: 26), RiskChip(label: 'Plan', level: 18)]),
       ]));
+}
+
+void _toggleFavorite(BuildContext context) {
+  _runUserAction(
+    context,
+    action: (ref, messenger) async {
+      final repo = ref.read(favoritesRepositoryProvider);
+      final favs = await repo.favorites();
+      const parcelId = 'Fenerbahçe_1247/18';
+      if (favs.contains(parcelId)) {
+        await repo.removeFavorite(parcelId);
+        messenger.showSnackBar(const SnackBar(content: Text('Favorilerden kaldırıldı.')));
+      } else {
+        await repo.addFavorite(parcelId);
+        messenger.showSnackBar(const SnackBar(content: Text('Favorilere eklendi.')));
+      }
+    },
+  );
+}
+
+void _toggleFollow(BuildContext context) {
+  _runUserAction(
+    context,
+    action: (ref, messenger) async {
+      final repo = ref.read(followedParcelRepositoryProvider);
+      final followed = await repo.followedParcels();
+      const parcelId = 'Fenerbahçe_1247/18';
+      if (followed.contains(parcelId)) {
+        await repo.unfollowParcel(parcelId);
+        messenger.showSnackBar(const SnackBar(content: Text('Takipten çıkarıldı.')));
+      } else {
+        await repo.followParcel(parcelId);
+        messenger.showSnackBar(const SnackBar(content: Text('Takibe alındı.')));
+      }
+    },
+  );
+}
+
+void _runUserAction(
+  BuildContext context, {
+  required Future<void> Function(WidgetRef ref, ScaffoldMessengerState messenger) action,
+}) {
+  final ref = ProviderScope.containerOf(context);
+  final messenger = ScaffoldMessenger.of(context);
+  action(ref, messenger).catchError((_) {
+    messenger.showSnackBar(const SnackBar(content: Text('İşlem şu anda tamamlanamadı. Lütfen tekrar deneyin.')));
+  });
 }
