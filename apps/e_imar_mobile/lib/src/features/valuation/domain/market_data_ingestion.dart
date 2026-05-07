@@ -83,7 +83,7 @@ abstract base class PartnerDatasetMarketDataAdapter implements EthicalMarketData
   }
 }
 
-class MockMarketDataAdapter extends PartnerDatasetMarketDataAdapter {
+base class MockMarketDataAdapter extends PartnerDatasetMarketDataAdapter {
   const MockMarketDataAdapter({required this.source});
 
   @override

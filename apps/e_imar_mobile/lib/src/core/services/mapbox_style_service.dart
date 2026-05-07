@@ -39,7 +39,7 @@ class MapboxCameraHelper {
         bearing: bearing,
         pitch: pitch,
       ),
-      const mapbox.MapAnimationOptions(duration: 1800, startDelay: 0),
+      mapbox.MapAnimationOptions(duration: 1800, startDelay: 0),
     );
   }
 

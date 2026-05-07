@@ -59,9 +59,9 @@ class _EmsalCalculatorScreenState extends State<EmsalCalculatorScreen> {
             ),
             if (r != null) ...[
               const SizedBox(height: 18),
-              _ResultsSection(result: r!),
+              _ResultsSection(result: r),
               const SizedBox(height: 18),
-              _FloorBreakdownSection(result: r!),
+              _FloorBreakdownSection(result: r),
               const SizedBox(height: 18),
               _AssumptionsSection(),
               const SizedBox(height: 24),
@@ -85,7 +85,6 @@ class _EmsalCalculatorScreenState extends State<EmsalCalculatorScreen> {
   }
 
   double _d(String value, double fallback) => double.tryParse(value.replaceAll(',', '.')) ?? fallback;
-  String _money(double value) => '₺${(value / 1000000).toStringAsFixed(1)}M';
 }
 
 class _EquationHero extends StatelessWidget {
