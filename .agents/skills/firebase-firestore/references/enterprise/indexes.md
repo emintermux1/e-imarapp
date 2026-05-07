@@ -131,5 +131,4 @@ Define a unique index:
 
 ### CLI Commands
 
-Deploy indexes only: `bash npx firebase-tools@latest -y deploy --only
-firestore:indexes`
+Deploy indexes only: `npx -y firebase-tools@latest deploy --only firestore:indexes`

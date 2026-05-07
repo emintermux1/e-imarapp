@@ -109,5 +109,4 @@ Your indexes should be defined in `firestore.indexes.json` (pointed to by
 
 ### CLI Commands
 
-Deploy indexes only: `bash npx -y firebase-tools@latest deploy --only
-firestore:indexes`
+Deploy indexes only: `npx -y firebase-tools@latest deploy --only firestore:indexes`
