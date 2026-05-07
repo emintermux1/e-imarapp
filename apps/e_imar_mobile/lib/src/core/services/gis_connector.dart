@@ -184,7 +184,7 @@ class LiveGisLayerRepository implements GisLayerRepository {
       final cacheKey = buildCacheKey(layer, query);
 
       if (_cache != null) {
-        final cached = await _cache!.get(cacheKey);
+        final cached = await _cache.get(cacheKey);
         if (cached != null) return cached;
       }
 
@@ -227,7 +227,7 @@ class LiveGisLayerRepository implements GisLayerRepository {
 
       if (_cache != null && !collection.hasError) {
         final ttl = layer.cacheTtl;
-        await _cache!.put(cacheKey, collection, ttl);
+        await _cache.put(cacheKey, collection, ttl);
       }
 
       return collection;
