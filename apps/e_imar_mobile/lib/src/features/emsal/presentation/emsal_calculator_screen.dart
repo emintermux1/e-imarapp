@@ -118,7 +118,7 @@ class _EquationHero extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 'İnşaat alanı, daire adedi, maliyet ve ROI potansiyelini tek ekranda gör.',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.white.withOpacity(.78)),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.white.withValues(alpha: .78)),
               ),
             ],
           ),
@@ -239,7 +239,7 @@ class _ResultsSection extends StatelessWidget {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: AppColors.mint.withOpacity(.14),
+                    color: AppColors.mint.withValues(alpha: .14),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Icon(Icons.foundation_rounded, color: AppColors.mint, size: 21),

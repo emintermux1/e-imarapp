@@ -31,7 +31,7 @@ class ParcelDetailSheet extends StatelessWidget {
         minChildSize: .42,
         maxChildSize: .95,
         builder: (context, controller) => ListView(controller: controller, padding: const EdgeInsets.fromLTRB(20, 10, 20, 26), children: [
-          Center(child: Container(width: 48, height: 5, decoration: BoxDecoration(color: AppColors.slate.withOpacity(.24), borderRadius: BorderRadius.circular(99)))),
+          Center(child: Container(width: 48, height: 5, decoration: BoxDecoration(color: AppColors.slate.withValues(alpha: .24), borderRadius: BorderRadius.circular(99)))),
           const SizedBox(height: 18),
           Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('${parcel.neighborhood} ${parcel.block}/${parcel.parcel}', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900, height: 1.02)), const SizedBox(height: 7), Text('${parcel.city} / ${parcel.district} • ${parcel.titleType}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.slate))])),

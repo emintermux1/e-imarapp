@@ -25,10 +25,10 @@ class GlassCard extends StatelessWidget {
     final color = switch (variant) {
       GlassVariant.dark => AppColors.glassDark,
       GlassVariant.light => AppColors.glassLight,
-      GlassVariant.elevated => (isDark ? Colors.white : AppColors.deepGreen).withOpacity(isDark ? .12 : .08),
-      GlassVariant.subtle => (isDark ? Colors.white : AppColors.deepGreen).withOpacity(isDark ? .075 : .055),
+      GlassVariant.elevated => (isDark ? Colors.white : AppColors.deepGreen).withValues(alpha: isDark ? .12 : .08),
+      GlassVariant.subtle => (isDark ? Colors.white : AppColors.deepGreen).withValues(alpha: isDark ? .075 : .055),
     };
-    final borderColor = isDark ? Colors.white.withOpacity(.13) : Colors.white.withOpacity(.72);
+    final borderColor = isDark ? Colors.white.withValues(alpha: .13) : Colors.white.withValues(alpha: .72);
     final content = Material(
       color: color,
       shape: RoundedRectangleBorder(borderRadius: radius, side: BorderSide(color: borderColor)),
@@ -70,7 +70,7 @@ class StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = _toneColor(tone);
     return DecoratedBox(
-      decoration: BoxDecoration(color: color.withOpacity(.13), borderRadius: BorderRadius.circular(AppRadius.pill), border: Border.all(color: color.withOpacity(.28))),
+      decoration: BoxDecoration(color: color.withValues(alpha: .13), borderRadius: BorderRadius.circular(AppRadius.pill), border: Border.all(color: color.withValues(alpha: .28))),
       child: Padding(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), child: Row(mainAxisSize: MainAxisSize.min, children: [if (icon != null) ...[Icon(icon, size: 14, color: color), const SizedBox(width: 5)], Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color, fontWeight: FontWeight.w800, letterSpacing: .15))])),
     );
   }
@@ -96,7 +96,7 @@ class InsightCard extends StatelessWidget {
   Widget build(BuildContext context) => GlassCard(
         padding: const EdgeInsets.all(14),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Container(width: 38, height: 38, decoration: BoxDecoration(color: color.withOpacity(.14), borderRadius: BorderRadius.circular(14)), child: Icon(icon, color: color, size: 21)),
+          Container(width: 38, height: 38, decoration: BoxDecoration(color: color.withValues(alpha: .14), borderRadius: BorderRadius.circular(14)), child: Icon(icon, color: color, size: 21)),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900)), const SizedBox(height: 4), Text(message, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate, height: 1.35))])),
         ]),
@@ -116,9 +116,9 @@ class ValueScoreCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Row(children: [
-            Container(width: 76, height: 76, decoration: BoxDecoration(color: Colors.black.withOpacity(.18), shape: BoxShape.circle, border: Border.all(color: Colors.white.withOpacity(.35))), child: Center(child: Text('$score', style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w900)))),
+            Container(width: 76, height: 76, decoration: BoxDecoration(color: Colors.black.withValues(alpha: .18), shape: BoxShape.circle, border: Border.all(color: Colors.white.withValues(alpha: .35))), child: Center(child: Text('$score', style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w900)))),
             const SizedBox(width: 16),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w900)), const SizedBox(height: 5), Text(subtitle, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withOpacity(.78), height: 1.35))])),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w900)), const SizedBox(height: 5), Text(subtitle, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: .78), height: 1.35))])),
             if (trailing != null) trailing!,
           ]),
         ),
@@ -135,7 +135,7 @@ class GradientButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
     return DecoratedBox(
-      decoration: BoxDecoration(gradient: enabled ? AppGradients.premium : null, color: enabled ? null : AppColors.slate.withOpacity(.18), borderRadius: BorderRadius.circular(AppRadius.pill), boxShadow: enabled ? AppShadows.glow(AppColors.emerald) : null),
+      decoration: BoxDecoration(gradient: enabled ? AppGradients.premium : null, color: enabled ? null : AppColors.slate.withValues(alpha: .18), borderRadius: BorderRadius.circular(AppRadius.pill), boxShadow: enabled ? AppShadows.glow(AppColors.emerald) : null),
       child: FilledButton.icon(
         style: FilledButton.styleFrom(backgroundColor: Colors.transparent, disabledBackgroundColor: Colors.transparent, shadowColor: Colors.transparent, padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15)),
         onPressed: onPressed,
@@ -162,7 +162,7 @@ class IconActionChip extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
   @override
-  Widget build(BuildContext context) => ActionChip(avatar: Icon(icon, size: 18, color: AppColors.emerald), label: Text(label), onPressed: onTap, side: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.outlineDark : AppColors.outlineLight).withOpacity(.8)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)));
+  Widget build(BuildContext context) => ActionChip(avatar: Icon(icon, size: 18, color: AppColors.emerald), label: Text(label), onPressed: onTap, side: BorderSide(color: (Theme.of(context).brightness == Brightness.dark ? AppColors.outlineDark : AppColors.outlineLight).withValues(alpha: .8)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill)));
 }
 
 class PremiumBottomSheetShell extends StatelessWidget {
@@ -182,7 +182,7 @@ class MetricCard extends StatelessWidget {
   final String? subtitle;
   final IconData? icon;
   @override
-  Widget build(BuildContext context) => Card(child: Padding(padding: const EdgeInsets.all(AppSpacing.md), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [if (icon != null) Container(width: 34, height: 34, decoration: BoxDecoration(color: AppColors.emerald.withOpacity(.12), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: AppColors.emerald, size: 20)), if (icon != null) const SizedBox(height: 9), Text(title, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.slate, fontWeight: FontWeight.w700)), const SizedBox(height: 5), Text(value, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)), if (subtitle != null) Padding(padding: const EdgeInsets.only(top: 3), child: Text(subtitle!, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate)))])));
+  Widget build(BuildContext context) => Card(child: Padding(padding: const EdgeInsets.all(AppSpacing.md), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [if (icon != null) Container(width: 34, height: 34, decoration: BoxDecoration(color: AppColors.emerald.withValues(alpha: .12), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: AppColors.emerald, size: 20)), if (icon != null) const SizedBox(height: 9), Text(title, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.slate, fontWeight: FontWeight.w700)), const SizedBox(height: 5), Text(value, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)), if (subtitle != null) Padding(padding: const EdgeInsets.only(top: 3), child: Text(subtitle!, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.slate)))])));
 }
 
 class MetricTile extends StatelessWidget {
@@ -227,7 +227,7 @@ class AppStateView extends StatelessWidget {
   final IconData icon;
   final Widget? action;
   @override
-  Widget build(BuildContext context) => Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.xl), child: Column(mainAxisSize: MainAxisSize.min, children: [Container(width: 60, height: 60, decoration: BoxDecoration(color: AppColors.emerald.withOpacity(.13), borderRadius: BorderRadius.circular(22)), child: Icon(icon, size: 32, color: AppColors.emerald)), const SizedBox(height: 14), Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900), textAlign: TextAlign.center), const SizedBox(height: 8), Text(message, textAlign: TextAlign.center, style: TextStyle(color: AppColors.slate)), if (action != null) ...[const SizedBox(height: 16), action!]])));
+  Widget build(BuildContext context) => Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.xl), child: Column(mainAxisSize: MainAxisSize.min, children: [Container(width: 60, height: 60, decoration: BoxDecoration(color: AppColors.emerald.withValues(alpha: .13), borderRadius: BorderRadius.circular(22)), child: Icon(icon, size: 32, color: AppColors.emerald)), const SizedBox(height: 14), Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900), textAlign: TextAlign.center), const SizedBox(height: 8), Text(message, textAlign: TextAlign.center, style: TextStyle(color: AppColors.slate)), if (action != null) ...[const SizedBox(height: 16), action!]])));
 }
 
 Color _toneColor(BadgeTone tone) => switch (tone) {

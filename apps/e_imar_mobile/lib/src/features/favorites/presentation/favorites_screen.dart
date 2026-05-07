@@ -426,7 +426,7 @@ class _InlineEmptyState extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.slate.withOpacity(.08),
+          color: AppColors.slate.withValues(alpha: .08),
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: Row(
@@ -458,7 +458,7 @@ class _SoftIcon extends StatelessWidget {
         width: compact ? 38 : 44,
         height: compact ? 38 : 44,
         decoration: BoxDecoration(
-          color: AppColors.emerald.withOpacity(.14),
+          color: AppColors.emerald.withValues(alpha: .14),
           borderRadius: BorderRadius.circular(
               compact ? AppRadius.sm : AppRadius.md),
         ),
@@ -482,9 +482,9 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(darkText ? .85 : .16),
+          color: color.withValues(alpha: darkText ? .85 : .16),
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(color: color.withOpacity(.28)),
+          border: Border.all(color: color.withValues(alpha: .28)),
         ),
         child: Text(
           label,

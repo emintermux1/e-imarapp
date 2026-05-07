@@ -77,9 +77,9 @@ class _ToggleRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       variant: GlassVariant.subtle,
       child: Row(children: [
-        Icon(icon, size: 18, color: value ? AppColors.emerald : AppColors.slate.withOpacity(.5)),
+        Icon(icon, size: 18, color: value ? AppColors.emerald : AppColors.slate.withValues(alpha: .5)),
         const SizedBox(width: 10),
-        Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: value ? null : AppColors.slate.withOpacity(.6)))),
+        Expanded(child: Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: value ? null : AppColors.slate.withValues(alpha: .6)))),
         SizedBox(
           width: 44,
           height: 28,
@@ -87,7 +87,7 @@ class _ToggleRow extends StatelessWidget {
             value: value,
             onChanged: onChanged,
             activeColor: AppColors.emerald,
-            activeTrackColor: AppColors.emerald.withOpacity(.3),
+            activeTrackColor: AppColors.emerald.withValues(alpha: .3),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ),

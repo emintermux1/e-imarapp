@@ -50,13 +50,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       const SizedBox(height: 38),
                       Text(slide.$1, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w900, height: 1.05)),
                       const SizedBox(height: 14),
-                      Text(slide.$2, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white.withOpacity(.72), height: 1.35)),
+                      Text(slide.$2, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white.withValues(alpha: .72), height: 1.35)),
                     ]);
                   },
                 ),
               ),
               Row(children: [
-                for (var i = 0; i < slides.length + 1; i++) AnimatedContainer(duration: const Duration(milliseconds: 160), margin: const EdgeInsets.only(right: 7), width: index == i ? 28 : 8, height: 8, decoration: BoxDecoration(color: index == i ? AppColors.lime : Colors.white.withOpacity(.25), borderRadius: BorderRadius.circular(99))),
+                for (var i = 0; i < slides.length + 1; i++) AnimatedContainer(duration: const Duration(milliseconds: 160), margin: const EdgeInsets.only(right: 7), width: index == i ? 28 : 8, height: 8, decoration: BoxDecoration(color: index == i ? AppColors.lime : Colors.white.withValues(alpha: .25), borderRadius: BorderRadius.circular(99))),
                 const Spacer(),
                 GradientButton(label: index == slides.length ? 'Devam Et' : 'İleri', icon: Icons.arrow_forward_rounded, onPressed: () { if (index == slides.length) { context.go(AuthRoute.path); } else { controller.nextPage(duration: const Duration(milliseconds: 220), curve: Curves.easeOutCubic); } }),
               ]),
@@ -77,10 +77,10 @@ class _CinematicParcelArt extends StatelessWidget {
         child: Container(
           width: 230,
           height: 230,
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(64), gradient: const LinearGradient(colors: [Color(0x6616C784), Color(0x22C6F66F)], begin: Alignment.topLeft, end: Alignment.bottomRight), border: Border.all(color: Colors.white.withOpacity(.18)), boxShadow: AppShadows.glow(AppColors.emerald)),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(64), gradient: const LinearGradient(colors: [Color(0x6616C784), Color(0x22C6F66F)], begin: Alignment.topLeft, end: Alignment.bottomRight), border: Border.all(color: Colors.white.withValues(alpha: .18)), boxShadow: AppShadows.glow(AppColors.emerald)),
           child: Stack(children: [
-            for (var i = 0; i < 5; i++) Positioned(left: 28 + i * 30, top: 42 + (i.isEven ? 18 : 0), child: Transform.rotate(angle: -.25, child: Container(width: 76, height: 38, decoration: BoxDecoration(color: Colors.white.withOpacity(.08), border: Border.all(color: AppColors.mint.withOpacity(.35)), borderRadius: BorderRadius.circular(12))))),
-            Positioned(right: 26, bottom: 28, child: Container(width: 78, height: 78, decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.lime.withOpacity(.12), border: Border.all(color: AppColors.lime.withOpacity(.35))), child: Icon(icon, color: Colors.white, size: 40))),
+            for (var i = 0; i < 5; i++) Positioned(left: 28 + i * 30, top: 42 + (i.isEven ? 18 : 0), child: Transform.rotate(angle: -.25, child: Container(width: 76, height: 38, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .08), border: Border.all(color: AppColors.mint.withValues(alpha: .35)), borderRadius: BorderRadius.circular(12))))),
+            Positioned(right: 26, bottom: 28, child: Container(width: 78, height: 78, decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.lime.withValues(alpha: .12), border: Border.all(color: AppColors.lime.withValues(alpha: .35))), child: Icon(icon, color: Colors.white, size: 40))),
             Positioned(left: 28, bottom: 34, child: StatusBadge(label: index == 0 ? 'Harita' : index == 1 ? 'Emsal' : 'AI', tone: BadgeTone.success)),
           ]),
         ),
@@ -97,6 +97,6 @@ class _ProfileStep extends StatelessWidget {
         const SizedBox(height: 16),
         const GlassCard(variant: GlassVariant.dark, child: TextField(style: TextStyle(color: Colors.white), decoration: InputDecoration(labelText: 'Ad Soyad', prefixIcon: Icon(Icons.badge_rounded)))),
         const SizedBox(height: 12),
-        Text('Avatar ve ilgi alanları sonraki fazda Firebase profiline kaydedilecek.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(.72))),
+        Text('Avatar ve ilgi alanları sonraki fazda Firebase profiline kaydedilecek.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: .72))),
       ]);
 }

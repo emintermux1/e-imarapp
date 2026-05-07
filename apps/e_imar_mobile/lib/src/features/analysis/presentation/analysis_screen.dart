@@ -122,7 +122,7 @@ class _LayerToggleCard extends StatelessWidget {
       onTap: onChanged,
       padding: const EdgeInsets.all(14),
       child: Row(children: [
-        Container(width: 48, height: 48, decoration: BoxDecoration(color: color.withOpacity(.14), borderRadius: BorderRadius.circular(17)), child: Icon(_layerIcon(layer.riskLayer!), color: color, size: 25)),
+        Container(width: 48, height: 48, decoration: BoxDecoration(color: color.withValues(alpha: .14), borderRadius: BorderRadius.circular(17)), child: Icon(_layerIcon(layer.riskLayer!), color: color, size: 25)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -199,7 +199,7 @@ class _HeatmapMetric extends StatelessWidget {
   Widget build(BuildContext context) => GlassCard(
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Container(width: 34, height: 34, decoration: BoxDecoration(color: color.withOpacity(.15), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 20)),
+          Container(width: 34, height: 34, decoration: BoxDecoration(color: color.withValues(alpha: .15), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 20)),
           const SizedBox(height: 10),
           Text(title, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.slate, fontWeight: FontWeight.w800)),
           const SizedBox(height: 4),

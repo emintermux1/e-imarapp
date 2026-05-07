@@ -30,9 +30,9 @@ class _MockMapPainter extends CustomPainter {
 
   void _drawSatelliteTexture(Canvas canvas, Size size) {
     final paints = [
-      Paint()..color = const Color(0xFF314C2E).withOpacity(.18),
-      Paint()..color = const Color(0xFFB39E65).withOpacity(.10),
-      Paint()..color = const Color(0xFF102D25).withOpacity(.22),
+      Paint()..color = const Color(0xFF314C2E).withValues(alpha: .18),
+      Paint()..color = const Color(0xFFB39E65).withValues(alpha: .10),
+      Paint()..color = const Color(0xFF102D25).withValues(alpha: .22),
     ];
     for (var i = 0; i < 26; i++) {
       final x = size.width * ((i * 37) % 100) / 100;
@@ -42,7 +42,7 @@ class _MockMapPainter extends CustomPainter {
   }
 
   void _drawContours(Canvas canvas, Size size) {
-    final paint = Paint()..color = AppColors.mapContour.withOpacity(.09)..style = PaintingStyle.stroke..strokeWidth = 1;
+    final paint = Paint()..color = AppColors.mapContour.withValues(alpha: .09)..style = PaintingStyle.stroke..strokeWidth = 1;
     for (var i = 0; i < 11; i++) {
       final path = Path()..moveTo(-20, size.height * (.12 + i * .075));
       for (var x = 0.0; x <= size.width + 40; x += 44) {
@@ -53,14 +53,14 @@ class _MockMapPainter extends CustomPainter {
   }
 
   void _drawRoads(Canvas canvas, Size size) {
-    final casing = Paint()..color = Colors.black.withOpacity(.22)..style = PaintingStyle.stroke..strokeWidth = 15..strokeCap = StrokeCap.round;
-    final road = Paint()..color = AppColors.mapRoad.withOpacity(.52)..style = PaintingStyle.stroke..strokeWidth = 9..strokeCap = StrokeCap.round;
-    final lane = Paint()..color = Colors.white.withOpacity(.28)..style = PaintingStyle.stroke..strokeWidth = 1.2..strokeCap = StrokeCap.round;
+    final casing = Paint()..color = Colors.black.withValues(alpha: .22)..style = PaintingStyle.stroke..strokeWidth = 15..strokeCap = StrokeCap.round;
+    final road = Paint()..color = AppColors.mapRoad.withValues(alpha: .52)..style = PaintingStyle.stroke..strokeWidth = 9..strokeCap = StrokeCap.round;
+    final lane = Paint()..color = Colors.white.withValues(alpha: .28)..style = PaintingStyle.stroke..strokeWidth = 1.2..strokeCap = StrokeCap.round;
     final main = Path()..moveTo(size.width * -.04, size.height * .34)..cubicTo(size.width * .28, size.height * .18, size.width * .51, size.height * .53, size.width * 1.05, size.height * .39);
     canvas.drawPath(main, casing);
     canvas.drawPath(main, road);
     canvas.drawPath(main, lane);
-    final secondary = Paint()..color = const Color(0xFFB8D1BE).withOpacity(.22)..style = PaintingStyle.stroke..strokeWidth = 5..strokeCap = StrokeCap.round;
+    final secondary = Paint()..color = const Color(0xFFB8D1BE).withValues(alpha: .22)..style = PaintingStyle.stroke..strokeWidth = 5..strokeCap = StrokeCap.round;
     for (var i = 0; i < 4; i++) {
       final path = Path()..moveTo(size.width * (.08 + i * .2), size.height * .08)..cubicTo(size.width * (.18 + i * .12), size.height * .26, size.width * (.1 + i * .22), size.height * .62, size.width * (.3 + i * .14), size.height * .96);
       canvas.drawPath(path, secondary);
@@ -74,13 +74,13 @@ class _MockMapPainter extends CustomPainter {
       (Offset(size.width * .64, size.height * .72), AppColors.info, 94.0),
     ];
     for (final spot in spots) {
-      canvas.drawCircle(spot.$1, spot.$3, Paint()..shader = RadialGradient(colors: [spot.$2.withOpacity(.25), spot.$2.withOpacity(0)]).createShader(Rect.fromCircle(center: spot.$1, radius: spot.$3)));
+      canvas.drawCircle(spot.$1, spot.$3, Paint()..shader = RadialGradient(colors: [spot.$2.withValues(alpha: .25), spot.$2.withValues(alpha: 0.0)]).createShader(Rect.fromCircle(center: spot.$1, radius: spot.$3)));
     }
   }
 
   void _drawParcels(Canvas canvas, Size size) {
-    final fill = Paint()..color = AppColors.mapParcel.withOpacity(.075)..style = PaintingStyle.fill;
-    final stroke = Paint()..color = AppColors.mapParcel.withOpacity(.38)..style = PaintingStyle.stroke..strokeWidth = .85;
+    final fill = Paint()..color = AppColors.mapParcel.withValues(alpha: .075)..style = PaintingStyle.fill;
+    final stroke = Paint()..color = AppColors.mapParcel.withValues(alpha: .38)..style = PaintingStyle.stroke..strokeWidth = .85;
     for (var row = 0; row < 9; row++) {
       for (var col = 0; col < 7; col++) {
         final cx = size.width * (.08 + col * .15) + math.sin(row * 1.7 + col) * 15;
@@ -106,23 +106,23 @@ class _MockMapPainter extends CustomPainter {
       ..lineTo(size.width * .66, size.height * .51)
       ..lineTo(size.width * .47, size.height * .58)
       ..close();
-    canvas.drawPath(path, Paint()..color = AppColors.emerald.withOpacity(.23)..maskFilter = const MaskFilter.blur(BlurStyle.outer, 16));
-    canvas.drawPath(path, Paint()..color = AppColors.emerald.withOpacity(.20)..style = PaintingStyle.fill);
-    canvas.drawPath(path, Paint()..color = AppColors.lime.withOpacity(.92)..style = PaintingStyle.stroke..strokeWidth = 2.2);
+    canvas.drawPath(path, Paint()..color = AppColors.emerald.withValues(alpha: .23)..maskFilter = const MaskFilter.blur(BlurStyle.outer, 16));
+    canvas.drawPath(path, Paint()..color = AppColors.emerald.withValues(alpha: .20)..style = PaintingStyle.fill);
+    canvas.drawPath(path, Paint()..color = AppColors.lime.withValues(alpha: .92)..style = PaintingStyle.stroke..strokeWidth = 2.2);
   }
 
   void _drawLocation(Canvas canvas, Size size) {
     final center = Offset(size.width * .55, size.height * .48);
     for (final r in const [18.0, 32.0, 48.0]) {
-      canvas.drawCircle(center, r, Paint()..color = AppColors.lime.withOpacity(.06)..style = PaintingStyle.fill);
-      canvas.drawCircle(center, r, Paint()..color = AppColors.lime.withOpacity(.16)..style = PaintingStyle.stroke..strokeWidth = 1);
+      canvas.drawCircle(center, r, Paint()..color = AppColors.lime.withValues(alpha: .06)..style = PaintingStyle.fill);
+      canvas.drawCircle(center, r, Paint()..color = AppColors.lime.withValues(alpha: .16)..style = PaintingStyle.stroke..strokeWidth = 1);
     }
     canvas.drawCircle(center, 8, Paint()..color = AppColors.lime);
     canvas.drawCircle(center, 3, Paint()..color = Colors.white);
   }
 
   void _drawVignette(Canvas canvas, Rect rect) {
-    canvas.drawRect(rect, Paint()..shader = RadialGradient(colors: [Colors.transparent, Colors.black.withOpacity(.48)], stops: const [.58, 1]).createShader(rect));
+    canvas.drawRect(rect, Paint()..shader = RadialGradient(colors: [Colors.transparent, Colors.black.withValues(alpha: .48)], stops: const [.58, 1]).createShader(rect));
     canvas.drawRect(rect, Paint()..shader = const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x7A000000), Color(0x00000000), Color(0xA6000000)], stops: [0, .43, 1]).createShader(rect));
   }
 

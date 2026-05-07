@@ -118,10 +118,10 @@ class _HeroSummary extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [const Icon(Icons.auto_awesome_rounded, color: Colors.white), const SizedBox(width: AppSpacing.xs), Text('Premium AI piyasa zekâsı', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Colors.white.withOpacity(.86), fontWeight: FontWeight.w800))]),
+            Row(children: [const Icon(Icons.auto_awesome_rounded, color: Colors.white), const SizedBox(width: AppSpacing.xs), Text('Premium AI piyasa zekâsı', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Colors.white.withValues(alpha: .86), fontWeight: FontWeight.w800))]),
             const SizedBox(height: AppSpacing.md),
             Text(model.parcelLabel, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w900)),
-            Text('${model.parcel.district} / ${model.parcel.city} • ${model.parcel.zoningStatus}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withOpacity(.82))),
+            Text('${model.parcel.district} / ${model.parcel.city} • ${model.parcel.zoningStatus}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: .82))),
             const SizedBox(height: AppSpacing.lg),
             Wrap(spacing: AppSpacing.sm, runSpacing: AppSpacing.sm, children: [
               _DarkMetric(label: 'Tahmini m²', value: _formatCurrency(model.pricePerSquareMeter)),
@@ -143,7 +143,7 @@ class _DarkMetric extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: 148,
         padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(color: Colors.white.withOpacity(.12), borderRadius: BorderRadius.circular(AppRadius.lg), border: Border.all(color: Colors.white.withOpacity(.18))),
+        decoration: BoxDecoration(color: Colors.white.withValues(alpha: .12), borderRadius: BorderRadius.circular(AppRadius.lg), border: Border.all(color: Colors.white.withValues(alpha: .18))),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.white70)), const SizedBox(height: 6), Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w900))]),
       );
 }
@@ -237,7 +237,7 @@ class _ComparableTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(color: AppColors.emerald.withOpacity(.07), borderRadius: BorderRadius.circular(AppRadius.lg), border: Border.all(color: AppColors.emerald.withOpacity(.14))),
+        decoration: BoxDecoration(color: AppColors.emerald.withValues(alpha: .07), borderRadius: BorderRadius.circular(AppRadius.lg), border: Border.all(color: AppColors.emerald.withValues(alpha: .14))),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -317,7 +317,7 @@ class _ConfidenceBar extends StatelessWidget {
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [Expanded(child: Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.slate))), Text(_formatPercent(value), style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900))]),
         const SizedBox(height: 6),
-        ClipRRect(borderRadius: BorderRadius.circular(AppRadius.pill), child: LinearProgressIndicator(value: value.clamp(0, 1).toDouble(), minHeight: 8, backgroundColor: AppColors.slate.withOpacity(.14), color: AppColors.emerald)),
+        ClipRRect(borderRadius: BorderRadius.circular(AppRadius.pill), child: LinearProgressIndicator(value: value.clamp(0, 1).toDouble(), minHeight: 8, backgroundColor: AppColors.slate.withValues(alpha: .14), color: AppColors.emerald)),
       ]);
 }
 

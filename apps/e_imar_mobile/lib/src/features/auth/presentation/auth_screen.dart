@@ -47,7 +47,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               const SizedBox(height: 10),
               _AuthButton(icon: Icons.apple_rounded, label: 'Apple ile devam et', onTap: () => _signIn((repo) => repo.signInWithApple())),
               const SizedBox(height: 18),
-              Row(children: [Expanded(child: Divider(color: AppColors.slate.withOpacity(.2))), Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: Text('veya telefon', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.slate))), Expanded(child: Divider(color: AppColors.slate.withOpacity(.2)))]),
+              Row(children: [Expanded(child: Divider(color: AppColors.slate.withValues(alpha: .2))), Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: Text('veya telefon', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.slate))), Expanded(child: Divider(color: AppColors.slate.withValues(alpha: .2)))]),
               const SizedBox(height: 16),
               TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Telefon', hintText: '+90 5xx xxx xx xx', prefixIcon: Icon(Icons.phone_rounded))),
               const SizedBox(height: 10),
@@ -110,5 +110,5 @@ class _AuthButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   @override
-  Widget build(BuildContext context) => OutlinedButton.icon(onPressed: onTap, icon: Icon(icon), label: Text(label, style: const TextStyle(fontWeight: FontWeight.w800)), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15), backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(.04) : Colors.white.withOpacity(.72), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill))));
+  Widget build(BuildContext context) => OutlinedButton.icon(onPressed: onTap, icon: Icon(icon), label: Text(label, style: const TextStyle(fontWeight: FontWeight.w800)), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15), backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: .04) : Colors.white.withValues(alpha: .72), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.pill))));
 }

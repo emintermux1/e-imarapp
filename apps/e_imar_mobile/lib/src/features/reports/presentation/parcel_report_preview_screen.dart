@@ -38,22 +38,22 @@ class _ParcelReportPreviewScreenState extends State<ParcelReportPreviewScreen> {
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
-                  Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white.withOpacity(.16), borderRadius: BorderRadius.circular(AppRadius.md)), child: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white)),
+                  Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white.withValues(alpha: .16), borderRadius: BorderRadius.circular(AppRadius.md)), child: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white)),
                   const Spacer(),
                   _StatusPill(label: reportBytes == null ? 'Taslak Önizleme' : 'Rapor Hazır'),
                 ]),
                 const SizedBox(height: 18),
                 Text('${parcel.neighborhood} ${parcel.block}/${parcel.parcel}', style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w900)),
                 const SizedBox(height: 6),
-                Text('${parcel.city} / ${parcel.district} • ${parcel.titleType} • ${parcel.zoningStatus}', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white.withOpacity(.86), fontWeight: FontWeight.w700)),
+                Text('${parcel.city} / ${parcel.district} • ${parcel.titleType} • ${parcel.zoningStatus}', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white.withValues(alpha: .86), fontWeight: FontWeight.w700)),
                 const SizedBox(height: 16),
-                Text('Tek sayfalık yatırım özeti, imar metrikleri, piyasa/risk istihbaratı yer tutucuları ve hukuki uyarılarla müşteriye sunuma hazır premium PDF akışı.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withOpacity(.84))),
+                Text('Tek sayfalık yatırım özeti, imar metrikleri, piyasa/risk istihbaratı yer tutucuları ve hukuki uyarılarla müşteriye sunuma hazır premium PDF akışı.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white.withValues(alpha: .84))),
               ]),
             ),
           ),
           const SizedBox(height: 18),
           GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _SectionTitle(icon: Icons.badge_rounded, title: 'Parsel Kimliği'),
+            const _SectionTitle(icon: Icons.badge_rounded, title: 'Parsel Kimliği'),
             const SizedBox(height: 12),
             _KeyValueGrid(values: {
               'İl / İlçe': '${parcel.city} / ${parcel.district}',
@@ -78,8 +78,8 @@ class _ParcelReportPreviewScreenState extends State<ParcelReportPreviewScreen> {
             ],
           ),
           const SizedBox(height: 14),
-          GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _SectionTitle(icon: Icons.insights_rounded, title: 'Risk ve Piyasa İstihbaratı'),
+          const GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const _SectionTitle(icon: Icons.insights_rounded, title: 'Risk ve Piyasa İstihbaratı'),
             const SizedBox(height: 12),
             const _InsightRow(icon: Icons.shield_rounded, label: 'Risk özeti', value: 'Deprem, taşkın ve zemin katmanları için premium analiz alanı ayrıldı.'),
             const _InsightRow(icon: Icons.trending_up_rounded, label: 'Piyasa sinyali', value: 'Yakın çevre değer trendleri ve arz/talep göstergeleri mock veriyle temsil edilir.'),
@@ -87,13 +87,13 @@ class _ParcelReportPreviewScreenState extends State<ParcelReportPreviewScreen> {
           ])),
           const SizedBox(height: 14),
           GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _SectionTitle(icon: Icons.article_rounded, title: 'Rapora Dahil Bölümler'),
+            const _SectionTitle(icon: Icons.article_rounded, title: 'Rapora Dahil Bölümler'),
             const SizedBox(height: 12),
             for (final section in _sections) _IncludedSection(section: section),
           ])),
           const SizedBox(height: 14),
           GlassCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            _SectionTitle(icon: Icons.gavel_rounded, title: 'Yasal Uyarı'),
+            const _SectionTitle(icon: Icons.gavel_rounded, title: 'Yasal Uyarı'),
             const SizedBox(height: 10),
             Text(_disclaimer, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.slate, height: 1.35)),
           ])),
@@ -148,7 +148,7 @@ class _StatusPill extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) => Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), decoration: BoxDecoration(color: Colors.white.withOpacity(.16), borderRadius: BorderRadius.circular(AppRadius.pill)), child: Text(label, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)));
+  Widget build(BuildContext context) => Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), decoration: BoxDecoration(color: Colors.white.withValues(alpha: .16), borderRadius: BorderRadius.circular(AppRadius.pill)), child: Text(label, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)));
 }
 
 class _SectionTitle extends StatelessWidget {
@@ -170,7 +170,7 @@ class _KeyValueGrid extends StatelessWidget {
           SizedBox(
             width: (MediaQuery.sizeOf(context).width - 68) / 2,
             child: DecoratedBox(
-              decoration: BoxDecoration(color: AppColors.emerald.withOpacity(.08), borderRadius: BorderRadius.circular(AppRadius.md)),
+              decoration: BoxDecoration(color: AppColors.emerald.withValues(alpha: .08), borderRadius: BorderRadius.circular(AppRadius.md)),
               child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(entry.key, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: AppColors.slate)), const SizedBox(height: 4), Text(entry.value, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800))])),
             ),
           ),

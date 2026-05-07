@@ -94,7 +94,7 @@ class _ComparableTile extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           variant: GlassVariant.light,
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.emerald.withOpacity(.12), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.apartment_rounded, color: AppColors.emerald, size: 21)),
+            Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.emerald.withValues(alpha: .12), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.apartment_rounded, color: AppColors.emerald, size: 21)),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [Expanded(child: Text(comparable.locationLabel, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900))), StatusBadge(label: comparable.source.label, tone: BadgeTone.info)]),

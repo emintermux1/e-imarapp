@@ -69,8 +69,8 @@ abstract final class AppGradients {
 }
 
 abstract final class AppShadows {
-  static List<BoxShadow> soft(Color color) => [BoxShadow(color: color.withOpacity(.10), blurRadius: 28, offset: const Offset(0, 14))];
-  static List<BoxShadow> medium(Color color) => [BoxShadow(color: color.withOpacity(.14), blurRadius: 36, offset: const Offset(0, 18))];
-  static List<BoxShadow> elevated(Color color) => [BoxShadow(color: color.withOpacity(.18), blurRadius: 46, offset: const Offset(0, 24))];
-  static List<BoxShadow> glow(Color color) => [BoxShadow(color: color.withOpacity(.28), blurRadius: 34, offset: const Offset(0, 12))];
+  static List<BoxShadow> soft(Color color) => [BoxShadow(color: color.withValues(alpha: .10), blurRadius: 28, offset: const Offset(0, 14))];
+  static List<BoxShadow> medium(Color color) => [BoxShadow(color: color.withValues(alpha: .14), blurRadius: 36, offset: const Offset(0, 18))];
+  static List<BoxShadow> elevated(Color color) => [BoxShadow(color: color.withValues(alpha: .18), blurRadius: 46, offset: const Offset(0, 24))];
+  static List<BoxShadow> glow(Color color) => [BoxShadow(color: color.withValues(alpha: .28), blurRadius: 34, offset: const Offset(0, 12))];
 }

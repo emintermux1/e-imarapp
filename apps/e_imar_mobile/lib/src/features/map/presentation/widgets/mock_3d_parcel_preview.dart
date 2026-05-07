@@ -54,9 +54,9 @@ class _Mock3dParcelPreviewState extends State<Mock3dParcelPreview> {
             child: SliderTheme(
               data: SliderThemeData(
                 activeTrackColor: AppColors.emerald,
-                inactiveTrackColor: AppColors.slate.withOpacity(.18),
+                inactiveTrackColor: AppColors.slate.withValues(alpha: .18),
                 thumbColor: AppColors.emerald,
-                overlayColor: AppColors.emerald.withOpacity(.16),
+                overlayColor: AppColors.emerald.withValues(alpha: .16),
                 trackHeight: 5,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
               ),
@@ -89,11 +89,11 @@ class _FloorButton extends StatelessWidget {
         height: 36,
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
-          color: enabled ? AppColors.emerald.withOpacity(.16) : AppColors.slate.withOpacity(.08),
+          color: enabled ? AppColors.emerald.withValues(alpha: .16) : AppColors.slate.withValues(alpha: .08),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: enabled ? AppColors.emerald.withOpacity(.4) : AppColors.slate.withOpacity(.15)),
+          border: Border.all(color: enabled ? AppColors.emerald.withValues(alpha: .4) : AppColors.slate.withValues(alpha: .15)),
         ),
-        child: Icon(icon, size: 22, color: enabled ? AppColors.emerald : AppColors.slate.withOpacity(.3)),
+        child: Icon(icon, size: 22, color: enabled ? AppColors.emerald : AppColors.slate.withValues(alpha: .3)),
       ),
     );
   }
@@ -119,8 +119,8 @@ class _MockMassingPainter extends CustomPainter {
       ..lineTo(origin.dx + plotW * .34, origin.dy - plotH * .94)
       ..lineTo(origin.dx - plotW * .36, origin.dy - plotH * .82)
       ..close();
-    canvas.drawPath(plotPath, Paint()..color = AppColors.slate.withOpacity(.07)..style = PaintingStyle.fill);
-    canvas.drawPath(plotPath, Paint()..color = AppColors.slate.withOpacity(.18)..style = PaintingStyle.stroke..strokeWidth = 0.8);
+    canvas.drawPath(plotPath, Paint()..color = AppColors.slate.withValues(alpha: .07)..style = PaintingStyle.fill);
+    canvas.drawPath(plotPath, Paint()..color = AppColors.slate.withValues(alpha: .18)..style = PaintingStyle.stroke..strokeWidth = 0.8);
 
     final bldScale = maxHeight / plotH;
     final bldH = (maxHeight / plotH) * (plotH * 0.78);
@@ -136,7 +136,7 @@ class _MockMassingPainter extends CustomPainter {
         ..lineTo(bldOrigin.dx - bldW * .30, bldOrigin.dy - yOff - bldH / 30)
         ..close();
       final opacity = .55 - (f / 30) * .2;
-      canvas.drawPath(bottom, Paint()..color = AppColors.emerald.withOpacity(opacity)..style = PaintingStyle.fill);
+      canvas.drawPath(bottom, Paint()..color = AppColors.emerald.withValues(alpha: opacity)..style = PaintingStyle.fill);
 
       final left = Path()
         ..moveTo(bldOrigin.dx - bldW * .32, bldOrigin.dy - yOff)
@@ -144,7 +144,7 @@ class _MockMassingPainter extends CustomPainter {
         ..lineTo(bldOrigin.dx - bldW * .30, bldOrigin.dy - yOff - bldH / 30 - bldH / 30)
         ..lineTo(bldOrigin.dx - bldW * .32, bldOrigin.dy - yOff - bldH / 30)
         ..close();
-      canvas.drawPath(left, Paint()..color = AppColors.forest.withOpacity(opacity * .6)..style = PaintingStyle.fill);
+      canvas.drawPath(left, Paint()..color = AppColors.forest.withValues(alpha: opacity * .6)..style = PaintingStyle.fill);
 
       final right = Path()
         ..moveTo(bldOrigin.dx + bldW * .28, bldOrigin.dy - yOff - bldW * .14)
@@ -152,7 +152,7 @@ class _MockMassingPainter extends CustomPainter {
         ..lineTo(bldOrigin.dx + bldW * .30, bldOrigin.dy - yOff - bldW * .14 - bldH / 30 - bldH / 30)
         ..lineTo(bldOrigin.dx + bldW * .28, bldOrigin.dy - yOff - bldW * .14 - bldH / 30)
         ..close();
-      canvas.drawPath(right, Paint()..color = AppColors.deepGreen.withOpacity(opacity * .5)..style = PaintingStyle.fill);
+      canvas.drawPath(right, Paint()..color = AppColors.deepGreen.withValues(alpha: opacity * .5)..style = PaintingStyle.fill);
     }
 
     final roofTop = bldOrigin.dy - bldH;
@@ -162,18 +162,18 @@ class _MockMassingPainter extends CustomPainter {
       ..lineTo(bldOrigin.dx + bldW * .30, roofTop - bldW * .14)
       ..lineTo(bldOrigin.dx - bldW * .30, roofTop)
       ..close();
-    canvas.drawPath(roof, Paint()..color = AppColors.lime.withOpacity(.7)..style = PaintingStyle.fill);
-    canvas.drawPath(roof, Paint()..color = Colors.white.withOpacity(.24)..style = PaintingStyle.stroke..strokeWidth = 1.2);
+    canvas.drawPath(roof, Paint()..color = AppColors.lime.withValues(alpha: .7)..style = PaintingStyle.fill);
+    canvas.drawPath(roof, Paint()..color = Colors.white.withValues(alpha: .24)..style = PaintingStyle.stroke..strokeWidth = 1.2);
 
-    canvas.drawPath(plotPath, Paint()..color = AppColors.slate.withOpacity(.22)..style = PaintingStyle.stroke..strokeWidth = 1.2);
+    canvas.drawPath(plotPath, Paint()..color = AppColors.slate.withValues(alpha: .22)..style = PaintingStyle.stroke..strokeWidth = 1.2);
 
     _drawDot(canvas, Offset(bldOrigin.dx - bldW * .36, bldOrigin.dy), 'Yol', false);
     _drawDot(canvas, Offset(bldOrigin.dx + bldW * .36, bldOrigin.dy - bldW * .18), 'K', true);
   }
 
   void _drawDot(Canvas canvas, Offset pos, String label, bool rightSide) {
-    canvas.drawCircle(pos, 4, Paint()..color = AppColors.sand.withOpacity(.6));
-    final tp = TextPainter(text: TextSpan(text: label, style: TextStyle(color: AppColors.sand.withOpacity(.5), fontSize: 10, fontWeight: FontWeight.w700)), textDirection: TextDirection.ltr);
+    canvas.drawCircle(pos, 4, Paint()..color = AppColors.sand.withValues(alpha: .6));
+    final tp = TextPainter(text: TextSpan(text: label, style: TextStyle(color: AppColors.sand.withValues(alpha: .5), fontSize: 10, fontWeight: FontWeight.w700)), textDirection: TextDirection.ltr);
     tp.layout();
     tp.paint(canvas, Offset(pos.dx - tp.width / 2, pos.dy - 18));
   }

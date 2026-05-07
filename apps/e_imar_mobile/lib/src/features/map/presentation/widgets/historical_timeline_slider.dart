@@ -61,7 +61,7 @@ class _HistoricalTimelineSliderState extends State<HistoricalTimelineSlider> {
           height: 48,
           child: Row(children: [
             for (var i = 0; i < _timelineEntries.length; i++) ...[
-              if (i > 0) Expanded(child: Container(height: 2, color: i <= _selectedIndex ? AppColors.emerald.withOpacity(.7) : AppColors.slate.withOpacity(.25))),
+              if (i > 0) Expanded(child: Container(height: 2, color: i <= _selectedIndex ? AppColors.emerald.withValues(alpha: .7) : AppColors.slate.withValues(alpha: .25))),
               GestureDetector(
                 onTap: () => _selectIndex(i),
                 child: Container(
@@ -70,10 +70,10 @@ class _HistoricalTimelineSliderState extends State<HistoricalTimelineSlider> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: i <= _selectedIndex ? AppColors.emerald : Colors.transparent,
-                    border: Border.all(color: i <= _selectedIndex ? AppColors.emerald : AppColors.slate.withOpacity(.4), width: 2),
+                    border: Border.all(color: i <= _selectedIndex ? AppColors.emerald : AppColors.slate.withValues(alpha: .4), width: 2),
                     boxShadow: i == _selectedIndex ? AppShadows.glow(AppColors.emerald) : null,
                   ),
-                  child: Center(child: Text(_timelineEntries[i].year.toString().substring(2), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: i <= _selectedIndex ? Colors.white : AppColors.slate.withOpacity(.6)))),
+                  child: Center(child: Text(_timelineEntries[i].year.toString().substring(2), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: i <= _selectedIndex ? Colors.white : AppColors.slate.withValues(alpha: .6)))),
                 ),
               ),
             ],
