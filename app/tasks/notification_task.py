@@ -1,5 +1,6 @@
 from celery import shared_task
 from app.services.notification_service import NotificationService
+from app.services.watchlist_detector import WatchlistChangeDetector
 from app.database import AsyncSessionLocal
 from app.models.watchlist import WatchlistItem
 from sqlalchemy import select
@@ -15,17 +16,11 @@ async def check_watchlist_changes():
     and send notifications if detected.
     """
     async with AsyncSessionLocal() as db:
-        result = await db.execute(select(WatchlistItem))
-        items = result.scalars().all()
-    
-    notifications_sent = 0
-    for item in items:
-        # Placeholder: real change detection would compare current vs stored state
-        # For now, log that monitoring is active
-        channels = item.notification_channels.split(",") if item.notification_channels else ["push"]
-        logger.info("watchlist_checked", item_id=item.id, channels=channels)
-    
-    return {"status": "ok", "items_checked": len(items), "notifications_sent": notifications_sent}
+        detector = WatchlistChangeDetector()
+        result = await detector.check_all_watchlists(db)
+        
+    logger.info("watchlist_check_completed", result=result)
+    return result
 
 @shared_task
 async def send_watchlist_notification(user_id: int, item_id: int, change_type: str, change_data: dict):
@@ -42,7 +37,12 @@ async def send_watchlist_notification(user_id: int, item_id: int, change_type: s
     
     service = NotificationService()
     notifications = await service.notify_watchlist_change(
-        {"user_id": user_id, "notification_channels": item.notification_channels.split(",") if item.notification_channels else ["push"]},
+        {
+            "user_id": user_id, 
+            "notification_channels": item.notification_channels.split(",") if item.notification_channels else ["push"],
+            "user_email": getattr(item, 'user_email', None),  # If email is stored
+            "user_phone": getattr(item, 'user_phone', None)   # If phone is stored
+        },
         change_type,
         change_data
     )
