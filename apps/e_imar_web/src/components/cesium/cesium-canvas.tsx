@@ -56,9 +56,17 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
   React.useEffect(() => {
     if (!viewer || !Cesium) return;
     const fc = getParcelsCollection();
+    const visibleFeatures = selectedParcelId
+      ? fc.features.filter((feature) => {
+          const [lng, lat] = feature.properties.centroid ?? [0, 0];
+          const selected = getParcelById(selectedParcelId);
+          const [slng, slat] = selected?.properties.centroid ?? [lng, lat];
+          return Math.abs(lng - slng) < 0.018 && Math.abs(lat - slat) < 0.014;
+        })
+      : fc.features.slice(0, 700);
     const handles = handlesRef.current;
     const seen = new Set<string>();
-    for (const feature of fc.features) {
+    for (const feature of visibleFeatures) {
       const props = feature.properties;
       seen.add(props.id);
       const snapshot = timelineYear

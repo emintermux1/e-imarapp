@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { getAllParcels, slugify } from "@/data/parcels";
+import { searchParcels, slugify } from "@/data/parcels";
 import { PROVINCES } from "@/data/provinces";
 import { DISTRICTS } from "@/data/districts";
 import { NEIGHBORHOODS } from "@/data/neighborhoods";
 import { BELEDIYE_LIST } from "@/data/belediye";
-import { adaParselText, adaParselSlug } from "@/lib/format";
+import { adaParselText } from "@/lib/format";
 import { TURKEY_BOUNDS, inTurkey, safeParseFloat } from "@/lib/utils";
 import type { SearchResult } from "@/types/geo";
 
@@ -38,16 +38,11 @@ function searchParcelResults(query: string, limit: number): SearchResult[] {
   const q = query.trim().toLocaleLowerCase("tr-TR");
   if (!q) return [];
   const adaParselMatch = q.match(ADA_PARSEL_REGEX);
-  return getAllParcels()
+  return searchParcels(query, limit)
     .filter((f) => {
+      if (!adaParselMatch) return true;
       const p = f.properties;
-      if (adaParselMatch) {
-        return (
-          p.ada === adaParselMatch[1] && p.parsel === adaParselMatch[2]
-        );
-      }
-      const text = `${adaParselText(p.ada, p.parsel)} ${adaParselSlug(p.ada, p.parsel)} ${p.mahalle} ${p.ilce} ${p.il} ${p.zoningType} ${p.id}`.toLocaleLowerCase("tr-TR");
-      return text.includes(q);
+      return p.ada === adaParselMatch[1] && p.parsel === adaParselMatch[2];
     })
     .slice(0, limit)
     .map<SearchResult>((f) => {

@@ -92,7 +92,7 @@ export const buildParcelLabelLayer = (
   id,
   type: "symbol",
   source: PARCEL_SOURCE,
-  minzoom: 14.5,
+  minzoom: 15.5,
   layout: {
     "text-field": [
       "concat",
@@ -105,10 +105,10 @@ export const buildParcelLabelLayer = (
       "interpolate",
       ["linear"],
       ["zoom"],
-      14.5,
-      9,
+      15.5,
+      8,
       18,
-      13
+      12
     ],
     "text-allow-overlap": false,
     "text-padding": 4

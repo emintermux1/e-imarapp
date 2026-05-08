@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Bookmark } from "lucide-react";
 import { ZoningBadge } from "@/components/gis/zoning-badge";
+import { getParcelSourceMetadata } from "@/data/parcels";
 
 interface SavedQuery {
   id: string;
@@ -12,33 +13,46 @@ interface SavedQuery {
   count: number;
 }
 
+const metadata = getParcelSourceMetadata();
+
 const SAVED: SavedQuery[] = [
   {
-    id: "q-yatirim-istanbul",
-    name: "İstanbul · Yüksek Yatırım Skoru",
-    filterDescription: "Yatırım Skoru ≥ 75 · Konut/Karma · İstanbul",
+    id: "q-istanbul-karma-ticaret",
+    name: "İstanbul · Karma/Ticaret yoğunluk",
+    filterDescription: "Levent · Şişli · Ataşehir · ticaret + karma aksları",
+    zoningHints: ["Ticaret", "Karma"],
+    count: 620
+  },
+  {
+    id: "q-ankara-aski-planlar",
+    name: "Ankara · Askıdaki planlar",
+    filterDescription: "Çankaya/Çukurambar · aktif demo askı kayıtları",
     zoningHints: ["Konut", "Karma"],
-    count: 12
+    count: 74
   },
   {
-    id: "q-aski-besiktas",
-    name: "Beşiktaş · Askıdaki Planlar",
-    filterDescription: "Askı: Açık · Plan tipi: UİP · Beşiktaş",
-    zoningHints: ["Konut", "Ticaret"],
-    count: 4
+    id: "q-izmir-kiyi-ticaret",
+    name: "İzmir · Kıyı ticaret parselleri",
+    filterDescription: "Alsancak · Bostanlı · Bayraklı kıyı bandı",
+    zoningHints: ["Ticaret", "Karma"],
+    count: 210
   },
   {
-    id: "q-ankara-cukurambar",
-    name: "Çukurambar · Karma Bölgeler",
-    filterDescription: "Zoning: Karma · TAKS ≥ 0.35 · Çankaya",
-    zoningHints: ["Karma"],
-    count: 6
+    id: "q-marmara-risk-donusum",
+    name: "Marmara · Risk + dönüşüm izleme",
+    filterDescription: "İstanbul/Bursa/Kocaeli · deprem riski yüksek demo kümeler",
+    zoningHints: ["Konut", "Karma"],
+    count: 480
   }
 ];
 
 export function SavedQueriesSection() {
   return (
     <div className="flex flex-col gap-2">
+      <div className="rounded-md border border-border-subtle bg-surface-1 px-3 py-2 text-[11px] text-fg-secondary">
+        <span className="font-medium text-fg-primary tabular-nums">{metadata.featureCount.toLocaleString("tr-TR")}</span>{" "}
+        sentetik parsel üzerinden yoğun demo sorgular
+      </div>
       {SAVED.map((q) => (
         <button
           key={q.id}
@@ -54,7 +68,7 @@ export function SavedQueriesSection() {
                 {q.filterDescription}
               </div>
             </div>
-            <span className="inline-flex h-6 min-w-[28px] items-center justify-center rounded-sm border border-border-subtle bg-surface-1 px-1.5 text-[11px] tabular-nums text-fg-secondary">
+            <span className="inline-flex h-6 min-w-[34px] items-center justify-center rounded-sm border border-border-subtle bg-surface-1 px-1.5 text-[11px] tabular-nums text-fg-secondary">
               {q.count}
             </span>
           </div>
