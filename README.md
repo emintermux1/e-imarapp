@@ -1,0 +1,72 @@
+# Türkiye E-İmar Platform Backend Foundation
+
+This repository contains the first backend-first foundation for a production-oriented Turkey e-imar, parcel, zoning, and municipal GIS platform.
+
+## Principles
+
+- No mock parcel, zoning, plan, or municipality data.
+- Real source metadata only.
+- Protected systems are reported as `requires_credentials`, `captcha_required`, `requires_legal_agreement`, or `unavailable`.
+- PostGIS is the canonical spatial store.
+- New municipal connectors should be added through source metadata and connector plugins, not hard-coded endpoint logic.
+
+## Stack
+
+- Node.js, TypeScript, NestJS, Fastify
+- PostgreSQL/PostGIS
+- Redis + BullMQ-compatible job orchestration
+- MinIO for object storage
+- OpenSearch for search indexing
+- Swagger/OpenAPI
+
+## Local startup
+
+```bash
+npm install
+docker compose up -d
+cp .env.example .env
+npm run start:dev
+```
+
+Swagger UI is available at `http://localhost:3000/docs`.
+
+## Database
+
+Migrations live in `database/migrations` and are mounted into the PostGIS container for first initialization.
+
+The initial schema includes:
+
+- `data_sources`
+- `municipalities`
+- `connectors`
+- `parcels`
+- `plans`
+- `zoning_layers`
+- `plan_sheets`
+- `plan_notes`
+- `suspension_notices`
+- `parcel_zoning_snapshots`
+- `connector_runs`
+
+Spatial indexes are created for municipal boundaries, parcels, plans, and zoning layers.
+
+## Real source registry
+
+The code registry is in `src/sources/source-registry.ts`. It starts with official and municipal seed systems, including TKGM, E-Plan, TUCBS, MAKS, HGM Atlas, İBB Açık Veri, and selected municipal imar/CBS portals.
+
+Discovery probes live endpoints and returns explicit status instead of assuming that a URL is usable.
+
+## API behavior
+
+If PostGIS or Redis is not configured, API endpoints return a `not_ready` or `unavailable` status with a concrete next action. They do not invent parcel or plan results.
+
+## Tests
+
+```bash
+npm test
+npm run build
+```
+
+## Architecture decisions
+
+See `docs/adr/0001-backend-first-geospatial-foundation.md`.
