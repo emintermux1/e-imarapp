@@ -9,7 +9,7 @@ export class PlansController {
   constructor(private readonly database: DatabaseService) {}
 
   @Get('suspensions')
-  async suspensions() {
+  async suspensions(): Promise<unknown> {
     if (!this.database.isConfigured()) {
       return {
         status: 'not_ready',

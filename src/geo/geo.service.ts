@@ -7,7 +7,7 @@ import { GeoIntersectionDto } from './dto/intersection.dto';
 export class GeoService {
   constructor(private readonly database: DatabaseService) {}
 
-  async intersections(dto: GeoIntersectionDto) {
+  async intersections(dto: GeoIntersectionDto): Promise<unknown> {
     if (!this.database.isConfigured()) {
       return {
         status: 'not_ready',

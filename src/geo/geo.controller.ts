@@ -9,7 +9,7 @@ export class GeoController {
   constructor(private readonly geo: GeoService) {}
 
   @Post('intersections')
-  intersections(@Body() dto: GeoIntersectionDto) {
+  intersections(@Body() dto: GeoIntersectionDto): Promise<unknown> {
     return this.geo.intersections(dto);
   }
 }

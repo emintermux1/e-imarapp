@@ -7,7 +7,7 @@ import { ParcelQueryDto } from './dto/parcel-query.dto';
 export class ParcelsService {
   constructor(private readonly database: DatabaseService) {}
 
-  async queryParcel(dto: ParcelQueryDto) {
+  async queryParcel(dto: ParcelQueryDto): Promise<unknown> {
     if (!this.database.isConfigured()) {
       return {
         status: 'not_ready',

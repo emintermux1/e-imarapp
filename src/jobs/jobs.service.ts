@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import IORedis from 'ioredis';
 import { IntegrationErrorCode } from '../common/error-taxonomy';
 
-interface JobRecord {
+export interface JobRecord {
   id: string;
   type: string;
   payload: Record<string, unknown>;

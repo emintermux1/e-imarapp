@@ -9,7 +9,7 @@ export class ParcelsController {
   constructor(private readonly parcels: ParcelsService) {}
 
   @Post('query')
-  query(@Body() dto: ParcelQueryDto) {
+  query(@Body() dto: ParcelQueryDto): Promise<unknown> {
     return this.parcels.queryParcel(dto);
   }
 }
