@@ -9,6 +9,8 @@ import { BELEDIYE_LIST } from "@/data/belediye";
 import { adaParselText, adaParselSlug } from "@/lib/format";
 import { TURKEY_BOUNDS, inTurkey, safeParseFloat } from "@/lib/utils";
 import {
+  getBackendParcelGeometry,
+  humanizeApiError,
   lookupBackendParcel,
   searchBackendParcels
 } from "@/lib/api/backend-client";
@@ -114,7 +116,19 @@ async function searchBackend(query: string, limit: number): Promise<ParcelRespon
   const rows = adaParselMatch
     ? await lookupBackendParcel({ ada: adaParselMatch[1], parsel: adaParselMatch[2] })
     : await searchBackendParcels(query.trim());
-  return Array.isArray(rows) ? rows.slice(0, limit) : [];
+  const parcels = Array.isArray(rows) ? rows.slice(0, limit) : [];
+  const hydrated = await Promise.all(
+    parcels.map(async (parcel) => {
+      if (geometryCentroid(parcel.geometri)) return parcel;
+      try {
+        const geometry = await getBackendParcelGeometry(parcel.id);
+        return { ...parcel, geometri: geometry };
+      } catch {
+        return parcel;
+      }
+    })
+  );
+  return hydrated;
 }
 
 function searchAddressResults(query: string, limit: number): SearchResult[] {
@@ -300,7 +314,7 @@ export function useSearch(opts: SearchOptions): SearchState {
             message: fallback.length > 0 ? "Canlı API sonucu yok — yerel demo veri gösteriliyor" : undefined
           });
         })
-        .catch(() => {
+        .catch((error) => {
           if (cancelled) return;
           const fallback = localResults(searchOptions, limit).map((result) =>
             result.type === "parcel" ? { ...result, sourceStatus: "fallback" as const } : result
@@ -310,7 +324,7 @@ export function useSearch(opts: SearchOptions): SearchState {
             loading: false,
             backendUnavailable: true,
             usedFallback: fallback.some((r) => r.type === "parcel"),
-            message: "Backend erişilemiyor — yerel demo veri gösteriliyor"
+            message: `${humanizeApiError(error)} Yerel demo veri gösteriliyor.`
           });
         });
     }, 220);
