@@ -38,12 +38,16 @@ Most public KEOS imar pages render a map application and call backend service en
 
 - `GET /connectors/netcad/strategy`
 - `POST /connectors/:id/netcad/discover`
+- `POST /connectors/public-health` or `POST /connectors/discover-public`
 
 Example:
 
 ```bash
 curl -X POST http://localhost:3000/connectors/pendik-keos-imar/netcad/discover
+curl -X POST 'http://localhost:3000/connectors/public-health?province=İstanbul&vendor=netcad&limit=10'
 ```
+
+Bulk public health discovery only probes registry sources whose access status is `public`, `public_metadata`, or `unknown`. Sources marked `requires_credentials` or `requires_legal_agreement` are returned as `skipped_protected`; no login, captcha, cookie, token, or legal boundary is bypassed. The default limit is intentionally low (25) with a hard cap of 50 so municipal sites are not overloaded. Bulk health uses candidate endpoint probes only; deeper Netcad HTML/JavaScript service discovery remains opt-in per source through `POST /connectors/:id/netcad/discover`.
 
 ## Important guardrails
 

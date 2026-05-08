@@ -7,6 +7,7 @@ import { ParcelsService } from '../src/parcels/parcels.service';
 import { SimulationService } from '../src/simulation/simulation.service';
 import { UserDataService } from '../src/user-data/user-data.service';
 import { WebsiteService } from '../src/website/website.service';
+import { SourcesService } from '../src/sources/sources.service';
 
 describe('WebsiteService', () => {
   const makeService = () => {
@@ -21,7 +22,8 @@ describe('WebsiteService', () => {
       {} as UserDataService,
       {} as EplanService,
       {} as MapService,
-      {} as IngestionService
+      {} as IngestionService,
+      {} as SourcesService
     );
   };
 
