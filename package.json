@@ -17,7 +17,10 @@
     "web:dev": "npm --prefix apps/e_imar_web run dev",
     "web:build": "npm --prefix apps/e_imar_web run build",
     "web:preview": "npm --prefix apps/e_imar_web run preview",
-    "web:typecheck": "npm --prefix apps/e_imar_web run typecheck"
+    "web:typecheck": "npm --prefix apps/e_imar_web run typecheck",
+    "next:dev": "npm --prefix apps/e_imar_next run dev",
+    "next:build": "npm --prefix apps/e_imar_next run build",
+    "next:typecheck": "npm --prefix apps/e_imar_next run typecheck"
   },
   "dependencies": {
     "@fastify/static": "^9.1.3",
