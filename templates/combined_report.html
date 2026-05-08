@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ report_title }}</title>
+    <style>
+        @media print {
+            @page {
+                size: A4;
+                margin: 2cm;
+                @bottom-right {
+                    content: "Sayfa " counter(page) " / " counter(pages);
+                    font-size: 10px;
+                    color: #666;
+                }
+            }
+        }
+        
+        body {
+            font-family: "DejaVu Sans", Arial, sans-serif;
+            margin: 2cm;
+            color: #333;
+            line-height: 1.4;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #1a5276;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .logo-placeholder {
+            width: 100px;
+            height: 100px;
+            border: 1px dashed #1a5276;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a5276;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .report-info {
+            text-align: right;
+        }
+        
+        h1 {
+            color: #1a5276;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        h2 {
+            color: #2874a6;
+            margin-top: 30px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        th {
+            background: #1a5276;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: 0 2cm;
+            font-size: 9px;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+            text-align: center;
+        }
+        
+        .stamp {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px dashed #1a5276;
+            color: #1a5276;
+            font-weight: bold;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .map-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .map-image {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+        }
+        
+        .report-meta {
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .report-meta div {
+            margin-bottom: 5px;
+        }
+        
+        .legend {
+            margin: 20px 0;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        .section-header {
+            background-color: #e3f2fd;
+            padding: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #1a5276;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-placeholder">
+            DAMGA<br>LOGOSU<br>YER TUTUCU
+        </div>
+        <div>
+            <h1>{{ report_title }} — eImarTR</h1>
+            <div class="report-info">
+                <div><strong>Rapor ID:</strong> {{ report_id }}</div>
+                <div><strong>Tarih:</strong> {{ report_date }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="report-meta">
+        <div><strong>Ada:</strong> {{ parcel.ada | default('Bilinmiyor') }}</div>
+        <div><strong>Parsel:</strong> {{ parcel.parsel | default('Bilinmiyor') }}</div>
+        <div><strong>İl:</strong> {{ parcel.il | default('Bilinmiyor') }}</div>
+        <div><strong>İlçe:</strong> {{ parcel.ilce | default('Bilinmiyor') }}</div>
+    </div>
+    
+    <div class="section-header">
+        <h2>1. Parsel Bilgileri</h2>
+    </div>
+    
+    <table>
+        <tr><th>Alan</th><th>Değer</th></tr>
+        <tr><td>Ada</td><td>{{ parcel.ada | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Parsel</td><td>{{ parcel.parsel | default('Bilinmiyor') }}</td></tr>
+        <tr><td>İl</td><td>{{ parcel.il | default('Bilinmiyor') }}</td></tr>
+        <tr><td>İlçe</td><td>{{ parcel.ilce | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Mahalle</td><td>{{ parcel.mahalle | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Nitelik</td><td>{{ parcel.nitelik | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Alan (m²)</td><td>{{ parcel.alan_m2 | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Tapu Durumu</td><td>{{ parcel.tapu_durumu | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Pafta</td><td>{{ parcel.pafta | default('Bilinmiyor') }}</td></tr>
+    </table>
+    
+    {% if satellite %}
+    <div class="page-break"></div>
+    <div class="section-header">
+        <h2>2. Uydu Görüntüsü Analizi</h2>
+    </div>
+    
+    {% if satellite.goruntu %}
+    <h3>Uydu Görüntüsü</h3>
+    <div class="map-container">
+        <img src="{{ satellite.goruntu }}" alt="Uydu Görüntüsü" class="map-image">
+    </div>
+    {% endif %}
+    
+    <table>
+        <tr><th>Alan</th><th>Değer</th></tr>
+        <tr><td>Bina Tespiti</td><td>{{ satellite.bina_tespiti | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Yapılaşma Durumu</td><td>{{ satellite.yapilasma_durumu | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Boş Arazi</td><td>{{ satellite.bos_arazi | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Ağaçlandırma</td><td>{{ satellite.agaclandirma | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Analiz Tarihi</td><td>{{ satellite.analiz_tarihi | default('Bilinmiyor') }}</td></tr>
+    </table>
+    {% endif %}
+    
+    {% if imar %}
+    <div class="page-break"></div>
+    <div class="section-header">
+        <h2>3. İmar Durumu</h2>
+    </div>
+    
+    <table>
+        <tr><th>Alan</th><th>Değer</th></tr>
+        <tr><td>Plan Türü</td><td>{{ imar.plan_turu | default('Bilinmiyor') }}</td></tr>
+        <tr><td>TAKS</td><td>{{ imar.taks | default('Bilinmiyor') }}</td></tr>
+        <tr><td>KAKS</td><td>{{ imar.kaks | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Hmax</td><td>{{ imar.h_max | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Gabari</td><td>{{ imar.gabari | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Kullanım Amacı</td><td>{{ imar.kullanim_amaci | default('Bilinmiyor') }}</td></tr>
+    </table>
+    {% endif %}
+    
+    {% if plan %}
+    <div class="page-break"></div>
+    <div class="section-header">
+        <h2>4. Plan Bilgileri</h2>
+    </div>
+    
+    <table>
+        <tr><th>Alan</th><th>Değer</th></tr>
+        <tr><td>Plan Numarası</td><td>{{ plan.plan_no | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Plan Adı</td><td>{{ plan.plan_adi | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Plan Türü</td><td>{{ plan.plan_turu | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Onay Tarihi</td><td>{{ plan.onay_tarihi | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Yürürlük Tarihi</td><td>{{ plan.yururluk_tarihi | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Durum</td><td>{{ plan.durum | default('Bilinmiyor') }}</td></tr>
+    </table>
+    
+    {% if plan.pafta_goruntusu %}
+    <h3>Plan Paftası</h3>
+    <div class="map-container">
+        <img src="{{ plan.pafta_goruntusu }}" alt="Plan Paftası" class="map-image">
+    </div>
+    {% endif %}
+    {% endif %}
+    
+    {% if map_image %}
+    <div class="page-break"></div>
+    <div class="section-header">
+        <h2>5. Harita Görünümü</h2>
+    </div>
+    
+    <div class="map-container">
+        <img src="{{ map_image }}" alt="Parsel Harita Görünümü" class="map-image">
+    </div>
+    {% endif %}
+    
+    <div class="stamp">
+        Bu rapor eImarTR Ulusal E-İmar Platformu tarafından otomatik üretilmiştir.<br>
+        Noter / Banka / Mimar uyumlu standart rapor formatı.<br>
+        Rapor Hash: {{ report_hash }}
+    </div>
+    
+    <div class="footer">
+        eImarTR — Türkiye Ulusal e-İmar Platformu | Veri kaynakları: TKGM, e-Plan, TUCBS<br>
+        Bu rapor bilgilendirme amaçlıdır; resmi işlemler için ilgili kurumlara başvurunuz.<br>
+        Rapor ID: {{ report_id }} | Sayfa: <span class="page-number"></span>
+    </div>
+</body>
+</html>

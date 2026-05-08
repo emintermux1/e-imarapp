@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ report_title }}</title>
+    <style>
+        @media print {
+            @page {
+                size: A4;
+                margin: 2cm;
+                @bottom-right {
+                    content: "Sayfa " counter(page) " / " counter(pages);
+                    font-size: 10px;
+                    color: #666;
+                }
+            }
+        }
+        
+        body {
+            font-family: "DejaVu Sans", Arial, sans-serif;
+            margin: 2cm;
+            color: #333;
+            line-height: 1.4;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #1a5276;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .logo-placeholder {
+            width: 100px;
+            height: 100px;
+            border: 1px dashed #1a5276;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a5276;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .report-info {
+            text-align: right;
+        }
+        
+        h1 {
+            color: #1a5276;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        h2 {
+            color: #2874a6;
+            margin-top: 30px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        th {
+            background: #1a5276;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: 0 2cm;
+            font-size: 9px;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+            text-align: center;
+        }
+        
+        .stamp {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px dashed #1a5276;
+            color: #1a5276;
+            font-weight: bold;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .report-meta {
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .report-meta div {
+            margin-bottom: 5px;
+        }
+        
+        .timeline {
+            margin: 20px 0;
+        }
+        
+        .timeline-item {
+            margin-bottom: 15px;
+            padding-left: 20px;
+            border-left: 3px solid #1a5276;
+        }
+        
+        .timeline-date {
+            font-weight: bold;
+            color: #1a5276;
+        }
+        
+        .objection-period {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-placeholder">
+            DAMGA<br>LOGOSU<br>YER TUTUCU
+        </div>
+        <div>
+            <h1>{{ report_title }} — eImarTR</h1>
+            <div class="report-info">
+                <div><strong>Rapor ID:</strong> {{ report_id }}</div>
+                <div><strong>Tarih:</strong> {{ report_date }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="report-meta">
+        <div><strong>Plan Numarası:</strong> {{ plan.plan_no | default('Bilinmiyor') }}</div>
+        <div><strong>Plan Adı:</strong> {{ plan.plan_adi | default('Bilinmiyor') }}</div>
+        <div><strong>Askı Başlangıç:</strong> {{ aski.baslangic_tarihi | default('Bilinmiyor') }}</div>
+        <div><strong>Askı Bitiş:</strong> {{ aski.bitis_tarihi | default('Bilinmiyor') }}</div>
+    </div>
+    
+    <div class="objection-period">
+        <h3>Askı Süresi Bilgileri</h3>
+        <div><strong>Başlangıç Tarihi:</strong> {{ aski.baslangic_tarihi | default('Bilinmiyor') }}</div>
+        <div><strong>Bitiş Tarihi:</strong> {{ aski.bitis_tarihi | default('Bilinmiyor') }}</div>
+        <div><strong>Kalan Gün:</strong> {{ aski.kalan_gun | default('Bilinmiyor') }}</div>
+        <div><strong>Durum:</strong> {{ aski.durum | default('Bilinmiyor') }}</div>
+    </div>
+    
+    <h2>İtiraz Bilgileri</h2>
+    <table>
+        <tr><th>Alan</th><th>Değer</th></tr>
+        <tr><td>Toplam İtiraz Sayısı</td><td>{{ aski.toplam_itiraz | default('Bilinmiyor') }}</td></tr>
+        <tr><td>İncelenen İtirazlar</td><td>{{ aski.incelenen_itiraz | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Kabul Edilen İtirazlar</td><td>{{ aski.kabul_edilen_itiraz | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Reddedilen İtirazlar</td><td>{{ aski.reddedilen_itiraz | default('Bilinmiyor') }}</td></tr>
+        <tr><td>Değerlendirme Süreci</td><td>{{ aski.degerlendirme_sureci | default('Bilinmiyor') }}</td></tr>
+    </table>
+    
+    {% if aski.itiraz_detaylari %}
+    <h2>İtiraz Detayları</h2>
+    <table>
+        <tr><th>İtiraz Eden</th><th>Konu</th><th>Durum</th><th>Tarih</th></tr>
+        {% for itiraz in aski.itiraz_detaylari %}
+        <tr>
+            <td>{{ itiraz.itiraz_eden | default('Bilinmiyor') }}</td>
+            <td>{{ itiraz.konu | default('Bilinmiyor') }}</td>
+            <td>{{ itiraz.durum | default('Bilinmiyor') }}</td>
+            <td>{{ itiraz.tarih | default('Bilinmiyor') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+    
+    {% if aski.ilgili_parseller %}
+    <h2>İlgili Parseller</h2>
+    <table>
+        <tr><th>Ada</th><th>Parsel</th><th>İl/İlçe</th><th>Nitelik</th></tr>
+        {% for parsel in aski.ilgili_parseller %}
+        <tr>
+            <td>{{ parsel.ada | default('Bilinmiyor') }}</td>
+            <td>{{ parsel.parsel | default('Bilinmiyor') }}</td>
+            <td>{{ parsel.il | default('Bilinmiyor') }} / {{ parsel.ilce | default('Bilinmiyor') }}</td>
+            <td>{{ parsel.nitelik | default('Bilinmiyor') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+    
+    {% if aski.timeline %}
+    <h2>Askı Süreci Takvimi</h2>
+    <div class="timeline">
+        {% for event in aski.timeline %}
+        <div class="timeline-item">
+            <div class="timeline-date">{{ event.date }}</div>
+            <div>{{ event.description }}</div>
+            {% if event.status %}
+            <div><strong>Durum:</strong> {{ event.status }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="stamp">
+        Bu rapor eImarTR Ulusal E-İmar Platformu tarafından otomatik üretilmiştir.<br>
+        Noter / Banka / Mimar uyumlu standart rapor formatı.<br>
+        Rapor Hash: {{ report_hash }}
+    </div>
+    
+    <div class="footer">
+        eImarTR — Türkiye Ulusal e-İmar Platformu | Veri kaynakları: TKGM, e-Plan, TUCBS<br>
+        Bu rapor bilgilendirme amaçlıdır; resmi işlemler için ilgili kurumlara başvurunuz.<br>
+        Rapor ID: {{ report_id }} | Sayfa: <span class="page-number"></span>
+    </div>
+</body>
+</html>
