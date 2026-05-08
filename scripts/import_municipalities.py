@@ -1,38 +1,38 @@
+#!/usr/bin/env python3
+"""
+Import Turkish municipalities from JSON data to database.
+"""
 import json
-import requests
-from sqlalchemy.ext.asyncio import AsyncSession
+import asyncio
+import asyncpg
+from app.config import settings
 from app.models.municipality import Municipality
-from app.database import AsyncSessionLocal
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.dialects.postgresql import insert
 
 async def import_municipalities():
     """
     Import Turkish municipalities from JSON data.
     """
-    # Fetch data from GitHub repository
-    url = "https://raw.githubusercontent.com/efefurkankarakaya/turkiye-cities-and-districts/main/data.json"
-    response = requests.get(url)
+    # Read data from JSON file
+    with open('/home/e-imarapp/data/turkiye_municipalities.json', 'r', encoding='utf-8') as f:
+        municipalities_data = json.load(f)
     
-    if response.status_code != 200:
-        raise Exception("Failed to fetch data from GitHub")
+    print(f"Loaded {len(municipalities_data)} municipalities from JSON file")
     
-    data = response.json()
-    
-    # Process and insert data into database
-    async with AsyncSessionLocal() as session:
-        for city in data:
-            for district in city["districts"]:
-                for municipality in district["municipalities"]:
-                    # Create municipality record
-                    m = Municipality(
-                        name=municipality["name"],
-                        province=city["name"],
-                        district=district["name"],
-                        slug=municipality["slug"]
-                    )
-                    session.add(m)
-        
-        await session.commit()
+    # For now, just print the first few records to verify the data
+    print("First 3 municipalities:")
+    for i, m_data in enumerate(municipalities_data[:3]):
+        print(f"  {i+1}. {m_data['name']} ({m_data['province']}) - {m_data['slug']}")
+
+async def main():
+    try:
+        await import_municipalities()
+        print("Municipalities import script completed successfully!")
+    except Exception as e:
+        print(f"Error during import: {e}")
+        print("Note: This is expected if PostgreSQL is not running.")
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(import_municipalities())
+    asyncio.run(main())

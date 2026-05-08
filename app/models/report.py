@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import func
+from datetime import datetime
 from app.models.base import Base
 
 class Report(Base):
