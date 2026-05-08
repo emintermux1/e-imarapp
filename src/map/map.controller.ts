@@ -22,6 +22,11 @@ export class MapController {
     return this.map.providers();
   }
 
+  @Get('providers/health')
+  providerHealth() {
+    return this.map.providerHealth();
+  }
+
   @Get('providers/styles')
   providerStyles() {
     return this.map.providerStyles();
