@@ -1,38 +1,67 @@
 import pyproj
+from shapely.geometry import shape, mapping
+from shapely.ops import transform as shapely_transform
+from typing import Dict, Union, Optional, Any
 
-class CoordinateTransform:
+class CoordinateTransformService:
+    """
+    Türkiye koordinat dönüşüm servisi.
+    Desteklenen sistemler: ED50, WGS84, ITRF96, ITRF2000, ITRF2008.
+    """
+    CRS_MAP = {
+        "ED50": "EPSG:4230",
+        "WGS84": "EPSG:4326",
+        "ITRF96": "EPSG:8991",
+        "ITRF2000": "EPSG:8992",
+        "ITRF2008": "EPSG:9000",
+        "TM30": "EPSG:5254",      # Türkiye 3 derece kesmeli izdüşüm
+        "LCC": "EPSG:5636",       # Lambert Conformal Conic
+    }
+
     def __init__(self):
-        # Define coordinate systems
-        self.wgs84 = pyproj.CRS('EPSG:4326')  # WGS84
-        self.ed50 = pyproj.CRS('EPSG:4230')   # ED50
-        self.itrf96 = pyproj.CRS('EPSG:4978') # ITRF96
-        
-        # Create transformers
-        self.wgs84_to_ed50 = pyproj.Transformer.from_crs(self.wgs84, self.ed50, always_xy=True)
-        self.ed50_to_wgs84 = pyproj.Transformer.from_crs(self.ed50, self.wgs84, always_xy=True)
-        self.wgs84_to_itrf96 = pyproj.Transformer.from_crs(self.wgs84, self.itrf96, always_xy=True)
-        self.itrf96_to_wgs84 = pyproj.Transformer.from_crs(self.itrf96, self.wgs84, always_xy=True)
-    
-    def transform_wgs84_to_ed50(self, lon, lat):
-        """
-        Transform coordinates from WGS84 to ED50.
-        """
-        return self.wgs84_to_ed50.transform(lon, lat)
-    
-    def transform_ed50_to_wgs84(self, lon, lat):
-        """
-        Transform coordinates from ED50 to WGS84.
-        """
-        return self.ed50_to_wgs84.transform(lon, lat)
-    
-    def transform_wgs84_to_itrf96(self, lon, lat):
-        """
-        Transform coordinates from WGS84 to ITRF96.
-        """
-        return self.wgs84_to_itrf96.transform(lon, lat)
-    
-    def transform_itrf96_to_wgs84(self, x, y, z):
-        """
-        Transform coordinates from ITRF96 to WGS84.
-        """
-        return self.itrf96_to_wgs84.transform(x, y, z)
+        self._transformers: Dict[str, pyproj.Transformer] = {}
+
+    def _get_transformer(self, from_crs: str, to_crs: str) -> pyproj.Transformer:
+        key = f"{from_crs}_to_{to_crs}"
+        if key not in self._transformers:
+            from_epsg = self.CRS_MAP.get(from_crs, from_crs)
+            to_epsg = self.CRS_MAP.get(to_crs, to_crs)
+            self._transformers[key] = pyproj.Transformer.from_crs(
+                from_epsg, to_epsg, always_xy=True
+            )
+        return self._transformers[key]
+
+    def transform_point(self, x: float, y: float, from_crs: str, to_crs: str) -> Dict[str, Any]:
+        """Tek nokta dönüşümü (always_xy = lon/lat veya X/Y)."""
+        transformer = self._get_transformer(from_crs, to_crs)
+        lon, lat = transformer.transform(x, y)
+        return {
+            "x": lon, "y": lat,
+            "from_crs": from_crs, "to_crs": to_crs,
+            "from_epsg": self.CRS_MAP.get(from_crs, from_crs),
+            "to_epsg": self.CRS_MAP.get(to_crs, to_crs),
+        }
+
+    def transform_geometry(self, geometry: Union[Dict[str, Any], Any],
+                           from_crs: str, to_crs: str) -> Dict[str, Any]:
+        """GeoJSON dict veya shapely geometry'yi dönüştür."""
+        geom = shape(geometry) if isinstance(geometry, dict) else geometry
+        transformer = self._get_transformer(from_crs, to_crs)
+        transformed = shapely_transform(
+            lambda x, y: transformer.transform(x, y),
+            geom
+        )
+        return {
+            "geojson": mapping(transformed),
+            "wkt": transformed.wkt,
+            "from_crs": from_crs,
+            "to_crs": to_crs,
+            "bbox": list(transformed.bounds),
+        }
+
+    def transform_bbox(self, minx: float, miny: float, maxx: float, maxy: float,
+                       from_crs: str, to_crs: str) -> Dict[str, float]:
+        """Bounding box dönüşümü."""
+        p1 = self.transform_point(minx, miny, from_crs, to_crs)
+        p2 = self.transform_point(maxx, maxy, from_crs, to_crs)
+        return {"minx": p1["x"], "miny": p1["y"], "maxx": p2["x"], "maxy": p2["y"]}
