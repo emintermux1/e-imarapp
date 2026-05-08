@@ -31,4 +31,26 @@ describe('DiscoveryService', () => {
     expect(result.generatedAt).toBeDefined();
     expect(probe.probe).toHaveBeenCalled();
   });
+
+  it('expands municipality pattern discovery without inventing source data', async () => {
+    const probe = {
+      probe: jest.fn(async (endpoint: string) => ({
+        endpoint,
+        status: ProbeStatus.Unavailable,
+        detectedKinds: []
+      }))
+    } as unknown as HttpProbeService;
+    const service = new DiscoveryService(probe);
+
+    const result = await service.discoverMunicipalityPatterns('pendik');
+
+    expect(result.candidates.map((candidate) => candidate.endpoint)).toEqual(
+      expect.arrayContaining([
+        'https://keos.pendik.bel.tr/',
+        'https://webgis.pendik.bel.tr/',
+        'https://eimar.pendik.bel.tr/'
+      ])
+    );
+    expect(result.note).toContain('does not imply permission');
+  });
 });

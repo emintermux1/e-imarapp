@@ -9,7 +9,10 @@ export enum ConnectorKind {
   GeoServer = 'geoserver',
   NetcadKeos = 'netcad_keos',
   OpenData = 'open_data',
-  Basemap = 'basemap'
+  Basemap = 'basemap',
+  RasterTile = 'raster_tile',
+  VectorTile = 'vector_tile',
+  Satellite = 'satellite'
 }
 
 export enum AccessStatus {
@@ -37,7 +40,7 @@ export interface SourceMetadata {
   id: string;
   name: string;
   jurisdiction: 'national' | 'municipal' | 'regional' | 'global';
-  category: 'parcel' | 'plan' | 'address' | 'municipal_gis' | 'basemap' | 'open_data';
+  category: 'parcel' | 'plan' | 'address' | 'municipal_gis' | 'basemap' | 'open_data' | 'satellite' | 'tile_service';
   homepageUrl: string;
   connectorKinds: ConnectorKind[];
   access: SourceAccess;

@@ -10,6 +10,7 @@ Initial endpoints:
 - `GET /health`
 - `GET /sources`
 - `POST /sources/discover`
+- `POST /sources/discover/municipality`
 - `GET /municipalities`
 - `GET /municipalities/:id/connectors`
 - `POST /parcels/query`

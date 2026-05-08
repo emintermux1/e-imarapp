@@ -30,6 +30,16 @@ npm run start:dev
 
 Swagger UI is available at `http://localhost:3000/docs`.
 
+## Cursor cloud agent startup
+
+Future agents can run the repository bootstrap command:
+
+```bash
+npm run cloud:setup
+```
+
+It installs locked npm dependencies, creates `.env` when missing, starts Docker Compose data services when Docker is available, and runs typecheck/tests. See `docs/cloud-agent-setup.md`.
+
 ## Database
 
 Migrations live in `database/migrations` and are mounted into the PostGIS container for first initialization.
@@ -52,7 +62,7 @@ Spatial indexes are created for municipal boundaries, parcels, plans, and zoning
 
 ## Real source registry
 
-The code registry is in `src/sources/source-registry.ts`. It starts with official and municipal seed systems, including TKGM, E-Plan, TUCBS, MAKS, HGM Atlas, İBB Açık Veri, and selected municipal imar/CBS portals.
+The code registry is in `src/sources/source-registry.ts`. It starts with official and municipal seed systems, including TKGM, E-Plan, TUCBS, MAKS, e-Devlet/TUCBS, ÇŞİDB CBS, İçişleri e-Belediye, HGM Atlas, İBB Açık Veri, Netcad/KEOS reference patterns, municipal imar/CBS portals, OpenStreetMap, Esri World Imagery, Copernicus, Landsat, Mapbox, MapTiler, HERE, and Cesium ion.
 
 Discovery probes live endpoints and returns explicit status instead of assuming that a URL is usable.
 

@@ -59,6 +59,71 @@ export const SOURCE_REGISTRY: readonly SourceMetadata[] = [
     capabilities: ['address_registry']
   },
   {
+    id: 'edevlet-csb-tucbs',
+    name: 'e-Devlet ÇŞİDB TUCBS Hizmeti',
+    jurisdiction: 'national',
+    category: 'open_data',
+    homepageUrl: 'https://www.turkiye.gov.tr/csb-tucbs-8514',
+    connectorKinds: [ConnectorKind.NationalPortal],
+    access: {
+      status: AccessStatus.RequiresCredentials,
+      notes: 'e-Devlet flow requires citizen or institutional authentication; connector must implement a legal credential workflow before access.'
+    },
+    capabilities: ['authenticated_service_catalog', 'tucbs_access']
+  },
+  {
+    id: 'csb-cbs',
+    name: 'ÇŞİDB Coğrafi Bilgi Sistemleri',
+    jurisdiction: 'national',
+    category: 'open_data',
+    homepageUrl: 'https://cbs.csb.gov.tr/',
+    connectorKinds: [ConnectorKind.NationalPortal, ConnectorKind.OpenData],
+    access: {
+      status: AccessStatus.Unknown,
+      notes: 'Official CBS portal; discovery must identify public catalogs and protected service boundaries separately.'
+    },
+    capabilities: ['national_cbs_catalog', 'geospatial_services']
+  },
+  {
+    id: 'icisleri-e-belediye',
+    name: 'İçişleri Bakanlığı e-Belediye',
+    jurisdiction: 'national',
+    category: 'municipal_gis',
+    homepageUrl: 'https://www.belediye.gov.tr/',
+    connectorKinds: [ConnectorKind.NationalPortal],
+    access: {
+      status: AccessStatus.RequiresCredentials,
+      notes: 'Central e-Belediye system is expected to require institutional access for operational data.'
+    },
+    capabilities: ['municipality_registry', 'institutional_services']
+  },
+  {
+    id: 'akilli-sehirler-yerel-veri',
+    name: 'Akıllı Şehirler Yerel Veri Platformları',
+    jurisdiction: 'national',
+    category: 'open_data',
+    homepageUrl: 'https://akillisehirler.csb.gov.tr/yerel-veri-platformlari/',
+    connectorKinds: [ConnectorKind.OpenData],
+    access: {
+      status: AccessStatus.Unknown,
+      notes: 'Official local data platforms page; discovery should harvest only public catalog metadata.'
+    },
+    capabilities: ['local_data_platform_discovery']
+  },
+  {
+    id: 'netcad-netgis-server',
+    name: 'Netcad NetGIS Server',
+    jurisdiction: 'national',
+    category: 'municipal_gis',
+    homepageUrl: 'https://www.netcad.com/netgis-server',
+    connectorKinds: [ConnectorKind.NetcadKeos],
+    access: {
+      status: AccessStatus.Unknown,
+      notes: 'Vendor product documentation and portal entry for NetGIS/KEOS patterns; not itself a parcel data source.'
+    },
+    capabilities: ['netcad_fingerprint_reference', 'keos_connector_reference']
+  },
+  {
     id: 'hgm-atlas',
     name: 'Harita Genel Müdürlüğü Atlas',
     jurisdiction: 'national',
@@ -70,6 +135,97 @@ export const SOURCE_REGISTRY: readonly SourceMetadata[] = [
       notes: 'Official basemap portal; tile/service use must be verified against terms and live endpoint metadata.'
     },
     capabilities: ['basemap', 'terrain_context']
+  },
+  {
+    id: 'esri-world-imagery',
+    name: 'Esri World Imagery MapServer',
+    jurisdiction: 'global',
+    category: 'basemap',
+    homepageUrl: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+    connectorKinds: [ConnectorKind.ArcGisRest, ConnectorKind.RasterTile, ConnectorKind.Satellite],
+    access: {
+      status: AccessStatus.Unknown,
+      notes: 'Public ArcGIS REST imagery service endpoint; production usage must follow Esri terms.'
+    },
+    capabilities: ['satellite_imagery', 'arcgis_rest', 'raster_tiles']
+  },
+  {
+    id: 'copernicus-data-space',
+    name: 'Copernicus Data Space Ecosystem',
+    jurisdiction: 'global',
+    category: 'satellite',
+    homepageUrl: 'https://dataspace.copernicus.eu/',
+    connectorKinds: [ConnectorKind.OpenData, ConnectorKind.Satellite],
+    access: {
+      status: AccessStatus.RequiresCredentials,
+      notes: 'Sentinel data access can require account/API credentials; connector must use official auth flows.'
+    },
+    capabilities: ['sentinel_imagery', 'satellite_archive']
+  },
+  {
+    id: 'usgs-landsat',
+    name: 'USGS Landsat Data',
+    jurisdiction: 'global',
+    category: 'satellite',
+    homepageUrl: 'https://landsat.gsfc.nasa.gov/data/',
+    connectorKinds: [ConnectorKind.OpenData, ConnectorKind.Satellite],
+    access: {
+      status: AccessStatus.Unknown,
+      notes: 'Landsat data portal documentation; connector must verify exact API account requirements per product.'
+    },
+    capabilities: ['landsat_imagery', 'satellite_archive']
+  },
+  {
+    id: 'mapbox-maps-api',
+    name: 'Mapbox Maps API',
+    jurisdiction: 'global',
+    category: 'tile_service',
+    homepageUrl: 'https://docs.mapbox.com/api/maps/',
+    connectorKinds: [ConnectorKind.VectorTile, ConnectorKind.RasterTile, ConnectorKind.Basemap],
+    access: {
+      status: AccessStatus.RequiresCredentials,
+      notes: 'Commercial map API requires access token and terms-compliant use.'
+    },
+    capabilities: ['vector_tiles', 'raster_tiles', 'basemap']
+  },
+  {
+    id: 'maptiler-cloud-api',
+    name: 'MapTiler Cloud API',
+    jurisdiction: 'global',
+    category: 'tile_service',
+    homepageUrl: 'https://docs.maptiler.com/cloud/api/',
+    connectorKinds: [ConnectorKind.VectorTile, ConnectorKind.RasterTile, ConnectorKind.Basemap],
+    access: {
+      status: AccessStatus.RequiresCredentials,
+      notes: 'Commercial map API requires API key and terms-compliant use.'
+    },
+    capabilities: ['vector_tiles', 'raster_tiles', 'basemap']
+  },
+  {
+    id: 'here-map-tile-api',
+    name: 'HERE Map Tile API',
+    jurisdiction: 'global',
+    category: 'tile_service',
+    homepageUrl: 'https://developer.here.com/documentation',
+    connectorKinds: [ConnectorKind.RasterTile, ConnectorKind.VectorTile, ConnectorKind.Basemap],
+    access: {
+      status: AccessStatus.RequiresCredentials,
+      notes: 'Commercial HERE APIs require credentials and product-specific license review.'
+    },
+    capabilities: ['basemap', 'routing_context', 'tiles']
+  },
+  {
+    id: 'cesium-ion',
+    name: 'Cesium ion',
+    jurisdiction: 'global',
+    category: 'tile_service',
+    homepageUrl: 'https://cesium.com/platform/cesium-ion/',
+    connectorKinds: [ConnectorKind.VectorTile, ConnectorKind.Basemap],
+    access: {
+      status: AccessStatus.RequiresCredentials,
+      notes: 'Cesium ion requires account/token for hosted assets and 3D Tiles workflows.'
+    },
+    capabilities: ['3d_tiles', 'terrain_tiles', 'citygml_pipeline']
   },
   {
     id: 'ibb-open-data',
@@ -119,12 +275,89 @@ export const SOURCE_REGISTRY: readonly SourceMetadata[] = [
     capabilities: ['zoning_status', 'municipal_gis']
   },
   {
+    id: 'pamukkale-keos-imar',
+    name: 'Pamukkale Belediyesi KEOS İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Pamukkale',
+    homepageUrl: 'http://keos.pamukkale.bel.tr/imardurumu/index.aspx',
+    connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal KEOS portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
+    id: 'cerkezkoy-webgis-imar',
+    name: 'Çerkezköy Belediyesi WebGIS İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Çerkezköy',
+    homepageUrl: 'https://webgis.cerkezkoy.bel.tr:444/imardurumu/',
+    connectorKinds: [ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal WebGIS portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
+    id: 'kahramankazan-keos-imar',
+    name: 'Kahramankazan Belediyesi KEOS İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Kahramankazan',
+    homepageUrl: 'https://keos.kahramankazan.bel.tr:8880/imardurumu/',
+    connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal KEOS portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
     id: 'alanya-keos-imar',
     name: 'Alanya Belediyesi KEOS İmar Durumu',
     jurisdiction: 'municipal',
     category: 'municipal_gis',
     municipalityName: 'Alanya',
     homepageUrl: 'https://keos.alanya.bel.tr/imardurumu/index.aspx',
+    connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal KEOS portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
+    id: 'merkezefendi-keos-imar',
+    name: 'Merkezefendi Belediyesi KEOS İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Merkezefendi',
+    homepageUrl: 'https://keos.merkezefendi.bel.tr/imardurumu/index.aspx',
+    connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal KEOS portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
+    id: 'altinordu-ekent-imar',
+    name: 'Altınordu Belediyesi eKent İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Altınordu',
+    homepageUrl: 'https://ekent.altinordu.bel.tr/imardurumu/',
+    connectorKinds: [ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal eKent portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
+    id: 'aksaray-ebelediye-imar',
+    name: 'Aksaray Belediyesi e-Belediye İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Aksaray',
+    homepageUrl: 'https://ebelediye.aksaray.bel.tr:444/imardurumu/',
+    connectorKinds: [ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal e-Belediye portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
+    id: 'sehitkamil-keos-imar',
+    name: 'Şehitkamil Belediyesi KEOS İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Şehitkamil',
+    homepageUrl: 'https://keos.sehitkamil.bel.tr/imardurumu/',
     connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal],
     access: { status: AccessStatus.Unknown, notes: 'Seed municipal KEOS portal; live probing determines endpoint health.' },
     capabilities: ['zoning_status', 'municipal_gis']
@@ -205,6 +438,17 @@ export const SOURCE_REGISTRY: readonly SourceMetadata[] = [
     connectorKinds: [ConnectorKind.MunicipalPortal],
     access: { status: AccessStatus.Unknown, notes: 'Seed metropolitan CBS portal; live probing determines endpoint health.' },
     capabilities: ['municipal_gis']
+  },
+  {
+    id: 'tusba-keos-imar',
+    name: 'Tuşba Belediyesi KEOS İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Tuşba',
+    homepageUrl: 'https://keos.tusba.bel.tr:8282/imardurumu/index.aspx',
+    connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal KEOS portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
   },
   {
     id: 'openstreetmap-api',

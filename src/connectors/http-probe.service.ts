@@ -132,6 +132,15 @@ export class HttpProbeService {
     if (haystack.includes('keos') || haystack.includes('netcad') || haystack.includes('netgis')) {
       kinds.add(ConnectorKind.NetcadKeos);
     }
+    if (haystack.includes('/tile/') || haystack.includes('wmts') || haystack.includes('xyz')) {
+      kinds.add(ConnectorKind.RasterTile);
+    }
+    if (haystack.includes('vectortile') || haystack.includes('vector tile') || haystack.includes('mvt')) {
+      kinds.add(ConnectorKind.VectorTile);
+    }
+    if (haystack.includes('sentinel') || haystack.includes('landsat') || haystack.includes('world imagery')) {
+      kinds.add(ConnectorKind.Satellite);
+    }
     if (haystack.includes('imardurumu') || haystack.includes('imar durumu') || haystack.includes('webgis')) {
       kinds.add(ConnectorKind.MunicipalPortal);
     }
