@@ -32,4 +32,7 @@ echo "==> Running verification"
 npm run typecheck
 npm test
 
+echo "==> Checking optional map provider keys"
+npm run map:check-keys || true
+
 echo "==> Cloud agent setup complete"

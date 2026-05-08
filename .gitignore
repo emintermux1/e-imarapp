@@ -3,6 +3,9 @@ dist/
 coverage/
 .env
 .env.local
+.env.production
+.env.staging
+.env.development
 npm-debug.log*
 *.tsbuildinfo
 .DS_Store

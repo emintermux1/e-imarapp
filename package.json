@@ -9,6 +9,7 @@
     "cloud:setup": "bash scripts/cloud-agent-setup.sh",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
+    "map:check-keys": "bash scripts/validate-map-provider-env.sh",
     "start": "node dist/main.js",
     "start:dev": "ts-node src/main.ts",
     "test": "jest --runInBand",

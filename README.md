@@ -98,6 +98,14 @@ HERE_API_KEY=...
 
 Use `GET /map/providers` to confirm whether each key is configured. The API only returns boolean configuration status and never returns secret values.
 
+Local check:
+
+```bash
+npm run map:check-keys
+```
+
+If you want to use local `.env`, copy `.env.example` to `.env` and fill the four map provider variables there. `.env` is gitignored.
+
 ## API behavior
 
 If PostGIS or Redis is not configured, API endpoints return a `not_ready` or `unavailable` status with a concrete next action. They do not invent parcel or plan results.
