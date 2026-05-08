@@ -79,8 +79,13 @@ export async function getMunicipalityImarStatus(slug: string, ada: string, parse
 }
 
 // Map
-export async function getMapLayers() {
-  return apiFetch<{ service_type: string; identification?: Record<string, unknown>; layers: import("./types").LayerInfo[]; url: string }>("/map/layers");
+export async function getMapLayers(params?: { wmsUrl?: string; wfsUrl?: string; serviceType?: "wms" | "wfs" }) {
+  const qs = new URLSearchParams();
+  if (params?.wmsUrl) qs.set("wms_url", params.wmsUrl);
+  if (params?.wfsUrl) qs.set("wfs_url", params.wfsUrl);
+  if (params?.serviceType) qs.set("service_type", params.serviceType);
+  const suffix = qs.toString() ? `?${qs.toString()}` : "";
+  return apiFetch<{ service_type: string; identification?: Record<string, unknown>; layers: import("./types").LayerInfo[]; url: string }>(`/map/layers${suffix}`);
 }
 
 // Reports

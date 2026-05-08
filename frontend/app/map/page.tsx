@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MapViewer } from "@/components/MapViewer";
 import { getMapLayers, getNearby } from "@/lib/api";
 import { jsPDF } from "jspdf";
@@ -66,6 +66,8 @@ export default function MapPage() {
   const [nearbyList, setNearbyList] = useState<Array<{ id: number; label: string; distanceM: number }>>([]);
   const [nearbyResults, setNearbyResults] = useState<Array<{ id: number; lon: number; lat: number; title: string; subtitle?: string }>>([]);
   const [wmsUrl, setWmsUrl] = useState<string>("");
+  const [wmsInput, setWmsInput] = useState<string>(process.env.NEXT_PUBLIC_DEFAULT_WMS_URL || "");
+  const [layerLoadError, setLayerLoadError] = useState<string>("");
   const [mapHandle, setMapHandle] = useState<maplibregl.Map | null>(null);
   const [measureMode, setMeasureMode] = useState<MeasureMode>("none");
   const [measurePoints, setMeasurePoints] = useState<[number, number][]>([]);
@@ -74,20 +76,34 @@ export default function MapPage() {
   const [loading, setLoading] = useState(false);
 
   const loadLayers = async () => {
+    if (!wmsInput.trim()) {
+      setLayerLoadError("Katman listesi için geçerli bir WMS URL girin.");
+      return;
+    }
     setLoading(true);
+    setLayerLoadError("");
     try {
-      const res = await getMapLayers();
+      const res = await getMapLayers({ wmsUrl: wmsInput.trim(), serviceType: "wms" });
       setLayers(res.layers);
       setWmsUrl(res.url);
       if (res.layers.length > 0) {
         setSelectedLayer((current) => current || res.layers[0].name);
+      } else {
+        setLayerLoadError("WMS servisinden katman dönmedi.");
       }
     } catch (e) {
-      alert("Katmanlar yüklenemedi: " + String(e));
+      setLayerLoadError("Katmanlar yüklenemedi: " + String(e));
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (wmsInput.trim()) {
+      void loadLayers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const selectedLayerMeta = useMemo(
     () => layers.find((layer) => layer.name === selectedLayer),
@@ -296,7 +312,7 @@ export default function MapPage() {
       </div>
 
       <div className="px-6 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-card)]/80">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-2">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-2 mb-2">
           <div className="flex items-center gap-2 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg px-3">
             <Search size={16} className="text-[var(--text-secondary)]" />
             <input
@@ -321,6 +337,18 @@ export default function MapPage() {
             Detaylı Sorgu
           </button>
         </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-2">
+          <input
+            value={wmsInput}
+            onChange={(event) => setWmsInput(event.target.value)}
+            placeholder="WMS URL (örn: https://.../wms)"
+            className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg px-3 py-2 text-sm"
+          />
+          <button onClick={loadLayers} disabled={loading} className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg px-4 py-2 text-sm hover:bg-white/5 disabled:opacity-50">
+            WMS Katmanını Uygula
+          </button>
+        </div>
+        {layerLoadError && <p className="text-xs text-red-300 mt-2">{layerLoadError}</p>}
       </div>
 
       <div className="flex-1 flex">
