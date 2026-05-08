@@ -32,6 +32,17 @@ npm run start:dev
 
 Swagger UI is available at `http://localhost:3000/docs`.
 
+### Web frontend startup
+
+```bash
+cd apps/web
+npm install
+cp .env.example .env
+npm run dev
+```
+
+Web app runs at `http://localhost:5173` and connects to backend via `VITE_API_BASE_URL` (default `http://localhost:3000`).
+
 Docker Compose now includes the API service as well as PostGIS, Redis, MinIO, OpenSearch, pg_tileserv, Prometheus, and Grafana.
 
 ## Cursor cloud agent startup
