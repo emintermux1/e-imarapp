@@ -1,0 +1,195 @@
+"use client";
+
+import * as React from "react";
+import { Plus, Minus, Compass, MapPin, Crosshair, Box, Locate } from "lucide-react";
+import { IconButton } from "@/components/ui/icon-button";
+import { useMapStore } from "@/stores/map-store";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { BASEMAPS } from "@/lib/maplibre/styles";
+
+export function MapHud({
+  cursorReadoutRef,
+  zoomReadoutRef
+}: {
+  cursorReadoutRef: React.RefObject<HTMLSpanElement>;
+  zoomReadoutRef: React.RefObject<HTMLSpanElement>;
+}) {
+  const basemap = useMapStore((s) => s.basemap);
+  const bearing = useMapStore((s) => s.bearing);
+
+  function emitMapControl(action: "in" | "out" | "reset" | "north") {
+    const evt = new CustomEvent("eimar:map:control", { detail: { action } });
+    window.dispatchEvent(evt);
+  }
+
+  return (
+    <>
+      {/* Top-left: mode + basemap chip */}
+      <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-col gap-1.5">
+        <ChipPill>
+          <span className="text-fg-muted">Mod</span>
+          <span aria-hidden className="block h-1 w-1 rounded-full bg-status-success" />
+          <span className="font-medium">2D · Vektör</span>
+        </ChipPill>
+        <ChipPill>
+          <span className="text-fg-muted">Zemin</span>
+          <span className="font-medium">{BASEMAPS[basemap].label}</span>
+          <span className="text-fg-muted">·</span>
+          <span className="text-fg-secondary">{BASEMAPS[basemap].description}</span>
+        </ChipPill>
+      </div>
+
+      {/* Top-right: zoom controls + compass + 3D toggle (disabled) */}
+      <div className="pointer-events-auto absolute right-3 top-3 z-10 flex flex-col items-end gap-1.5">
+        <div className="flex flex-col rounded-md border border-border-strong bg-surface-2 shadow-card overflow-hidden">
+          <IconButton
+            label="Yakınlaştır"
+            variant="ghost"
+            tooltipSide="left"
+            onClick={() => emitMapControl("in")}
+            className="rounded-none border-b border-border-subtle h-8 w-8"
+          >
+            <Plus className="h-4 w-4" />
+          </IconButton>
+          <IconButton
+            label="Uzaklaştır"
+            variant="ghost"
+            tooltipSide="left"
+            onClick={() => emitMapControl("out")}
+            className="rounded-none h-8 w-8"
+          >
+            <Minus className="h-4 w-4" />
+          </IconButton>
+        </div>
+
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label="Kuzeye çevir"
+              onClick={() => emitMapControl("north")}
+              className="h-8 w-8 inline-flex items-center justify-center rounded-md border border-border-strong bg-surface-2 shadow-card text-fg-secondary hover:bg-surface-3"
+            >
+              <span
+                className="inline-block"
+                style={{ transform: `rotate(${-bearing}deg)`, transition: "transform 200ms ease-out" }}
+              >
+                <Compass className="h-4 w-4" />
+              </span>
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="left">Kuzeye çevir · {bearing.toFixed(0)}°</TooltipContent>
+        </Tooltip>
+
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label="3D modu (yakında)"
+              disabled
+              className="h-8 w-8 inline-flex items-center justify-center rounded-md border border-border-subtle bg-surface-1 text-fg-muted/70 cursor-not-allowed"
+            >
+              <Box className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="left">3D modu — yakında</TooltipContent>
+        </Tooltip>
+      </div>
+
+      {/* Bottom-right floating cluster: my-location / reset / measure(stub) / share(stub) */}
+      <div className="pointer-events-auto absolute right-3 bottom-3 z-10 hidden md:flex flex-col items-end gap-1.5">
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label="Konumum"
+              className="h-9 w-9 inline-flex items-center justify-center rounded-md border border-border-strong bg-surface-2 shadow-card text-fg-secondary hover:bg-surface-3"
+            >
+              <Locate className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="left">Konumuma git</TooltipContent>
+        </Tooltip>
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label="Türkiye genel görünümü"
+              onClick={() => emitMapControl("reset")}
+              className="h-9 w-9 inline-flex items-center justify-center rounded-md border border-border-strong bg-surface-2 shadow-card text-fg-secondary hover:bg-surface-3"
+            >
+              <Crosshair className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="left">Türkiye geneline dön</TooltipContent>
+        </Tooltip>
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label="Ölçü aracı (yakında)"
+              disabled
+              className="h-9 w-9 inline-flex items-center justify-center rounded-md border border-border-subtle bg-surface-1 text-fg-muted/70 cursor-not-allowed"
+            >
+              <MapPin className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="left">Ölçü aracı — yakında</TooltipContent>
+        </Tooltip>
+      </div>
+
+      {/* Bottom-left: scale + coords + crs */}
+      <div className="pointer-events-none absolute left-3 bottom-3 z-10 flex items-end gap-2 text-[11px] tabular-nums text-fg-secondary">
+        <ScaleBar />
+        <ChipPill>
+          <span className="text-fg-muted">İmleç</span>
+          <span ref={cursorReadoutRef} className="font-medium tabular-nums text-fg-primary">
+            —
+          </span>
+        </ChipPill>
+        <ChipPill>
+          <span className="text-fg-muted">Zoom</span>
+          <span ref={zoomReadoutRef} className="font-medium tabular-nums text-fg-primary">
+            5.50
+          </span>
+        </ChipPill>
+        <ChipPill>
+          <span className="text-fg-muted">CRS</span>
+          <span className="font-medium text-fg-primary">WGS84 · EPSG:4326</span>
+        </ChipPill>
+      </div>
+    </>
+  );
+
+}
+
+function ChipPill({
+  children,
+  className
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 px-2 h-6 rounded-sm border border-border-subtle bg-surface-2/95 backdrop-blur-[2px] text-[11px] text-fg-secondary shadow-card",
+        className
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function ScaleBar() {
+  return (
+    <span className="pointer-events-none inline-flex items-end gap-1 h-6">
+      <span aria-hidden className="block h-2 w-12 border-l border-r border-b border-fg-secondary/70" />
+      <span className="text-[10px] uppercase tracking-wider text-fg-muted leading-none translate-y-[-2px]">
+        ~ ölçek
+      </span>
+    </span>
+  );
+}
