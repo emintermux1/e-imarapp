@@ -45,6 +45,17 @@ function polygonAreaSquareMeters(points: [number, number][]): number {
   return Math.abs(area / 2);
 }
 
+function formatDistance(valueMeters: number): string {
+  if (valueMeters >= 1000) return `${(valueMeters / 1000).toFixed(2)} km`;
+  return `${valueMeters.toFixed(1)} m`;
+}
+
+function formatArea(valueSquareMeters: number): string {
+  if (valueSquareMeters >= 1_000_000) return `${(valueSquareMeters / 1_000_000).toFixed(2)} km²`;
+  if (valueSquareMeters >= 10_000) return `${(valueSquareMeters / 10_000).toFixed(2)} ha`;
+  return `${valueSquareMeters.toFixed(1)} m²`;
+}
+
 export default function MapPage() {
   const [layers, setLayers] = useState<LayerInfo[]>([]);
   const [selectedLayer, setSelectedLayer] = useState<string>("");
@@ -150,6 +161,10 @@ export default function MapPage() {
     setEndElevation(0);
   };
 
+  const undoLastMeasurementPoint = () => {
+    setMeasurePoints((previous) => previous.slice(0, -1));
+  };
+
   const measurementDistanceMeters = useMemo(() => {
     if (measureMode !== "distance" && measureMode !== "slope") return 0;
     if (measurePoints.length < 2) return 0;
@@ -222,15 +237,26 @@ export default function MapPage() {
     doc.text(`Yaricap: ${radius} m`, 14, 40);
     doc.text(`Olcum Modu: ${measureMode}`, 14, 46);
     doc.text(
-      `Olcum Sonucu: Mesafe ${measurementDistanceMeters.toFixed(1)} m / Alan ${measurementAreaSquareMeters.toFixed(1)} m2 / Egim ${slopePercent.toFixed(2)}%`,
+      `Olcum Sonucu: Mesafe ${formatDistance(measurementDistanceMeters)} / Alan ${formatArea(measurementAreaSquareMeters)} / Egim ${slopePercent.toFixed(2)}%`,
       14,
       52,
     );
     doc.text(`Sonuc sayisi: ${nearbyList.length}`, 14, 58);
+    if (selectedLayerMeta?.abstract) {
+      doc.text(`Katman Aciklama: ${selectedLayerMeta.abstract.slice(0, 180)}`, 14, 64);
+    }
 
     if (image) {
-      doc.addImage(image, "PNG", 14, 64, 182, 100);
+      doc.addImage(image, "PNG", 14, 72, 182, 92);
     }
+
+    const tableStartY = 170;
+    doc.setFontSize(9);
+    doc.text("Top Sonuclar", 14, tableStartY);
+    nearbyList.slice(0, 8).forEach((item, index) => {
+      const y = tableStartY + 6 + index * 5;
+      doc.text(`- ${item.label} (${Math.round(item.distanceM)}m)`, 14, y);
+    });
     doc.save(`map-report-${Date.now()}.pdf`);
   };
 
@@ -369,9 +395,12 @@ export default function MapPage() {
             <div className="text-xs bg-[var(--bg-elevated)] rounded-lg px-3 py-3 border border-[var(--border-subtle)] space-y-2">
               <div className="flex items-center justify-between">
                 <p className="font-semibold text-[var(--text-primary)] flex items-center gap-1"><Calculator size={13} /> Ölçüm Araçları</p>
-                <button onClick={clearMeasurements} className="flex items-center gap-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-                  <Eraser size={12} /> Temizle
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={undoLastMeasurementPoint} disabled={measurePoints.length === 0} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40">Geri Al</button>
+                  <button onClick={clearMeasurements} className="flex items-center gap-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                    <Eraser size={12} /> Temizle
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-1.5">
                 <button onClick={() => setMeasureMode("distance")} className={`rounded px-2 py-1 border ${measureMode === "distance" ? "border-[var(--accent-cyan)]" : "border-[var(--border-subtle)]"}`}>Mesafe</button>
@@ -379,9 +408,14 @@ export default function MapPage() {
                 <button onClick={() => setMeasureMode("slope")} className={`rounded px-2 py-1 border ${measureMode === "slope" ? "border-[var(--accent-cyan)]" : "border-[var(--border-subtle)]"}`}>Eğim</button>
                 <button onClick={() => setMeasureMode("none")} className={`rounded px-2 py-1 border ${measureMode === "none" ? "border-[var(--accent-cyan)]" : "border-[var(--border-subtle)]"}`}>Kapalı</button>
               </div>
-              <p className="text-[var(--text-secondary)]">Haritaya tıklayarak ölçüm noktalarını ekleyin. Nokta sayısı: {measurePoints.length}</p>
-              <p className="text-[var(--text-secondary)]">Mesafe: <span className="text-[var(--text-primary)]">{measurementDistanceMeters.toFixed(1)} m</span></p>
-              <p className="text-[var(--text-secondary)]">Alan: <span className="text-[var(--text-primary)]">{measurementAreaSquareMeters.toFixed(1)} m²</span></p>
+              <p className="text-[var(--text-secondary)]">
+                {measureMode === "none"
+                  ? "Ölçüm kapalı. Bir mod seçip haritaya tıklayarak başlayın."
+                  : "Haritaya tıklayarak ölçüm noktalarını ekleyin."}{" "}
+                Nokta sayısı: {measurePoints.length}
+              </p>
+              <p className="text-[var(--text-secondary)]">Mesafe: <span className="text-[var(--text-primary)]">{formatDistance(measurementDistanceMeters)}</span></p>
+              <p className="text-[var(--text-secondary)]">Alan: <span className="text-[var(--text-primary)]">{formatArea(measurementAreaSquareMeters)}</span></p>
               {measureMode === "slope" && (
                 <div className="space-y-1.5">
                   <input type="number" value={startElevation} onChange={(event) => setStartElevation(Number(event.target.value))} placeholder="Başlangıç kotu (m)" className="w-full bg-transparent border border-[var(--border-subtle)] rounded px-2 py-1" />
