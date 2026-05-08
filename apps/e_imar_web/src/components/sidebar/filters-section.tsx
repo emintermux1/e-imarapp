@@ -6,14 +6,11 @@ import { ZONING_PRESETS } from "@/data/zoning";
 import { BELEDIYE_LIST } from "@/data/belediye";
 import type { ZoningType } from "@/types/parcel";
 import { cn } from "@/lib/utils";
-
-interface FiltersState {
-  belediyeler: string[];
-  planTipi: string[];
-  durum: ("askida" | "onaylandi" | "reddedildi" | "yok")[];
-  zoning: ZoningType[];
-  yapilasma: string[];
-}
+import {
+  useFilterStore,
+  type ParcelFilters
+} from "@/stores/filter-store";
+import { useParcelFilters } from "@/hooks/use-parcel-filters";
 
 const PLAN_TIPLERI = [
   "Uygulama İmar Planı",
@@ -23,7 +20,7 @@ const PLAN_TIPLERI = [
   "Koruma Amaçlı UİP"
 ];
 
-const DURUM_OPTIONS: Array<{ id: FiltersState["durum"][number]; label: string }> = [
+const DURUM_OPTIONS: Array<{ id: ParcelFilters["durum"][number]; label: string }> = [
   { id: "askida", label: "Askıda" },
   { id: "onaylandi", label: "Onaylandı" },
   { id: "reddedildi", label: "Reddedildi" },
@@ -33,25 +30,46 @@ const DURUM_OPTIONS: Array<{ id: FiltersState["durum"][number]; label: string }>
 const YAPILASMA_OPTIONS = ["Ayrik", "Bitisik", "Blok"];
 
 export function FiltersSection() {
-  const [state, setState] = React.useState<FiltersState>({
-    belediyeler: [],
-    planTipi: [],
-    durum: ["askida"],
-    zoning: [],
-    yapilasma: []
-  });
+  const state = useFilterStore((s) => s.parcelFilters);
+  const setParcelFilters = useFilterStore((s) => s.setParcelFilters);
+  const resetParcelFilters = useFilterStore((s) => s.resetParcelFilters);
+  const { filteredCount, totalCount, hasActiveFilters } = useParcelFilters();
 
-  function toggle<K extends keyof FiltersState>(key: K, value: FiltersState[K][number]) {
-    setState((s) => {
-      const arr = s[key] as Array<FiltersState[K][number]>;
+  function toggle<K extends keyof ParcelFilters>(key: K, value: ParcelFilters[K][number]) {
+    setParcelFilters(((s) => {
+      const arr = s[key] as Array<ParcelFilters[K][number]>;
       const has = arr.includes(value);
       const next = has ? arr.filter((v) => v !== value) : [...arr, value];
-      return { ...s, [key]: next } as FiltersState;
-    });
+      return { ...s, [key]: next } as ParcelFilters;
+    })(state));
   }
 
   return (
     <div className="flex flex-col gap-3">
+      <section className="rounded-sm border border-border-subtle bg-surface-1 px-2.5 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] text-fg-secondary">
+            Eşleşen parsel
+            <span className="ml-1 font-semibold tabular-nums text-fg-primary">
+              {filteredCount.toLocaleString("tr-TR")}
+            </span>
+            <span className="ml-1 text-fg-muted">/ {totalCount.toLocaleString("tr-TR")}</span>
+          </span>
+          <button
+            type="button"
+            disabled={!hasActiveFilters}
+            onClick={resetParcelFilters}
+            className={cn(
+              "h-6 px-2 rounded-sm border text-[10px] uppercase tracking-wider",
+              hasActiveFilters
+                ? "border-border-strong text-fg-primary hover:bg-surface-2"
+                : "border-border-subtle text-fg-muted cursor-not-allowed"
+            )}
+          >
+            Sıfırla
+          </button>
+        </div>
+      </section>
       <FilterGroup label="Belediye">
         <div className="flex flex-wrap gap-1">
           {BELEDIYE_LIST.slice(0, 12).map((b) => {

@@ -6,6 +6,7 @@ import type { Map, MapMouseEvent } from "maplibre-gl";
 import { Layers } from "lucide-react";
 import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
+import { useParcelFilters } from "@/hooks/use-parcel-filters";
 import {
   getParcelsCollection,
   getParcelById,
@@ -92,6 +93,7 @@ export function MapCanvas({
   const layerOpacity = useUIStore((s) => s.layerOpacity);
   const askiMode = useUIStore((s) => s.askiMode);
   const timelineYear = useUIStore((s) => s.timelineYear);
+  const { hasActiveFilters, filteredMapIds, filteredCount } = useParcelFilters();
 
   const onAskiClickRef = React.useRef(onAskiClick);
   React.useEffect(() => {
@@ -308,12 +310,14 @@ export function MapCanvas({
         bearing: +map.getBearing().toFixed(1),
         pitch: +map.getPitch().toFixed(1)
       });
+      applyPerformanceProfile(map, z, layerVisibility["deprem-risk-grid"]);
     });
     map.on("rotateend", () => setViewState({ bearing: +map.getBearing().toFixed(1) }));
     map.on("pitchend", () => setViewState({ pitch: +map.getPitch().toFixed(1) }));
     map.on("moveend", () => {
       const c = map.getCenter();
       setCursorLngLat([c.lng, c.lat]);
+      applyPerformanceProfile(map, map.getZoom(), layerVisibility["deprem-risk-grid"]);
     });
 
     return () => {
@@ -453,6 +457,17 @@ export function MapCanvas({
     if (map.isStyleLoaded()) apply();
     else map.once("idle", apply);
   }, [timelineYear]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      applyParcelFilter(map, hasActiveFilters ? filteredMapIds : null);
+      applyPerformanceProfile(map, map.getZoom(), layerVisibility["deprem-risk-grid"]);
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [hasActiveFilters, filteredMapIds, filteredCount, layerVisibility]);
 
   function applyVisibilityAndOpacity(map: Map) {
     Object.entries(layerVisibility).forEach(([id, vis]) => {
@@ -780,6 +795,56 @@ function setOpacityIfExists(
     map.setPaintProperty(layerId, prop as never, value as never);
   } catch {
     /* swallow */
+  }
+}
+
+function applyParcelFilter(map: Map, filteredMapIds: number[] | null) {
+  const targetLayers = [
+    "parcels-fill",
+    "parcels-line",
+    "parcels-label",
+    "plan-constraint-line",
+    "plan-donati-label",
+    "parcels-selected-accent",
+    "parcels-hover-dot"
+  ];
+  for (const layerId of targetLayers) {
+    if (!map.getLayer(layerId)) continue;
+    if (!filteredMapIds) {
+      map.setFilter(layerId, null);
+      continue;
+    }
+    map.setFilter(layerId, [
+      "in",
+      ["to-number", ["id"]],
+      ["literal", filteredMapIds]
+    ] as never);
+  }
+}
+
+function applyPerformanceProfile(map: Map, zoom: number, riskVisible?: boolean) {
+  // Adaptive style profile: keep interactivity responsive on low zoom / heavy layers.
+  if (map.getLayer("deprem-risk-grid")) {
+    const opacity = zoom < 9.5 ? 0.12 : zoom < 12 ? 0.2 : 0.3;
+    map.setPaintProperty(
+      "deprem-risk-grid",
+      "circle-opacity",
+      (riskVisible === false ? 0 : opacity) as never
+    );
+  }
+  if (map.getLayer("parcels-label")) {
+    map.setLayoutProperty(
+      "parcels-label",
+      "visibility",
+      zoom >= 15.2 ? "visible" : "none"
+    );
+  }
+  if (map.getLayer("plan-donati-label")) {
+    map.setLayoutProperty(
+      "plan-donati-label",
+      "visibility",
+      zoom >= 16.2 ? "visible" : "none"
+    );
   }
 }
 

@@ -15,6 +15,12 @@ const MONTH_LABELS = [
   "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"
 ];
 
+const SCENARIOS = {
+  mevcut: { label: "Mevcut", sunHour: 12, sunMonth: 6, katsayi: 1 },
+  kisSabah: { label: "Kış Sabah", sunHour: 9, sunMonth: 1, katsayi: 1.08 },
+  yazAksam: { label: "Yaz Akşam", sunHour: 18, sunMonth: 8, katsayi: 1.15 }
+} as const;
+
 /**
  * 3D-only floating panel that appears next to the right info panel when the
  * map is in 3D mode. Drives shadow analysis and view corridor.
@@ -40,6 +46,7 @@ export function Section3DAnalizleri() {
   const parcel = parcelFeature?.properties;
 
   const [collapsed, setCollapsed] = React.useState(false);
+  const [activeScenario, setActiveScenario] = React.useState<keyof typeof SCENARIOS>("mevcut");
 
   const visible = mapMode === "3d";
 
@@ -161,15 +168,51 @@ export function Section3DAnalizleri() {
                 />
               </div>
               {parcel && (
-                <div className="border-t border-border-subtle pt-2 grid grid-cols-2 gap-2 text-[10px]">
-                  <Stat label="Seçili parsel" value={`${parcel.ada}/${parcel.parsel}`} />
-                  <Stat label="Maks. kat" value={`${parcel.katSiniri} kat`} />
-                  <Stat label="Gabari" value={`${parcel.gabariM.toFixed(1)} m`} />
-                  <Stat
-                    label="3D envelope"
-                    value={`${Math.round(parcel.yuzolcumuM2 * parcel.kaks).toLocaleString("tr-TR")} m²`}
-                  />
-                </div>
+                <>
+                  <div className="border-t border-border-subtle pt-2">
+                    <div className="text-[10px] uppercase tracking-wider text-fg-muted mb-1.5">
+                      Senaryo Karşılaştırma
+                    </div>
+                    <div className="flex gap-1">
+                      {(Object.keys(SCENARIOS) as Array<keyof typeof SCENARIOS>).map((key) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => {
+                            setActiveScenario(key);
+                            setSunHour(SCENARIOS[key].sunHour);
+                            setSunMonth(SCENARIOS[key].sunMonth);
+                          }}
+                          className={cn(
+                            "h-6 px-2 rounded-sm border text-[10px] uppercase tracking-wider",
+                            activeScenario === key
+                              ? "border-border-strong bg-surface-1 text-fg-primary"
+                              : "border-border-subtle text-fg-muted hover:text-fg-primary"
+                          )}
+                        >
+                          {SCENARIOS[key].label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="border-t border-border-subtle pt-2 grid grid-cols-2 gap-2 text-[10px]">
+                    <Stat label="Seçili parsel" value={`${parcel.ada}/${parcel.parsel}`} />
+                    <Stat label="Maks. kat" value={`${parcel.katSiniri} kat`} />
+                    <Stat label="Gabari" value={`${parcel.gabariM.toFixed(1)} m`} />
+                    <Stat
+                      label="3D envelope"
+                      value={`${Math.round(parcel.yuzolcumuM2 * parcel.kaks).toLocaleString("tr-TR")} m²`}
+                    />
+                    <Stat
+                      label="Senaryo inşaat"
+                      value={`${Math.round(parcel.yuzolcumuM2 * parcel.kaks * SCENARIOS[activeScenario].katsayi).toLocaleString("tr-TR")} m²`}
+                    />
+                    <Stat
+                      label="Güneş profili"
+                      value={`${String(sunHour).padStart(2, "0")}:00 · ${MONTH_LABELS[sunMonth - 1]}`}
+                    />
+                  </div>
+                </>
               )}
             </div>
           )}

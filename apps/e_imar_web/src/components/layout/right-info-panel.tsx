@@ -8,7 +8,6 @@ import {
   Star,
   Calculator,
   FileDown,
-  Lock,
   Building2,
   ShieldAlert,
   Route
@@ -44,6 +43,7 @@ import { SectionYatirimSkoru } from "@/components/info/section-yatirim-skoru";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmsalCalculatorPanel } from "@/components/emsal/emsal-calculator-panel";
 import { cn } from "@/lib/utils";
+import { downloadParcelPdfReport } from "@/lib/reports/parcel-pdf";
 
 export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   const open = useUIStore((s) => s.rightPanelOpen);
@@ -256,18 +256,14 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled
                     className="w-full"
+                    onClick={() => downloadParcelPdfReport(parcel)}
                   >
                     <FileDown className="h-4 w-4" /> PDF Rapor
                   </Button>
                 </span>
               </TooltipTrigger>
-              <TooltipContent>
-                <span className="inline-flex items-center gap-1">
-                  <Lock className="h-3 w-3" /> Yakında
-                </span>
-              </TooltipContent>
+              <TooltipContent>Yazdır / PDF olarak kaydet</TooltipContent>
             </Tooltip>
             <Button
               variant="secondary"
