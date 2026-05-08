@@ -156,3 +156,4 @@ Design preparation for website-first rollout:
 - `docs/ui-contract-map-workspace-props.md`
 - `docs/ui-state-machine-parcel-analysis.md`
 - `docs/ui-ux-maps-full.md`
+- `docs/frontend-task-pack-sprint-1.md`
