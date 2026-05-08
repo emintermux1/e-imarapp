@@ -21,10 +21,20 @@ export function MapWorkspacePage() {
       <aside className="left-panel">
         <h2>Parsel Arama</h2>
         <p className="hint">Arama kriteri: {state?.query?.ada ?? '-'} / {state?.query?.parselNo ?? '-'}</p>
+        <div className="compact-form">
+          <input placeholder="İl" defaultValue={state?.query?.city ?? ''} />
+          <input placeholder="İlçe" defaultValue={state?.query?.district ?? ''} />
+          <input placeholder="Ada" defaultValue={state?.query?.ada ?? ''} />
+          <input placeholder="Parsel" defaultValue={state?.query?.parselNo ?? ''} />
+        </div>
+        <div className="panel-group horizontal">
+          <button className="secondary">Sorgula</button>
+          <button className="secondary">Temizle</button>
+        </div>
         <div className="panel-group">
-          <button className="secondary">Haritadan Seç</button>
-          <button className="secondary">Katmanları Aç</button>
-          <button className="secondary">Haritayı Temizle</button>
+          <button className="secondary">Katman Kataloğu</button>
+          <button className="secondary">Plan Opaklığı</button>
+          <button className="secondary">Parsel Opaklığı</button>
         </div>
         <StatusPill label={`Workflow: ${result?.status ?? 'idle'}`} tone={result?.status === 'ok' ? 'ok' : 'warn'} />
       </aside>
@@ -36,13 +46,24 @@ export function MapWorkspacePage() {
         </div>
         <div className="map-placeholder-grid">
           <span>MAP WORKSPACE</span>
-          <small>Frontend mock değil; backend response burada render ediliyor.</small>
+          <small>Parsel geometri / katman overlay bileşenleri burada render edilir.</small>
+          <div className="map-legend">
+            <span><i className="legend red" /> Parsel sınırı</span>
+            <span><i className="legend blue" /> Plan alanı</span>
+            <span><i className="legend green" /> Risk katmanı</span>
+          </div>
         </div>
       </div>
 
       <aside className="right-panel">
         <h2>Parsel Detayı</h2>
         <p className="hint">ID: {String(selectedParcel?.id ?? '-')}</p>
+        <div className="tab-row">
+          <button className="tab active">Öznitelik</button>
+          <button className="tab">Koordinat</button>
+          <button className="tab">Ortofoto</button>
+          <button className="tab">Detay</button>
+        </div>
         <dl className="detail-list">
           <div><dt>Zoning</dt><dd>{String(selectedParcel?.zoning_function ?? '-')}</dd></div>
           <div><dt>Emsal</dt><dd>{String(selectedParcel?.emsal ?? '-')}</dd></div>
@@ -64,7 +85,10 @@ export function MapWorkspacePage() {
           <div><dt>Net satılabilir</dt><dd>{String(emsalOutput?.netSellableAreaM2 ?? '-')}</dd></div>
           <div><dt>Ünite</dt><dd>{String(emsalOutput?.estimatedIndependentUnits ?? '-')}</dd></div>
         </dl>
-        <button onClick={() => navigate('/plan-explain')} className="primary">Plan Notunu Açıkla</button>
+        <div className="panel-group horizontal">
+          <button onClick={() => navigate('/plan-explain')} className="primary">Plan Notunu Açıkla</button>
+          <button className="secondary">PDF Rapor</button>
+        </div>
       </aside>
     </section>
   );
