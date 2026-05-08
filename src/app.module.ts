@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AnalysisModule } from './analysis/analysis.module';
 import { CacheModule } from './cache/cache.module';
+import { EplanModule } from './eplan/eplan.module';
 import { ConnectorsModule } from './connectors/connectors.module';
 import { DatabaseModule } from './database/database.module';
 import { GeoModule } from './geo/geo.module';
@@ -35,7 +36,8 @@ import { StorageModule } from './storage/storage.module';
     StorageModule,
     MapModule,
     ObservabilityModule,
-    AnalysisModule
+    AnalysisModule,
+    EplanModule
   ]
 })
 export class AppModule {}

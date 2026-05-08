@@ -23,6 +23,7 @@
     "@nestjs/platform-fastify": "latest",
     "@nestjs/swagger": "latest",
     "bullmq": "latest",
+    "cheerio": "^1.2.0",
     "class-transformer": "latest",
     "class-validator": "latest",
     "fast-xml-parser": "^5.7.3",
