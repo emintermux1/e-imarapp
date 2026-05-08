@@ -99,15 +99,27 @@ function municipalSources(): SourceRegistryEntry[] {
     ['nilufer-webgis-imar', 'Nilüfer Belediyesi WebGIS İmar Durumu', 'https://webgis.nilufer.bel.tr/imardurumu/', 'Bursa', 'Nilüfer', 'nilufer', 'netcad']
   ];
 
+  const connectorKindsForVendor = (vendor?: string) => {
+    if (vendor === 'ekent') return [ConnectorKind.Ekent, ConnectorKind.MunicipalPortal];
+    if (vendor === 'netcad') return [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal];
+    return [ConnectorKind.MunicipalPortal];
+  };
+
+  const capabilitiesForVendor = (vendor?: string) => {
+    if (vendor === 'ekent') return ['zoning_status', 'municipal_gis', 'ekent'];
+    if (vendor === 'netcad') return ['zoning_status', 'municipal_gis', 'netcad_keos'];
+    return ['zoning_status', 'municipal_gis'];
+  };
+
   return rows.map(([id, name, homepageUrl, province, district, municipalitySlug, vendor]) => ({
     id,
     name,
     jurisdiction: 'municipal' as const,
     category: 'municipal_gis' as const,
     homepageUrl,
-    connectorKinds: vendor === 'ekent' ? [ConnectorKind.Ekent, ConnectorKind.MunicipalPortal] : [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal],
+    connectorKinds: connectorKindsForVendor(vendor),
     access: { status: 'unknown' as const, notes: municipalNotes },
-    capabilities: vendor === 'ekent' ? ['zoning_status', 'municipal_gis', 'ekent'] : ['zoning_status', 'municipal_gis', 'netcad_keos'],
+    capabilities: capabilitiesForVendor(vendor),
     metadata: { province, district, municipalitySlug, vendor }
   }));
 }

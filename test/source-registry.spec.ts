@@ -1,4 +1,5 @@
 import { SOURCE_REGISTRY } from '../src/sources/source-registry';
+import { ConnectorKind } from '../src/connectors/connector.types';
 
 const ids = new Set(SOURCE_REGISTRY.map((source) => source.id));
 
@@ -36,6 +37,21 @@ describe('SOURCE_REGISTRY', () => {
     expect(ids.has('gelibolu-keos-imar')).toBe(true);
     expect(ids.has('caycuma-keos')).toBe(true);
     expect(ids.has('kecioren-kbs')).toBe(true);
+  });
+
+  it('does not force municipal vendor portals into Netcad connector flow', () => {
+    const ibb = SOURCE_REGISTRY.find((source) => source.id === 'ibb-sehir-haritasi');
+    const ankara = SOURCE_REGISTRY.find((source) => source.id === 'ankara-imar');
+    const izmir = SOURCE_REGISTRY.find((source) => source.id === 'izmir-cbs');
+    const cankaya = SOURCE_REGISTRY.find((source) => source.id === 'cankaya-imar-durumu');
+    const kecioren = SOURCE_REGISTRY.find((source) => source.id === 'kecioren-kbs');
+
+    for (const source of [ibb, ankara, izmir, cankaya, kecioren]) {
+      expect(source?.metadata?.vendor).toBe('municipal');
+      expect(source?.connectorKinds).not.toContain(ConnectorKind.NetcadKeos);
+      expect(source?.capabilities).not.toContain('netcad_keos');
+      expect(source?.connectorKinds).toContain(ConnectorKind.MunicipalPortal);
+    }
   });
 
   it('does not store map provider secret values in source metadata', () => {
