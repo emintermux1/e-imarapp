@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-base: #F7F8FA;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F1F3F6;
+  --bg-inverse: #0F2743;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #6B7280;
+  --text-inverse: #FFFFFF;
+  --border-default: #D8DEE6;
+  --border-strong: #B6BFCB;
+  --border-subtle: #E6EAF0;
+  --brand-navy: #0F2743;
+  --brand-muted-blue: #2D5B88;
+  --state-gov-red: #B4232C;
+  --state-warn: #B7791F;
+  --state-success: #1F7A4D;
+  --state-info: #2D5B88;
+  --map-parcel-fill: rgba(45, 91, 136, 0.18);
+  --map-parcel-stroke: #0F2743;
+  --map-plan-fill: rgba(180, 35, 44, 0.18);
+  --map-risk-overlay: rgba(183, 121, 31, 0.30);
+}
+
+.dark {
+  --bg-base: #0B111A;
+  --bg-surface: #11192A;
+  --bg-subtle: #182238;
+  --bg-inverse: #F7F8FA;
+  --text-primary: #F1F4F9;
+  --text-secondary: #B8C2D1;
+  --text-muted: #8995A8;
+  --text-inverse: #0F2743;
+  --border-default: #243049;
+  --border-strong: #344363;
+  --border-subtle: #1B243A;
+  --brand-navy: #5A8DC4;
+  --brand-muted-blue: #7AA8D6;
+  --state-gov-red: #E45A62;
+  --state-warn: #E0AC57;
+  --state-success: #58C28F;
+  --state-info: #7AA8D6;
+  --map-parcel-fill: rgba(122, 168, 214, 0.20);
+  --map-parcel-stroke: #C2D8F0;
+  --map-plan-fill: rgba(228, 90, 98, 0.22);
+  --map-risk-overlay: rgba(224, 172, 87, 0.28);
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-inter), Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.font-data {
+  font-family: var(--font-plex), 'IBM Plex Sans', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Map library overrides */
+.maplibregl-ctrl-attrib {
+  background: rgba(255, 255, 255, 0.85) !important;
+  font-size: 11px !important;
+}
+
+.dark .maplibregl-ctrl-attrib {
+  background: rgba(17, 25, 42, 0.85) !important;
+  color: var(--text-secondary) !important;
+}
+
+.dark .maplibregl-ctrl-attrib a {
+  color: var(--text-secondary) !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Custom scrollbar */
+.scroll-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+
+.scroll-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus, 0 0 0 3px rgba(45, 91, 136, 0.30));
+}
