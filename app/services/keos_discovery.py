@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime, timezone
 from typing import Any
-from urllib.parse import urlencode, urljoin
+from urllib.parse import urlencode, urljoin, urlparse
 
 import httpx
 import structlog
@@ -26,6 +26,30 @@ COMMON_PATHS = [
     "/netgis/wms",
     "/wms",
 ]
+
+KNOWN_BASE_URL_OVERRIDES: dict[str, str] = {
+    "pendik": "https://keos.pendik.bel.tr/imardurumu/",
+    "esenler": "https://keos.esenler.bel.tr/imardurumu/index.aspx",
+    "canakkale": "https://webgis.canakkale.bel.tr/imardurumu/index.aspx",
+    "pamukkale": "http://keos.pamukkale.bel.tr/imardurumu/index.aspx",
+    "cerkezkoy": "https://webgis.cerkezkoy.bel.tr:444/imardurumu/",
+    "kahramankazan": "https://keos.kahramankazan.bel.tr:8880/imardurumu/",
+    "alanya": "https://keos.alanya.bel.tr/imardurumu/index.aspx",
+    "konak": "https://keos.konak.bel.tr/imardurumu/",
+    "merkezefendi": "https://keos.merkezefendi.bel.tr/imardurumu/index.aspx",
+    "altinordu": "https://ekent.altinordu.bel.tr/imardurumu/",
+    "aksaray": "https://ebelediye.aksaray.bel.tr:444/imardurumu/",
+    "sehitkamil": "https://keos.sehitkamil.bel.tr/imardurumu/",
+    "ibb": "https://sehirharitasi.ibb.gov.tr/",
+    "ankara": "https://imar.ankara.bel.tr/",
+    "izmir": "https://cbs.izmir.bel.tr/",
+    "cankaya": "https://imardurumu.cankaya.bel.tr/",
+    "sultangazi": "https://webgis.sultangazi.bel.tr/imardurumu/",
+    "basaksehir": "https://webgis.basaksehir.bel.tr/imardurumu/",
+    "tusba": "https://keos.tusba.bel.tr:8282/imardurumu/index.aspx",
+    "gelibolu": "https://keos.gelibolu.bel.tr/imardurumu/",
+    "caycuma": "https://keos.caycuma.bel.tr/",
+}
 
 
 class KeosDiscoveryService:
@@ -56,8 +80,7 @@ class KeosDiscoveryService:
         base_url = self._resolve_base_url(municipality)
         logger.info("keos_discovery_started", belediye_id=belediye_id, base_url=base_url)
 
-        for path in COMMON_PATHS:
-            endpoint = urljoin(base_url.rstrip("/") + "/", path.lstrip("/"))
+        for endpoint in self._build_wms_candidates(base_url):
             capabilities_url = f"{endpoint}?{urlencode({'request': 'GetCapabilities', 'service': 'WMS'})}"
             result = await self._fetch_capabilities(capabilities_url, referer=base_url)
             if not result:
@@ -259,4 +282,55 @@ class KeosDiscoveryService:
     def _resolve_base_url(self, municipality: Municipality) -> str:
         if municipality.keos_url:
             return municipality.keos_url.rstrip("/")
-        return f"https://keos.{municipality.slug}.bel.tr"
+        keys = self._candidate_keys(municipality)
+        for key in keys:
+            if key in KNOWN_BASE_URL_OVERRIDES:
+                return KNOWN_BASE_URL_OVERRIDES[key].rstrip("/")
+        return f"https://keos.{keys[0]}.bel.tr"
+
+    def _candidate_keys(self, municipality: Municipality) -> list[str]:
+        keys: list[str] = []
+        keys.append(self._normalize_key(municipality.slug.split("-")[0]))
+        keys.append(self._normalize_key(municipality.slug))
+        if municipality.district:
+            keys.append(self._normalize_key(municipality.district))
+        if municipality.province:
+            keys.append(self._normalize_key(municipality.province))
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for key in keys:
+            if key and key not in seen:
+                seen.add(key)
+                ordered.append(key)
+        return ordered
+
+    def _normalize_key(self, value: str) -> str:
+        lowered = value.strip().lower()
+        table = str.maketrans({
+            "ı": "i",
+            "ğ": "g",
+            "ş": "s",
+            "ç": "c",
+            "ö": "o",
+            "ü": "u",
+        })
+        return lowered.translate(table).replace(" ", "").replace("-", "")
+
+    def _build_wms_candidates(self, base_url: str) -> list[str]:
+        parsed = urlparse(base_url)
+        origin = f"{parsed.scheme}://{parsed.netloc}"
+        base_path = (parsed.path or "/").rstrip("/")
+        if "." in base_path.split("/")[-1]:
+            base_path = "/".join(base_path.split("/")[:-1]) or "/"
+        prefixes = {"/", base_path if base_path.startswith("/") else f"/{base_path}"}
+        endpoints: list[str] = []
+        seen: set[str] = set()
+        for prefix in prefixes:
+            for path in COMMON_PATHS:
+                normalized = path if path.startswith("/") else f"/{path}"
+                combined = normalized if prefix == "/" else f"{prefix}{normalized}"
+                endpoint = urljoin(origin.rstrip("/") + "/", combined.lstrip("/"))
+                if endpoint not in seen:
+                    seen.add(endpoint)
+                    endpoints.append(endpoint)
+        return endpoints
