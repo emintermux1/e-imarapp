@@ -28,16 +28,27 @@ export function PlanExplainPage() {
 
   return (
     <section className="explain-page">
-      <h1>İmar Notu Çevirici</h1>
-      <p className="subtitle">Plan notunu sade Türkçe’ye çevirir; risk ve belirsizlikleri listeler.</p>
-      <form onSubmit={onSubmit} className="explain-form">
-        <textarea value={noteText} onChange={(event) => setNoteText(event.target.value)} rows={8} />
-        <button type="submit" className="primary" disabled={loading}>
-          {loading ? 'Açıklanıyor...' : 'Açıkla'}
-        </button>
-      </form>
-      {error ? <p className="error-text">{error}</p> : null}
-      <pre className="result-card">{JSON.stringify(result, null, 2)}</pre>
+      <div className="split-head">
+        <div>
+          <h1>İmar Notu Çevirici</h1>
+          <p className="subtitle">Plan notunu sade Türkçe’ye çevirir; risk ve belirsizlikleri listeler.</p>
+        </div>
+        <button className="secondary">Kaydet</button>
+      </div>
+      <div className="explain-grid">
+        <form onSubmit={onSubmit} className="explain-form">
+          <label>Ham Plan Notu</label>
+          <textarea value={noteText} onChange={(event) => setNoteText(event.target.value)} rows={12} />
+          <button type="submit" className="primary" disabled={loading}>
+            {loading ? 'Açıklanıyor...' : 'Açıkla'}
+          </button>
+          {error ? <p className="error-text">{error}</p> : null}
+        </form>
+        <div className="result-panel">
+          <h3>Açıklama Sonucu</h3>
+          <pre className="result-card">{JSON.stringify(result, null, 2)}</pre>
+        </div>
+      </div>
     </section>
   );
 }
