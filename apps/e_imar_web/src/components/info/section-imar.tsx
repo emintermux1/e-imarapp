@@ -1,6 +1,7 @@
 import * as React from "react";
 import { DataRow } from "@/components/gis/data-card";
 import { ZoningBadge } from "@/components/gis/zoning-badge";
+import { SourceBadge } from "@/components/gis/source-badge";
 import { formatArea, formatDate } from "@/lib/format";
 import type { ParcelProps } from "@/types/parcel";
 
@@ -11,8 +12,14 @@ const YAPILASMA_LABEL: Record<ParcelProps["yapilasmaSekli"], string> = {
 };
 
 export function SectionImar({ parcel }: { parcel: ParcelProps }) {
+  const isLiveUnknown = parcel.sourceStatus === "live" && parcel.taks === 0 && parcel.kaks === 0;
   return (
     <div className="grid gap-0">
+      <DataRow
+        label="Veri Kaynağı"
+        value={<SourceBadge status={parcel.sourceStatus ?? "demo"} />}
+        hint={parcel.sourceNote}
+      />
       <DataRow
         label="Plan Kullanımı"
         value={
@@ -27,21 +34,21 @@ export function SectionImar({ parcel }: { parcel: ParcelProps }) {
       />
       <DataRow
         label="TAKS"
-        value={parcel.taks.toFixed(2)}
-        hint={`Maks. taban alanı ≈ ${formatArea(parcel.yuzolcumuM2 * parcel.taks)}`}
+        value={isLiveUnknown ? "Bilinmiyor" : parcel.taks.toFixed(2)}
+        hint={isLiveUnknown ? "Canlı parsel kaydında imar parametresi yok" : `Maks. taban alanı ≈ ${formatArea(parcel.yuzolcumuM2 * parcel.taks)}`}
       />
       <DataRow
         label="KAKS · Emsal"
-        value={parcel.kaks.toFixed(2)}
-        hint={`Toplam yapı alanı ≈ ${formatArea(parcel.yuzolcumuM2 * parcel.kaks)}`}
+        value={isLiveUnknown ? "Bilinmiyor" : parcel.kaks.toFixed(2)}
+        hint={isLiveUnknown ? "Plan servisi eşleşmesi bekleniyor" : `Toplam yapı alanı ≈ ${formatArea(parcel.yuzolcumuM2 * parcel.kaks)}`}
       />
       <DataRow
         label="Gabari"
-        value={`${parcel.gabariM.toFixed(1)} m`}
+        value={isLiveUnknown ? "Bilinmiyor" : `${parcel.gabariM.toFixed(1)} m`}
       />
       <DataRow
         label="Kat Sınırı"
-        value={`${parcel.katSiniri} kat`}
+        value={isLiveUnknown ? "Bilinmiyor" : `${parcel.katSiniri} kat`}
       />
       <DataRow
         label="Yol Cephesi"

@@ -67,6 +67,9 @@ export interface ParcelProps {
   planNotlari: string[];
   /** [lng, lat] convenience centroid */
   centroid?: [number, number];
+  sourceStatus?: import("./api").DataSourceStatus;
+  backendId?: number;
+  sourceNote?: string;
 }
 
 export interface ParcelFeature {

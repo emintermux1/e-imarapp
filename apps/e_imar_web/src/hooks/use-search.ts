@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getAllParcels, slugify } from "@/data/parcels";
 import { PROVINCES } from "@/data/provinces";
 import { DISTRICTS } from "@/data/districts";
@@ -8,7 +8,14 @@ import { NEIGHBORHOODS } from "@/data/neighborhoods";
 import { BELEDIYE_LIST } from "@/data/belediye";
 import { adaParselText, adaParselSlug } from "@/lib/format";
 import { TURKEY_BOUNDS, inTurkey, safeParseFloat } from "@/lib/utils";
+import {
+  lookupBackendParcel,
+  searchBackendParcels
+} from "@/lib/api/backend-client";
+import { backendParcelId, geometryCentroid } from "@/lib/api/parcel-normalizer";
+import { useBackendParcelStore } from "@/stores/backend-parcel-store";
 import type { SearchResult } from "@/types/geo";
+import type { ParcelResponse } from "@/types/api";
 
 export type SearchMode = "Hepsi" | "AdaParsel" | "Koordinat" | "Adres" | "Belediye";
 
@@ -17,6 +24,21 @@ interface SearchOptions {
   mode: SearchMode;
   limit?: number;
 }
+
+interface SearchState {
+  results: SearchResult[];
+  loading: boolean;
+  backendUnavailable: boolean;
+  usedFallback: boolean;
+  message?: string;
+}
+
+const EMPTY_STATE: SearchState = {
+  results: [],
+  loading: false,
+  backendUnavailable: false,
+  usedFallback: false
+};
 
 const COORD_REGEX = /^\s*(-?\d+(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d+(?:[.,]\d+)?)\s*$/;
 const ADA_PARSEL_REGEX = /^\s*(\d{1,5})\s*[\/\-\s]\s*(\d{1,5})\s*$/;
@@ -27,9 +49,7 @@ function parseCoord(q: string): { lng: number; lat: number } | null {
   const a = safeParseFloat(m[1]);
   const b = safeParseFloat(m[2]);
   if (a == null || b == null) return null;
-  // Try lat,lng first
   if (inTurkey(b, a)) return { lng: b, lat: a };
-  // Fallback lng,lat
   if (inTurkey(a, b)) return { lng: a, lat: b };
   return null;
 }
@@ -60,9 +80,41 @@ function searchParcelResults(query: string, limit: number): SearchResult[] {
         meta: p.zoningType,
         parcelId: p.id,
         zoningType: p.zoningType,
-        centroid: p.centroid
+        centroid: p.centroid,
+        sourceStatus: "demo"
       };
     });
+}
+
+function backendParcelToResult(parcel: ParcelResponse): SearchResult | null {
+  if (!parcel.id || !parcel.ada || !parcel.parsel) return null;
+  const local = getAllParcels().find(
+    (feature) =>
+      feature.properties.ada === parcel.ada &&
+      feature.properties.parsel === parcel.parsel &&
+      (!parcel.ilce || feature.properties.ilce.toLocaleLowerCase("tr-TR") === parcel.ilce.toLocaleLowerCase("tr-TR"))
+  );
+  const centroid = geometryCentroid(parcel.geometri) ?? local?.properties.centroid;
+  const location = [parcel.mahalle, parcel.ilce, parcel.il].filter(Boolean).join(", ");
+  return {
+    id: `backend-parcel:${parcel.id}`,
+    type: "parcel",
+    primary: `Ada/Parsel ${adaParselText(parcel.ada, parcel.parsel)}`,
+    secondary: location || "Canlı API parsel sonucu",
+    meta: "Canlı API",
+    parcelId: local?.properties.id ?? backendParcelId(parcel.id),
+    zoningType: local?.properties.zoningType ?? "Konut",
+    centroid,
+    sourceStatus: "live"
+  };
+}
+
+async function searchBackend(query: string, limit: number): Promise<ParcelResponse[]> {
+  const adaParselMatch = query.trim().match(ADA_PARSEL_REGEX);
+  const rows = adaParselMatch
+    ? await lookupBackendParcel({ ada: adaParselMatch[1], parsel: adaParselMatch[2] })
+    : await searchBackendParcels(query.trim());
+  return Array.isArray(rows) ? rows.slice(0, limit) : [];
 }
 
 function searchAddressResults(query: string, limit: number): SearchResult[] {
@@ -163,25 +215,113 @@ function coordToResult(query: string): SearchResult | null {
   };
 }
 
-export function useSearch(opts: SearchOptions) {
+function localResults(opts: SearchOptions, limit: number) {
+  if (opts.mode === "AdaParsel") return searchParcelResults(opts.query, limit);
+  if (opts.mode === "Adres") return searchAddressResults(opts.query, limit);
+  if (opts.mode === "Belediye") return searchBelediyeResults(opts.query, limit);
+  if (opts.mode === "Koordinat") {
+    const r = coordToResult(opts.query);
+    return r ? [r] : [];
+  }
+  const results: SearchResult[] = [];
+  const coord = coordToResult(opts.query);
+  if (coord) results.push(coord);
+  results.push(...searchParcelResults(opts.query, 5));
+  results.push(...searchAddressResults(opts.query, 4));
+  results.push(...searchBelediyeResults(opts.query, 3));
+  return results.slice(0, 12);
+}
+
+export function useSearch(opts: SearchOptions): SearchState {
   const limit = opts.limit ?? 8;
-  return useMemo(() => {
-    if (opts.mode === "AdaParsel") return searchParcelResults(opts.query, limit);
-    if (opts.mode === "Adres") return searchAddressResults(opts.query, limit);
-    if (opts.mode === "Belediye") return searchBelediyeResults(opts.query, limit);
-    if (opts.mode === "Koordinat") {
-      const r = coordToResult(opts.query);
-      return r ? [r] : [];
+  const query = opts.query.trim();
+  const mode = opts.mode;
+  const rawQuery = opts.query;
+  const upsertParcels = useBackendParcelStore((s) => s.upsertParcels);
+  const immediateResults = useMemo(() => {
+    if (!query) return [];
+    if (mode === "Koordinat") return localResults({ query: rawQuery, mode, limit }, limit);
+    if (mode === "Hepsi") {
+      const coord = coordToResult(rawQuery);
+      return coord ? [coord] : [];
     }
-    // Hepsi
-    const results: SearchResult[] = [];
-    const coord = coordToResult(opts.query);
-    if (coord) results.push(coord);
-    results.push(...searchParcelResults(opts.query, 5));
-    results.push(...searchAddressResults(opts.query, 4));
-    results.push(...searchBelediyeResults(opts.query, 3));
-    return results.slice(0, 12);
-  }, [opts.query, opts.mode, limit]);
+    if (mode === "Adres" || mode === "Belediye") return localResults({ query: rawQuery, mode, limit }, limit);
+    return [];
+  }, [limit, mode, query, rawQuery]);
+  const [state, setState] = useState<SearchState>({ ...EMPTY_STATE, results: immediateResults });
+
+  useEffect(() => {
+    if (!query) {
+      setState({ ...EMPTY_STATE, results: [] });
+      return;
+    }
+    const searchOptions = { query: rawQuery, mode, limit };
+    if (mode === "Koordinat" || mode === "Adres" || mode === "Belediye") {
+      setState({ ...EMPTY_STATE, results: localResults(searchOptions, limit) });
+      return;
+    }
+
+    const coord = mode === "Hepsi" ? coordToResult(rawQuery) : null;
+    if (coord) {
+      setState({ ...EMPTY_STATE, results: [coord] });
+      return;
+    }
+
+    let cancelled = false;
+    setState((current) => ({ ...current, loading: true, backendUnavailable: false, message: undefined }));
+    const timeout = window.setTimeout(() => {
+      searchBackend(query, limit)
+        .then((parcels) => {
+          if (cancelled) return;
+          const backendResults = parcels
+            .map(backendParcelToResult)
+            .filter((r): r is SearchResult => Boolean(r));
+          if (backendResults.length > 0) {
+            upsertParcels(parcels);
+            const rest = mode === "Hepsi"
+              ? [...searchAddressResults(query, 4), ...searchBelediyeResults(query, 3)]
+              : [];
+            setState({
+              results: [...backendResults, ...rest].slice(0, mode === "Hepsi" ? 12 : limit),
+              loading: false,
+              backendUnavailable: false,
+              usedFallback: false
+            });
+            return;
+          }
+          const fallback = localResults(searchOptions, limit).map((result) =>
+            result.type === "parcel" ? { ...result, sourceStatus: "fallback" as const } : result
+          );
+          setState({
+            results: fallback,
+            loading: false,
+            backendUnavailable: false,
+            usedFallback: fallback.some((r) => r.type === "parcel"),
+            message: fallback.length > 0 ? "Canlı API sonucu yok — yerel demo veri gösteriliyor" : undefined
+          });
+        })
+        .catch(() => {
+          if (cancelled) return;
+          const fallback = localResults(searchOptions, limit).map((result) =>
+            result.type === "parcel" ? { ...result, sourceStatus: "fallback" as const } : result
+          );
+          setState({
+            results: fallback,
+            loading: false,
+            backendUnavailable: true,
+            usedFallback: fallback.some((r) => r.type === "parcel"),
+            message: "Backend erişilemiyor — yerel demo veri gösteriliyor"
+          });
+        });
+    }, 220);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [limit, mode, query, rawQuery, upsertParcels]);
+
+  return state;
 }
 
 export const TURKEY_BBOX = TURKEY_BOUNDS;

@@ -23,6 +23,7 @@ export interface ParcelSearchResult extends SearchResultBase {
   type: "parcel";
   parcelId: string;
   zoningType: import("./parcel").ZoningType;
+  sourceStatus?: import("./api").DataSourceStatus;
 }
 
 export interface AddressSearchResult extends SearchResultBase {

@@ -6,6 +6,9 @@ restrained* — TKGM Parsel Sorgu, sahibinden, ArcGIS Online and Bloomberg
 Terminal are the references; we deliberately avoid the marketing-landing,
 neon, glassmorphism, toy-rounded vocabulary.
 
+This is the canonical polished GIS product frontend for the repository. The
+older `frontend/` and `apps/web/` apps are deprecated/simple prototypes.
+
 > This package replaces the previous Vite shell. The Flutter mobile app at
 > `apps/e_imar_mobile/` is **not** modified by this work.
 
@@ -444,12 +447,22 @@ swap.
 
 ### Search
 
-(unchanged from Task 1)
+Search now tries FastAPI first for parcel queries:
+
+- `1234/2` style queries call `/parsel?ada=1234&parsel=2`
+- free text parcel search calls `/parsel/search?query=...`
+- coordinate parsing remains immediate and local
+
+When FastAPI is unavailable or has no usable parcel result, the UI falls back
+to the bundled demo parcel set and shows `Yerel yedek` / `Demo veri` badges
+instead of presenting fallback values as official.
 
 ### Emsal
 
-(unchanged; powers both the in-panel `<EmsalCalculatorPanel>` Dialog and
-the standalone `/emsal` page, with the same `lib/math/emsal.ts` core).
+The calculator still uses the local `lib/math/emsal.ts` core for real-time
+feedback. For live API parcels with geometry, the dialog can also call
+`/simulation/compliance` via the `API ile doğrula` action and renders returned
+violations/compliance status inline.
 
 ---
 
@@ -489,14 +502,14 @@ the standalone `/emsal` page, with the same `lib/math/emsal.ts` core).
 
 | Surface | What's needed | Notes |
 |---|---|---|
-| **TKGM Parsel Sorgu API** | Replace `data/parcels.ts` mock + accessor functions with REST/GraphQL fetcher | Accessors (`getParcelById`, `searchParcels`, `useParcel`, `useSearch`) are pure synchronous selectors today; swap to TanStack Query + REST without touching components. |
+| **TKGM Parsel Sorgu API** | Expand current FastAPI adapter coverage beyond search/detail cache | `useSearch` now prefers `/parsel` and `/parsel/search`, then falls back to local demo data with visible badges. |
 | **e-Plan / askı feed** | Replace `data/aski-list.ts` and `data/aski-polygons.ts` with the official belediye askı service | Current polygons are synthetic 0.005°-by-0.0035° rectangles around realistic city centroids. |
 | **AFAD risk** | Replace `data/risk-grid.ts` with AFAD's WMS / GeoJSON risk service | Current grid is a 14×8 Gaussian over 13 high-risk centers. |
 | **Plan değişikliği tarihçesi** | Replace `data/historical-snapshots.ts` with TKGM plan tadilat geçmişi | 5 parcels have explicit history arcs; rest synthesise. |
 | **Cesium World Terrain** | Acquire ion access token; swap `EllipsoidTerrainProvider` → `Terrain.fromWorldTerrain()` | Required for accurate elevation in 3D. |
 | **Photorealistic 3D Tiles** | ion or Google Maps Photorealistic 3D Tiles | Replaces the custom polygon extrusion with the real building dataset. |
 | **Archival satellite imagery** | Replace the sepia-filtered placeholder in `<SatelliteCompareOverlay>` with Maxar/Planet historic WMTS | Current "Eski" pane reuses Esri World Imagery with a CSS sepia filter. |
-| **PDF Rapor server endpoint** | Wire the print-styled layout to a server-side PDF render (e.g. Playwright) | Today the user prints from the browser; an API route can produce the same A4 layout server-side. |
+| **PDF Rapor server endpoint** | Harden/report polling once backend report jobs become asynchronous | Right panel calls `/reports/generate` for live API parcels and opens `pdf_url` when returned. |
 | **Mapbox provider switching** | Activate when `NEXT_PUBLIC_MAPBOX_TOKEN` is present | Stub already present in `lib/maplibre/styles.ts`. |
 | **Backend swap** | TanStack Query is wired; replace mock fetcher with real backend | `app/providers.tsx` already has the QueryClient. |
 
