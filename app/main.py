@@ -5,7 +5,7 @@ from app.core.logging import setup_logging
 from app.database import init_db
 from app.core.exceptions import custom_exception_handler
 from app.config import settings
-from app.routers import health, parcels, plans, municipalities, map, reports, watchlist, auth, user_data
+from app.routers import health, parcels, plans, municipalities, map, reports, watchlist, auth, user_data, simulation, satellite, analysis
 import structlog
 
 setup_logging()
@@ -47,3 +47,6 @@ app.include_router(map.router, prefix="/api/v1/map", tags=["map"])
 app.include_router(reports.router, prefix="/api/v1", tags=["reports"])
 app.include_router(watchlist.router, prefix="/api/v1", tags=["watchlist"])
 app.include_router(user_data.router, prefix="/api/v1/user", tags=["user_data"])
+app.include_router(simulation.router)
+app.include_router(satellite.router)
+app.include_router(analysis.router)
