@@ -58,6 +58,24 @@ The running NestJS service exposes Swagger UI and JSON at:
 - `GET /analysis/runs?limit=`
 - `GET /analysis/provenance/:parcelId`
 
+### Reports
+- `POST /reports/request`
+- `GET /reports/:id`
+
+### Simulation / Premium Spatial Tools
+- `GET /simulation/building-envelope/:parcelId`
+- `GET /simulation/merge-candidates/:parcelId`
+
+### User Data
+- `POST /users/history`
+- `GET /users/:userReference/history`
+- `POST /users/favorites`
+- `GET /users/:userReference/favorites`
+
+### Satellite / Drone Analysis Requests
+- `GET /satellite/providers`
+- `POST /satellite/analysis/request`
+
 ### Cache
 - `GET /cache/status`
 

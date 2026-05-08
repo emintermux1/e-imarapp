@@ -451,6 +451,166 @@ export const SOURCE_REGISTRY: readonly SourceMetadata[] = [
     capabilities: ['zoning_status', 'municipal_gis']
   },
   {
+    id: 'atlas-ulusal-cbs',
+    name: 'Atlas Ulusal CBS',
+    jurisdiction: 'national',
+    category: 'basemap',
+    homepageUrl: 'https://www.atlas.gov.tr/',
+    connectorKinds: [ConnectorKind.Basemap, ConnectorKind.OpenData],
+    access: { status: AccessStatus.Unknown, notes: 'National atlas portal; live probing determines catalog and service availability.' },
+    capabilities: ['national_atlas', 'basemap', 'geospatial_catalog']
+  },
+  {
+    id: 'bulutkbs',
+    name: 'BulutKBS Vatandaş Portalı',
+    jurisdiction: 'national',
+    category: 'municipal_gis',
+    homepageUrl: 'https://bulutkbs.gov.tr/',
+    connectorKinds: [ConnectorKind.NationalPortal, ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Public/institutional KBS portal; connector must separate public views from protected institutional flows.' },
+    capabilities: ['municipal_gis', 'kbs_portal']
+  },
+  {
+    id: 'netcad-e-imar',
+    name: 'Netcad E-İmar',
+    jurisdiction: 'national',
+    category: 'municipal_gis',
+    homepageUrl: 'https://www.netcad.com/tr/urunler/e-imar',
+    connectorKinds: [ConnectorKind.NetcadKeos],
+    access: { status: AccessStatus.Unknown, notes: 'Vendor reference page for Netcad E-İmar product and common implementation patterns.' },
+    capabilities: ['netcad_reference', 'e_imar_reference']
+  },
+  {
+    id: 'citygml-standard',
+    name: 'CityGML Standard',
+    jurisdiction: 'global',
+    category: 'open_data',
+    homepageUrl: 'https://www.citygml.org/',
+    connectorKinds: [ConnectorKind.OpenData],
+    access: { status: AccessStatus.Public, notes: 'Open standard reference for 3D city model ingestion and export.' },
+    capabilities: ['citygml', '3d_city_models']
+  },
+  {
+    id: 'osm-overpass-api',
+    name: 'OpenStreetMap Overpass API',
+    jurisdiction: 'global',
+    category: 'open_data',
+    homepageUrl: 'https://wiki.openstreetmap.org/wiki/Overpass_API',
+    connectorKinds: [ConnectorKind.OpenData],
+    access: { status: AccessStatus.Public, notes: 'Public OSM query API; production use must respect fair-use and rate limits.' },
+    capabilities: ['poi_search', 'road_network', 'nearby_search']
+  },
+  {
+    id: 'ibb-eplan',
+    name: 'İBB E-Plan Sorgu',
+    jurisdiction: 'municipal',
+    category: 'plan',
+    municipalityName: 'İstanbul Büyükşehir Belediyesi',
+    homepageUrl: 'https://eplan.ibb.istanbul/sorgu/plansorgu',
+    connectorKinds: [ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'İBB plan query portal; public plan details must be discovered and normalized.' },
+    capabilities: ['plan_lookup', 'municipal_plan_catalog']
+  },
+  {
+    id: 'besiktas-keos-imar',
+    name: 'Beşiktaş Belediyesi KEOS İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Beşiktaş',
+    homepageUrl: 'https://keos.besiktas.bel.tr/imardurumu/',
+    connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal KEOS portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
+    id: 'bakirkoy-keos-imar',
+    name: 'Bakırköy Belediyesi KEOS İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Bakırköy',
+    homepageUrl: 'https://keos.bakirkoy.bel.tr/imardurumu/',
+    connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal KEOS portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
+    id: 'kadikoy-webgis-imar',
+    name: 'Kadıköy Belediyesi WebGIS İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Kadıköy',
+    homepageUrl: 'https://webgis.kadikoy.bel.tr/imardurumu/',
+    connectorKinds: [ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal WebGIS portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
+    id: 'gaziosmanpasa-keos',
+    name: 'Gaziosmanpaşa Belediyesi KEOS',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Gaziosmanpaşa',
+    homepageUrl: 'https://keos.gaziosmanpasa.bel.tr/keos/',
+    connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal KEOS portal; live probing determines endpoint health.' },
+    capabilities: ['municipal_gis']
+  },
+  {
+    id: 'bodrum-keos-imar',
+    name: 'Bodrum Belediyesi KEOS İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Bodrum',
+    homepageUrl: 'https://keos.bodrum.bel.tr/imardurumu/',
+    connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal KEOS portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
+    id: 'karsiyaka-keos-imar',
+    name: 'Karşıyaka Belediyesi KEOS İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Karşıyaka',
+    homepageUrl: 'https://keos.karsiyaka.bel.tr/imardurumu/index.aspx',
+    connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal KEOS portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
+    id: 'nilufer-webgis-imar',
+    name: 'Nilüfer Belediyesi WebGIS İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Nilüfer',
+    homepageUrl: 'https://webgis.nilufer.bel.tr/imardurumu/',
+    connectorKinds: [ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal WebGIS portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
+    id: 'antakya-keos-imar',
+    name: 'Antakya Belediyesi KEOS İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Antakya',
+    homepageUrl: 'https://keos.antakya.bel.tr/imardurumu/',
+    connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal KEOS portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
+    id: 'batman-keos-imar',
+    name: 'Batman Belediyesi KEOS İmar Durumu',
+    jurisdiction: 'municipal',
+    category: 'municipal_gis',
+    municipalityName: 'Batman',
+    homepageUrl: 'http://keos.batman.bel.tr/imardurumu/',
+    connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal],
+    access: { status: AccessStatus.Unknown, notes: 'Seed municipal KEOS portal; live probing determines endpoint health.' },
+    capabilities: ['zoning_status', 'municipal_gis']
+  },
+  {
     id: 'openstreetmap-api',
     name: 'OpenStreetMap API',
     jurisdiction: 'global',

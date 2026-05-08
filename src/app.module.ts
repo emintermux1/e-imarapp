@@ -14,9 +14,13 @@ import { MunicipalitiesModule } from './municipalities/municipalities.module';
 import { ObservabilityModule } from './observability/observability.module';
 import { ParcelsModule } from './parcels/parcels.module';
 import { PlansModule } from './plans/plans.module';
+import { ReportsModule } from './reports/reports.module';
+import { SatelliteModule } from './satellite/satellite.module';
 import { SearchModule } from './search/search.module';
+import { SimulationModule } from './simulation/simulation.module';
 import { SourcesModule } from './sources/sources.module';
 import { StorageModule } from './storage/storage.module';
+import { UserDataModule } from './user-data/user-data.module';
 
 @Module({
   imports: [
@@ -37,7 +41,11 @@ import { StorageModule } from './storage/storage.module';
     MapModule,
     ObservabilityModule,
     AnalysisModule,
-    EplanModule
+    EplanModule,
+    ReportsModule,
+    SimulationModule,
+    UserDataModule,
+    SatelliteModule
   ]
 })
 export class AppModule {}
