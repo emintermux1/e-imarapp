@@ -9,10 +9,26 @@ export function SectionRiskler({ parcel }: { parcel: ParcelProps }) {
         label="Deprem (AFAD)"
         value={parcel.riskler.deprem}
         scale={5}
+        source="AFAD Deprem Tehlike Haritası"
       />
-      <RiskIndicator label="Heyelan" value={parcel.riskler.heyelan} scale={3} />
-      <RiskIndicator label="Sel" value={parcel.riskler.sel} scale={3} />
-      <RiskIndicator label="Yangın" value={parcel.riskler.yangin} scale={3} />
+      <RiskIndicator
+        label="Heyelan"
+        value={parcel.riskler.heyelan}
+        scale={3}
+        source="MTA Heyelan Envanteri"
+      />
+      <RiskIndicator
+        label="Sel"
+        value={parcel.riskler.sel}
+        scale={3}
+        source="DSİ Taşkın Risk Haritaları"
+      />
+      <RiskIndicator
+        label="Yangın"
+        value={parcel.riskler.yangin}
+        scale={3}
+        source="OGM Yangın Riski"
+      />
     </div>
   );
 }

@@ -1,0 +1,115 @@
+/**
+ * Print stylesheet — invoked when /sorgu/[adaParsel] is printed.
+ *
+ * Strategy:
+ *   - Hide all chrome (sidebar, topbar, map canvas, HUD, mobile sheet, FABs)
+ *   - Promote the right info panel to the full A4 page
+ *   - Render the print header with the brand mark + ada/parsel + date
+ *   - Use white surfaces, black ink, no shadows, no animations
+ */
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 14mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Hide chrome */
+  body[data-route="parcel"] header[role="banner"],
+  body[data-route="parcel"] aside[aria-label="Yan panel"],
+  body[data-route="parcel"] [aria-label="GIS Harita"],
+  body[data-route="parcel"] [aria-label="3D GIS sahne"],
+  body[data-route="parcel"] [aria-label="Mobil yan menü"],
+  body[data-route="parcel"] [role="dialog"][aria-label*="Mobil"],
+  body[data-route="parcel"] [role="dialog"][aria-label="Parsel detay"],
+  body[data-route="parcel"] [aria-label*="HUD"],
+  body[data-route="parcel"] [aria-label*="kaydırıcısı"],
+  body[data-route="parcel"] [aria-label="3D analiz paneli"],
+  body[data-route="parcel"] .pointer-events-auto.absolute.bottom-3,
+  body[data-route="parcel"] .pointer-events-none.absolute,
+  body[data-route="parcel"] .maplibregl-map,
+  body[data-route="parcel"] [class*="GISLegend"],
+  body[data-route="parcel"] footer.grid {
+    display: none !important;
+  }
+
+  /* Promote right info panel to full page */
+  body[data-route="parcel"] aside[aria-label="Parsel detay paneli"] {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    border: none !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    transform: none !important;
+    overflow: visible !important;
+  }
+
+  body[data-route="parcel"] aside[aria-label="Parsel detay paneli"] header {
+    border-bottom: 1px solid #cbd5e1 !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 12px !important;
+  }
+
+  body[data-route="parcel"] [data-radix-scroll-area-viewport] {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Print-only header (rendered alongside the panel) */
+  .print-only {
+    display: block !important;
+    margin-bottom: 16px;
+  }
+
+  /* Hide non-print elements */
+  .print-hidden {
+    display: none !important;
+  }
+
+  /* Restore all backgrounds + shadows to white */
+  *,
+  *::before,
+  *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    background-image: none !important;
+  }
+
+  /* Accordion contents always visible when printing */
+  [data-state="closed"][data-orientation="vertical"] > [data-state="closed"] {
+    display: block !important;
+  }
+  [data-state="closed"] > div[role="region"],
+  [hidden] {
+    display: revert !important;
+  }
+
+  /* Ensure links don't print URL after them */
+  a[href]::after {
+    content: "" !important;
+  }
+
+  /* Tabular content stays tight */
+  body[data-route="parcel"] dl,
+  body[data-route="parcel"] table {
+    page-break-inside: auto;
+  }
+  body[data-route="parcel"] tr,
+  body[data-route="parcel"] li {
+    page-break-inside: avoid;
+  }
+}
+
+/* Default state: print header is hidden on screen */
+@media screen {
+  .print-only {
+    display: none;
+  }
+}

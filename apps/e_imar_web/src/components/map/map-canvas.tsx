@@ -14,12 +14,23 @@ import {
 import { getStyleForBasemap, type BasemapId } from "@/lib/maplibre/styles";
 import {
   PARCEL_SOURCE,
+  ASKI_SOURCE,
+  RISK_GRID_SOURCE,
   buildParcelFillLayer,
   buildParcelLineLayer,
   buildParcelLabelLayer,
   buildParcelSelectedAccentLayer,
-  buildParcelHoverDotLayer
+  buildParcelHoverDotLayer,
+  buildAskiFillLayer,
+  buildAskiLineLayer,
+  buildAskiHatchedLayer,
+  buildRiskGridLayer
 } from "@/lib/maplibre/layers";
+import { getAskiCollection } from "@/data/aski-polygons";
+import type { AskiPolygonFeature } from "@/data/aski-polygons";
+import { getRiskGridCollection } from "@/data/risk-grid";
+import { ZONING_PRESETS } from "@/data/zoning";
+import { getSnapshotForYear } from "@/data/historical-snapshots";
 
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
@@ -28,12 +39,21 @@ interface MapCanvasProps {
   className?: string;
   cursorReadoutRef?: React.RefObject<HTMLSpanElement>;
   zoomReadoutRef?: React.RefObject<HTMLSpanElement>;
+  /**
+   * Callback fired when an askı polygon is clicked. Hosts can render a side
+   * popover with details. Position is screen-space relative to the document.
+   */
+  onAskiClick?: (
+    feature: AskiPolygonFeature,
+    pos: { x: number; y: number }
+  ) => void;
 }
 
 export function MapCanvas({
   className,
   cursorReadoutRef,
-  zoomReadoutRef
+  zoomReadoutRef,
+  onAskiClick
 }: MapCanvasProps) {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const mapRef = React.useRef<Map | null>(null);
@@ -52,9 +72,14 @@ export function MapCanvas({
 
   const layerVisibility = useUIStore((s) => s.layerVisibility);
   const layerOpacity = useUIStore((s) => s.layerOpacity);
+  const askiMode = useUIStore((s) => s.askiMode);
+  const timelineYear = useUIStore((s) => s.timelineYear);
 
-  // Lazy import: ensure CSS is present (already imported in globals).
-  // Initialize the map once.
+  const onAskiClickRef = React.useRef(onAskiClick);
+  React.useEffect(() => {
+    onAskiClickRef.current = onAskiClick;
+  }, [onAskiClick]);
+
   React.useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     let map: Map;
@@ -82,7 +107,6 @@ export function MapCanvas({
 
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
 
-    // Wire up HUD events
     const onControl = (e: Event) => {
       const detail = (e as CustomEvent<{ action: string }>).detail;
       if (!detail) return;
@@ -109,29 +133,25 @@ export function MapCanvas({
     };
     window.addEventListener("eimar:map:control", onControl);
 
-    // Synchronous source/layer setup. MapLibre queues these internally
-    // until the style finishes loading. This avoids losing the load event
-    // because of React 18 StrictMode double-mount in dev.
-    const ensureParcels = () => {
+    const ensureLayers = () => {
       if (!map.getSource(PARCEL_SOURCE)) {
         registerParcelLayers(map);
       }
+      ensureAskiLayers(map);
+      ensureRiskGridLayer(map);
       applyVisibilityAndOpacity(map);
     };
     if (map.isStyleLoaded()) {
-      ensureParcels();
+      ensureLayers();
     } else {
-      map.once("load", ensureParcels);
+      map.once("load", ensureLayers);
     }
 
     map.on("styledata", () => {
-      // After basemap change (setStyle), the parcel source/layers are
-      // wiped. Re-register them.
       if (!map.isStyleLoaded()) return;
-      if (!map.getSource(PARCEL_SOURCE)) {
-        registerParcelLayers(map);
-      }
-      // Re-apply selection state on style swap
+      if (!map.getSource(PARCEL_SOURCE)) registerParcelLayers(map);
+      ensureAskiLayers(map);
+      ensureRiskGridLayer(map);
       if (lastSelectedMapIdRef.current != null) {
         map.setFeatureState(
           { source: PARCEL_SOURCE, id: lastSelectedMapIdRef.current },
@@ -141,7 +161,6 @@ export function MapCanvas({
       applyVisibilityAndOpacity(map);
     });
 
-    // mousemove — write coords directly to DOM (avoid React re-renders)
     let rafId: number | null = null;
     let pendingLngLat: { lng: number; lat: number } | null = null;
     const onMouseMove = (e: MapMouseEvent) => {
@@ -163,7 +182,6 @@ export function MapCanvas({
     map.on("mousemove", onMouseMove);
     map.on("mouseout", onMouseLeave);
 
-    // hover/click handlers on parcel-fill layer
     const onParcelMouseMove = (e: maplibregl.MapLayerMouseEvent) => {
       if (!e.features?.length) return;
       const id = e.features[0].id as string | number | undefined;
@@ -214,6 +232,52 @@ export function MapCanvas({
     map.on("mousemove", "parcels-fill", onParcelMouseMove);
     map.on("mouseleave", "parcels-fill", onParcelMouseLeave);
     map.on("click", "parcels-fill", onParcelClick);
+
+    // Askı polygon click — open side popover
+    const onAskiInteract = (e: maplibregl.MapLayerMouseEvent) => {
+      const f = e.features?.[0];
+      if (!f) return;
+      const props = f.properties as Record<string, unknown> & {
+        id?: string;
+        durum?: string;
+        belediye?: string;
+        baslangic?: string;
+        bitis?: string;
+        label?: string;
+        matchedParcelId?: string;
+        planAdi?: string;
+      };
+      onAskiClickRef.current?.(
+        {
+          id: String(props.id ?? ""),
+          label: String(props.label ?? "Askı kaydı"),
+          durum: (props.durum as AskiPolygonFeature["durum"]) ?? "askida",
+          baslangic: String(props.baslangic ?? ""),
+          bitis: String(props.bitis ?? ""),
+          belediye: String(props.belediye ?? ""),
+          ilSlug: String(
+            (props as { ilSlug?: string }).ilSlug ?? ""
+          ),
+          ilceSlug: String(
+            (props as { ilceSlug?: string }).ilceSlug ?? ""
+          ),
+          ring: [],
+          matchedParcelId: props.matchedParcelId as string | undefined,
+          planAdi: props.planAdi as string | undefined
+        },
+        { x: e.point.x, y: e.point.y }
+      );
+    };
+    const onAskiHover = () => {
+      map.getCanvas().style.cursor = "pointer";
+    };
+    const onAskiLeave = () => {
+      map.getCanvas().style.cursor = "";
+    };
+    map.on("click", "askida-overlay-fill", onAskiInteract);
+    map.on("mouseenter", "askida-overlay-fill", onAskiHover);
+    map.on("mouseleave", "askida-overlay-fill", onAskiLeave);
+
     map.on("zoomend", () => {
       const z = map.getZoom();
       if (zoomReadoutRef?.current) {
@@ -228,7 +292,6 @@ export function MapCanvas({
     map.on("rotateend", () => setViewState({ bearing: +map.getBearing().toFixed(1) }));
     map.on("pitchend", () => setViewState({ pitch: +map.getPitch().toFixed(1) }));
     map.on("moveend", () => {
-      // also push cursor coords store occasionally for UI uses
       const c = map.getCenter();
       setCursorLngLat([c.lng, c.lat]);
     });
@@ -242,21 +305,18 @@ export function MapCanvas({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Basemap change → setStyle (the styledata handler re-adds custom sources/layers)
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     map.setStyle(getStyleForBasemap(basemap));
   }, [basemap]);
 
-  // Selection state syncing
+  // Selection sync
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-
     const apply = () => {
       if (!map.getSource(PARCEL_SOURCE)) return;
-      // Find the numeric mapId for the selected (string) parcel id
       const newMapId = selectedParcelId
         ? getParcelById(selectedParcelId)?.properties.mapId ?? null
         : null;
@@ -277,12 +337,10 @@ export function MapCanvas({
         );
       }
     };
-
     if (map.isStyleLoaded()) apply();
     else map.once("load", apply);
   }, [selectedParcelId]);
 
-  // FlyTo target
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map || !flyTarget) return;
@@ -298,22 +356,88 @@ export function MapCanvas({
     });
   }, [flyTarget]);
 
-  // Layer visibility / opacity sync
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     const apply = () => applyVisibilityAndOpacity(map);
     if (map.isStyleLoaded()) apply();
     else map.once("idle", apply);
-  }, [layerVisibility, layerOpacity]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layerVisibility, layerOpacity, askiMode]);
+
+  // Timeline year → re-color parcel fill expression by historical snapshot
+  // We don't replace the source; instead we toggle a `historicalColor`
+  // expression by rebuilding fill-color paint property.
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      if (!map.isStyleLoaded() || !map.getLayer("parcels-fill")) return;
+      if (timelineYear == null) {
+        try {
+          map.setPaintProperty(
+            "parcels-fill",
+            "fill-color",
+            buildParcelFillLayer().paint!["fill-color"] as never
+          );
+        } catch {
+          /* swallow */
+        }
+        return;
+      }
+      // Build a per-feature historical zoning lookup. We can't use feature
+      // expressions to read a JS map at paint time, so we build a `match`
+      // expression keyed on parcel id.
+      const fc = getParcelsCollection();
+      const matchExpr: (string | string[] | number)[] = [
+        "match",
+        ["get", "id"]
+      ];
+      for (const f of fc.features) {
+        const parcelId = f.properties.id;
+        const snap = getSnapshotForYear(parcelId, timelineYear);
+        const zoning = snap?.zoningType ?? f.properties.zoningType;
+        const fill =
+          ZONING_PRESETS[zoning as keyof typeof ZONING_PRESETS]?.fill ??
+          ZONING_PRESETS.Konut.fill;
+        matchExpr.push(parcelId, fill);
+      }
+      matchExpr.push("#FFE9A8");
+      try {
+        map.setPaintProperty(
+          "parcels-fill",
+          "fill-color",
+          matchExpr as unknown as never
+        );
+      } catch {
+        /* swallow */
+      }
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [timelineYear]);
 
   function applyVisibilityAndOpacity(map: Map) {
     Object.entries(layerVisibility).forEach(([id, vis]) => {
+      // The askida-overlay descriptor maps to two MapLibre layers
+      if (id === "askida-overlay") {
+        const reallyVisible = askiMode || vis;
+        ["askida-overlay-fill", "askida-overlay-line", "askida-overlay-hatched"].forEach(
+          (layerId) => {
+            if (!map.getLayer(layerId)) return;
+            map.setLayoutProperty(
+              layerId,
+              "visibility",
+              reallyVisible ? "visible" : "none"
+            );
+          }
+        );
+        return;
+      }
       if (!map.getLayer(id)) return;
       map.setLayoutProperty(id, "visibility", vis ? "visible" : "none");
     });
-    // Build conditional opacity expressions so we keep hover/select highlight
-    // while still respecting the user's slider value as the base.
+
     const fillOpacity = layerOpacity["parcels-fill"];
     if (fillOpacity != null && map.getLayer("parcels-fill")) {
       try {
@@ -326,11 +450,19 @@ export function MapCanvas({
           fillOpacity
         ] as never);
       } catch {
-        /* swallow paint property errors during style transitions */
+        /* swallow */
       }
     }
     setOpacityIfExists(map, "parcels-line", "line-opacity", layerOpacity["parcels-line"]);
     setOpacityIfExists(map, "parcels-label", "text-opacity", layerOpacity["parcels-label"]);
+    setOpacityIfExists(
+      map,
+      "deprem-risk-grid",
+      "circle-opacity",
+      layerOpacity["deprem-risk-grid"] != null
+        ? Math.min(0.5, layerOpacity["deprem-risk-grid"] * 0.5)
+        : undefined
+    );
   }
 
   return (
@@ -371,8 +503,6 @@ function registerParcelLayers(map: Map) {
     map.addSource(PARCEL_SOURCE, {
       type: "geojson",
       data: fc,
-      // Tile generation hints — empirically these settings produce visible
-      // tiles for our small (~20m) parcel polygons across zoom 5..19.
       tolerance: 0,
       buffer: 256,
       maxzoom: 20,
@@ -396,6 +526,39 @@ function registerParcelLayers(map: Map) {
   }
 }
 
+function ensureAskiLayers(map: Map) {
+  if (!map.getSource(ASKI_SOURCE)) {
+    map.addSource(ASKI_SOURCE, {
+      type: "geojson",
+      data: getAskiCollection() as never
+    });
+  }
+  // Add layers below the parcel-label so labels stay on top
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("askida-overlay-fill")) {
+    map.addLayer(buildAskiFillLayer(), beforeId);
+  }
+  if (!map.getLayer("askida-overlay-line")) {
+    map.addLayer(buildAskiLineLayer(), beforeId);
+  }
+  if (!map.getLayer("askida-overlay-hatched")) {
+    map.addLayer(buildAskiHatchedLayer(), beforeId);
+  }
+}
+
+function ensureRiskGridLayer(map: Map) {
+  if (!map.getSource(RISK_GRID_SOURCE)) {
+    map.addSource(RISK_GRID_SOURCE, {
+      type: "geojson",
+      data: getRiskGridCollection() as never
+    });
+  }
+  const beforeId = map.getLayer("parcels-fill") ? "parcels-fill" : undefined;
+  if (!map.getLayer("deprem-risk-grid")) {
+    map.addLayer(buildRiskGridLayer(), beforeId);
+  }
+}
+
 function setOpacityIfExists(
   map: Map,
   layerId: string,
@@ -407,7 +570,7 @@ function setOpacityIfExists(
   try {
     map.setPaintProperty(layerId, prop as never, value as never);
   } catch {
-    /* swallow paint property errors during style transitions */
+    /* swallow */
   }
 }
 
