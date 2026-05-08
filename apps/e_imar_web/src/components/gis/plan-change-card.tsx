@@ -44,7 +44,7 @@ function YonIcon({ yon }: { yon: PlanChangeEntry["delta"][number]["yon"] }) {
  * Visually:
  * - Compact 3-grid badge of field-level deltas
  * - Header row with date + kategori dot
- * - "Time Machine'a Aç" button when callback is provided
+ * - "Zaman Çizelgesi'nde Aç" button when callback is provided
  */
 export function PlanChangeCard({
   entry,
@@ -89,7 +89,7 @@ export function PlanChangeCard({
                 ? "border-brand-red/60 bg-[rgb(var(--accent-red)/0.10)] text-fg-primary"
                 : "border-border-subtle text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
             )}
-            aria-label={`Time Machine'a ${entry.yil} aç`}
+            aria-label={`Zaman Çizelgesi'ni ${entry.yil} yılına aç`}
           >
             <GitBranch className="h-3 w-3" />
             {entry.yil}

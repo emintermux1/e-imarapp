@@ -35,7 +35,7 @@ export function CompareMapPair({
   zoomReadoutRef
 }: CompareMapPairProps) {
   const yearA = useUIStore((s) => s.timelineYear) ?? 2014;
-  const yearB = useUIStore((s) => s.timelineCompareYear) ?? 2024;
+  const yearB = useUIStore((s) => s.timelineCompareYear) ?? 2026;
   const basemap = useMapStore((s) => s.basemap);
 
   const containerARef = React.useRef<HTMLDivElement | null>(null);

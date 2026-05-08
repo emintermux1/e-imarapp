@@ -21,7 +21,7 @@ interface MapShellProps {
 /**
  * Visual orchestrator for the workspace canvas. Handles:
  * - 2D ↔ 3D crossfade (220ms)
- * - Time Machine compare-mode (split-pane synced 2D maps; placeholder in 3D)
+ * - Zaman Çizelgesi compare-mode (split-pane synced 2D maps; placeholder in 3D)
  * - Satellite Compare slider overlay
  *
  * The 2D MapLibre canvas always exists once mounted (so React keeps its DOM

@@ -68,7 +68,7 @@ export function TimelinePanel({
       title={
         <span className="inline-flex items-center gap-1.5">
           <History className="h-3.5 w-3.5 text-fg-muted" />
-          Time Machine
+          Zaman Çizelgesi
         </span>
       }
       subtitle={

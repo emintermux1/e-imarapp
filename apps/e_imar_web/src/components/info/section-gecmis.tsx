@@ -82,7 +82,7 @@ export function SectionGecmis({ parcel }: SectionGecmisProps) {
           onClick={() => openInTimeline(2020)}
         >
           <History className="h-4 w-4" />
-          Time Machine'i Aç
+          Zaman Çizelgesi'ni Aç
         </Button>
         <Button
           variant="ghost"

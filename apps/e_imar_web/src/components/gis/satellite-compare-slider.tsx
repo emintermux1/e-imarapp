@@ -11,7 +11,7 @@ interface SatelliteCompareSliderProps {
 }
 
 const HISTORICAL_YEAR = 2014;
-const CURRENT_YEAR = 2024;
+const CURRENT_YEAR = 2026;
 
 /**
  * Inline satellite compare preview that lives inside RightInfoPanel and

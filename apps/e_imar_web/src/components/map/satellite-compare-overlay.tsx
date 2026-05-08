@@ -16,7 +16,7 @@ const CURRENT_TILE_URL =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 
 const HISTORICAL_YEAR = 2014;
-const CURRENT_YEAR = 2024;
+const CURRENT_YEAR = 2026;
 
 /**
  * Satellite Compare overlay — an absolutely-positioned compare slider that
