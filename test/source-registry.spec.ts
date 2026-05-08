@@ -1,5 +1,7 @@
 import { SOURCE_REGISTRY } from '../src/sources/source-registry';
 
+const ids = new Set(SOURCE_REGISTRY.map((source) => source.id));
+
 describe('SOURCE_REGISTRY', () => {
   it('contains only concrete http sources and no placeholder URLs', () => {
     expect(SOURCE_REGISTRY.length).toBeGreaterThan(30);
@@ -19,8 +21,6 @@ describe('SOURCE_REGISTRY', () => {
   });
 
   it('covers national, municipal, satellite, and tile service source families', () => {
-    const ids = new Set(SOURCE_REGISTRY.map((source) => source.id));
-
     expect(ids.has('tkgm-parsel-sorgu')).toBe(true);
     expect(ids.has('edevlet-csb-tucbs')).toBe(true);
     expect(ids.has('netcad-netgis-server')).toBe(true);
@@ -28,5 +28,22 @@ describe('SOURCE_REGISTRY', () => {
     expect(ids.has('esri-world-imagery')).toBe(true);
     expect(ids.has('mapbox-maps-api')).toBe(true);
     expect(ids.has('tusba-keos-imar')).toBe(true);
+  });
+
+  it('includes newly provided public municipal portal seeds', () => {
+    expect(ids.has('suleymanpasa-keos-imar')).toBe(true);
+    expect(ids.has('mustafakemalpasa-keos-imar')).toBe(true);
+    expect(ids.has('gelibolu-keos-imar')).toBe(true);
+    expect(ids.has('caycuma-keos')).toBe(true);
+    expect(ids.has('kecioren-kbs')).toBe(true);
+  });
+
+  it('does not store map provider secret values in source metadata', () => {
+    const serialized = JSON.stringify(SOURCE_REGISTRY);
+    expect(serialized).toContain('MAPBOX_ACCESS_TOKEN');
+    expect(serialized).toContain('MAPTILER_API_KEY');
+    expect(serialized).toContain('CESIUM_ION_TOKEN');
+    expect(serialized).toContain('HERE_API_KEY');
+    expect(serialized).not.toMatch(/pk\.|sk\.|eyJ|AIza|glpat|ghp_/);
   });
 });

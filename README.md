@@ -82,7 +82,7 @@ Spatial indexes are created for municipal boundaries, parcels, plans, and zoning
 
 ## Real source registry
 
-The code registry is in `src/sources/source-registry.ts`. It starts with official and municipal seed systems, including TKGM, E-Plan, TUCBS, MAKS, e-Devlet/TUCBS, ÇŞİDB CBS, İçişleri e-Belediye, HGM Atlas, İBB Açık Veri, Netcad/KEOS reference patterns, municipal imar/CBS portals, OpenStreetMap, Esri World Imagery, Copernicus, Landsat, Mapbox, MapTiler, HERE, and Cesium ion.
+The code registry is in `src/sources/source-registry.ts`. It starts with official and municipal seed systems, including TKGM Parsel Sorgu and data-sharing rules, current/legacy E-Plan, TUCBS Public API and main portal, Atlas, ÇŞB CBS, Akıllı Şehirler local data platforms, BulutKBS, MAKS, Netcad references, municipal KEOS/WebGIS/eKent/KBS portals, OpenStreetMap, Esri World Imagery, Copernicus, Landsat, Mapbox, MapTiler, HERE, and Cesium ion. New municipal seeds include Süleymanpaşa, Mustafakemalpaşa, Gelibolu, Çaycuma, and Keçiören.
 
 Discovery probes live endpoints and returns explicit status instead of assuming that a URL is usable.
 
@@ -110,7 +110,7 @@ For public KEOS portals without login/bot protection, data is pulled by discover
 - `GET /connectors/netcad/strategy`
 - `POST /connectors/:id/netcad/discover`
 
-The discovery step fetches HTML/JS, extracts `.ashx`, `.asmx`, `NetGIS`, WMS/WFS, ArcGIS, and GeoServer references, probes common KEOS endpoints, and reports the next connector step. See `docs/connectors/netcad-keos.md`.
+The discovery step fetches public HTML and same-origin JS only, extracts `.ashx`, `.asmx`, `NetGIS`, WMS/WFS, ArcGIS, and GeoServer references, preserves published ports in candidate URLs, probes common KEOS endpoints, and reports the next connector step. Protected flows return `captcha_required`, `requires_credentials`, or `requires_legal_agreement` rather than fabricated data. See `docs/connectors/netcad-keos.md`.
 
 Map provider keys and OpenAI credentials should be provided through environment variables or a secret manager, never committed:
 
