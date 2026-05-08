@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IntegrationErrorCode } from '../common/error-taxonomy';
+import { inspectOptionalSecret } from '../config/provider-env';
 
 @Injectable()
 export class MapService {
@@ -56,36 +57,45 @@ export class MapService {
   }
 
   providers() {
+    const diagnostics = this.providerDiagnostics();
     return [
       {
         id: 'maptiler',
         name: 'MapTiler Cloud',
-        configured: this.hasSecret(this.providerKeys.maptiler),
+        configured: diagnostics.MAPTILER_API_KEY.configured,
         requiredEnv: 'MAPTILER_API_KEY',
+        envStatus: diagnostics.MAPTILER_API_KEY.status,
+        issue: diagnostics.MAPTILER_API_KEY.configured ? undefined : diagnostics.MAPTILER_API_KEY.message,
         capabilities: ['vector_tiles', 'raster_tiles', 'basemap'],
         docsUrl: 'https://docs.maptiler.com/cloud/api/'
       },
       {
         id: 'mapbox',
         name: 'Mapbox Maps API',
-        configured: this.hasSecret(this.providerKeys.mapbox),
+        configured: diagnostics.MAPBOX_ACCESS_TOKEN.configured,
         requiredEnv: 'MAPBOX_ACCESS_TOKEN',
+        envStatus: diagnostics.MAPBOX_ACCESS_TOKEN.status,
+        issue: diagnostics.MAPBOX_ACCESS_TOKEN.configured ? undefined : diagnostics.MAPBOX_ACCESS_TOKEN.message,
         capabilities: ['vector_tiles', 'raster_tiles', 'basemap'],
         docsUrl: 'https://docs.mapbox.com/api/maps/'
       },
       {
         id: 'cesium-ion',
         name: 'Cesium ion',
-        configured: this.hasSecret(this.providerKeys.cesiumIon),
+        configured: diagnostics.CESIUM_ION_TOKEN.configured,
         requiredEnv: 'CESIUM_ION_TOKEN',
+        envStatus: diagnostics.CESIUM_ION_TOKEN.status,
+        issue: diagnostics.CESIUM_ION_TOKEN.configured ? undefined : diagnostics.CESIUM_ION_TOKEN.message,
         capabilities: ['terrain_tiles', '3d_tiles', 'citygml_pipeline'],
         docsUrl: 'https://cesium.com/platform/cesium-ion/'
       },
       {
         id: 'here',
         name: 'HERE APIs',
-        configured: this.hasSecret(this.providerKeys.here),
+        configured: diagnostics.HERE_API_KEY.configured,
         requiredEnv: 'HERE_API_KEY',
+        envStatus: diagnostics.HERE_API_KEY.status,
+        issue: diagnostics.HERE_API_KEY.configured ? undefined : diagnostics.HERE_API_KEY.message,
         capabilities: ['raster_tiles', 'vector_tiles', 'routing_context'],
         docsUrl: 'https://developer.here.com/documentation'
       }
@@ -112,7 +122,25 @@ export class MapService {
     };
   }
 
+  providerHealth() {
+    const diagnostics = this.providerDiagnostics();
+    return {
+      status: Object.values(diagnostics).every((item) => item.configured) ? 'ok' : 'partial',
+      providers: diagnostics,
+      note: 'Provider diagnostics report only configuration state. Secret values are never returned.'
+    };
+  }
+
+  private providerDiagnostics() {
+    return {
+      MAPTILER_API_KEY: inspectOptionalSecret('MAPTILER_API_KEY', this.providerKeys.maptiler),
+      MAPBOX_ACCESS_TOKEN: inspectOptionalSecret('MAPBOX_ACCESS_TOKEN', this.providerKeys.mapbox),
+      CESIUM_ION_TOKEN: inspectOptionalSecret('CESIUM_ION_TOKEN', this.providerKeys.cesiumIon),
+      HERE_API_KEY: inspectOptionalSecret('HERE_API_KEY', this.providerKeys.here)
+    };
+  }
+
   private hasSecret(value: string | undefined): boolean {
-    return Boolean(value && value.trim().length > 0);
+    return inspectOptionalSecret('secret', value).configured;
   }
 }
