@@ -24,6 +24,7 @@ import { SectionAski } from "@/components/info/section-aski";
 import { SectionCevre } from "@/components/info/section-cevre";
 import { SectionGecmis } from "@/components/info/section-gecmis";
 import { SectionYatirimSkoru } from "@/components/info/section-yatirim-skoru";
+import { SectionSatelliteIntelligence } from "@/components/info/section-satellite-intelligence";
 import { EmsalCalculatorPanel } from "@/components/emsal/emsal-calculator-panel";
 import { cn } from "@/lib/utils";
 
@@ -202,6 +203,12 @@ export function MobileBottomSheet() {
             <AccordionTrigger>Geçmiş & Plan Değişiklikleri</AccordionTrigger>
             <AccordionContent>
               <SectionGecmis parcel={parcel} />
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="satellite-intelligence">
+            <AccordionTrigger>4. Satellite Intelligence (advanced)</AccordionTrigger>
+            <AccordionContent>
+              <SectionSatelliteIntelligence parcel={parcel} />
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="yatirim">
