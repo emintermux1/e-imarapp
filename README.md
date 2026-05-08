@@ -152,3 +152,7 @@ Design preparation for website-first rollout:
 - `docs/site-design-phase-1.md`
 - `docs/site-design-language.md`
 - `docs/site-ui-implementation-backlog.md`
+- `docs/ui-contract-homepage-wireframe.md`
+- `docs/ui-contract-map-workspace-props.md`
+- `docs/ui-state-machine-parcel-analysis.md`
+- `docs/ui-ux-maps-full.md`
