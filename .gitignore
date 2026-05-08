@@ -10,3 +10,6 @@ npm-debug.log*
 *.tsbuildinfo
 .DS_Store
 tmp/
+frontend/.next/
+**/__pycache__/
+*.pyc

@@ -5,6 +5,7 @@
   "description": "Production-oriented backend foundation for a Turkey-wide e-imar, parcel, and municipal GIS platform.",
   "license": "UNLICENSED",
   "scripts": {
+    "dev": "npm run web:dev",
     "build": "tsc -p tsconfig.build.json",
     "cloud:setup": "bash scripts/cloud-agent-setup.sh",
     "docker:up": "docker compose up -d",
@@ -14,10 +15,12 @@
     "start:dev": "ts-node src/main.ts",
     "test": "jest --runInBand",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "web:dev": "npm --prefix apps/e_imar_web run dev",
-    "web:build": "npm --prefix apps/e_imar_web run build",
-    "web:preview": "npm --prefix apps/e_imar_web run preview",
-    "web:typecheck": "npm --prefix apps/e_imar_web run typecheck"
+    "web:dev": "npm --prefix frontend run dev",
+    "web:build": "npm --prefix frontend run build",
+    "web:preview": "npm --prefix frontend run start",
+    "web:typecheck": "npm --prefix frontend run typecheck",
+    "legacy:web-vite:dev": "npm --prefix apps/web run dev",
+    "legacy:web-vite:build": "npm --prefix apps/web run build"
   },
   "dependencies": {
     "@fastify/static": "^9.1.3",

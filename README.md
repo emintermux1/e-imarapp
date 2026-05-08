@@ -32,27 +32,21 @@ npm run start:dev
 
 Swagger UI is available at `http://localhost:3000/docs`.
 
-### Web frontend startup
+### Web frontend startup (canonical Next.js app)
 
 ```bash
-cd apps/web
+cd frontend
 npm install
-cp .env.example .env
 npm run dev
 ```
 
-Web app runs at `http://localhost:5173` and connects to backend via `VITE_API_BASE_URL` (default `http://localhost:3000`).
+Web app runs at `http://localhost:3000` and connects to FastAPI via `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000/api/v1`).
 
-### Next.js production frontend startup
+`apps/web` is a deprecated Vite prototype. Its npm scripts are shims that start/build `frontend/` so agents and humans do not accidentally open the stale `localhost:5173` app.
 
-```bash
-cd apps/web-next
-npm install
-cp .env.example .env
-npm run dev
-```
+### Legacy prototype frontends
 
-Next app connects to backend via `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:3000`).
+Older experiments remain under `apps/` for historical reference only. Do not use `apps/web`, `apps/web-next`, `apps/e_imar_next`, or `apps/e_imar_web` as the product frontend unless explicitly working on legacy migration.
 
 Docker Compose now includes the API service as well as PostGIS, Redis, MinIO, OpenSearch, pg_tileserv, Prometheus, and Grafana.
 
@@ -155,9 +149,9 @@ See `docs/adr/0001-backend-first-geospatial-foundation.md`.
 
 ## Website app and integration
 
-The repository includes a website integration layer (`/website/*`) plus the first production web app at `apps/e_imar_web`. The frontend is React + TypeScript + Vite, consumes the existing BFF endpoints, and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data.
+The canonical product frontend is `frontend/` (Next.js 14 App Router). It consumes the FastAPI `/api/v1/*` endpoints and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data.
 
-- App README: `apps/e_imar_web/README.md`
+- App README: `frontend/README.md`
 - Architecture and runbook: `docs/website-architecture.md`
 - Bootstrap/capabilities endpoint: `GET /website/bootstrap`
 - Aggregated website workflow endpoint: `POST /website/bff/parcel-workflow`
@@ -168,12 +162,12 @@ The repository includes a website integration layer (`/website/*`) plus the firs
 Run the website locally:
 
 ```bash
-npm install --prefix apps/e_imar_web
-VITE_API_BASE_URL=http://localhost:3000 npm run web:dev
+npm install --prefix frontend
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1 npm run web:dev
 npm run web:build
 ```
 
-The root `npm run build` remains the backend build. Website-specific scripts are `web:dev`, `web:build`, `web:preview`, and `web:typecheck`.
+The root `npm run build` remains the backend build. Website-specific scripts are `web:dev`, `web:build`, `web:preview`, and `web:typecheck`, all pointing at `frontend/`.
 
 Required website integration env:
 
@@ -181,7 +175,7 @@ Required website integration env:
 WEBSITE_SESSION_SECRET=...
 OPENAI_API_KEY=...          # for plan-note explain
 PUSH_GATEWAY_URL=...        # for push channel delivery
-VITE_API_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
 ```
 
 Design references for website-first rollout:

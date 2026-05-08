@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "dev": "node -e \"console.log('apps/web is deprecated. Starting ../../frontend Next.js on http://localhost:3000 instead.');\" && npm --prefix ../../frontend run dev",
+    "build": "node -e \"console.log('apps/web is deprecated. Building ../../frontend instead.');\" && npm --prefix ../../frontend run build",
+    "lint": "node -e \"console.log('apps/web is deprecated. Linting ../../frontend instead.');\" && npm --prefix ../../frontend run lint",
+    "preview": "node -e \"console.log('apps/web is deprecated. Starting ../../frontend preview on http://localhost:3000 instead.');\" && npm --prefix ../../frontend run start"
   },
   "dependencies": {
     "react": "^19.2.5",
