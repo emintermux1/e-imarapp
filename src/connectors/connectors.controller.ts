@@ -1,6 +1,6 @@
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { DiscoveryService } from './discovery.service';
+import { DiscoveryService, PublicHealthFilters } from './discovery.service';
 import { NetcadKeosService } from './netcad-keos.service';
 
 @ApiTags('connectors')
@@ -14,6 +14,16 @@ export class ConnectorsController {
   @Get('netcad/strategy')
   netcadStrategy() {
     return this.netcad.strategy();
+  }
+
+  @Post('discover-public')
+  discoverPublic(@Body() body: PublicHealthFilters = {}, @Query() query: PublicHealthFilters = {}) {
+    return this.discovery.discoverPublicHealth({ ...body, ...query });
+  }
+
+  @Post('public-health')
+  publicHealth(@Body() body: PublicHealthFilters = {}, @Query() query: PublicHealthFilters = {}) {
+    return this.discovery.discoverPublicHealth({ ...body, ...query });
   }
 
   @Post(':id/netcad/discover')

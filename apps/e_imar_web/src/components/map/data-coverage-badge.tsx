@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Database, Info } from "lucide-react";
 import { getParcelSourceMetadata } from "@/data/parcels";
+import { getSourceCoverage, type SourceCoverageState } from "@/lib/source-coverage";
 import { useMapStore } from "@/stores/map-store";
 
 const metadata = getParcelSourceMetadata();
@@ -19,10 +20,28 @@ function isNearDemoCoverage(center: [number, number] | null, zoom: number) {
   return clusterCenters.some(([lng, lat]) => Math.abs(center[0] - lng) < 0.18 && Math.abs(center[1] - lat) < 0.14);
 }
 
+function coverageText(coverage: SourceCoverageState) {
+  if (coverage.summary) {
+    return `${coverage.summary.publicCandidateCount.toLocaleString("tr-TR")} kayıtlı canlı kaynak adayı / ${coverage.summary.protectedCount.toLocaleString("tr-TR")} korumalı kaynak`;
+  }
+  return coverage.message ?? "Kaynak registry özeti alınamıyor";
+}
+
 export function DataCoverageBadge() {
   const cursorLngLat = useMapStore((s) => s.cursorLngLat);
   const zoom = useMapStore((s) => s.zoom);
   const sparse = !isNearDemoCoverage(cursorLngLat, zoom);
+  const [coverage, setCoverage] = React.useState<SourceCoverageState>({ status: "unavailable", summary: null });
+
+  React.useEffect(() => {
+    let mounted = true;
+    getSourceCoverage().then((result) => {
+      if (mounted) setCoverage(result);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <div className="pointer-events-none absolute left-3 top-3 z-10 flex max-w-[min(520px,calc(100vw-2rem))] flex-col gap-2">
@@ -31,7 +50,7 @@ export function DataCoverageBadge() {
         <span className="text-[11px] text-fg-secondary">
           <span className="font-medium text-fg-primary">Demo veri:</span>{" "}
           <span className="tabular-nums">{metadata.featureCount.toLocaleString("tr-TR")}</span> parsel ·{" "}
-          <span className="tabular-nums">{metadata.askidaCount.toLocaleString("tr-TR")}</span> askı bölgesi · canlı kaynak bekleniyor
+          <span className="tabular-nums">{metadata.askidaCount.toLocaleString("tr-TR")}</span> askı bölgesi · {coverageText(coverage)}
         </span>
       </div>
       {metadata.fallbackReason && (

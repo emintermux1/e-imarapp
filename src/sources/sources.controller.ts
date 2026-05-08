@@ -1,6 +1,6 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { SOURCE_REGISTRY } from './source-registry';
+import { SourceAccessStatus } from './source-registry';
 import { SourcesService } from './sources.service';
 
 @ApiTags('sources')
@@ -11,6 +11,25 @@ export class SourcesController {
   @Get()
   list() {
     return this.sources.list();
+  }
+
+  @Get('summary')
+  summary() {
+    return this.sources.summary();
+  }
+
+  @Get('coverage')
+  coverage() {
+    return this.sources.summary();
+  }
+
+  @Get('municipalities')
+  municipalities(
+    @Query('province') province?: string,
+    @Query('vendor') vendor?: string,
+    @Query('accessStatus') accessStatus?: SourceAccessStatus
+  ) {
+    return this.sources.municipalities({ province, vendor, accessStatus });
   }
 
   @Get(':id')
