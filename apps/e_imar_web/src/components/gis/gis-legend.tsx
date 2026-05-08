@@ -103,11 +103,17 @@ export function GISLegend({ collapsed: collapsedProp, onCollapsedChange }: {
               <LegendItem label="Kentsel dönüşüm / rezerv">
                 <span aria-hidden className="block h-0.5 w-6 border-t-2 border-dashed border-amber-600" />
               </LegendItem>
+              <LegendItem label="Plan kısıt çizgileri">
+                <span aria-hidden className="block h-0.5 w-6 border-t-2 border-dashed border-teal-700" />
+              </LegendItem>
               <LegendItem label="Sit / koruma kısıtı">
                 <span aria-hidden className="block h-0.5 w-6 bg-teal-700" />
               </LegendItem>
               <LegendItem label="Mevcut konum">
                 <span aria-hidden className="block h-3 w-3 rounded-full border-2 border-white bg-[#2563EB] shadow-sm" />
+              </LegendItem>
+              <LegendItem label="Türkiye çalışma çerçevesi">
+                <span aria-hidden className="block h-0.5 w-6 border-t border-dashed border-[#102A4C]" />
               </LegendItem>
             </div>
           </div>

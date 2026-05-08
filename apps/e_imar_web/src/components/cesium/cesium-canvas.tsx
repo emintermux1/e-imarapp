@@ -47,6 +47,7 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
   });
 
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
+  const flyTarget = useMapStore((s) => s.flyTarget);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
   const setHoveredParcelId = useMapStore((s) => s.setHoveredParcelId);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
@@ -117,6 +118,24 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
       }
     });
   }, [viewer, Cesium, selectedParcelId]);
+
+  // Search/focus flow parity with 2D map: react to generic fly targets in 3D.
+  React.useEffect(() => {
+    if (!viewer || !Cesium || !flyTarget) return;
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(
+        flyTarget.center[0],
+        flyTarget.center[1],
+        flyTarget.zoom && flyTarget.zoom >= 15 ? 1300 : 4800
+      ),
+      duration: 0.95,
+      orientation: {
+        heading: 0,
+        pitch: Cesium.Math.toRadians(-52),
+        roll: 0
+      }
+    });
+  }, [viewer, Cesium, flyTarget]);
 
   // Sun / shadow analysis
   React.useEffect(() => {

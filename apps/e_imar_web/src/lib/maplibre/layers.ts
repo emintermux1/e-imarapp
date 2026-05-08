@@ -447,6 +447,22 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     group: "Plan"
   },
   {
+    id: "plan-constraint-line",
+    label: "Plan Kısıtları",
+    description: "Koruma, sit, dönüşüm ve rezerv sınır çizgileri",
+    defaultVisible: true,
+    defaultOpacity: 0.9,
+    group: "Plan"
+  },
+  {
+    id: "plan-donati-label",
+    label: "Donatı Kısaltmaları",
+    description: "Eğitim, sağlık, belediye gibi donatı etiketleri",
+    defaultVisible: true,
+    defaultOpacity: 0.85,
+    group: "Plan"
+  },
+  {
     id: "deprem-risk-grid",
     label: "Risk Haritası",
     description: "AFAD bazlı bölgesel risk dağılımı (mock grid)",
@@ -468,6 +484,14 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Örnek ilçe ve belediye sınır çizgileri",
     defaultVisible: true,
     defaultOpacity: 0.75,
+    group: "İdari"
+  },
+  {
+    id: "turkey-frame",
+    label: "Türkiye Çalışma Çerçevesi",
+    description: "Ulusal odak sınırı ve çalışma alanı kılavuzu",
+    defaultVisible: true,
+    defaultOpacity: 0.7,
     group: "İdari"
   }
 ];
