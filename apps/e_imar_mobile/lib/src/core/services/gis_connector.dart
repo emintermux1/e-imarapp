@@ -11,22 +11,26 @@ import 'gis_layers.dart';
 
 final _dioProvider = Provider<Dio?>((ref) {
   try {
-    return Dio(BaseOptions(
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
-      sendTimeout: const Duration(seconds: 15),
-      headers: {
-        'Accept': 'application/json, image/png',
-        'User-Agent': 'EImarMobile/1.0 (GIS Connector)',
-      },
-    ));
+    return Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        sendTimeout: const Duration(seconds: 15),
+        headers: {
+          'Accept': 'application/json, image/png',
+          'User-Agent': 'EImarMobile/1.0 (GIS Connector)',
+        },
+      ),
+    );
   } catch (e) {
     debugPrint('Dio başlatılamadı, mock depoya düşülüyor: $e');
     return null;
   }
 });
 
-final gisCacheServiceProvider = Provider<GisCacheService>((ref) => GisCacheService());
+final gisCacheServiceProvider = Provider<GisCacheService>(
+  (ref) => GisCacheService(),
+);
 
 final gisLayerRepositoryProvider = Provider<GisLayerRepository>((ref) {
   final dio = ref.watch(_dioProvider);
@@ -40,7 +44,9 @@ final gisLayerRepositoryProvider = Provider<GisLayerRepository>((ref) {
   return LiveGisLayerRepository(dio: dio, cache: cache);
 });
 
-final gisOfficialLayersProvider = Provider<List<GisLayerDescriptor>>((ref) => officialRiskLayerPresets);
+final gisOfficialLayersProvider = Provider<List<GisLayerDescriptor>>(
+  (ref) => officialRiskLayerPresets,
+);
 
 class _RateLimiter {
   final Map<String, DateTime> _lastRequest = {};
@@ -104,15 +110,21 @@ void _isolateEntry(SendPort mainSendPort) {
         if (type == 'FeatureCollection') {
           result = GisFeatureCollection.fromJson(decoded);
         } else if (type == 'Feature') {
-          result = GisFeatureCollection(features: [GisFeature.fromJson(decoded)]);
+          result = GisFeatureCollection(
+            features: [GisFeature.fromJson(decoded)],
+          );
         } else if (decoded['features'] is List) {
           result = GisFeatureCollection.fromJson(decoded);
         } else {
-          result = GisFeatureCollection.withError('Tanınmayan GeoJSON yapısı (isolate): $type');
+          result = GisFeatureCollection.withError(
+            'Tanınmayan GeoJSON yapısı (isolate): $type',
+          );
         }
         replyPort.send(result);
       } catch (e) {
-        replyPort.send(GisFeatureCollection.withError('Isolate ayrıştırma hatası: $e'));
+        replyPort.send(
+          GisFeatureCollection.withError('Isolate ayrıştırma hatası: $e'),
+        );
       }
     }
   });
@@ -134,7 +146,9 @@ Future<GisFeatureCollection> parseGeoJsonInIsolate(String rawJson) async {
 
     return result;
   } catch (e) {
-    debugPrint('Isolate GeoJSON ayrıştırma başarısız — ana iş parçacığına düşülüyor: $e');
+    debugPrint(
+      'Isolate GeoJSON ayrıştırma başarısız — ana iş parçacığına düşülüyor: $e',
+    );
     return _parseGeoJsonMainThread(rawJson);
   }
 }
@@ -156,9 +170,9 @@ class _GisHttpResponse {
 
 class LiveGisLayerRepository implements GisLayerRepository {
   LiveGisLayerRepository({required Dio dio, GisCacheService? cache})
-      : _dio = dio,
-        _cache = cache,
-        _rateLimiter = _RateLimiter();
+    : _dio = dio,
+      _cache = cache,
+      _rateLimiter = _RateLimiter();
 
   final Dio _dio;
   final GisCacheService? _cache;
@@ -176,7 +190,10 @@ class LiveGisLayerRepository implements GisLayerRepository {
   }
 
   @override
-  Future<GisFeatureCollection> fetchFeatures(GisLayerDescriptor layer, GisLayerQuery query) async {
+  Future<GisFeatureCollection> fetchFeatures(
+    GisLayerDescriptor layer,
+    GisLayerQuery query,
+  ) async {
     try {
       final cacheKey = buildCacheKey(layer, query);
 
@@ -205,13 +222,19 @@ class LiveGisLayerRepository implements GisLayerRepository {
       }
 
       final body = response.body!;
-      final isJsonResponse = response.isJson || body.trim().startsWith('{') || body.trim().startsWith('[');
+      final isJsonResponse =
+          response.isJson ||
+          body.trim().startsWith('{') ||
+          body.trim().startsWith('[');
 
       if (!isJsonResponse) {
-        return GisFeatureCollection(features: [], metadata: {
-          'format': response.contentType,
-          'info': 'Görüntü/ikili yanıt — ayrıştırma atlandı',
-        });
+        return GisFeatureCollection(
+          features: [],
+          metadata: {
+            'format': response.contentType,
+            'info': 'Görüntü/ikili yanıt — ayrıştırma atlandı',
+          },
+        );
       }
 
       GisFeatureCollection collection;
@@ -230,7 +253,8 @@ class LiveGisLayerRepository implements GisLayerRepository {
     } on DioException catch (e) {
       debugPrint('GIS DioException: ${layer.name} → ${e.type} / ${e.message}');
       final message = switch (e.type) {
-        DioExceptionType.connectionTimeout => 'Bağlantı zaman aşımı: ${layer.name}',
+        DioExceptionType.connectionTimeout =>
+          'Bağlantı zaman aşımı: ${layer.name}',
         DioExceptionType.receiveTimeout => 'Yanıt zaman aşımı: ${layer.name}',
         DioExceptionType.connectionError => 'Ağ bağlantısı yok: ${layer.name}',
         _ => 'Ağ hatası: ${layer.name} (${e.message})',
@@ -256,7 +280,11 @@ class LiveGisLayerRepository implements GisLayerRepository {
   }
 
   @override
-  Future<String> fetchGeoJson(GisLayerDescriptor layer, {required double latitude, required double longitude}) async {
+  Future<String> fetchGeoJson(
+    GisLayerDescriptor layer, {
+    required double latitude,
+    required double longitude,
+  }) async {
     const padding = 0.03;
     final query = GisLayerQuery(
       bbox: GisBoundingBox(
