@@ -131,14 +131,27 @@ npm run build
 
 See `docs/adr/0001-backend-first-geospatial-foundation.md`.
 
-## Website integration (UI-free backend architecture)
+## Website app and integration
 
-The repository now includes a website integration layer (`/website/*`) so a separate web frontend can connect without embedding domain orchestration logic in UI code.
+The repository includes a website integration layer (`/website/*`) plus the first production web app at `apps/e_imar_web`. The frontend is React + TypeScript + Vite, consumes the existing BFF endpoints, and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data.
 
+- App README: `apps/e_imar_web/README.md`
 - Architecture and runbook: `docs/website-architecture.md`
 - Bootstrap/capabilities endpoint: `GET /website/bootstrap`
 - Aggregated website workflow endpoint: `POST /website/bff/parcel-workflow`
+- Plan note endpoint: `POST /website/bff/plan-note-explain`
+- Workspace endpoint: `GET /website/workspace/:userReference`
 - Session token endpoints: `POST /website/session/start`, `POST /website/session/verify`
+
+Run the website locally:
+
+```bash
+npm install --prefix apps/e_imar_web
+VITE_API_BASE_URL=http://localhost:3000 npm run web:dev
+npm run web:build
+```
+
+The root `npm run build` remains the backend build. Website-specific scripts are `web:dev`, `web:build`, `web:preview`, and `web:typecheck`.
 
 Required website integration env:
 
@@ -146,9 +159,10 @@ Required website integration env:
 WEBSITE_SESSION_SECRET=...
 OPENAI_API_KEY=...          # for plan-note explain
 PUSH_GATEWAY_URL=...        # for push channel delivery
+VITE_API_BASE_URL=http://localhost:3000
 ```
 
-Design preparation for website-first rollout:
+Design references for website-first rollout:
 
 - `docs/site-design-phase-1.md`
 - `docs/site-design-language.md`
