@@ -8,6 +8,7 @@ import * as XLSX from "xlsx";
 import type maplibregl from "maplibre-gl";
 import { Calculator, Crosshair, Download, Eraser, FileSpreadsheet, Layers, MapPin, RefreshCw, Search } from "lucide-react";
 import type { LayerInfo } from "@/lib/types";
+import { MAP_SERVICE_PRESETS } from "@/lib/mapServicePresets";
 
 type MeasureMode = "none" | "distance" | "area" | "slope";
 
@@ -67,6 +68,7 @@ export default function MapPage() {
   const [nearbyResults, setNearbyResults] = useState<Array<{ id: number; lon: number; lat: number; title: string; subtitle?: string }>>([]);
   const [wmsUrl, setWmsUrl] = useState<string>("");
   const [wmsInput, setWmsInput] = useState<string>(process.env.NEXT_PUBLIC_DEFAULT_WMS_URL || "");
+  const [selectedPreset, setSelectedPreset] = useState<string>("");
   const [layerLoadError, setLayerLoadError] = useState<string>("");
   const [mapHandle, setMapHandle] = useState<maplibregl.Map | null>(null);
   const [measureMode, setMeasureMode] = useState<MeasureMode>("none");
@@ -338,6 +340,28 @@ export default function MapPage() {
           </button>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-2">
+          <select
+            value={selectedPreset}
+            onChange={(event) => {
+              const nextKey = event.target.value;
+              setSelectedPreset(nextKey);
+              const preset = MAP_SERVICE_PRESETS.find((item) => item.key === nextKey);
+              if (preset) {
+                setWmsInput(preset.wmsUrl);
+              }
+            }}
+            className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="">Hazır Servis Seçin (Belediye / Kurum)</option>
+            {MAP_SERVICE_PRESETS.map((preset) => (
+              <option key={preset.key} value={preset.key}>
+                {preset.label}
+              </option>
+            ))}
+          </select>
+          <div />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-2 mt-2">
           <input
             value={wmsInput}
             onChange={(event) => setWmsInput(event.target.value)}
