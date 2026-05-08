@@ -22,7 +22,7 @@ for (const feature of parcels.features) {
   searchIndex.push({
     feature,
     adaParsel: adaKey,
-    text: `${p.id} ${adaParselText(p.ada, p.parsel)} ${adaParselSlug(p.ada, p.parsel)} ${p.mahalle} ${p.ilce} ${p.il} ${p.zoningType} ${p.planAdi}`.toLocaleLowerCase("tr-TR")
+    text: `${p.id} ${adaParselText(p.ada, p.parsel)} ${adaParselSlug(p.ada, p.parsel)} ${p.mahalle} ${p.ilce} ${p.il} ${p.zoningType} ${p.detailedUse ?? ""} ${p.planScale ?? ""} ${p.planStatus ?? ""} ${p.planLayer ?? ""} ${(p.constraints ?? []).join(" ")} ${p.planAdi}`.toLocaleLowerCase("tr-TR")
   });
 }
 

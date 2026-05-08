@@ -51,8 +51,8 @@ function searchParcelResults(query: string, limit: number): SearchResult[] {
         id: p.id,
         type: "parcel",
         primary: `Ada/Parsel ${adaParselText(p.ada, p.parsel)}`,
-        secondary: `${p.mahalle}, ${p.ilce} / ${p.il}`,
-        meta: p.zoningType,
+        secondary: `${p.detailedUse ?? p.mahalle} · ${p.mahalle}, ${p.ilce} / ${p.il}`,
+        meta: p.planScale ? `${p.planScale} · ${p.planStatus ?? p.zoningType}` : p.zoningType,
         parcelId: p.id,
         zoningType: p.zoningType,
         centroid: p.centroid

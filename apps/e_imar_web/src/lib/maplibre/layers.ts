@@ -10,6 +10,7 @@ export const PARCEL_SOURCE = "parcels";
 export const TURKEY_GRID_SOURCE = "turkey-grid";
 export const ASKI_SOURCE = "aski-overlay";
 export const RISK_GRID_SOURCE = "risk-grid";
+export const TURKEY_FOCUS_SOURCE = "turkey-focus";
 
 const zoningCases: (string | string[])[] = ["match", ["get", "zoningType"]];
 Object.values(ZONING_PRESETS).forEach((preset) => {
@@ -98,7 +99,20 @@ export const buildParcelLabelLayer = (
       "concat",
       ["get", "ada"],
       "/",
-      ["get", "parsel"]
+      ["get", "parsel"],
+      " · ",
+      [
+        "case",
+        ["in", "TİCK", ["coalesce", ["get", "detailedUse"], ""]],
+        "TİCK",
+        ["in", "MİA", ["coalesce", ["get", "detailedUse"], ""]],
+        "MİA",
+        ["==", ["get", "zoningType"], "Kamu"],
+        "Donatı",
+        ["==", ["get", "zoningType"], "Yesil"],
+        "Park",
+        ["get", "zoningType"]
+      ]
     ],
     "text-font": ["Noto Sans Regular"],
     "text-size": [
@@ -118,6 +132,87 @@ export const buildParcelLabelLayer = (
     "text-halo-color": "rgba(255,255,255,0.85)",
     "text-halo-width": 1.4,
     "text-halo-blur": 0.4
+  }
+});
+
+export const buildPlanConstraintLineLayer = (
+  id = "plan-constraint-line"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: PARCEL_SOURCE,
+  filter: [
+    "any",
+    ["in", "Koruma", ["coalesce", ["get", "detailedUse"], ""]],
+    ["in", "Sit", ["coalesce", ["get", "detailedUse"], ""]],
+    ["in", "Dönüşüm", ["coalesce", ["get", "detailedUse"], ""]],
+    ["in", "Rezerv", ["coalesce", ["get", "detailedUse"], ""]]
+  ],
+  paint: {
+    "line-color": [
+      "case",
+      ["in", "Dönüşüm", ["coalesce", ["get", "detailedUse"], ""]],
+      "#D97706",
+      ["in", "Rezerv", ["coalesce", ["get", "detailedUse"], ""]],
+      "#D97706",
+      "#0F766E"
+    ] as never,
+    "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.2, 16, 2.4] as never,
+    "line-opacity": 0.9,
+    "line-dasharray": [
+      "case",
+      ["any", ["in", "Dönüşüm", ["coalesce", ["get", "detailedUse"], ""]], ["in", "Rezerv", ["coalesce", ["get", "detailedUse"], ""]]],
+      ["literal", [2, 1.4]] as unknown as never,
+      ["literal", [1, 0]] as unknown as never
+    ] as never
+  }
+});
+
+export const buildPlanDonatiLabelLayer = (
+  id = "plan-donati-label"
+): SymbolLayerSpecification => ({
+  id,
+  type: "symbol",
+  source: PARCEL_SOURCE,
+  minzoom: 16.2,
+  filter: ["==", ["get", "zoningType"], "Kamu"],
+  layout: {
+    "text-field": [
+      "case",
+      ["in", "Eğitim", ["coalesce", ["get", "detailedUse"], ""]],
+      "EĞT",
+      ["in", "Sağlık", ["coalesce", ["get", "detailedUse"], ""]],
+      "SAĞ",
+      ["in", "Belediye", ["coalesce", ["get", "detailedUse"], ""]],
+      "BLD",
+      ["in", "Dini", ["coalesce", ["get", "detailedUse"], ""]],
+      "DİN",
+      "DON"
+    ],
+    "text-font": ["Noto Sans Bold"],
+    "text-size": 10,
+    "text-allow-overlap": false,
+    "text-padding": 6
+  },
+  paint: {
+    "text-color": "#102A4C",
+    "text-halo-color": "rgba(255,255,255,0.9)",
+    "text-halo-width": 1.2
+  }
+});
+
+export const buildTurkeyFrameLayer = (
+  id = "turkey-frame"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: TURKEY_FOCUS_SOURCE,
+  minzoom: 4,
+  paint: {
+    "line-color": "rgb(16,42,76)",
+    "line-width": ["interpolate", ["linear"], ["zoom"], 5, 1, 7, 1.8] as never,
+    "line-opacity": ["interpolate", ["linear"], ["zoom"], 5, 0.7, 8, 0.18] as never,
+    "line-dasharray": [2, 2] as never
   }
 });
 

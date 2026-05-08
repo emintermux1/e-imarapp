@@ -1,9 +1,49 @@
+import type { PlanLayer, PlanScale, PlanStatus } from "@/types/parcel";
 import type { ZoningPreset } from "@/types/zoning";
+
+export const PLAN_SCALE_LABELS: Record<PlanScale, string> = {
+  "1/100000": "1/100.000 Çevre Düzeni",
+  "1/25000": "1/25.000 Nazım",
+  "1/5000": "1/5.000 Nazım",
+  "1/1000": "1/1.000 Uygulama"
+};
+
+export const PLAN_STATUS_LABELS: Record<PlanStatus, string> = {
+  yururlukte: "Yürürlükte",
+  askida: "Askıda",
+  revizyon: "Revizyon",
+  iptal: "İptal",
+  taslak: "Taslak"
+};
+
+export const PLAN_LAYER_LABELS: Record<PlanLayer, string> = {
+  nazim: "Nazım plan",
+  uygulama: "Uygulama planı",
+  aski: "Askı süreci",
+  risk: "Risk / rezerv",
+  koruma: "Koruma planı"
+};
+
+export const COMMON_PLAN_CONSTRAINTS = [
+  "çekme mesafesi 5 m",
+  "otopark yönetmeliği",
+  "yükseklik mania kriteri",
+  "dere mutlak koruma bandı",
+  "sit etkileşim geçiş alanı",
+  "jeolojik etüt gerekli",
+  "kıyı kenar çizgisi kontrolü",
+  "tevhid-ifraz şartı",
+  "plan notu 12.4",
+  "DSİ görüşü gerekli"
+];
 
 export const ZONING_PRESETS: Record<string, ZoningPreset> = {
   Konut: {
     type: "Konut",
     label: "Konut Alanı",
+    shortLabel: "Konut",
+    subcategories: ["Ayrık Nizam Konut Alanı", "Bitişik Nizam Konut Alanı", "Kentsel Dönüşüm / Rezerv Alan"],
+    commonConstraints: ["çekme mesafesi 5 m", "otopark yönetmeliği", "jeolojik etüt gerekli"],
     fill: "#FFE9A8",
     stroke: "#C39A2B",
     fillVar: "var(--z-konut)",
@@ -13,7 +53,10 @@ export const ZONING_PRESETS: Record<string, ZoningPreset> = {
   },
   Ticaret: {
     type: "Ticaret",
-    label: "Ticaret Alanı",
+    label: "Ticaret / MİA",
+    shortLabel: "MİA",
+    subcategories: ["Merkezi İş Alanı (MİA)", "Ticaret-Konut Alanı (TİCK)", "Belediye Hizmet Alanı"],
+    commonConstraints: ["otopark yönetmeliği", "yükseklik mania kriteri", "plan notu 12.4"],
     fill: "#FFCFC0",
     stroke: "#B14D2B",
     fillVar: "var(--z-ticaret)",
@@ -23,7 +66,10 @@ export const ZONING_PRESETS: Record<string, ZoningPreset> = {
   },
   Karma: {
     type: "Karma",
-    label: "Karma (Konut+Ticaret)",
+    label: "TİCK / Karma Kullanım",
+    shortLabel: "TİCK",
+    subcategories: ["Ticaret-Konut Alanı (TİCK)", "Merkezi İş Alanı (MİA)", "Kentsel Dönüşüm / Rezerv Alan"],
+    commonConstraints: ["otopark yönetmeliği", "tevhid-ifraz şartı", "plan notu 12.4"],
     fill: "#E2D2F2",
     stroke: "#6E48A8",
     fillVar: "var(--z-karma)",
@@ -34,6 +80,9 @@ export const ZONING_PRESETS: Record<string, ZoningPreset> = {
   Sanayi: {
     type: "Sanayi",
     label: "Sanayi / OSB",
+    shortLabel: "OSB",
+    subcategories: ["Küçük Sanayi Alanı", "Organize Sanayi Bölgesi"],
+    commonConstraints: ["DSİ görüşü gerekli", "jeolojik etüt gerekli", "servis yolu şartı"],
     fill: "#C9D6E0",
     stroke: "#44607A",
     fillVar: "var(--z-sanayi)",
@@ -43,7 +92,10 @@ export const ZONING_PRESETS: Record<string, ZoningPreset> = {
   },
   Yesil: {
     type: "Yesil",
-    label: "Yeşil Alan / Park",
+    label: "Park / Yeşil Alan",
+    shortLabel: "Yeşil",
+    subcategories: ["Park ve Yeşil Alan", "Spor Alanı", "Koruma Alanı / Sit Etkileşim"],
+    commonConstraints: ["sit etkileşim geçiş alanı", "dere mutlak koruma bandı", "kıyı kenar çizgisi kontrolü"],
     fill: "#C6E5C2",
     stroke: "#3D7A33",
     fillVar: "var(--z-yesil)",
@@ -54,6 +106,9 @@ export const ZONING_PRESETS: Record<string, ZoningPreset> = {
   Tarim: {
     type: "Tarim",
     label: "Tarım Alanı",
+    shortLabel: "Tarım",
+    subcategories: ["Tarım Alanı", "Koruma Alanı / Sit Etkileşim"],
+    commonConstraints: ["DSİ görüşü gerekli", "tevhid-ifraz şartı", "dere mutlak koruma bandı"],
     fill: "#E5DDB3",
     stroke: "#87772F",
     fillVar: "var(--z-tarim)",
@@ -63,7 +118,10 @@ export const ZONING_PRESETS: Record<string, ZoningPreset> = {
   },
   Kamu: {
     type: "Kamu",
-    label: "Kamu / Sosyal Donatı",
+    label: "Donatı / Kamu",
+    shortLabel: "Donatı",
+    subcategories: ["Eğitim Tesisi Alanı", "Sağlık Tesisi Alanı", "Belediye Hizmet Alanı", "Dini Tesis Alanı", "Spor Alanı"],
+    commonConstraints: ["kurum görüşü gerekli", "otopark yönetmeliği", "çekme mesafesi 5 m"],
     fill: "#BFD8F2",
     stroke: "#2F5C8E",
     fillVar: "var(--z-kamu)",
@@ -73,7 +131,10 @@ export const ZONING_PRESETS: Record<string, ZoningPreset> = {
   },
   Turizm: {
     type: "Turizm",
-    label: "Turizm Alanı",
+    label: "Turizm Tesis Alanı",
+    shortLabel: "Turizm",
+    subcategories: ["Turizm Tesis Alanı", "Koruma Alanı / Sit Etkileşim"],
+    commonConstraints: ["kıyı kenar çizgisi kontrolü", "yükseklik mania kriteri", "otopark yönetmeliği"],
     fill: "#FFD9B3",
     stroke: "#B5651D",
     fillVar: "var(--z-turizm)",

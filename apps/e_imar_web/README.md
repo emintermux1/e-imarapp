@@ -44,7 +44,10 @@ npm --prefix apps/e_imar_web run copy:cesium
 
 ### Environment
 
-Out of the box, the app uses fully token-free providers:
+Out of the box, the app uses fully token-free providers and constrains both 2D
+and 3D navigation to a Turkey working extent (`25.0,34.5` → `45.5,43.5`,
+initial fit around the country). This is intentional: the product should feel
+like a Türkiye e-imar workspace, not a global map demo.
 
 - **Carto Voyager** raster tiles (light)
 - **Carto Dark Matter** raster tiles (dark)
@@ -73,7 +76,13 @@ NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL=https://.../{z}/{x}/{y}.pbf
 
 If `api` or `vector-tile` is selected without its endpoint, the app falls back
 to the sentetik demo collection and shows the fallback reason in the map status
-badge. Current demo data is **not official cadastral/TKGM data**.
+badge. Current demo data is **not official cadastral/TKGM data**. Demo parcel
+properties include richer synthetic imar fields (`planScale`, `planStatus`,
+`detailedUse`, `constraints`, `planLayer`) so UI, search, legend, and 3D labels
+can demonstrate nazım/uygulama plan concepts without implying official records.
+Official Turkey boundary geometry, municipality plan sheets, TKGM parcels, and
+e-Plan/WMS/vector-tile layers should replace the generated polygons and rough
+focus frame when licensed legal data sources are connected.
 
 ---
 

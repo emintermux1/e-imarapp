@@ -54,8 +54,8 @@ export function MapHud({
           </span>
         </ChipPill>
         <ChipPill>
-          <span className="text-fg-muted">Zemin</span>
-          <span className="font-medium">{BASEMAPS[basemap].label}</span>
+          <span className="text-fg-muted">Çalışma alanı</span>
+          <span className="font-medium">Türkiye</span>
           <span className="text-fg-muted">·</span>
           <span className="text-fg-secondary">{BASEMAPS[basemap].description}</span>
         </ChipPill>
@@ -199,7 +199,7 @@ export function MapHud({
         </ChipPill>
         <ChipPill>
           <span className="text-fg-muted">CRS</span>
-          <span className="font-medium text-fg-primary">WGS84 · EPSG:4326</span>
+          <span className="font-medium text-fg-primary">Türkiye çalışma alanı · WGS84 / EPSG:4326</span>
         </ChipPill>
       </div>
     </>
