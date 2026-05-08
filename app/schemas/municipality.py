@@ -17,13 +17,14 @@ class MunicipalityResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 class MunicipalityDiscoveryResponse(BaseModel):
-    slug: str
-    name: str
-    tested_patterns: int
-    live_endpoints: List[Dict[str, Any]]
+    status: str
+    belediye_id: int
+    base_url: str
     keos_url: Optional[str] = None
     wms_url: Optional[str] = None
     wfs_url: Optional[str] = None
+    available_layers: List[Dict[str, Any]] = []
+    supported_srs: List[str] = []
     discovered_at: str
 
 class ImarStatusResponse(BaseModel):

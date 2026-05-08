@@ -1,3 +1,6 @@
+from datetime import datetime
+
+from sqlalchemy import DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import Base
 
@@ -13,3 +16,4 @@ class Municipality(Base):
     wms_url: Mapped[str | None] = mapped_column()
     wfs_url: Mapped[str | None] = mapped_column()
     ogc_capabilities_json: Mapped[str | None] = mapped_column()
+    discovered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

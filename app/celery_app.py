@@ -10,6 +10,13 @@ celery_app.conf.update(
     result_backend=settings.REDIS_URL,
     timezone="Europe/Istanbul",
     enable_utc=True,
+    beat_schedule={
+        "discover-all-municipalities-every-7-days": {
+            "task": "app.tasks.discovery_task.batch_discover_municipalities",
+            "schedule": 60 * 60 * 24 * 7,
+            "args": (None, 500),
+        }
+    },
 )
 
 # Import tasks to register them

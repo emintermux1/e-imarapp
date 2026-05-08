@@ -6,3 +6,4 @@ from app.models.user import User
 from app.models.watchlist import WatchlistItem
 from app.models.report import Report
 from app.models.query_log import QueryLog
+from app.models.municipal_gis_endpoint import MunicipalGisEndpoint

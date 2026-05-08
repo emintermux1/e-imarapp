@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     # External service URLs
     TKGM_PARSEL_SORGU_URL: str = "https://parselsorgu.tkgm.gov.tr/"
     EPLAN_BASE_URL: str = "https://eplan.csb.gov.tr/"
+    ADMIN_DISCOVERY_KEY: Optional[str] = None
     
     class Config:
         env_file = ".env"
