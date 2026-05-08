@@ -17,8 +17,4 @@ class ReportResponse(BaseModel):
     plan_id: Optional[int] = None
     status: str
     pdf_url: Optional[str] = None
-    share_token: Optional[str] = None
     created_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-
-    model_config = {"from_attributes": True}

@@ -1,60 +1,73 @@
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Dict, List
+from fastapi import APIRouter, HTTPException
+from typing import List, Dict, Any
+from app.services.simulation_service import BuildingSimulationService
 from app.schemas.simulation import (
     BuildingVolumeRequest, BuildingVolumeResponse,
     ShadowAnalysisRequest, ShadowAnalysisResponse,
-    NeighborVisibilityRequest, NeighborVisibilityResponse,
     ComplianceRequest, ComplianceResponse,
-    CesiumTilesetRequest, CesiumTilesetResponse
+    NeighborVisibilityRequest, NeighborVisibilityResponse,
+    CesiumTilesetRequest, CesiumTilesetResponse,
 )
-from app.services.simulation_service import BuildingSimulationService
 
-router = APIRouter(prefix="/api/v1/simulation", tags=["simulation"])
+router = APIRouter()
+service = BuildingSimulationService()
 
-# Initialize service
-simulation_service = BuildingSimulationService()
-
-
-@router.post("/building/volume", response_model=BuildingVolumeResponse)
-async def calculate_building_volume(request: BuildingVolumeRequest):
+@router.post("/simulation/building/volume", response_model=BuildingVolumeResponse)
+async def calc_volume(req: BuildingVolumeRequest):
     try:
-        result = simulation_service.calculate_building_volume(request)
+        result = service.calculate_building_volume(
+            req.footprint_geojson, req.floors, req.floor_height
+        )
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
         return result
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Volume calculation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.post("/shadow", response_model=ShadowAnalysisResponse)
-async def shadow_analysis(request: ShadowAnalysisRequest):
+@router.post("/simulation/shadow", response_model=ShadowAnalysisResponse)
+async def shadow_analysis(req: ShadowAnalysisRequest):
     try:
-        result = simulation_service.calculate_shadow_analysis(request)
+        result = service.calculate_shadow(
+            req.footprint_geojson, req.building_height,
+            req.sun_azimuth_deg, req.sun_elevation_deg
+        )
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
         return result
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Shadow analysis failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.post("/neighbor-visibility", response_model=NeighborVisibilityResponse)
-async def neighbor_visibility(request: NeighborVisibilityRequest):
+@router.post("/simulation/compliance", response_model=ComplianceResponse)
+async def check_compliance(req: ComplianceRequest):
     try:
-        result = simulation_service.calculate_neighbor_visibility(request)
+        result = service.check_compliance(
+            req.footprint_geojson, req.parcel_area_m2,
+            req.emsal, req.gabari, req.h_max,
+            req.floors, req.floor_height
+        )
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
         return result
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Neighbor visibility analysis failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.post("/compliance", response_model=ComplianceResponse)
-async def check_compliance(request: ComplianceRequest):
+@router.post("/simulation/neighbor-visibility", response_model=NeighborVisibilityResponse)
+async def neighbor_visibility(req: NeighborVisibilityRequest):
     try:
-        result = simulation_service.check_emsal_gabari_compliance(request)
+        neighbors = [{"footprint": n.footprint, "height": n.height} for n in req.neighbor_buildings]
+        result = service.neighbor_visibility(
+            req.target_footprint, req.target_height, neighbors, req.observer_height
+        )
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
         return result
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Compliance check failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.post("/cesium-tileset", response_model=CesiumTilesetResponse)
-async def generate_cesium_tileset(request: CesiumTilesetRequest):
+@router.post("/simulation/cesium-tileset", response_model=CesiumTilesetResponse)
+async def generate_tileset(req: CesiumTilesetRequest):
     try:
-        result = simulation_service.generate_cesium_tileset(request)
-        return {"tileset": result}
+        tileset = service.generate_cesium_tileset(req.buildings)
+        return {"tileset": tileset}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Cesium tileset generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

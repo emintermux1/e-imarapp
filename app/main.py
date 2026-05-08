@@ -5,7 +5,10 @@ from app.core.logging import setup_logging
 from app.database import init_db
 from app.core.exceptions import custom_exception_handler
 from app.config import settings
-from app.routers import health, parcels, plans, municipalities, map, reports, watchlist, auth, user_data, simulation, satellite, analysis
+from app.routers import (
+    health, parcels, plans, municipalities, map, reports, watchlist, auth,
+    simulation, satellite, analysis, user_data,
+)
 import structlog
 
 setup_logging()
@@ -21,7 +24,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="eImarTR API — Türkiye Ulusal e-İmar Platformu",
-    description="Backend API for Turkey's national e-Imar platform. Integrates TKGM, e-Plan, TUCBS, and municipal KEOS systems.",
+    description="Backend API for Turkey's national e-Imar platform. Integrates TKGM, e-Plan, TUCBS, municipal KEOS, 3D simulation, satellite analysis, and watchlist change detection.",
     version="0.1.0",
     lifespan=lifespan,
 )
@@ -46,7 +49,7 @@ app.include_router(municipalities.router, prefix="/api/v1", tags=["municipalitie
 app.include_router(map.router, prefix="/api/v1/map", tags=["map"])
 app.include_router(reports.router, prefix="/api/v1", tags=["reports"])
 app.include_router(watchlist.router, prefix="/api/v1", tags=["watchlist"])
-app.include_router(user_data.router, prefix="/api/v1/user", tags=["user_data"])
-app.include_router(simulation.router)
-app.include_router(satellite.router)
-app.include_router(analysis.router)
+app.include_router(simulation.router, prefix="/api/v1", tags=["simulation"])
+app.include_router(satellite.router, prefix="/api/v1", tags=["satellite"])
+app.include_router(analysis.router, prefix="/api/v1", tags=["analysis"])
+app.include_router(user_data.router, prefix="/api/v1", tags=["user-data"])

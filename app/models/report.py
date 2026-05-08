@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import func
-from datetime import datetime
 from app.models.base import Base
 
 class Report(Base):
@@ -12,6 +11,4 @@ class Report(Base):
     plan_id: Mapped[int | None] = mapped_column()
     pdf_path: Mapped[str | None] = mapped_column()
     status: Mapped[str | None] = mapped_column()
-    share_token: Mapped[str | None] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
-    completed_at: Mapped[datetime | None] = mapped_column()

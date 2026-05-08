@@ -1,238 +1,102 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <title>{{ report_title }}</title>
-    <style>
-        @media print {
-            @page {
-                size: A4;
-                margin: 2cm;
-                @bottom-right {
-                    content: "Sayfa " counter(page) " / " counter(pages);
-                    font-size: 10px;
-                    color: #666;
-                }
-            }
-        }
-        
-        body {
-            font-family: "DejaVu Sans", Arial, sans-serif;
-            margin: 2cm;
-            color: #333;
-            line-height: 1.4;
-        }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid #1a5276;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .logo-placeholder {
-            width: 100px;
-            height: 100px;
-            border: 1px dashed #1a5276;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #1a5276;
-            font-size: 12px;
-            text-align: center;
-        }
-        
-        .report-info {
-            text-align: right;
-        }
-        
-        h1 {
-            color: #1a5276;
-            margin: 0;
-            font-size: 24px;
-        }
-        
-        h2 {
-            color: #2874a6;
-            margin-top: 30px;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            margin-bottom: 20px;
-        }
-        
-        th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-        }
-        
-        th {
-            background: #1a5276;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            margin: 0 2cm;
-            font-size: 9px;
-            color: #666;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
-            text-align: center;
-        }
-        
-        .stamp {
-            margin: 30px 0;
-            padding: 20px;
-            border: 2px dashed #1a5276;
-            color: #1a5276;
-            font-weight: bold;
-            text-align: center;
-            font-size: 14px;
-        }
-        
-        .map-container {
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .map-image {
-            max-width: 100%;
-            height: auto;
-            border: 1px solid #ccc;
-        }
-        
-        .report-meta {
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        
-        .report-meta div {
-            margin-bottom: 5px;
-        }
-        
-        .legend {
-            margin: 20px 0;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            margin-right: 10px;
-            border: 1px solid #ccc;
-        }
-        
-        .timeline {
-            margin: 20px 0;
-        }
-        
-        .timeline-item {
-            margin-bottom: 15px;
-            padding-left: 20px;
-            border-left: 3px solid #1a5276;
-        }
-        
-        .timeline-date {
-            font-weight: bold;
-            color: #1a5276;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eImarTR — Plan Raporu</title>
+<style>
+  @page { size: A4; margin: 25mm; }
+  body { font-family: "DejaVu Sans", "Helvetica Neue", Arial, sans-serif; font-size: 10pt; color: #222; line-height: 1.5; }
+  h1 { font-size: 18pt; color: #1a5276; border-bottom: 3px solid #1a5276; padding-bottom: 8px; margin-bottom: 12px; }
+  h2 { font-size: 14pt; color: #2874a6; margin-top: 24px; border-left: 4px solid #2874a6; padding-left: 10px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; page-break-inside: avoid; }
+  th, td { border: 1px solid #bbb; padding: 8px 10px; text-align: left; }
+  th { background: #1a5276; color: #fff; font-weight: 600; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  .header-block { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+  .logo-area { font-size: 24pt; font-weight: 800; color: #1a5276; letter-spacing: -1px; }
+  .report-meta { text-align: right; font-size: 9pt; color: #555; }
+  .stamp-box { margin-top: 30px; padding: 16px; border: 2px dashed #c0392b; color: #c0392b; font-weight: 700; text-align: center; background: #fdf2f2; }
+  .footer { margin-top: 40px; font-size: 8pt; color: #777; border-top: 1px solid #ddd; padding-top: 10px; text-align: center; }
+  .section-note { font-size: 9pt; color: #666; font-style: italic; margin-top: 4px; }
+  .timeline { list-style: none; padding: 0; margin: 10px 0; }
+  .timeline li { padding: 8px 12px; border-left: 3px solid #2874a6; margin-bottom: 6px; background: #f4f8fb; }
+  .timeline .date { font-weight: 700; color: #1a5276; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 8pt; font-weight: 600; }
+  .badge-aski { background: #e74c3c; color: #fff; }
+  .badge-yururlukte { background: #27ae60; color: #fff; }
+  .badge-plan { background: #8e44ad; color: #fff; }
+</style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo-placeholder">
-            DAMGA<br>LOGOSU<br>YER TUTUCU
-        </div>
-        <div>
-            <h1>{{ report_title }} — eImarTR</h1>
-            <div class="report-info">
-                <div><strong>Rapor ID:</strong> {{ report_id }}</div>
-                <div><strong>Tarih:</strong> {{ report_date }}</div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="report-meta">
-        <div><strong>Plan Numarası:</strong> {{ plan.plan_no | default('Bilinmiyor') }}</div>
-        <div><strong>Plan Adı:</strong> {{ plan.plan_adi | default('Bilinmiyor') }}</div>
-        <div><strong>Durum:</strong> {{ plan.durum | default('Bilinmiyor') }}</div>
-    </div>
-    
-    <h2>Plan Bilgileri</h2>
-    <table>
-        <tr><th>Alan</th><th>Değer</th></tr>
-        <tr><td>Plan Numarası</td><td>{{ plan.plan_no | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Plan Adı</td><td>{{ plan.plan_adi | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Plan Türü</td><td>{{ plan.plan_turu | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Onay Tarihi</td><td>{{ plan.onay_tarihi | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Yürürlük Tarihi</td><td>{{ plan.yururluk_tarihi | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Durum</td><td>{{ plan.durum | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Pafta Sayısı</td><td>{{ plan.pafta_sayisi | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Uygulama Şekli</td><td>{{ plan.uygulama_sekli | default('Bilinmiyor') }}</td></tr>
-    </table>
-    
-    {% if plan.pafta_goruntusu %}
-    <h2>Plan Paftası</h2>
-    <div class="map-container">
-        <img src="{{ plan.pafta_goruntusu }}" alt="Plan Paftası" class="map-image">
-    </div>
+
+<div class="header-block">
+  <div class="logo-area">eImarTR</div>
+  <div class="report-meta">
+    <strong>TÜRKİYE ULUSAL E-İMAR PLATFORMA</strong><br>
+    Plan Raporu<br>
+    Rapor ID: <code>eimar-plan-{{ report_id }}</code><br>
+    Tarih: {{ report_date }}<br>
+    Versiyon: {{ version }}
+  </div>
+</div>
+
+<h1>Plan Raporu</h1>
+
+<table>
+  <tr><th>Alan</th><th>Değer</th></tr>
+  <tr><td><strong>Plan Adı</strong></td><td>{{ plan.name | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Plan Türü</strong></td><td>
+    <span class="badge badge-plan">{{ plan.plan_type | default('—') }}</span>
+  </td></tr>
+  <tr><td><strong>Statü</strong></td><td>
+    {% set s = plan.status | default('—') %}
+    {% if s == 'aski' %}<span class="badge badge-aski">ASKIDA</span>
+    {% elif s == 'yururlukte' %}<span class="badge badge-yururlukte">YÜRÜRLÜKTE</span>
+    {% else %}<span class="badge badge-plan">{{ s }}</span>
     {% endif %}
-    
-    {% if plan.legend %}
-    <h2>Lejant (Renk Kodları)</h2>
-    <div class="legend">
-        {% for item in plan.legend %}
-        <div class="legend-item">
-            <div class="legend-color" style="background-color: {{ item.color }};"></div>
-            <div>{{ item.label }} ({{ item.code }})</div>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    
-    {% if plan.timeline %}
-    <h2>Yasal Süreç Takvimi</h2>
-    <div class="timeline">
-        {% for event in plan.timeline %}
-        <div class="timeline-item">
-            <div class="timeline-date">{{ event.date }}</div>
-            <div>{{ event.description }}</div>
-            {% if event.status %}
-            <div><strong>Durum:</strong> {{ event.status }}</div>
-            {% endif %}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    
-    <div class="stamp">
-        Bu rapor eImarTR Ulusal E-İmar Platformu tarafından otomatik üretilmiştir.<br>
-        Noter / Banka / Mimar uyumlu standart rapor formatı.<br>
-        Rapor Hash: {{ report_hash }}
-    </div>
-    
-    <div class="footer">
-        eImarTR — Türkiye Ulusal e-İmar Platformu | Veri kaynakları: TKGM, e-Plan, TUCBS<br>
-        Bu rapor bilgilendirme amaçlıdır; resmi işlemler için ilgili kurumlara başvurunuz.<br>
-        Rapor ID: {{ report_id }} | Sayfa: <span class="page-number"></span>
-    </div>
+  </td></tr>
+  <tr><td><strong>Belediye</strong></td><td>{{ plan.municipality | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>İl / İlçe</strong></td><td>{{ plan.province | default('—') }} / {{ plan.district | default('—') }}</td></tr>
+  <tr><td><strong>Askı Başlangıç</strong></td><td>{{ plan.aski_start | default('—') }}</td></tr>
+  <tr><td><strong>Askı Bitiş</strong></td><td>{{ plan.aski_end | default('—') }}</td></tr>
+  <tr><td><strong>PDF URL</strong></td><td>{{ plan.pdf_url | default('—') }}</td></tr>
+  <tr><td><strong>GML URL</strong></td><td>{{ plan.gml_url | default('—') }}</td></tr>
+</table>
+
+<h2>Yasal Süreç Takvimi</h2>
+<ul class="timeline">
+  <li><span class="date">{{ plan.aski_start | default('—') }}</span> — Askı ilanı (Resmi Gazete / Belediye ilan panosu)</li>
+  <li><span class="date">{{ plan.aski_end | default('—') }}</span> — Askı süresi sonu (itiraz süresi dolma)</li>
+  <li><span class="date">?</span> — Plan değişikliği yürürlüğe girme (askı reddedilmediyse)</li>
+</ul>
+
+<h2>Lejant (Renk Kodları)</h2>
+<p class="section-note">Plan paftasındaki renk kodlarının anlamı aşağıdaki gibidir. Tam lejant plan paftasından OCR/AI ile okunur.</p>
+<table>
+  <tr><th>Renk</th><th>Anlam</th><th>Kod</th></tr>
+  <tr><td style="background:#a9dfbf">Yeşil tonları</td><td>Park, yeşil alan, ağaçlandırma</td><td>P</td></tr>
+  <tr><td style="background:#f9e79f">Sarı tonları</td><td>Konut alanı, düşük yoğunluk</td><td>K1, K2</td></tr>
+  <tr><td style="background:#f5b041">Turuncu tonları</td><td>Karma kullanım, ticari+konut</td><td>K/T</td></tr>
+  <tr><td style="background:#e74c3c; color:#fff">Kırmızı tonları</td><td>Ticaret, sanayi, yoğun kullanım</td><td>T, S</td></tr>
+  <tr><td style="background:#85c1e9">Mavi tonları</td><td>Eğitim, sağlık, kamu</td><td>E, SA, K</td></tr>
+  <tr><td style="background:#d5d8dc">Gri tonları</td><td>Yol, ulaşım, altyapı</td><td>Y, U</td></tr>
+</table>
+
+<h2>Sorumsuzluk Beyanı</h2>
+<p style="font-size: 9pt; color: #555;">
+Bu rapor eImarTR tarafından otomatik üretilmiştir. Resmi işlemler için belediye imar müdürlüğüne başvurunuz.
+</p>
+
+<div class="stamp-box">
+  RESMİ RAPOR DAMGASI<br>
+  eImarTR — Türkiye Ulusal e-İmar Platformu<br>
+  Banka / Noter / Mimar Uyumlu Format
+</div>
+
+<div class="footer">
+  eImarTR — Türkiye Ulusal e-İmar Platformu | Veri kaynakları: ÇŞB e-Plan, TUCBS, Belediye KEOS
+</div>
+
 </body>
 </html>

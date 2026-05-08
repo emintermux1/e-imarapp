@@ -1,77 +1,71 @@
-import Link from 'next/link'
+import Link from "next/link";
+import { Map, Search, Globe, FileText, BarChart3, Bell, ArrowRight } from "lucide-react";
 
-export default function Home() {
+const features = [
+  { href: "/map", icon: Map, title: "Harita", desc: "Parsel ve planları harita üzerinde keşfedin" },
+  { href: "/parsel", icon: Search, title: "Parsel Ara", desc: "TKGM verilerinden parsel sorgulama" },
+  { href: "/simulation", icon: Globe, title: "3D Simülasyon", desc: "Yapı hacmi, gölge ve uygunluk analizi" },
+  { href: "/satellite", icon: Bell, title: "Uydu Analizi", desc: "Değişim tespiti ve kaçak yapı kontrolü" },
+  { href: "/reports", icon: FileText, title: "Raporlar", desc: "Profesyonel parsel ve plan raporları" },
+  { href: "/analysis", icon: BarChart3, title: "Analiz", desc: "Birleşebilirlik, değer tahmini, lejant" },
+];
+
+export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="border-b border-foreground/10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-heading text-accent">
-            e-İmar
+    <div className="space-y-16">
+      <section className="text-center py-16 md:py-24 animate-fade-in-up">
+        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4" style={{ fontFamily: "'Outfit', sans-serif" }}>
+          <span className="text-[var(--accent-cyan)]">e</span>Imar<span className="text-[var(--accent-magenta)]">TR</span>
+        </h1>
+        <p className="text-lg md:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto mb-8">
+          Türkiye&apos;nin ulusal e-İmar platformu. Parsel, imar planı, 3D simülasyon,
+          uydu analizi ve profesyonel raporlama — tek bir yerde.
+        </p>
+        <div className="flex flex-wrap justify-center gap-4">
+          <Link
+            href="/map"
+            className="inline-flex items-center gap-2 bg-[var(--accent-cyan)] text-[var(--bg-primary)] font-semibold px-6 py-3 rounded-xl hover:opacity-90 transition-opacity"
+          >
+            <Map size={18} /> Haritayı Keşfet <ArrowRight size={16} />
           </Link>
-          <nav className="hidden md:flex space-x-6">
-            <Link href="/dashboard" className="hover:text-accent transition-colors">
-              Dashboard
-            </Link>
-            <Link href="/arama" className="hover:text-accent transition-colors">
-              Arama
-            </Link>
-            <Link href="/rapor" className="hover:text-accent transition-colors">
-              Raporlar
-            </Link>
-            <Link href="/simulasyon" className="hover:text-accent transition-colors">
-              Simülasyon
-            </Link>
-          </nav>
-          <div className="flex space-x-2">
-            <Link href="/login" className="btn-secondary">
-              Giriş
-            </Link>
-            <Link href="/register" className="btn-primary">
-              Kayıt Ol
-            </Link>
-          </div>
+          <Link
+            href="/parsel"
+            className="inline-flex items-center gap-2 border border-[var(--border-subtle)] text-[var(--text-primary)] font-medium px-6 py-3 rounded-xl hover:bg-white/5 transition-colors"
+          >
+            <Search size={18} /> Parsel Ara
+          </Link>
         </div>
-      </header>
+      </section>
 
-      <main className="flex-grow container mx-auto px-4 py-12">
-        <section className="text-center mb-16">
-          <h1 className="text-4xl md:text-6xl font-heading mb-6">
-            İmar Planlamasını <span className="text-accent">Dönüştürüyoruz</span>
-          </h1>
-          <p className="text-xl max-w-2xl mx-auto mb-8">
-            Belediyeler için gelişmiş imar planlama, izleme ve analiz platformu
-          </p>
-          <div className="flex justify-center gap-4">
-            <Link href="/dashboard" className="btn-primary text-lg px-8 py-3">
-              Dashboard'a Git
-            </Link>
-            <Link href="/simulasyon" className="btn-secondary text-lg px-8 py-3">
-              3D Simülasyon
-            </Link>
-          </div>
-        </section>
-
-        <section className="grid md:grid-cols-3 gap-8 mb-16">
-          <div className="card">
-            <h3 className="text-xl font-heading mb-3">Harita & Parsel</h3>
-            <p>İnteraktif harita üzerinden parselleri görüntüleyin ve detaylı bilgi alın</p>
-          </div>
-          <div className="card">
-            <h3 className="text-xl font-heading mb-3">Planlama</h3>
-            <p>İmar planlarını yönetin, güncelleyin ve yeni planlar oluşturun</p>
-          </div>
-          <div className="card">
-            <h3 className="text-xl font-heading mb-3">Analiz</h3>
-            <p>Uydu verileri ve simülasyonlarla imar durumunu analiz edin</p>
-          </div>
-        </section>
-      </main>
-
-      <footer className="border-t border-foreground/10 py-8">
-        <div className="container mx-auto px-4 text-center">
-          <p>© 2026 e-İmar Platformu. Tüm hakları saklıdır.</p>
+      <section className="animate-fade-in-up animate-delay-1">
+        <h2 className="text-2xl font-bold mb-6 text-center">Özellikler</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {features.map((f) => {
+            const Icon = f.icon;
+            return (
+              <Link
+                key={f.href}
+                href={f.href}
+                className="group bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl p-6 hover:border-[var(--accent-cyan)]/30 transition-all duration-300"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 rounded-lg bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)]">
+                    <Icon size={20} />
+                  </div>
+                  <h3 className="font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-cyan)] transition-colors">{f.title}</h3>
+                </div>
+                <p className="text-sm text-[var(--text-secondary)]">{f.desc}</p>
+              </Link>
+            );
+          })}
         </div>
-      </footer>
+      </section>
+
+      <section className="animate-fade-in-up animate-delay-2 text-center pb-8">
+        <p className="text-xs text-[var(--text-secondary)]">
+          eImarTR — T.C. Çevre, Şehircilik ve İklim Değişikliği Bakanlığı veri kaynakları ile entegre.
+        </p>
+      </section>
     </div>
-  )
+  );
 }

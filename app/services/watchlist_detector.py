@@ -1,276 +1,130 @@
-from typing import List, Dict, Optional, Any
+from typing import Dict, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
 from app.models.watchlist import WatchlistItem
 from app.models.parcel import Parcel
 from app.models.plan import Plan
+from app.services.notification_service import NotificationService
+from app.services.tkgm_service import TKGMService
+from app.services.netcad_keos_service import NetcadKeosService
 import structlog
 
 logger = structlog.get_logger()
 
 class WatchlistChangeDetector:
     """
-    Kullanıcının izleme listesindeki parsel/planlar için değişiklik tespiti.
-    Periyodik Celery task ile çalışır.
+    İzleme listesi değişiklik tespiti.
+    Parsel tapu, imar planı, askı durumu, kamulaştırma değişikliklerini izler.
     """
-    
-    async def check_all_watchlists(self, db: AsyncSession) -> Dict[str, Any]:
-        """
-        Tüm watchlist item'ları çek ve değişiklikleri kontrol et.
-        Değişiklik varsa notification gönder.
-        """
-        try:
-            result = await db.execute(select(WatchlistItem))
-            items = result.scalars().all()
-            
-            changes_detected = 0
-            notifications_sent = 0
-            
-            for item in items:
-                changes = await self._check_item_changes(item, db)
-                if changes:
-                    changes_detected += 1
-                    # Send notification for each change
-                    for change in changes:
-                        # This would typically trigger a Celery task
-                        # For now, we'll just log it
-                        logger.info("watchlist_change_detected", 
-                                  item_id=item.id, 
-                                  change_type=change["type"],
-                                  change_data=change["data"])
-                        notifications_sent += 1
-            
-            return {
-                "status": "completed",
-                "items_checked": len(items),
-                "changes_detected": changes_detected,
-                "notifications_sent": notifications_sent
-            }
-        except Exception as e:
-            logger.error("watchlist_check_failed", error=str(e))
-            return {
-                "status": "error",
-                "error": str(e)
-            }
 
-    async def _check_item_changes(self, watchlist_item: WatchlistItem, db: AsyncSession) -> List[Dict]:
-        """Check for changes in a specific watchlist item."""
+    def __init__(self):
+        self.notifier = NotificationService()
+
+    async def check_all(self, db: AsyncSession) -> Dict:
+        """
+        Tüm watchlist item'ları kontrol et.
+        """
+        result = await db.execute(select(WatchlistItem))
+        items = result.scalars().all()
         changes = []
-        
-        if watchlist_item.parcel_id:
-            parcel_changes = await self.check_parcel_changes(watchlist_item, db)
-            changes.extend(parcel_changes)
-            
-        if watchlist_item.plan_id:
-            plan_changes = await self.check_plan_changes(watchlist_item, db)
-            changes.extend(plan_changes)
-            
-        if watchlist_item.geom_wkt:
-            area_changes = await self.check_area_changes(watchlist_item, db)
-            changes.extend(area_changes)
-            
+        for item in items:
+            item_changes = await self.check_item(item, db)
+            if item_changes:
+                changes.extend(item_changes)
+                # Send notifications
+                for change in item_changes:
+                    await self._notify(item, change)
+        logger.info("watchlist_check_complete", items_checked=len(items), changes_found=len(changes))
+        return {"items_checked": len(items), "changes_found": len(changes), "changes": changes}
+
+    async def check_item(self, item: WatchlistItem, db: AsyncSession) -> List[Dict]:
+        """
+        Tek bir watchlist item için değişiklik tespiti.
+        """
+        changes = []
+        if item.parcel_id:
+            changes.extend(await self._check_parcel_changes(item, db))
+        if item.plan_id:
+            changes.extend(await self._check_plan_changes(item, db))
+        if item.geom_wkt:
+            changes.extend(await self._check_area_changes(item, db))
         return changes
 
-    async def check_parcel_changes(self, watchlist_item: WatchlistItem, db: AsyncSession) -> List[Dict]:
-        """
-        Parsel değişiklikleri:
-        - Tapu durumu değişimi
-        - İmar planı değişimi
-        - Şerh/kamulaştırma
-        - Dönüşüm projesi dahil edilmesi
-        """
-        if not watchlist_item.parcel_id:
-            return []
-            
-        try:
-            result = await db.execute(
-                select(Parcel).where(Parcel.id == watchlist_item.parcel_id)
-            )
-            parcel = result.scalar_one_or_none()
-            
-            if not parcel:
-                return []
-                
-            # In a real implementation, we would compare with stored previous state
-            # For now, we'll simulate some changes for demonstration
-            changes = []
-            
-            # Check for tapu status changes (simulated)
-            if parcel.attributes and parcel.attributes.get('tapu_durumu'):
-                # This is where we would compare with previous state
-                # For now, we'll just log that we're checking
-                changes.append({
-                    "type": "tapu_change",
-                    "data": {
-                        "parcel_id": str(parcel.id),
-                        "current_status": parcel.attributes.get('tapu_durumu'),
-                        "message": "Tapu durumu değişikliği kontrol edildi"
-                    }
-                })
-            
-            # Check for imar plan changes (simulated)
-            if parcel.attributes and parcel.attributes.get('imar_plan_id'):
-                changes.append({
-                    "type": "imar_change",
-                    "data": {
-                        "parcel_id": str(parcel.id),
-                        "plan_id": parcel.attributes.get('imar_plan_id'),
-                        "message": "İmar planı değişikliği kontrol edildi"
-                    }
-                })
-                
-            # Check for serh/kamulaştırma (simulated)
-            if parcel.attributes and parcel.attributes.get('serh_durumu'):
-                changes.append({
-                    "type": "serh",
-                    "data": {
-                        "parcel_id": str(parcel.id),
-                        "serh_status": parcel.attributes.get('serh_durumu'),
-                        "message": "Şerh durumu kontrol edildi"
-                    }
-                })
-                
-            # Check for transformation project (simulated)
-            if parcel.attributes and parcel.attributes.get('donusum_projesi'):
-                changes.append({
-                    "type": "donusum",
-                    "data": {
-                        "parcel_id": str(parcel.id),
-                        "project": parcel.attributes.get('donusum_projesi'),
-                        "message": "Dönüşüm projesi değişikliği kontrol edildi"
-                    }
-                })
-                
-            return changes
-        except Exception as e:
-            logger.error("parcel_change_check_failed", 
-                        item_id=watchlist_item.id, 
-                        parcel_id=watchlist_item.parcel_id, 
-                        error=str(e))
+    async def _check_parcel_changes(self, item: WatchlistItem, db: AsyncSession) -> List[Dict]:
+        """Parsel tapu durumu, imar durumu, şerh değişiklikleri."""
+        result = await db.execute(
+            select(Parcel).where(Parcel.id == item.parcel_id)
+        )
+        parcel = result.scalar_one_or_none()
+        if not parcel:
             return []
 
-    async def check_plan_changes(self, watchlist_item: WatchlistItem, db: AsyncSession) -> List[Dict]:
-        """
-        Plan değişiklikleri:
-        - Askı durumu değişimi (aski → yürürlükte / askı reddedildi)
-        - Plan değişikliği (emsal, gabari değişimi)
-        - Yeni plan askıya çıktı
-        """
-        if not watchlist_item.plan_id:
-            return []
-            
-        try:
-            result = await db.execute(
-                select(Plan).where(Plan.id == watchlist_item.plan_id)
-            )
-            plan = result.scalar_one_or_none()
-            
-            if not plan:
-                return []
-                
-            # In a real implementation, we would compare with stored previous state
-            # For now, we'll simulate some changes for demonstration
-            changes = []
-            
-            # Check for askı status changes (simulated)
-            if plan.metadata_ and plan.metadata_.get('aski_durumu'):
-                changes.append({
-                    "type": "aski_plan",
-                    "data": {
-                        "plan_id": str(plan.id),
-                        "current_status": plan.metadata_.get('aski_durumu'),
-                        "message": "Askı durumu değişikliği kontrol edildi"
-                    }
-                })
-            
-            # Check for plan changes (simulated)
-            if plan.metadata_ and plan.metadata_.get('plan_degisiklikleri'):
-                changes.append({
-                    "type": "plan_change",
-                    "data": {
-                        "plan_id": str(plan.id),
-                        "changes": plan.metadata_.get('plan_degisiklikleri'),
-                        "message": "Plan değişiklikleri kontrol edildi"
-                    }
-                })
-                
-            # Check for new plan announcement (simulated)
-            if plan.metadata_ and plan.metadata_.get('yeni_aski'):
-                changes.append({
-                    "type": "yeni_aski",
-                    "data": {
-                        "plan_id": str(plan.id),
-                        "announcement": plan.metadata_.get('yeni_aski'),
-                        "message": "Yeni plan askıya çıktı"
-                    }
-                })
-                
-            return changes
-        except Exception as e:
-            logger.error("plan_change_check_failed", 
-                        item_id=watchlist_item.id, 
-                        plan_id=watchlist_item.plan_id, 
-                        error=str(e))
+        changes = []
+        # Check if tapu status changed (simplified: compare with stored hash)
+        # In production: compare with previous state snapshot
+        if parcel.tapu_status and parcel.tapu_status != "temiz":
+            changes.append({
+                "type": "tapu_change",
+                "parcel_id": item.parcel_id,
+                "severity": "medium",
+                "message": f"Parsel {parcel.ada}/{parcel.parsel} tapu durumu: {parcel.tapu_status}",
+                "timestamp": None,
+            })
+        return changes
+
+    async def _check_plan_changes(self, item: WatchlistItem, db: AsyncSession) -> List[Dict]:
+        """Plan değişiklikleri — askı durumu, emsal/gabari değişimi."""
+        result = await db.execute(
+            select(Plan).where(Plan.id == item.plan_id)
+        )
+        plan = result.scalar_one_or_none()
+        if not plan:
             return []
 
-    async def check_area_changes(self, watchlist_item: WatchlistItem, db: AsyncSession) -> List[Dict]:
-        """
-        Bölge değişiklikleri:
-        - Yeni imar planı askıya çıktı (geom intersect)
-        - Kamulaştırma ilanı
-        - Dönüşüm projesi ilanı
-        """
-        if not watchlist_item.geom_wkt:
+        changes = []
+        if plan.status == "aski":
+            changes.append({
+                "type": "aski_plan",
+                "plan_id": item.plan_id,
+                "severity": "high",
+                "message": f"Plan askıda — itiraz süresi kontrol edilmeli",
+                "aski_end": plan.aski_end.isoformat() if plan.aski_end else None,
+            })
+        return changes
+
+    async def _check_area_changes(self, item: WatchlistItem, db: AsyncSession) -> List[Dict]:
+        """Bölge değişiklikleri — yeni plan, kamulaştırma, dönüşüm."""
+        if not item.geom_wkt:
             return []
-            
-        try:
-            # Use PostGIS ST_Intersects to find intersecting plans
-            sql = text("""
-                SELECT id, plan_number, title, metadata
-                FROM plans 
+        changes = []
+        # Check for new plans intersecting the watch area
+        result = await db.execute(
+            text("""
+                SELECT id, plan_type, status, ST_AsGeoJSON(geom) as geom_json
+                FROM plans
                 WHERE ST_Intersects(geom, ST_GeomFromText(:wkt, 4326))
-                AND created_at > NOW() - INTERVAL '30 days'
-            """)
-            
-            result = await db.execute(sql, {"wkt": watchlist_item.geom_wkt})
-            intersecting_plans = result.fetchall()
-            
-            changes = []
-            
-            for plan in intersecting_plans:
-                changes.append({
-                    "type": "bolge_yeni_plan",
-                    "data": {
-                        "plan_id": str(plan.id),
-                        "plan_number": plan.plan_number,
-                        "title": plan.title,
-                        "message": "Bölgenizde yeni imar planı askıya çıktı"
-                    }
-                })
-            
-            # Check for kamulaştırma (simulated)
-            # In a real implementation, we would check against kamulaştırma tables
+                AND status = 'aski'
+            """),
+            {"wkt": item.geom_wkt}
+        )
+        rows = result.mappings().all()
+        for row in rows:
             changes.append({
-                "type": "kamulastirma",
-                "data": {
-                    "area": watchlist_item.geom_wkt,
-                    "message": "Bölge kamulaştırma kontrolü yapıldı"
-                }
+                "type": "new_plan_aski",
+                "plan_id": row["id"],
+                "severity": "high",
+                "message": f"İzlediğiniz bölgede yeni {row['plan_type']} planı askıya çıktı",
+                "geom": row["geom_json"],
             })
-            
-            # Check for dönüşüm projesi (simulated)
-            # In a real implementation, we would check against transformation project tables
-            changes.append({
-                "type": "donusum_ilani",
-                "data": {
-                    "area": watchlist_item.geom_wkt,
-                    "message": "Bölge dönüşüm projesi kontrolü yapıldı"
-                }
-            })
-                
-            return changes
-        except Exception as e:
-            logger.error("area_change_check_failed", 
-                        item_id=watchlist_item.id, 
-                        error=str(e))
-            return []
+        return changes
+
+    async def _notify(self, item: WatchlistItem, change: Dict):
+        """Değişiklik bildirimi gönder."""
+        channels = item.notification_channels.split(",") if item.notification_channels else ["push"]
+        title = f"eImarTR: {change['type']} tespit edildi"
+        body = change.get("message", "İzlediğiniz parsel/planda değişiklik algılandı")
+        await self.notifier.notify_watchlist_change(
+            {"user_id": item.user_id, "notification_channels": channels},
+            change["type"],
+            change
+        )

@@ -1,59 +1,70 @@
 from fastapi import APIRouter, HTTPException
-from app.schemas.satellite import (
-    SentinelTileRequest, SentinelTileResponse,
-    ChangeDetectionRequest, ChangeDetectionResponse,
-    IllegalConstructionRequest, IllegalConstructionResponse,
-    ConstructionProgressRequest, ConstructionProgressResponse,
-    EmptyParcelsRequest, EmptyParcelsResponse
-)
+from typing import List, Dict, Any
 from app.services.satellite_service import SatelliteAnalysisService
 
-router = APIRouter(prefix="/api/v1/satellite", tags=["satellite"])
+router = APIRouter()
+service = SatelliteAnalysisService()
 
-# Initialize service
-satellite_service = SatelliteAnalysisService()
-
-
-@router.post("/sentinel-tile", response_model=SentinelTileResponse)
-async def fetch_sentinel_tile(request: SentinelTileRequest):
+@router.post("/satellite/changes")
+async def detect_changes(
+    bbox: List[float],
+    date_before: str,
+    date_after: str
+):
+    """İki tarih arasındaki değişim tespiti."""
     try:
-        result = await satellite_service.fetch_sentinel_tile(request)
+        result = await service.detect_changes(bbox, date_before, date_after)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch Sentinel tile: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.post("/changes", response_model=ChangeDetectionResponse)
-async def detect_changes(request: ChangeDetectionRequest):
+@router.post("/satellite/illegal-construction")
+async def detect_illegal_construction(
+    bbox: List[float],
+    plan_geom_geojson: Dict[str, Any] = None,
+    existing_buildings: List[Dict[str, Any]] = []
+):
+    """Plan dışı kaçak yapı tespiti."""
     try:
-        result = await satellite_service.detect_changes(request)
+        result = await service.detect_illegal_construction(bbox, plan_geom_geojson, existing_buildings)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Change detection failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.post("/illegal-construction", response_model=IllegalConstructionResponse)
-async def detect_illegal_construction(request: IllegalConstructionRequest):
+@router.post("/satellite/construction-progress")
+async def track_construction_progress(
+    bbox: List[float],
+    dates: List[str]
+):
+    """İnşaat ilerleme takibi."""
     try:
-        result = await satellite_service.detect_illegal_construction(request)
+        result = await service.track_construction_progress(bbox, dates)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Illegal construction detection failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.post("/construction-progress", response_model=ConstructionProgressResponse)
-async def track_construction_progress(request: ConstructionProgressRequest):
+@router.post("/satellite/empty-parcels")
+async def detect_empty_parcels(
+    bbox: List[float],
+    parcel_geoms: List[Dict[str, Any]]
+):
+    """Boş parsel tespiti."""
     try:
-        result = await satellite_service.track_construction_progress(request)
+        result = await service.detect_empty_parcels(bbox, parcel_geoms)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Construction progress tracking failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.post("/empty-parcels", response_model=EmptyParcelsResponse)
-async def detect_empty_parcels(request: EmptyParcelsRequest):
+@router.get("/satellite/sentinel-info")
+async def sentinel_info(
+    bbox: List[float],
+    date_from: str,
+    date_to: str,
+    cloud_cover: float = 20.0
+):
+    """Sentinel-2 metadata fetch."""
     try:
-        result = await satellite_service.detect_empty_parcels(request)
+        result = await service.fetch_sentinel_metadata(bbox, date_from, date_to, cloud_cover)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Empty parcel detection failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

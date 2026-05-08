@@ -1,212 +1,118 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <title>{{ report_title }}</title>
-    <style>
-        @media print {
-            @page {
-                size: A4;
-                margin: 2cm;
-                @bottom-right {
-                    content: "Sayfa " counter(page) " / " counter(pages);
-                    font-size: 10px;
-                    color: #666;
-                }
-            }
-        }
-        
-        body {
-            font-family: "DejaVu Sans", Arial, sans-serif;
-            margin: 2cm;
-            color: #333;
-            line-height: 1.4;
-        }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid #1a5276;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .logo-placeholder {
-            width: 100px;
-            height: 100px;
-            border: 1px dashed #1a5276;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #1a5276;
-            font-size: 12px;
-            text-align: center;
-        }
-        
-        .report-info {
-            text-align: right;
-        }
-        
-        h1 {
-            color: #1a5276;
-            margin: 0;
-            font-size: 24px;
-        }
-        
-        h2 {
-            color: #2874a6;
-            margin-top: 30px;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            margin-bottom: 20px;
-        }
-        
-        th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-        }
-        
-        th {
-            background: #1a5276;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            margin: 0 2cm;
-            font-size: 9px;
-            color: #666;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
-            text-align: center;
-        }
-        
-        .stamp {
-            margin: 30px 0;
-            padding: 20px;
-            border: 2px dashed #1a5276;
-            color: #1a5276;
-            font-weight: bold;
-            text-align: center;
-            font-size: 14px;
-        }
-        
-        .map-container {
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .map-image {
-            max-width: 100%;
-            height: auto;
-            border: 1px solid #ccc;
-        }
-        
-        .report-meta {
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        
-        .report-meta div {
-            margin-bottom: 5px;
-        }
-        
-        .page-break {
-            page-break-before: always;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eImarTR — Parsel Raporu</title>
+<style>
+  @page { size: A4; margin: 25mm; }
+  body { font-family: "DejaVu Sans", "Helvetica Neue", Arial, sans-serif; font-size: 10pt; color: #222; line-height: 1.5; }
+  h1 { font-size: 18pt; color: #1a5276; border-bottom: 3px solid #1a5276; padding-bottom: 8px; margin-bottom: 12px; }
+  h2 { font-size: 14pt; color: #2874a6; margin-top: 24px; border-left: 4px solid #2874a6; padding-left: 10px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; page-break-inside: avoid; }
+  th, td { border: 1px solid #bbb; padding: 8px 10px; text-align: left; }
+  th { background: #1a5276; color: #fff; font-weight: 600; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  .header-block { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+  .logo-area { font-size: 24pt; font-weight: 800; color: #1a5276; letter-spacing: -1px; }
+  .report-meta { text-align: right; font-size: 9pt; color: #555; }
+  .stamp-box { margin-top: 30px; padding: 16px; border: 2px dashed #c0392b; color: #c0392b; font-weight: 700; text-align: center; background: #fdf2f2; }
+  .footer { margin-top: 40px; font-size: 8pt; color: #777; border-top: 1px solid #ddd; padding-top: 10px; text-align: center; }
+  .section-note { font-size: 9pt; color: #666; font-style: italic; margin-top: 4px; }
+  .map-placeholder { width: 100%; height: 180px; background: #e8f4f8; border: 1px dashed #2874a6; display: flex; align-items: center; justify-content: center; color: #2874a6; font-size: 10pt; margin-top: 10px; }
+  .page-break { page-break-before: always; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 8pt; font-weight: 600; }
+  .badge-imarli { background: #27ae60; color: #fff; }
+  .badge-imarsiz { background: #e74c3c; color: #fff; }
+  .badge-tarla { background: #f39c12; color: #fff; }
+</style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo-placeholder">
-            DAMGA<br>LOGOSU<br>YER TUTUCU
-        </div>
-        <div>
-            <h1>{{ report_title }} — eImarTR</h1>
-            <div class="report-info">
-                <div><strong>Rapor ID:</strong> {{ report_id }}</div>
-                <div><strong>Tarih:</strong> {{ report_date }}</div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="report-meta">
-        <div><strong>Ada:</strong> {{ parcel.ada | default('Bilinmiyor') }}</div>
-        <div><strong>Parsel:</strong> {{ parcel.parsel | default('Bilinmiyor') }}</div>
-        <div><strong>İl:</strong> {{ parcel.il | default('Bilinmiyor') }}</div>
-        <div><strong>İlçe:</strong> {{ parcel.ilce | default('Bilinmiyor') }}</div>
-        <div><strong>Mahalle:</strong> {{ parcel.mahalle | default('Bilinmiyor') }}</div>
-    </div>
-    
-    <h2>Parsel Bilgileri</h2>
-    <table>
-        <tr><th>Alan</th><th>Değer</th></tr>
-        <tr><td>Ada</td><td>{{ parcel.ada | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Parsel</td><td>{{ parcel.parsel | default('Bilinmiyor') }}</td></tr>
-        <tr><td>İl</td><td>{{ parcel.il | default('Bilinmiyor') }}</td></tr>
-        <tr><td>İlçe</td><td>{{ parcel.ilce | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Mahalle</td><td>{{ parcel.mahalle | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Nitelik</td><td>{{ parcel.nitelik | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Alan (m²)</td><td>{{ parcel.alan_m2 | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Tapu Durumu</td><td>{{ parcel.tapu_durumu | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Pafta</td><td>{{ parcel.pafta | default('Bilinmiyor') }}</td></tr>
-    </table>
-    
-    {% if imar %}
-    <h2>İmar Durumu</h2>
-    <table>
-        <tr><th>Alan</th><th>Değer</th></tr>
-        <tr><td>Plan Türü</td><td>{{ imar.plan_turu | default('Bilinmiyor') }}</td></tr>
-        <tr><td>TAKS</td><td>{{ imar.taks | default('Bilinmiyor') }}</td></tr>
-        <tr><td>KAKS</td><td>{{ imar.kaks | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Hmax</td><td>{{ imar.h_max | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Gabari</td><td>{{ imar.gabari | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Kullanım Amacı</td><td>{{ imar.kullanim_amaci | default('Bilinmiyor') }}</td></tr>
-    </table>
+
+<div class="header-block">
+  <div class="logo-area">eImarTR</div>
+  <div class="report-meta">
+    <strong>TÜRKİYE ULUSAL E-İMAR PLATFORMA</strong><br>
+    Rapor ID: <code>eimar-{{ report_id }}</code><br>
+    Tarih: {{ report_date }}<br>
+    Versiyon: {{ version }}
+  </div>
+</div>
+
+<h1>Parsel Raporu</h1>
+
+<table>
+  <tr><th>Alan</th><th>Değer</th></tr>
+  <tr><td><strong>Ada</strong></td><td>{{ parcel.ada | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Parsel</strong></td><td>{{ parcel.parsel | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>İl</strong></td><td>{{ parcel.il | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>İlçe</strong></td><td>{{ parcel.ilce | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Mahalle</strong></td><td>{{ parcel.mahalle | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Nitelik</strong></td><td>
+    {% set n = parcel.nitelik | default('Bilinmiyor') %}
+    {% if 'İmar' in n or 'imar' in n %}<span class="badge badge-imarli">İmarlı</span>
+    {% elif 'Tarla' in n %}<span class="badge badge-tarla">Tarla</span>
+    {% else %}<span class="badge badge-imarsiz">İmarsız</span>
     {% endif %}
-    
-    {% if plan %}
-    <h2>Plan Bilgileri</h2>
-    <table>
-        <tr><th>Alan</th><th>Değer</th></tr>
-        <tr><td>Plan Numarası</td><td>{{ plan.plan_no | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Plan Adı</td><td>{{ plan.plan_adi | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Plan Türü</td><td>{{ plan.plan_turu | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Onay Tarihi</td><td>{{ plan.onay_tarihi | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Yürürlük Tarihi</td><td>{{ plan.yururluk_tarihi | default('Bilinmiyor') }}</td></tr>
-        <tr><td>Durum</td><td>{{ plan.durum | default('Bilinmiyor') }}</td></tr>
-    </table>
-    {% endif %}
-    
-    {% if map_image %}
-    <h2>Harita Görünümü</h2>
-    <div class="map-container">
-        <img src="{{ map_image }}" alt="Parsel Harita Görünümü" class="map-image">
-    </div>
-    {% endif %}
-    
-    <div class="stamp">
-        Bu rapor eImarTR Ulusal E-İmar Platformu tarafından otomatik üretilmiştir.<br>
-        Noter / Banka / Mimar uyumlu standart rapor formatı.<br>
-        Rapor Hash: {{ report_hash }}
-    </div>
-    
-    <div class="footer">
-        eImarTR — Türkiye Ulusal e-İmar Platformu | Veri kaynakları: TKGM, e-Plan, TUCBS<br>
-        Bu rapor bilgilendirme amaçlıdır; resmi işlemler için ilgili kurumlara başvurunuz.<br>
-        Rapor ID: {{ report_id }} | Sayfa: <span class="page-number"></span>
-    </div>
+    {{ n }}
+  </td></tr>
+  <tr><td><strong>Alan (m²)</strong></td><td>{{ parcel.alan_m2 | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Tapu Durumu</strong></td><td>{{ parcel.tapu_durumu | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Pafta</strong></td><td>{{ parcel.pafta | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Mevkii</strong></td><td>{{ parcel.mevkii | default('Bilinmiyor') }}</td></tr>
+</table>
+
+<div class="map-placeholder">
+  Harita Görüntüsü (WMS/WFS katman entegrasyonu ile otomatik üretilir)
+</div>
+<p class="section-note">Harita görüntüsü WMS/WFS servisinden dinamik olarak çekilir.</p>
+
+{% if imar %}
+<h2>İmar Durumu</h2>
+<table>
+  <tr><th>Alan</th><th>Değer</th></tr>
+  <tr><td><strong>İmar Durumu</strong></td><td>{{ imar.imar_durumu | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Plan Türü</strong></td><td>{{ imar.plan_turu | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>TAKS</strong></td><td>{{ imar.taks | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>KAKS (Emsal)</strong></td><td>{{ imar.kaks | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Hmax (m)</strong></td><td>{{ imar.h_max | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Gabari</strong></td><td>{{ imar.gabari | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Yapılaşma Şartı</strong></td><td>{{ imar.yapilasma_sarti | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Kullanım Amacı</strong></td><td>{{ imar.kullanim_amaci | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Açıklama</strong></td><td>{{ imar.aciklama | default('Bilinmiyor') }}</td></tr>
+</table>
+{% endif %}
+
+{% if plan %}
+<h2>Plan Bilgisi</h2>
+<table>
+  <tr><th>Alan</th><th>Değer</th></tr>
+  <tr><td><strong>Plan Türü</strong></td><td>{{ plan.plan_type | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Statü</strong></td><td>{{ plan.status | default('Bilinmiyor') }}</td></tr>
+  <tr><td><strong>Askı Başlangıç</strong></td><td>{{ plan.aski_start | default('—') }}</td></tr>
+  <tr><td><strong>Askı Bitiş</strong></td><td>{{ plan.aski_end | default('—') }}</td></tr>
+</table>
+{% endif %}
+
+<h2>Sorumsuzluk Beyanı</h2>
+<p style="font-size: 9pt; color: #555;">
+Bu rapor eImarTR Ulusal E-İmar Platformu tarafından otomatik üretilmiştir. Veriler TKGM, ÇŞB e-Plan, 
+TUCBS ve belediye KEOS sistemlerinden derlenmiştir. Resmi işlemler için mutlaka ilgili kurumlara (Tapu Kadastro, 
+Belediye İmar Müdürlüğü) başvurunuz. eImarTR verilerin doğruluğu konusunda garanti vermez.
+</p>
+
+<div class="stamp-box">
+  RESMİ RAPOR DAMGASI<br>
+  eImarTR — Türkiye Ulusal e-İmar Platformu<br>
+  Rapor Hash: {{ report_hash }}<br>
+  Banka / Noter / Mimar Uyumlu Format
+</div>
+
+<div class="footer">
+  eImarTR — Türkiye Ulusal e-İmar Platformu | www.eimartr.gov.tr (örnek)<br>
+  Veri kaynakları: TKGM, ÇŞB e-Plan, TUCBS, Belediye KEOS, OpenStreetMap<br>
+  Rapor ID: eimar-{{ report_id }} | Versiyon: {{ version }} | Tarih: {{ report_date }}
+</div>
+
 </body>
 </html>

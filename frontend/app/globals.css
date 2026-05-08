@@ -2,26 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: #0a1628;
-    --foreground: #ffffff;
-    --accent: #c9a227;
-  }
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-card: #111118;
+  --bg-elevated: #1a1a24;
+  --text-primary: #f0f0f5;
+  --text-secondary: #8a8a9a;
+  --accent-cyan: #00e5ff;
+  --accent-magenta: #ff0080;
+  --border-subtle: rgba(255,255,255,0.08);
+  --glass-bg: rgba(17,17,24,0.7);
+  --background: #0a0a0f;
+  --foreground: #f0f0f5;
 }
 
-@layer components {
-  .card {
-    @apply bg-background/80 backdrop-blur-sm border border-foreground/10 rounded-lg p-4;
-  }
-  
-  .btn-primary {
-    @apply bg-accent text-background font-medium rounded-md px-4 py-2 hover:bg-accent/90 transition-colors;
-  }
-  
-  .btn-secondary {
-    @apply bg-foreground/10 text-foreground font-medium rounded-md px-4 py-2 hover:bg-foreground/20 transition-colors;
-  }
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Outfit', sans-serif;
 }
 
 @layer utilities {
@@ -29,3 +31,24 @@
     text-wrap: balance;
   }
 }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out both;
+}
+
+.animate-delay-1 { animation-delay: 0.1s; }
+.animate-delay-2 { animation-delay: 0.2s; }
+.animate-delay-3 { animation-delay: 0.3s; }
+.animate-delay-4 { animation-delay: 0.4s; }
+.animate-delay-5 { animation-delay: 0.5s; }
