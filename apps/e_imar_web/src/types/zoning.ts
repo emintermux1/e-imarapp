@@ -3,6 +3,9 @@ import type { ZoningType } from "./parcel";
 export interface ZoningPreset {
   type: ZoningType;
   label: string;
+  shortLabel?: string;
+  subcategories?: string[];
+  commonConstraints?: string[];
   /** Hex without alpha, used for fills */
   fill: string;
   /** Hex without alpha, used for strokes */

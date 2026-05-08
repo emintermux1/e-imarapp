@@ -4,12 +4,13 @@ import * as React from "react";
 import { Bookmark } from "lucide-react";
 import { ZoningBadge } from "@/components/gis/zoning-badge";
 import { getParcelSourceMetadata } from "@/data/parcels";
+import type { ZoningType } from "@/types/parcel";
 
 interface SavedQuery {
   id: string;
   name: string;
   filterDescription: string;
-  zoningHints: Array<"Konut" | "Ticaret" | "Karma">;
+  zoningHints: ZoningType[];
   count: number;
 }
 
@@ -17,30 +18,30 @@ const metadata = getParcelSourceMetadata();
 
 const SAVED: SavedQuery[] = [
   {
-    id: "q-istanbul-karma-ticaret",
-    name: "İstanbul · Karma/Ticaret yoğunluk",
-    filterDescription: "Levent · Şişli · Ataşehir · ticaret + karma aksları",
+    id: "q-istanbul-tick-mia",
+    name: "İstanbul · TİCK + MİA parselleri",
+    filterDescription: "Levent · Şişli · Ataşehir · 1/1000 UİP ticaret aksları",
     zoningHints: ["Ticaret", "Karma"],
     count: 620
   },
   {
-    id: "q-ankara-aski-planlar",
-    name: "Ankara · Askıdaki planlar",
-    filterDescription: "Çankaya/Çukurambar · aktif demo askı kayıtları",
+    id: "q-kiyi-koruma-kisit",
+    name: "Kıyı / koruma kısıtı olan alanlar",
+    filterDescription: "Kıyı kenar çizgisi · sit etkileşim · dere koruma bandı",
+    zoningHints: ["Yesil", "Turizm"],
+    count: 246
+  },
+  {
+    id: "q-uip-revizyon",
+    name: "1/1000 Uygulama Planı · Revizyon",
+    filterDescription: "Askı/revizyon durumundaki sentetik uygulama plan kayıtları",
     zoningHints: ["Konut", "Karma"],
-    count: 74
+    count: 174
   },
   {
-    id: "q-izmir-kiyi-ticaret",
-    name: "İzmir · Kıyı ticaret parselleri",
-    filterDescription: "Alsancak · Bostanlı · Bayraklı kıyı bandı",
-    zoningHints: ["Ticaret", "Karma"],
-    count: 210
-  },
-  {
-    id: "q-marmara-risk-donusum",
-    name: "Marmara · Risk + dönüşüm izleme",
-    filterDescription: "İstanbul/Bursa/Kocaeli · deprem riski yüksek demo kümeler",
+    id: "q-donusum-rezerv",
+    name: "Kentsel dönüşüm / rezerv alanlar",
+    filterDescription: "Marmara deprem riski · rezerv yapı alanı demo izlemesi",
     zoningHints: ["Konut", "Karma"],
     count: 480
   }
@@ -51,7 +52,7 @@ export function SavedQueriesSection() {
     <div className="flex flex-col gap-2">
       <div className="rounded-md border border-border-subtle bg-surface-1 px-3 py-2 text-[11px] text-fg-secondary">
         <span className="font-medium text-fg-primary tabular-nums">{metadata.featureCount.toLocaleString("tr-TR")}</span>{" "}
-        sentetik parsel üzerinden yoğun demo sorgular
+        sentetik Türkiye demo parseli · resmi TKGM/belediye kaydı değildir
       </div>
       {SAVED.map((q) => (
         <button

@@ -18,11 +18,15 @@ import {
   RISK_GRID_SOURCE,
   TRANSPORT_SOURCE,
   MUNICIPALITY_SOURCE,
+  TURKEY_FOCUS_SOURCE,
   buildParcelFillLayer,
   buildParcelLineLayer,
   buildParcelLabelLayer,
   buildParcelSelectedAccentLayer,
   buildParcelHoverDotLayer,
+  buildPlanConstraintLineLayer,
+  buildPlanDonatiLabelLayer,
+  buildTurkeyFrameLayer,
   buildAskiFillLayer,
   buildAskiLineLayer,
   buildAskiHatchedLayer,
@@ -37,10 +41,16 @@ import { getTransportLineCollection } from "@/data/transport-lines";
 import { getMunicipalityBoundaryCollection } from "@/data/municipality-boundaries";
 import { ZONING_PRESETS } from "@/data/zoning";
 import { getSnapshotForYear } from "@/data/historical-snapshots";
+import {
+  TURKEY_CENTER,
+  TURKEY_FIT_BOUNDS,
+  TURKEY_FRAME_GEOJSON,
+  TURKEY_MAX_BOUNDS
+} from "@/lib/geo/turkey";
 
-const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
 const USER_LOCATION_SOURCE = "user-location";
+const MIN_ZOOM = 5.2;
 
 interface MapCanvasProps {
   className?: string;
@@ -99,7 +109,8 @@ export function MapCanvas({
         attributionControl: false,
         cooperativeGestures: false,
         maxZoom: 19,
-        minZoom: 3,
+        minZoom: MIN_ZOOM,
+        maxBounds: TURKEY_MAX_BOUNDS,
         hash: false,
         fadeDuration: 200
       });
@@ -128,12 +139,11 @@ export function MapCanvas({
           map.rotateTo(0, { duration: 300 });
           break;
         case "reset":
-          map.flyTo({
-            center: TURKEY_CENTER,
-            zoom: INITIAL_ZOOM,
+          map.fitBounds(TURKEY_FIT_BOUNDS, {
             bearing: 0,
             pitch: 0,
-            duration: 700
+            duration: 700,
+            padding: 24
           });
           break;
         case "locate":
@@ -144,6 +154,7 @@ export function MapCanvas({
     window.addEventListener("eimar:map:control", onControl);
 
     const ensureLayers = () => {
+      ensureTurkeyFocusLayer(map);
       if (!map.getSource(PARCEL_SOURCE)) {
         registerParcelLayers(map);
       }
@@ -162,6 +173,7 @@ export function MapCanvas({
 
     map.on("styledata", () => {
       if (!map.isStyleLoaded()) return;
+      ensureTurkeyFocusLayer(map);
       if (!map.getSource(PARCEL_SOURCE)) registerParcelLayers(map);
       ensureAskiLayers(map);
       ensureRiskGridLayer(map);
@@ -325,6 +337,7 @@ export function MapCanvas({
     const map = mapRef.current;
     if (!map) return;
     map.setStyle(getStyleForBasemap(basemap));
+    map.setMaxBounds(TURKEY_MAX_BOUNDS);
   }, [basemap]);
 
   // Selection sync
@@ -539,6 +552,9 @@ function registerParcelLayers(map: Map) {
   if (!map.getLayer("parcels-line")) {
     map.addLayer(buildParcelLineLayer("parcels-line"));
   }
+  if (!map.getLayer("plan-constraint-line")) {
+    map.addLayer(buildPlanConstraintLineLayer("plan-constraint-line"));
+  }
   if (!map.getLayer("parcels-selected-accent")) {
     map.addLayer(buildParcelSelectedAccentLayer("parcels-selected-accent"));
   }
@@ -547,6 +563,21 @@ function registerParcelLayers(map: Map) {
   }
   if (!map.getLayer("parcels-label")) {
     map.addLayer(buildParcelLabelLayer("parcels-label"));
+  }
+  if (!map.getLayer("plan-donati-label")) {
+    map.addLayer(buildPlanDonatiLabelLayer("plan-donati-label"));
+  }
+}
+
+function ensureTurkeyFocusLayer(map: Map) {
+  if (!map.getSource(TURKEY_FOCUS_SOURCE)) {
+    map.addSource(TURKEY_FOCUS_SOURCE, {
+      type: "geojson",
+      data: TURKEY_FRAME_GEOJSON as unknown as GeoJSON.FeatureCollection
+    });
+  }
+  if (!map.getLayer("turkey-frame")) {
+    map.addLayer(buildTurkeyFrameLayer("turkey-frame"));
   }
 }
 

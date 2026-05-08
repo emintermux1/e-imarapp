@@ -3,7 +3,11 @@
 import * as React from "react";
 import { ChevronDown, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ZONING_PRESETS } from "@/data/zoning";
+import {
+  COMMON_PLAN_CONSTRAINTS,
+  PLAN_STATUS_LABELS,
+  ZONING_PRESETS
+} from "@/data/zoning";
 
 export function GISLegend({ collapsed: collapsedProp, onCollapsedChange }: {
   collapsed?: boolean;
@@ -53,25 +57,57 @@ export function GISLegend({ collapsed: collapsedProp, onCollapsedChange }: {
           </div>
 
           <div className="mt-3 border-t border-border-subtle/60 pt-2">
+            <LegendHeading>İmar detayları</LegendHeading>
+            <div className="flex flex-wrap gap-1">
+              {["1/1000 UİP", "1/5000 NİP", ...Object.values(PLAN_STATUS_LABELS).slice(0, 4)].map((label) => (
+                <span
+                  key={label}
+                  className="inline-flex h-5 items-center rounded-sm border border-border-subtle bg-surface-1 px-1.5 text-[10px] text-fg-secondary"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+            <div className="mt-2 grid gap-1">
+              {Object.values(ZONING_PRESETS).slice(0, 5).map((preset) => (
+                <div key={`${preset.type}-subs`} className="text-[10px] leading-snug text-fg-muted">
+                  <span className="font-medium text-fg-secondary">{preset.shortLabel ?? preset.type}:</span>{" "}
+                  {(preset.subcategories ?? []).slice(0, 3).join(" · ")}
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {COMMON_PLAN_CONSTRAINTS.slice(0, 6).map((constraint) => (
+                <span
+                  key={constraint}
+                  className="rounded-sm bg-surface-1 px-1.5 py-0.5 text-[10px] text-fg-muted border border-border-subtle"
+                >
+                  {constraint}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-3 border-t border-border-subtle/60 pt-2">
             <LegendHeading>Harita çizimleri</LegendHeading>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
               <LegendItem label="Seçili parsel">
                 <span aria-hidden className="block h-0.5 w-6 bg-[rgb(var(--accent-red))]" />
               </LegendItem>
               <LegendItem label="Belediye sınırı">
-                <span
-                  aria-hidden
-                  className="block h-0.5 w-6 border-t border-dashed border-[#0F766E]"
-                />
+                <span aria-hidden className="block h-0.5 w-6 border-t border-dashed border-[#0F766E]" />
               </LegendItem>
               <LegendItem label="Metro / raylı sistem">
                 <span aria-hidden className="block h-1 w-6 rounded-full bg-[#2563EB]" />
               </LegendItem>
+              <LegendItem label="Kentsel dönüşüm / rezerv">
+                <span aria-hidden className="block h-0.5 w-6 border-t-2 border-dashed border-amber-600" />
+              </LegendItem>
+              <LegendItem label="Sit / koruma kısıtı">
+                <span aria-hidden className="block h-0.5 w-6 bg-teal-700" />
+              </LegendItem>
               <LegendItem label="Mevcut konum">
-                <span
-                  aria-hidden
-                  className="block h-3 w-3 rounded-full border-2 border-white bg-[#2563EB] shadow-sm"
-                />
+                <span aria-hidden className="block h-3 w-3 rounded-full border-2 border-white bg-[#2563EB] shadow-sm" />
               </LegendItem>
             </div>
           </div>

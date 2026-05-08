@@ -89,6 +89,11 @@ function scoreParcel(
       p.ilce,
       p.il,
       p.zoningType,
+      p.detailedUse ?? "",
+      p.planScale ?? "",
+      p.planStatus ?? "",
+      p.planLayer ?? "",
+      ...(p.constraints ?? []),
       p.planAdi,
       p.tapuTipi
     ].join(" ")
@@ -118,8 +123,8 @@ function parcelToResult(f: ParcelFeature): SearchResult {
     id: p.id,
     type: "parcel",
     primary: `Ada/Parsel ${adaParselText(p.ada, p.parsel)}`,
-    secondary: `${p.mahalle}, ${p.ilce} / ${p.il} · ${p.zoningType} · ${p.yuzolcumuM2.toLocaleString("tr-TR")} m²`,
-    meta: p.planAdi,
+    secondary: `${p.detailedUse ?? p.mahalle} · ${p.mahalle}, ${p.ilce} / ${p.il} · ${p.yuzolcumuM2.toLocaleString("tr-TR")} m²`,
+    meta: p.planScale ? `${p.planScale} · ${p.planStatus ?? p.zoningType}` : p.zoningType,
     parcelId: p.id,
     zoningType: p.zoningType,
     centroid: p.centroid
@@ -137,7 +142,7 @@ function normalizeSearchText(value: string) {
     .replace(/[ç]/g, "c")
     .replace(/[ö]/g, "o")
     .replace(/[ü]/g, "u")
-    .replace(/[^\w/\\-\s]+/g, " ")
+    .replace(/[^\w/\-\s]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }

@@ -5,6 +5,9 @@ import type {
   ParcelFeature,
   ParcelFeatureCollection,
   ParcelProps,
+  PlanLayer,
+  PlanScale,
+  PlanStatus,
   Riskler,
   TapuTipi,
   YapilasmaSekli,
@@ -114,6 +117,73 @@ function planAdi(zoning: ZoningType, rng: Rng) {
   return base;
 }
 
+const DETAILED_USES: Record<ZoningType, string[]> = {
+  Konut: ["Ayrık Nizam Konut Alanı", "Bitişik Nizam Konut Alanı", "Kentsel Dönüşüm / Rezerv Alan"],
+  Ticaret: ["Merkezi İş Alanı (MİA)", "Ticaret-Konut Alanı (TİCK)", "Belediye Hizmet Alanı"],
+  Karma: ["Ticaret-Konut Alanı (TİCK)", "Merkezi İş Alanı (MİA)", "Kentsel Dönüşüm / Rezerv Alan"],
+  Sanayi: ["Küçük Sanayi Alanı", "Organize Sanayi Bölgesi"],
+  Yesil: ["Park ve Yeşil Alan", "Spor Alanı", "Koruma Alanı / Sit Etkileşim"],
+  Tarim: ["Tarım Alanı", "Koruma Alanı / Sit Etkileşim"],
+  Kamu: ["Eğitim Tesisi Alanı", "Sağlık Tesisi Alanı", "Belediye Hizmet Alanı", "Dini Tesis Alanı", "Spor Alanı"],
+  Turizm: ["Turizm Tesis Alanı", "Koruma Alanı / Sit Etkileşim"]
+};
+
+const BASE_CONSTRAINTS = [
+  "çekme mesafesi 5 m",
+  "otopark yönetmeliği",
+  "yükseklik mania kriteri",
+  "dere mutlak koruma bandı",
+  "sit etkileşim geçiş alanı",
+  "jeolojik etüt gerekli",
+  "kıyı kenar çizgisi kontrolü",
+  "tevhid-ifraz şartı",
+  "plan notu 12.4",
+  "DSİ görüşü gerekli"
+];
+
+function planScale(zoning: ZoningType, cluster: ParcelClusterSeed, rng: Rng): PlanScale {
+  if (zoning === "Tarim") return pick(rng, ["1/100000", "1/25000", "1/5000"] as PlanScale[]);
+  if (cluster.kind === "peripheral" || cluster.kind === "agricultural") return pick(rng, ["1/5000", "1/1000", "1/25000"] as PlanScale[]);
+  return pick(rng, ["1/1000", "1/1000", "1/5000"] as PlanScale[]);
+}
+
+function planStatus(aski: Aski | undefined, rng: Rng): PlanStatus {
+  if (aski?.durum === "askida") return "askida";
+  return pick(rng, ["yururlukte", "yururlukte", "yururlukte", "revizyon", "taslak"] as PlanStatus[]);
+}
+
+function detailedUse(zoning: ZoningType, cluster: ParcelClusterSeed, rng: Rng): string {
+  if (cluster.kind === "central" && (zoning === "Ticaret" || zoning === "Karma")) return pick(rng, ["Merkezi İş Alanı (MİA)", "Ticaret-Konut Alanı (TİCK)"]);
+  if (cluster.kind === "coastal" && (zoning === "Turizm" || zoning === "Yesil")) return pick(rng, ["Turizm Tesis Alanı", "Koruma Alanı / Sit Etkileşim", "Park ve Yeşil Alan"]);
+  if (cluster.kind === "industrial" && zoning === "Sanayi") return "Organize Sanayi Bölgesi";
+  return pick(rng, DETAILED_USES[zoning]);
+}
+
+function planLayer(use: string, status: PlanStatus, scale: PlanScale, zoning: ZoningType): PlanLayer {
+  if (status === "askida") return "aski";
+  if (use.includes("Koruma") || use.includes("Sit")) return "koruma";
+  if (use.includes("Dönüşüm") || use.includes("Rezerv")) return "risk";
+  if (scale === "1/5000" || scale === "1/25000" || scale === "1/100000") return "nazim";
+  if (zoning === "Tarim") return "nazim";
+  return "uygulama";
+}
+
+function constraintsFor(use: string, zoning: ZoningType, cluster: ParcelClusterSeed, rng: Rng): string[] {
+  const values = new Set<string>();
+  values.add("çekme mesafesi 5 m");
+  values.add("otopark yönetmeliği");
+  if (cluster.kind === "coastal") values.add("kıyı kenar çizgisi kontrolü");
+  if (cluster.kind === "coastal" || zoning === "Yesil") values.add("dere mutlak koruma bandı");
+  if (cluster.kind === "industrial" || zoning === "Sanayi" || zoning === "Tarim") values.add("DSİ görüşü gerekli");
+  if (use.includes("Koruma") || use.includes("Sit")) values.add("sit etkileşim geçiş alanı");
+  if (use.includes("Dönüşüm") || use.includes("Rezerv")) values.add("jeolojik etüt gerekli");
+  if (zoning === "Ticaret" || zoning === "Karma") values.add("yükseklik mania kriteri");
+  values.add(pick(rng, BASE_CONSTRAINTS));
+  values.add(pick(rng, BASE_CONSTRAINTS));
+  values.add(pick(rng, BASE_CONSTRAINTS));
+  return Array.from(values).slice(0, int(rng, 3, 6));
+}
+
 function planNotlari(zoning: ZoningType, cluster: ParcelClusterSeed, rng: Rng): string[] {
   const notes = [
     "3194 sayılı İmar Kanunu uyarınca uygulanır.",
@@ -210,6 +280,11 @@ function generateCluster(cluster: ParcelClusterSeed, startMapId: number): Parcel
       const stableId = `TR-${cluster.plaka}-${cluster.ilceCode}-${ada}-${parsel}-${String(n + 1).padStart(5, "0")}`;
       const area = Math.max(90, Math.round(width * height * 820000000 * rand(rng, 0.82, 1.18)));
       const aski = buildAski(cluster, n, rng);
+      const scale = planScale(zoningType, cluster, rng);
+      const status = planStatus(aski, rng);
+      const use = detailedUse(zoningType, cluster, rng);
+      const layer = planLayer(use, status, scale, zoningType);
+      const constraints = constraintsFor(use, zoningType, cluster, rng);
 
       features.push({
         type: "Feature",
@@ -233,6 +308,11 @@ function generateCluster(cluster: ParcelClusterSeed, startMapId: number): Parcel
           katSiniri: metrics.kat,
           yolCephesiM: round(rand(rng, 6, 32), 1),
           planAdi: planAdi(zoningType, rng),
+          planScale: scale,
+          planStatus: status,
+          detailedUse: use,
+          constraints,
+          planLayer: layer,
           planOnayTarihi: `${int(rng, 2016, 2025)}-${String(int(rng, 1, 12)).padStart(2, "0")}-${String(int(rng, 1, 28)).padStart(2, "0")}`,
           yatirimSkoru: Math.max(18, Math.min(96, Math.round(rand(rng, 38, 82) + (cluster.kind === "central" ? 10 : 0) + (zoningType === "Karma" || zoningType === "Ticaret" ? 5 : 0)))),
           riskler: riskler(cluster, rng),
@@ -259,12 +339,23 @@ function generateCluster(cluster: ParcelClusterSeed, startMapId: number): Parcel
 function normalizeFeatured(): ParcelFeature[] {
   return FEATURED.features.map((feature, index) => {
     const mapId = index + 1;
+    const rng = createRng(feature.properties.id);
+    const zoningType = feature.properties.zoningType;
+    const scale = feature.properties.planScale ?? planScale(zoningType, DEMO_PARCEL_CLUSTERS[index % DEMO_PARCEL_CLUSTERS.length], rng);
+    const status = feature.properties.planStatus ?? planStatus(feature.properties.aski, rng);
+    const use = feature.properties.detailedUse ?? detailedUse(zoningType, DEMO_PARCEL_CLUSTERS[index % DEMO_PARCEL_CLUSTERS.length], rng);
+    const constraints = feature.properties.constraints ?? constraintsFor(use, zoningType, DEMO_PARCEL_CLUSTERS[index % DEMO_PARCEL_CLUSTERS.length], rng);
     return {
       ...feature,
       id: mapId,
       properties: {
         ...feature.properties,
         mapId,
+        planScale: scale,
+        planStatus: status,
+        detailedUse: use,
+        constraints,
+        planLayer: feature.properties.planLayer ?? planLayer(use, status, scale, zoningType),
         planNotlari: feature.properties.planNotlari.includes("Bu kayıt sentetik demo veridir; resmi kadastro kaydı değildir.")
           ? feature.properties.planNotlari
           : [...feature.properties.planNotlari, "Bu kayıt sentetik demo veridir; resmi kadastro kaydı değildir."]
