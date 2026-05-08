@@ -10,6 +10,7 @@ export const PARCEL_SOURCE = "parcels";
 export const TURKEY_GRID_SOURCE = "turkey-grid";
 export const ASKI_SOURCE = "aski-overlay";
 export const RISK_GRID_SOURCE = "risk-grid";
+export const SATELLITE_INTELLIGENCE_SOURCE = "satellite-intelligence-grid";
 export const TRANSPORT_SOURCE = "transport-lines";
 export const MUNICIPALITY_SOURCE = "municipality-boundaries";
 export const TURKEY_FOCUS_SOURCE = "turkey-focus";
@@ -356,6 +357,52 @@ export const buildRiskGridLayer = (
   }
 });
 
+export const buildSatelliteIntelligenceLayer = (
+  id = "satellite-intelligence-grid"
+): CircleLayerSpecification => ({
+  id,
+  type: "circle",
+  source: SATELLITE_INTELLIGENCE_SOURCE,
+  paint: {
+    "circle-color": [
+      "interpolate",
+      ["linear"],
+      ["get", "score"],
+      20,
+      "#86EFAC",
+      45,
+      "#FACC15",
+      65,
+      "#F97316",
+      85,
+      "#DC2626"
+    ] as never,
+    "circle-radius": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      5,
+      ["+", 5, ["/", ["get", "score"], 22]],
+      10,
+      ["+", 8, ["/", ["get", "score"], 14]],
+      14,
+      ["+", 12, ["/", ["get", "score"], 10]]
+    ] as never,
+    "circle-opacity": 0.3,
+    "circle-stroke-color": "#0F172A",
+    "circle-stroke-width": [
+      "interpolate",
+      ["linear"],
+      ["get", "confidence"],
+      50,
+      0.2,
+      100,
+      1.2
+    ] as never,
+    "circle-stroke-opacity": 0.45
+  }
+});
+
 export const buildTransportLineLayer = (
   id = "metro-hatti"
 ): LineLayerSpecification => ({
@@ -452,6 +499,15 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "AFAD bazlı bölgesel risk dağılımı (mock grid)",
     defaultVisible: false,
     defaultOpacity: 0.55,
+    group: "Risk"
+  },
+  {
+    id: "satellite-intelligence-grid",
+    label: "Satellite Intelligence",
+    description:
+      "Çok zamanlı uydu sinyal yoğunluğu (ısı, değişim, geçirimsiz yüzey) özet katmanı",
+    defaultVisible: false,
+    defaultOpacity: 0.6,
     group: "Risk"
   },
   {

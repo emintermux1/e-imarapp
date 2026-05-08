@@ -16,6 +16,7 @@ import {
   PARCEL_SOURCE,
   ASKI_SOURCE,
   RISK_GRID_SOURCE,
+  SATELLITE_INTELLIGENCE_SOURCE,
   TRANSPORT_SOURCE,
   MUNICIPALITY_SOURCE,
   TURKEY_FOCUS_SOURCE,
@@ -31,12 +32,14 @@ import {
   buildAskiLineLayer,
   buildAskiHatchedLayer,
   buildRiskGridLayer,
+  buildSatelliteIntelligenceLayer,
   buildTransportLineLayer,
   buildMunicipalityBoundaryLayer
 } from "@/lib/maplibre/layers";
 import { getAskiCollection } from "@/data/aski-polygons";
 import type { AskiPolygonFeature } from "@/data/aski-polygons";
 import { getRiskGridCollection } from "@/data/risk-grid";
+import { getSatelliteIntelligenceGridCollection } from "@/data/satellite-intelligence-grid";
 import { getTransportLineCollection } from "@/data/transport-lines";
 import { getMunicipalityBoundaryCollection } from "@/data/municipality-boundaries";
 import { ZONING_PRESETS } from "@/data/zoning";
@@ -161,6 +164,7 @@ export function MapCanvas({
       }
       ensureAskiLayers(map);
       ensureRiskGridLayer(map);
+      ensureSatelliteIntelligenceLayer(map);
       ensureTransportLayer(map);
       ensureMunicipalityBoundaryLayer(map);
       ensureUserLocationLayers(map);
@@ -485,6 +489,14 @@ export function MapCanvas({
         ? Math.min(0.5, layerOpacity["deprem-risk-grid"] * 0.5)
         : undefined
     );
+    setOpacityIfExists(
+      map,
+      "satellite-intelligence-grid",
+      "circle-opacity",
+      layerOpacity["satellite-intelligence-grid"] != null
+        ? Math.min(0.6, layerOpacity["satellite-intelligence-grid"] * 0.5)
+        : undefined
+    );
     const askiOpacity = layerOpacity["askida-overlay"];
     if (askiOpacity != null) {
       setOpacityIfExists(map, "askida-overlay-fill", "fill-opacity", Math.min(0.45, askiOpacity * 0.32));
@@ -602,6 +614,19 @@ function ensureRiskGridLayer(map: Map) {
   const beforeId = map.getLayer("parcels-fill") ? "parcels-fill" : undefined;
   if (!map.getLayer("deprem-risk-grid")) {
     map.addLayer(buildRiskGridLayer(), beforeId);
+  }
+}
+
+function ensureSatelliteIntelligenceLayer(map: Map) {
+  if (!map.getSource(SATELLITE_INTELLIGENCE_SOURCE)) {
+    map.addSource(SATELLITE_INTELLIGENCE_SOURCE, {
+      type: "geojson",
+      data: getSatelliteIntelligenceGridCollection() as never
+    });
+  }
+  const beforeId = map.getLayer("parcels-fill") ? "parcels-fill" : undefined;
+  if (!map.getLayer("satellite-intelligence-grid")) {
+    map.addLayer(buildSatelliteIntelligenceLayer(), beforeId);
   }
 }
 
