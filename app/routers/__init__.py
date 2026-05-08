@@ -1,1 +1,1 @@
-from app.routers import health, auth, parcels, plans, municipalities, map, reports, watchlist
+from app.routers import health, auth, parcels, plans, municipalities, map, reports, watchlist, simulation, satellite, analysis
