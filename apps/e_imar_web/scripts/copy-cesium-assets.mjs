@@ -6,8 +6,8 @@
 // dev/build. Cesium is also lazy-imported on the client, so the assets must
 // be reachable as static files.
 
-import { mkdir, cp, stat, readdir, rm } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { mkdir, cp, stat, readdir, rm, readFile, writeFile } from "node:fs/promises";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -29,15 +29,18 @@ async function main() {
   }
 
   // Stamp file lets us skip when already up-to-date with the installed version.
+  // NOTE: read package.json synchronously rather than dynamic-importing the
+  // absolute path. On Windows, `await import("C:\\...\\package.json")` throws
+  // ERR_UNSUPPORTED_ESM_URL_SCHEME because Node's ESM loader treats `C:` as a
+  // URL scheme; using readFileSync sidesteps the platform difference entirely.
   const pkgPath = path.join(root, "node_modules", "cesium", "package.json");
-  const { default: pkg } = await import(pkgPath, { with: { type: "json" } });
+  const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
   const version = pkg.version;
   const stampPath = path.join(DEST, ".cesium-version");
 
   if (existsSync(stampPath)) {
     try {
-      const fs = await import("node:fs/promises");
-      const stampVer = (await fs.readFile(stampPath, "utf-8")).trim();
+      const stampVer = (await readFile(stampPath, "utf-8")).trim();
       if (stampVer === version) {
         console.log(`[cesium] assets already up to date (v${version}).`);
         return;
@@ -67,8 +70,7 @@ async function main() {
   }
 
   // Stamp
-  const fs = await import("node:fs/promises");
-  await fs.writeFile(stampPath, version, "utf-8");
+  await writeFile(stampPath, version, "utf-8");
 
   console.log(`[cesium] assets ready at /public/cesium (v${version}).`);
 }
