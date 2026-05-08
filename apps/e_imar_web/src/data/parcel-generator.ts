@@ -1,5 +1,6 @@
 import parcelsRaw from "./parcels.geo.json";
 import { DEMO_PARCEL_CLUSTERS, type ParcelClusterSeed } from "./parcel-seeds";
+import municipalitiesRaw from "../../../../data/turkiye_municipalities.json";
 import type {
   Aski,
   ParcelFeature,
@@ -15,9 +16,19 @@ import type {
 } from "@/types/parcel";
 
 const FEATURED = parcelsRaw as unknown as ParcelFeatureCollection;
+type MunicipalityRecord = {
+  id: number;
+  name: string;
+  province: string;
+  district: string;
+  slug: string;
+  type: string;
+};
+const MUNICIPALITIES = municipalitiesRaw as MunicipalityRecord[];
 
 let cachedCollection: ParcelFeatureCollection | null = null;
 let cachedAskida = 0;
+let cachedExpansionClusters: ParcelClusterSeed[] | null = null;
 
 interface Rng {
   next: () => number;
@@ -86,6 +97,90 @@ function slugPart(value: string) {
     .replace(/Ü/g, "U")
     .replace(/[^A-Z0-9]/g, "")
     .slice(0, 3);
+}
+
+function normalizeAscii(value: string) {
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/[ğ]/g, "g")
+    .replace(/[ş]/g, "s")
+    .replace(/[ç]/g, "c")
+    .replace(/[ö]/g, "o")
+    .replace(/[ü]/g, "u")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function kindForMunicipalityType(type: string): ParcelClusterSeed["kind"] {
+  if (type.includes("buyuksehir")) return "central";
+  if (type.includes("ilce")) return "mixed";
+  if (type.includes("belde")) return "residential";
+  return "peripheral";
+}
+
+function provinceCenterMap() {
+  const centers: Record<string, [number, number]> = {};
+  for (const cluster of DEMO_PARCEL_CLUSTERS) {
+    const key = normalizeAscii(cluster.il);
+    if (!centers[key]) centers[key] = cluster.center;
+  }
+  return centers;
+}
+
+function shiftAround(center: [number, number], seed: string): [number, number] {
+  const rng = createRng(`municipality-center:${seed}`);
+  return [round(center[0] + rand(rng, -0.22, 0.22), 6), round(center[1] + rand(rng, -0.16, 0.16), 6)];
+}
+
+function buildMunicipalityExpansionClusters(): ParcelClusterSeed[] {
+  if (cachedExpansionClusters) return cachedExpansionClusters;
+  const provinceCenters = provinceCenterMap();
+  const existingKeys = new Set(
+    DEMO_PARCEL_CLUSTERS.map((cluster) => `${normalizeAscii(cluster.il)}:${normalizeAscii(cluster.ilce)}`)
+  );
+  const out: ParcelClusterSeed[] = [];
+  const perProvinceCount = new Map<string, number>();
+
+  for (const row of MUNICIPALITIES) {
+    const provinceKey = normalizeAscii(row.province);
+    const districtKey = normalizeAscii(row.district || row.name);
+    const dedupeKey = `${provinceKey}:${districtKey}`;
+    if (existingKeys.has(dedupeKey)) continue;
+    const provinceCenter = provinceCenters[provinceKey];
+    if (!provinceCenter) continue;
+
+    const ordinal = (perProvinceCount.get(provinceKey) ?? 0) + 1;
+    perProvinceCount.set(provinceKey, ordinal);
+    const center = shiftAround(provinceCenter, `${row.slug}:${ordinal}`);
+    const kind = kindForMunicipalityType(row.type);
+
+    out.push({
+      id: `auto-${row.slug}`,
+      il: row.province,
+      ilce: row.district || row.name.replace(/\s+Belediyesi$/i, ""),
+      mahalle: "Merkez",
+      plaka: String(ordinal).padStart(2, "0"),
+      ilceCode: slugPart(row.district || row.name),
+      center,
+      count: kind === "central" ? 34 : kind === "mixed" ? 30 : 26,
+      kind,
+      adaBase: 10000 + row.id * 12,
+      riskBase: kind === "coastal" ? 4 : kind === "central" ? 3 : 2,
+      zoningBias:
+        kind === "central"
+          ? { Karma: 30, Ticaret: 24, Konut: 22, Kamu: 10, Yesil: 8, Sanayi: 6 }
+          : kind === "mixed"
+            ? { Konut: 36, Karma: 20, Ticaret: 16, Kamu: 10, Yesil: 10, Sanayi: 8 }
+            : { Konut: 44, Ticaret: 14, Kamu: 14, Yesil: 10, Tarim: 10, Sanayi: 8 }
+    });
+    existingKeys.add(dedupeKey);
+    if (out.length >= 320) break;
+  }
+  cachedExpansionClusters = out;
+  return out;
 }
 
 function zoningMetrics(zoning: ZoningType, rng: Rng) {
@@ -369,7 +464,8 @@ export function generateDemoParcels(): ParcelFeatureCollection {
   const featured = normalizeFeatured();
   const generated: ParcelFeature[] = [];
   let nextMapId = featured.length + 1;
-  for (const cluster of DEMO_PARCEL_CLUSTERS) {
+  const clusters = [...DEMO_PARCEL_CLUSTERS, ...buildMunicipalityExpansionClusters()];
+  for (const cluster of clusters) {
     const items = generateCluster(cluster, nextMapId);
     generated.push(...items);
     nextMapId += items.length;
