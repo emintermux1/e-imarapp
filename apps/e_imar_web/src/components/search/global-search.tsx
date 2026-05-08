@@ -33,10 +33,10 @@ const TAB_LABELS: Record<SearchMode, string> = {
   Belediye: "Belediye"
 };
 const SUGGESTIONS = [
-  { primary: "Şişli Mecidiyeköy ticaret", mode: "Hepsi" as SearchMode },
-  { primary: "Çankaya Çukurambar askı", mode: "Hepsi" as SearchMode },
-  { primary: "İzmir Alsancak karma", mode: "Hepsi" as SearchMode },
-  { primary: "Kadıköy Caddebostan", mode: "Adres" as SearchMode }
+  { primary: "İstanbul TİCK MİA", mode: "Hepsi" as SearchMode },
+  { primary: "kıyı kenar çizgisi kontrolü", mode: "Hepsi" as SearchMode },
+  { primary: "1/1000 revizyon", mode: "Hepsi" as SearchMode },
+  { primary: "kentsel dönüşüm rezerv", mode: "Hepsi" as SearchMode }
 ];
 
 const PLACEHOLDERS: Record<SearchMode, string> = {
@@ -168,7 +168,7 @@ export function GlobalSearch() {
           >
             <Search className="h-4 w-4 text-fg-muted" />
             <span className="flex-1 text-left text-fg-muted truncate">
-              Ada/parsel, mahalle, koordinat ara…
+              Ada/parsel, TİCK, MİA, plan kısıtı ara…
             </span>
             <Kbd combo={["⌘", "K"]} />
           </button>
@@ -256,7 +256,7 @@ export function GlobalSearch() {
               </>
             ) : results.length === 0 ? (
               <CommandEmpty>
-                Sonuç bulunamadı. Mecidiyeköy, Çukurambar, Alsancak, Caddebostan veya ada/parsel formatı deneyin.
+                Sonuç bulunamadı. TİCK, MİA, 1/1000 revizyon, kıyı kenar çizgisi veya ada/parsel formatı deneyin.
               </CommandEmpty>
             ) : (
               <ResultGroups
@@ -274,7 +274,7 @@ export function GlobalSearch() {
               <Kbd combo={["Enter"]} /> seç
             </span>
             <span className="inline-flex items-center gap-1.5">
-              WGS84 / EPSG:4326
+              Türkiye çalışma alanı · WGS84 / EPSG:4326
             </span>
           </div>
         </CommandRoot>
@@ -375,8 +375,8 @@ function ResultRow({
       {result.type === "parcel" && (
         <ZoningBadge type={result.zoningType} size="xs" />
       )}
-      {result.type !== "parcel" && result.meta && (
-        <span className="text-[11px] uppercase tracking-wider text-fg-muted">
+      {result.meta && (
+        <span className="hidden sm:inline text-[10px] uppercase tracking-wider text-fg-muted max-w-[120px] truncate">
           {result.meta}
         </span>
       )}

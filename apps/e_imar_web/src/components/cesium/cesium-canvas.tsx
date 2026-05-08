@@ -17,6 +17,7 @@ import {
   getParcelById
 } from "@/data/parcels";
 import { getSnapshotForYear } from "@/data/historical-snapshots";
+import { TURKEY_CENTER } from "@/lib/geo/turkey";
 
 interface CesiumCanvasProps {
   className?: string;
@@ -38,7 +39,11 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
   const corridorRef = React.useRef<EntityT | null>(null);
 
   const { status, error, Cesium, viewer } = useCesiumViewer(containerRef, {
-    minimal: true
+    minimal: true,
+    initialCamera: {
+      position: [TURKEY_CENTER[0], TURKEY_CENTER[1] - 0.3, 1_350_000],
+      orientation: [0, -65, 0]
+    }
   });
 
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
@@ -181,7 +186,7 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
               id: `${id}::label`,
               position: Cesium.Cartesian3.fromDegrees(c[0], c[1], 80),
               label: {
-                text: `${parcel.properties.ada}/${parcel.properties.parsel}`,
+                text: `${parcel.properties.ada}/${parcel.properties.parsel} · ${parcel.properties.detailedUse?.includes("TİCK") ? "TİCK" : parcel.properties.detailedUse?.includes("MİA") ? "MİA" : parcel.properties.zoningType}`,
                 font: "12px Inter, sans-serif",
                 fillColor: Cesium.Color.WHITE,
                 outlineColor: Cesium.Color.BLACK.withAlpha(0.6),
