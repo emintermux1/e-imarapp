@@ -25,6 +25,7 @@
     "bullmq": "latest",
     "class-transformer": "latest",
     "class-validator": "latest",
+    "fast-xml-parser": "^5.7.3",
     "ioredis": "latest",
     "pg": "latest",
     "reflect-metadata": "latest",

@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { DiscoveryService } from './discovery.service';
 import { JobsService } from '../jobs/jobs.service';
 import { NetcadKeosService } from './netcad-keos.service';
+import { OgcDiscoveryService } from './ogc-discovery.service';
 
 @ApiTags('connectors')
 @Controller('connectors')
@@ -10,7 +11,8 @@ export class ConnectorsController {
   constructor(
     private readonly discovery: DiscoveryService,
     private readonly jobs: JobsService,
-    private readonly netcadKeos: NetcadKeosService
+    private readonly netcadKeos: NetcadKeosService,
+    private readonly ogc: OgcDiscoveryService
   ) {}
 
   @Get('netcad/strategy')
@@ -37,5 +39,16 @@ export class ConnectorsController {
       job,
       note: 'The job records the real connector target. Workers must perform source-specific auth/session discovery before ingesting data.'
     };
+  }
+
+  @Post(':id/ogc/discover')
+  async discoverOgc(@Param('id') id: string) {
+    return this.ogc.discoverForSource(id);
+  }
+
+  @Get('ogc/endpoints')
+  async listOgcEndpoints() {
+    // Basit listeleme için şimdilik tüm kayıtları döneceğiz
+    return { message: 'Use municipal_gis_endpoints table for full list' };
   }
 }
