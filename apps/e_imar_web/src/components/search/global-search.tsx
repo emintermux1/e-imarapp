@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, ArrowRight, MapPin, Building2, Hash, Crosshair } from "lucide-react";
+import { Search, ArrowRight, MapPin, Building2, Hash, Crosshair, Navigation } from "lucide-react";
 import {
   Popover,
   PopoverAnchor,
@@ -112,8 +112,16 @@ export function GlobalSearch() {
         flyTo({ center: r.centroid, zoom: 16, parcelId: r.parcelId });
       }
     } else if (r.type === "coordinate") {
+      setSelectedParcelId(null);
+      setRightPanelOpen(false);
       flyTo({ center: [r.lng, r.lat], zoom: 14 });
+    } else if (r.type === "location" && r.centroid) {
+      setSelectedParcelId(null);
+      setRightPanelOpen(false);
+      flyTo({ center: r.centroid, zoom: r.zoom });
     } else if (r.centroid) {
+      setSelectedParcelId(null);
+      setRightPanelOpen(false);
       flyTo({ center: r.centroid, zoom: r.type === "address" ? 12 : 11 });
     }
   }
@@ -309,10 +317,11 @@ function ResultGroups({
       </CommandGroup>
     );
   }
-  const groupOrder: Array<SearchResult["type"]> = ["coordinate", "parcel", "address", "belediye"];
+  const groupOrder: Array<SearchResult["type"]> = ["coordinate", "parcel", "location", "address", "belediye"];
   const headings: Record<SearchResult["type"], string> = {
     coordinate: "Koordinat",
     parcel: "Parsel",
+    location: "Konum",
     address: "Adres",
     belediye: "Belediye"
   };
@@ -354,6 +363,7 @@ function ResultRow({
   const icon = (() => {
     if (result.type === "parcel") return <Hash className="h-3.5 w-3.5" />;
     if (result.type === "address") return <MapPin className="h-3.5 w-3.5" />;
+    if (result.type === "location") return <Navigation className="h-3.5 w-3.5" />;
     if (result.type === "coordinate") return <Crosshair className="h-3.5 w-3.5" />;
     return <Building2 className="h-3.5 w-3.5" />;
   })();
@@ -383,7 +393,7 @@ function ResultRow({
           <ZoningBadge type={result.zoningType} size="xs" />
         </div>
       )}
-      {result.meta && (
+      {result.type !== "parcel" && result.meta && (
         <span className="hidden sm:inline text-[10px] uppercase tracking-wider text-fg-muted max-w-[120px] truncate">
           {result.meta}
         </span>

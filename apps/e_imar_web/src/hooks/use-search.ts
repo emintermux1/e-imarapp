@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { kindLabel, searchLocationTargets } from "@/data/location-navigation";
 import { getAllParcels, searchParcels, slugify } from "@/data/parcels";
 import { PROVINCES } from "@/data/provinces";
 import { DISTRICTS } from "@/data/districts";
@@ -8,7 +9,7 @@ import { NEIGHBORHOODS } from "@/data/neighborhoods";
 import { BELEDIYE_LIST } from "@/data/belediye";
 import { adaParselText } from "@/lib/format";
 import { TURKEY_BOUNDS, inTurkey, safeParseFloat } from "@/lib/utils";
-import type { SearchResult } from "@/types/geo";
+import type { LocationSearchResult, SearchResult } from "@/types/geo";
 import type { ParcelFeature } from "@/types/parcel";
 
 export type SearchMode = "Hepsi" | "AdaParsel" | "Koordinat" | "Adres" | "Belediye";
@@ -156,6 +157,27 @@ function normalizeSearchText(value: string) {
     .trim();
 }
 
+function searchLocationResults(query: string, limit: number): SearchResult[] {
+  const results: LocationSearchResult[] = [];
+  for (const target of searchLocationTargets(query, limit)) {
+    if (target.kind === "parcel") continue;
+    results.push({
+      id: `loc:${target.kind}:${target.il ?? ""}:${target.ilce ?? ""}:${target.mahalle ?? ""}`,
+      type: "location",
+      primary: target.kind === "mahalle" ? `${target.label} Mahallesi` : target.label,
+      secondary: [target.il, target.ilce].filter((value) => value && value !== target.label).join(" / "),
+      meta: kindLabel(target.kind),
+      centroid: target.center,
+      zoom: target.zoom,
+      kind: target.kind,
+      il: target.il,
+      ilce: target.ilce,
+      mahalle: target.mahalle
+    });
+  }
+  return results;
+}
+
 function searchAddressResults(query: string, limit: number): SearchResult[] {
   const q = query.trim().toLocaleLowerCase("tr-TR");
   if (!q) return [];
@@ -258,7 +280,9 @@ export function useSearch(opts: SearchOptions) {
   const limit = opts.limit ?? 8;
   return useMemo(() => {
     if (opts.mode === "AdaParsel") return searchParcelResults(opts.query, limit);
-    if (opts.mode === "Adres") return searchAddressResults(opts.query, limit);
+    if (opts.mode === "Adres") {
+      return [...searchLocationResults(opts.query, 4), ...searchAddressResults(opts.query, limit)].slice(0, limit);
+    }
     if (opts.mode === "Belediye") return searchBelediyeResults(opts.query, limit);
     if (opts.mode === "Koordinat") {
       const r = coordToResult(opts.query);
@@ -269,6 +293,7 @@ export function useSearch(opts: SearchOptions) {
     const coord = coordToResult(opts.query);
     if (coord) results.push(coord);
     results.push(...searchParcelResults(opts.query, 5));
+    results.push(...searchLocationResults(opts.query, 4));
     results.push(...searchAddressResults(opts.query, 4));
     results.push(...searchBelediyeResults(opts.query, 3));
     return results.slice(0, 12);
