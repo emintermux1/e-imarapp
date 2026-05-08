@@ -1,9 +1,20 @@
 "use client";
 
 import * as React from "react";
-import { Plus, Minus, Compass, MapPin, Crosshair, Box, Locate } from "lucide-react";
+import {
+  Plus,
+  Minus,
+  Compass,
+  MapPin,
+  Crosshair,
+  Box,
+  Locate,
+  Map as MapIcon
+} from "lucide-react";
+import { motion } from "framer-motion";
 import { IconButton } from "@/components/ui/icon-button";
 import { useMapStore } from "@/stores/map-store";
+import { useUIStore } from "@/stores/ui-store";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { BASEMAPS } from "@/lib/maplibre/styles";
@@ -17,6 +28,8 @@ export function MapHud({
 }) {
   const basemap = useMapStore((s) => s.basemap);
   const bearing = useMapStore((s) => s.bearing);
+  const mapMode = useUIStore((s) => s.mapMode);
+  const setMapMode = useUIStore((s) => s.setMapMode);
 
   function emitMapControl(action: "in" | "out" | "reset" | "north") {
     const evt = new CustomEvent("eimar:map:control", { detail: { action } });
@@ -29,8 +42,16 @@ export function MapHud({
       <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-col gap-1.5">
         <ChipPill>
           <span className="text-fg-muted">Mod</span>
-          <span aria-hidden className="block h-1 w-1 rounded-full bg-status-success" />
-          <span className="font-medium">2D · Vektör</span>
+          <span
+            aria-hidden
+            className={cn(
+              "block h-1 w-1 rounded-full",
+              mapMode === "3d" ? "bg-brand-blue" : "bg-status-success"
+            )}
+          />
+          <span className="font-medium">
+            {mapMode === "3d" ? "3D · Cesium" : "2D · Vektör"}
+          </span>
         </ChipPill>
         <ChipPill>
           <span className="text-fg-muted">Zemin</span>
@@ -40,7 +61,7 @@ export function MapHud({
         </ChipPill>
       </div>
 
-      {/* Top-right: zoom controls + compass + 3D toggle (disabled) */}
+      {/* Top-right: zoom controls + compass + 3D toggle */}
       <div className="pointer-events-auto absolute right-3 top-3 z-10 flex flex-col items-end gap-1.5">
         <div className="flex flex-col rounded-md border border-border-strong bg-surface-2 shadow-card overflow-hidden">
           <IconButton
@@ -73,7 +94,10 @@ export function MapHud({
             >
               <span
                 className="inline-block"
-                style={{ transform: `rotate(${-bearing}deg)`, transition: "transform 200ms ease-out" }}
+                style={{
+                  transform: `rotate(${-bearing}deg)`,
+                  transition: "transform 200ms ease-out"
+                }}
               >
                 <Compass className="h-4 w-4" />
               </span>
@@ -86,18 +110,37 @@ export function MapHud({
           <TooltipTrigger asChild>
             <button
               type="button"
-              aria-label="3D modu (yakında)"
-              disabled
-              className="h-8 w-8 inline-flex items-center justify-center rounded-md border border-border-subtle bg-surface-1 text-fg-muted/70 cursor-not-allowed"
+              aria-label={mapMode === "3d" ? "2D moduna geç" : "3D moduna geç"}
+              aria-pressed={mapMode === "3d"}
+              onClick={() => setMapMode(mapMode === "3d" ? "2d" : "3d")}
+              className={cn(
+                "h-8 w-8 inline-flex items-center justify-center rounded-md border bg-surface-2 shadow-card transition-colors",
+                mapMode === "3d"
+                  ? "border-brand-blue/60 text-fg-primary"
+                  : "border-border-strong text-fg-secondary hover:bg-surface-3"
+              )}
             >
-              <Box className="h-4 w-4" />
+              <motion.span
+                key={mapMode}
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.16 }}
+              >
+                {mapMode === "3d" ? (
+                  <MapIcon className="h-4 w-4" />
+                ) : (
+                  <Box className="h-4 w-4" />
+                )}
+              </motion.span>
             </button>
           </TooltipTrigger>
-          <TooltipContent side="left">3D modu — yakında</TooltipContent>
+          <TooltipContent side="left">
+            {mapMode === "3d" ? "2D moduna geç" : "3D moduna geç"}
+          </TooltipContent>
         </Tooltip>
       </div>
 
-      {/* Bottom-right floating cluster: my-location / reset / measure(stub) / share(stub) */}
+      {/* Bottom-right floating cluster */}
       <div className="pointer-events-auto absolute right-3 bottom-3 z-10 hidden md:flex flex-col items-end gap-1.5">
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild>
