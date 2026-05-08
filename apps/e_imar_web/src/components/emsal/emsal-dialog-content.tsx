@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Calculator, RotateCcw, AlertTriangle, ShieldCheck, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { simulateBackendCompliance } from "@/lib/api/backend-client";
+import { humanizeApiError, simulateBackendCompliance } from "@/lib/api/backend-client";
 import { useBackendParcelStore } from "@/stores/backend-parcel-store";
 import { computeEmsal, validateEmsalInput, EMSAL_DEFAULTS } from "@/lib/math/emsal";
 import {
@@ -186,10 +186,10 @@ export function EmsalDialogContent({ parcel, embed }: EmsalDialogContentProps) {
         compliant,
         messages: violations.length > 0 ? violations : [compliant ? "API kontrolü: belirgin ihlal bulunmadı" : "API kontrolü tamamlandı"]
       });
-    } catch {
+    } catch (error) {
       setCompliance({
         state: "error",
-        messages: ["Uygunluk API'sine ulaşılamıyor — yerel hesap sonuçları korunuyor"]
+        messages: [`${humanizeApiError(error)} Yerel hesap sonuçları korunuyor.`]
       });
     }
   }

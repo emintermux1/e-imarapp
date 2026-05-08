@@ -39,7 +39,7 @@ npm install --prefix apps/e_imar_web
 npm run web:dev
 ```
 
-The canonical polished GIS UI is `apps/e_imar_web` and runs at `http://localhost:3000`. It connects to FastAPI via `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000/api/v1`) and visibly labels live API, local fallback, computed, and demo data.
+The canonical polished GIS UI is `apps/e_imar_web` and runs at `http://localhost:3000`. It connects to FastAPI via `NEXT_PUBLIC_API_BASE_URL || http://localhost:8000/api/v1` and visibly labels live API, local fallback, computed, and demo data in search, map selection, right-panel workflow, and trust/source cards.
 
 `frontend/` and `apps/web` are deprecated/simple prototypes and are not the product frontend.
 
@@ -162,7 +162,7 @@ Run the website locally:
 
 ```bash
 npm install --prefix apps/e_imar_web
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1 npm run web:dev
+npm run web:dev
 npm run web:build
 ```
 

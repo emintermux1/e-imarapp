@@ -9,7 +9,9 @@ import {
   Layers,
   GitCompareArrows,
   AlertTriangle,
-  Map as MapIcon
+  Map as MapIcon,
+  RefreshCw,
+  Loader2
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { BrandMark } from "@/components/layout/brand-mark";
@@ -26,6 +28,7 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip";
 import { activeAskiCount, ASKI_POLYGONS } from "@/data/aski-polygons";
+import { useAskiStore } from "@/stores/aski-store";
 import { cn } from "@/lib/utils";
 
 export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) {
@@ -38,6 +41,10 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
   const setAskiMode = useUIStore((s) => s.setAskiMode);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
   const flyTo = useMapStore((s) => s.flyTo);
+  const askiRefresh = useAskiStore((s) => s.refresh);
+  const askiApiStatus = useAskiStore((s) => s.status);
+  const askiApiMessage = useAskiStore((s) => s.message);
+  const liveAskiCount = useAskiStore((s) => s.plans.length);
 
   const aktifAski = activeAskiCount();
 
@@ -97,12 +104,25 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
                   askiMode ? "text-status-warning" : "text-fg-muted"
                 )}
               />
-              {aktifAski} aktif askı
+	              {askiApiStatus === "live" ? liveAskiCount : aktifAski} aktif askı
             </button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            {askiMode ? "Askı modunu kapat" : "Askı haritasını aç ve en yakın askıya yakınlaş"}
-          </TooltipContent>
+	            <div className="max-w-xs space-y-2">
+	              <p>{askiApiMessage ?? (askiMode ? "Askı modunu kapat" : "Askı haritasını aç ve en yakın askıya yakınlaş")}</p>
+	              <button
+	                type="button"
+	                onClick={(event) => {
+	                  event.stopPropagation();
+	                  void askiRefresh();
+	                }}
+	                className="inline-flex items-center gap-1 rounded-sm border border-border-subtle px-2 py-1 text-[11px]"
+	              >
+	                {askiApiStatus === "loading" ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+	                Askı planlarını yenile
+	              </button>
+	            </div>
+	          </TooltipContent>
         </Tooltip>
 
         {/* Compare button */}

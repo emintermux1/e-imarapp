@@ -21,6 +21,21 @@ export class ApiFetchError extends Error {
   }
 }
 
+export function humanizeApiError(error: unknown, fallback?: string) {
+  if (error instanceof ApiFetchError) {
+    if (error.status == null) {
+      return "Backend erişilemiyor. FastAPI servisinin http://localhost:8000 üzerinde çalıştığını kontrol edin.";
+    }
+    if (error.status === 404) return fallback ?? "İstenen kayıt canlı API üzerinde bulunamadı.";
+    if (error.status >= 500) return "Backend geçici olarak yanıt veremiyor. Servis loglarını kontrol edin.";
+    return fallback ?? "API isteği tamamlanamadı; gönderilen parametreleri kontrol edin.";
+  }
+  if (error instanceof TypeError && /failed to fetch/i.test(error.message)) {
+    return "Backend erişilemiyor. FastAPI servisinin http://localhost:8000 üzerinde çalıştığını kontrol edin.";
+  }
+  return fallback ?? "İşlem tamamlanamadı; lütfen tekrar deneyin.";
+}
+
 function makeUrl(path: string) {
   if (/^https?:\/\//i.test(path)) return path;
   return `${API_BASE.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
@@ -88,6 +103,31 @@ export function generateBackendReport(body: Record<string, unknown>) {
   return apiFetch<ReportResponse>("/reports/generate", {
     method: "POST",
     body: JSON.stringify(body)
+  });
+}
+
+export function getBackendReport(reportId: number) {
+  return apiFetch<ReportResponse>(`/reports/${reportId}`);
+}
+
+export function createBackendWatchlistItem(body: {
+  parcel_id: number;
+  label?: string;
+  notification_channels?: string[];
+}) {
+  return apiFetch<Record<string, unknown>>("/watchlist", {
+    method: "POST",
+    body: JSON.stringify(body)
+  });
+}
+
+export function getBackendWatchlist() {
+  return apiFetch<Array<Record<string, unknown>>>("/watchlist");
+}
+
+export function deleteBackendWatchlistItem(itemId: string | number) {
+  return apiFetch<Record<string, unknown>>(`/watchlist/${itemId}`, {
+    method: "DELETE"
   });
 }
 

@@ -31,9 +31,12 @@ import type { AskiPolygonFeature } from "@/data/aski-polygons";
 import { getRiskGridCollection } from "@/data/risk-grid";
 import { ZONING_PRESETS } from "@/data/zoning";
 import { getSnapshotForYear } from "@/data/historical-snapshots";
+import { useBackendParcelStore } from "@/stores/backend-parcel-store";
+import { parseBackendParcelId } from "@/lib/api/parcel-normalizer";
 
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
+const BACKEND_SELECTED_SOURCE = "backend-selected-parcel";
 
 interface MapCanvasProps {
   className?: string;
@@ -63,6 +66,7 @@ export function MapCanvas({
 
   const basemap = useMapStore((s) => s.basemap);
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
+  const selectedBackendFeature = useBackendParcelStore((s) => s.getFeature(selectedParcelId));
   const flyTarget = useMapStore((s) => s.flyTarget);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
   const setHoveredParcelId = useMapStore((s) => s.setHoveredParcelId);
@@ -139,6 +143,7 @@ export function MapCanvas({
       }
       ensureAskiLayers(map);
       ensureRiskGridLayer(map);
+      ensureBackendSelectedLayer(map);
       applyVisibilityAndOpacity(map);
     };
     if (map.isStyleLoaded()) {
@@ -152,6 +157,7 @@ export function MapCanvas({
       if (!map.getSource(PARCEL_SOURCE)) registerParcelLayers(map);
       ensureAskiLayers(map);
       ensureRiskGridLayer(map);
+      ensureBackendSelectedLayer(map);
       if (lastSelectedMapIdRef.current != null) {
         map.setFeatureState(
           { source: PARCEL_SOURCE, id: lastSelectedMapIdRef.current },
@@ -340,6 +346,34 @@ export function MapCanvas({
     if (map.isStyleLoaded()) apply();
     else map.once("load", apply);
   }, [selectedParcelId]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      ensureBackendSelectedLayer(map);
+      const source = map.getSource(BACKEND_SELECTED_SOURCE) as maplibregl.GeoJSONSource | undefined;
+      const feature =
+        selectedParcelId && parseBackendParcelId(selectedParcelId) != null
+          ? selectedBackendFeature
+          : null;
+      source?.setData({
+        type: "FeatureCollection",
+        features: feature?.geometry.coordinates.length ? [feature as unknown as GeoJSON.Feature] : []
+      });
+      if (feature?.geometry.coordinates.length) {
+        const bounds = geometryBounds(feature.geometry);
+        const padding = window.innerWidth >= 1280 ? { top: 72, bottom: 72, left: 320, right: 440 } : { top: 56, bottom: 56, left: 24, right: 24 };
+        if (bounds) {
+          map.fitBounds(bounds, { padding, duration: 700, maxZoom: 17 });
+        } else if (feature.properties.centroid) {
+          map.flyTo({ center: feature.properties.centroid, zoom: Math.max(map.getZoom(), 16), padding, duration: 700 });
+        }
+      }
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [selectedBackendFeature, selectedParcelId]);
 
   React.useEffect(() => {
     const map = mapRef.current;
@@ -557,6 +591,70 @@ function ensureRiskGridLayer(map: Map) {
   if (!map.getLayer("deprem-risk-grid")) {
     map.addLayer(buildRiskGridLayer(), beforeId);
   }
+}
+
+function ensureBackendSelectedLayer(map: Map) {
+  if (!map.getSource(BACKEND_SELECTED_SOURCE)) {
+    map.addSource(BACKEND_SELECTED_SOURCE, {
+      type: "geojson",
+      data: { type: "FeatureCollection", features: [] }
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("backend-selected-fill")) {
+    map.addLayer(
+      {
+        id: "backend-selected-fill",
+        type: "fill",
+        source: BACKEND_SELECTED_SOURCE,
+        paint: {
+          "fill-color": "#0EA5E9",
+          "fill-opacity": 0.34
+        }
+      },
+      beforeId
+    );
+  }
+  if (!map.getLayer("backend-selected-outline")) {
+    map.addLayer(
+      {
+        id: "backend-selected-outline",
+        type: "line",
+        source: BACKEND_SELECTED_SOURCE,
+        paint: {
+          "line-color": "#38BDF8",
+          "line-width": 3,
+          "line-opacity": 1
+        }
+      },
+      beforeId
+    );
+  }
+}
+
+function geometryBounds(geometry: GeoJSON.Geometry): maplibregl.LngLatBoundsLike | null {
+  const coords: Array<[number, number]> = [];
+  function collect(input: unknown): void {
+    if (!Array.isArray(input)) return;
+    if (input.length >= 2 && typeof input[0] === "number" && typeof input[1] === "number") {
+      coords.push([input[0], input[1]]);
+      return;
+    }
+    input.forEach(collect);
+  }
+  collect((geometry as { coordinates?: unknown }).coordinates);
+  if (coords.length === 0) return null;
+  let minLng = coords[0][0];
+  let maxLng = coords[0][0];
+  let minLat = coords[0][1];
+  let maxLat = coords[0][1];
+  coords.forEach(([lng, lat]) => {
+    minLng = Math.min(minLng, lng);
+    maxLng = Math.max(maxLng, lng);
+    minLat = Math.min(minLat, lat);
+    maxLat = Math.max(maxLat, lat);
+  });
+  return [[minLng, minLat], [maxLng, maxLat]];
 }
 
 function setOpacityIfExists(

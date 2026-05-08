@@ -6,8 +6,9 @@ restrained* — TKGM Parsel Sorgu, sahibinden, ArcGIS Online and Bloomberg
 Terminal are the references; we deliberately avoid the marketing-landing,
 neon, glassmorphism, toy-rounded vocabulary.
 
-This is the canonical polished GIS product frontend for the repository. The
-older `frontend/` and `apps/web/` apps are deprecated/simple prototypes.
+This is the canonical polished GIS product frontend for the repository at
+`apps/e_imar_web`. The older `frontend/` and `apps/web/` apps are
+deprecated/simple prototypes.
 
 > This package replaces the previous Vite shell. The Flutter mobile app at
 > `apps/e_imar_mobile/` is **not** modified by this work.
@@ -19,12 +20,12 @@ older `frontend/` and `apps/web/` apps are deprecated/simple prototypes.
 ```bash
 # from repo root
 npm install --prefix apps/e_imar_web
-npm --prefix apps/e_imar_web run dev   # http://localhost:3000
+npm run web:dev   # http://localhost:3000
 
 # typecheck / build / start
-npm --prefix apps/e_imar_web run typecheck
-npm --prefix apps/e_imar_web run build
-npm --prefix apps/e_imar_web run start
+npm run web:typecheck
+npm run web:build
+npm run web:preview
 ```
 
 The repo-root scripts also wrap these:
@@ -63,6 +64,16 @@ NEXT_PUBLIC_MAPBOX_TOKEN=pk.xxxx
 
 If the variable is set, a future enhancement can swap in Mapbox styles. This
 work does not install the Mapbox SDK.
+
+The FastAPI adapter uses:
+
+```
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+```
+
+When the variable is omitted, `http://localhost:8000/api/v1` is the default.
+Live API, local fallback, computed, and demo data are visibly labelled in the
+search results, map selection, right panel workflow strip, and trust section.
 
 ---
 
