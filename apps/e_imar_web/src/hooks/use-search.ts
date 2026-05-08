@@ -180,6 +180,7 @@ function searchLocationResults(query: string, limit: number): SearchResult[] {
       secondary: [target.il, target.ilce].filter((value) => value && value !== target.label).join(" / "),
       meta: kindLabel(target.kind),
       centroid: target.center,
+      bbox: bboxFromCenter(target.center, target.kind),
       zoom: target.zoom,
       kind: target.kind,
       il: target.il,
@@ -203,7 +204,8 @@ function searchAddressResults(query: string, limit: number): SearchResult[] {
         secondary: `Plaka ${il.code}`,
         il: il.slug,
         ilce: "",
-        centroid: il.centroid
+        centroid: il.centroid,
+        bbox: bboxFromCenter(il.centroid, "il")
       });
     }
   });
@@ -221,7 +223,8 @@ function searchAddressResults(query: string, limit: number): SearchResult[] {
         secondary: "İlçe",
         il: d.ilSlug,
         ilce: d.slug,
-        centroid: d.centroid
+        centroid: d.centroid,
+        bbox: bboxFromCenter(d.centroid, "ilce")
       });
     }
   });
@@ -242,7 +245,8 @@ function searchAddressResults(query: string, limit: number): SearchResult[] {
         il: n.ilSlug,
         ilce: n.ilceSlug,
         mahalle: n.slug,
-        centroid: n.centroid
+        centroid: n.centroid,
+        bbox: bboxFromCenter(n.centroid, "mahalle")
       });
     }
   });
@@ -268,7 +272,8 @@ function searchBelediyeResults(query: string, limit: number): SearchResult[] {
         primary: b.ad,
         secondary: prov?.name ?? b.ilSlug,
         il: b.ilSlug,
-        centroid: prov?.centroid
+        centroid: prov?.centroid,
+        bbox: prov?.centroid ? bboxFromCenter(prov.centroid, "il") : undefined
       };
     });
 }
@@ -284,7 +289,28 @@ function coordToResult(query: string): SearchResult | null {
     meta: "Konum",
     lng: c.lng,
     lat: c.lat,
-    centroid: [c.lng, c.lat]
+    centroid: [c.lng, c.lat],
+    bbox: bboxFromCenter([c.lng, c.lat], "koordinat")
+  };
+}
+
+function bboxFromCenter(
+  center: [number, number],
+  level: "il" | "ilce" | "mahalle" | "koordinat"
+) {
+  const [lng, lat] = center;
+  const spans = {
+    il: { lng: 0.42, lat: 0.3 },
+    ilce: { lng: 0.14, lat: 0.1 },
+    mahalle: { lng: 0.05, lat: 0.035 },
+    koordinat: { lng: 0.03, lat: 0.022 }
+  } as const;
+  const span = spans[level];
+  return {
+    west: lng - span.lng,
+    south: lat - span.lat,
+    east: lng + span.lng,
+    north: lat + span.lat
   };
 }
 

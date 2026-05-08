@@ -119,15 +119,19 @@ export function GlobalSearch() {
     } else if (r.type === "coordinate") {
       setSelectedParcelId(null);
       setRightPanelOpen(false);
-      flyTo({ center: [r.lng, r.lat], zoom: 14 });
+      flyTo({ center: [r.lng, r.lat], bounds: r.bbox, zoom: 14 });
     } else if (r.type === "location" && r.centroid) {
       setSelectedParcelId(null);
       setRightPanelOpen(false);
-      flyTo({ center: r.centroid, zoom: r.zoom });
+      flyTo({ center: r.centroid, bounds: r.bbox, zoom: r.zoom });
     } else if (r.centroid) {
       setSelectedParcelId(null);
       setRightPanelOpen(false);
-      flyTo({ center: r.centroid, zoom: r.type === "address" ? 12 : 11 });
+      flyTo({
+        center: r.centroid,
+        bounds: r.bbox,
+        zoom: r.type === "address" ? 12 : 11
+      });
     }
   }
 
