@@ -140,3 +140,111 @@ export interface ApiFailure {
 }
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: ApiFailure };
+
+/* -------------------------------------------------------------------------- */
+/*  Sprint 2 — askı haritası                                                  */
+/* -------------------------------------------------------------------------- */
+
+export type SuspensionPlanType =
+  | 'imar_plani'
+  | 'plan_degisikligi'
+  | 'mevzi'
+  | 'koruma'
+  | 'kentsel_donusum'
+  | string;
+
+export interface SuspensionNotice extends StatusEnvelope {
+  id: string;
+  municipalityId?: string;
+  municipalityName?: string;
+  planTitle?: string;
+  planType?: SuspensionPlanType;
+  startDate?: string; // ISO
+  endDate?: string; // ISO
+  postedAt?: string;
+  documentUrl?: string;
+  geometry?: Record<string, unknown> | null; // GeoJSON geometry
+  bbox?: [number, number, number, number] | null;
+  sourceName?: string;
+  fetchedAt?: string;
+}
+
+export interface SuspensionNoticeListResponse extends StatusEnvelope {
+  notices?: SuspensionNotice[];
+  count?: number;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Sprint 2 — watchlist                                                      */
+/* -------------------------------------------------------------------------- */
+
+export type WatchlistEntityType = 'parcel' | 'region' | 'municipality_feed';
+export type WatchlistEventType =
+  | 'plan_change'
+  | 'risk_change'
+  | 'aski_start'
+  | 'aski_end';
+export type WatchlistSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type WatchlistChannel = 'push' | 'email';
+
+export interface WatchlistRule {
+  id?: string;
+  entityType: WatchlistEntityType;
+  entityRef: string; // parcel id, region polygon id, municipality id
+  events: WatchlistEventType[];
+  severityFloor?: WatchlistSeverity;
+  channels?: WatchlistChannel[];
+  label?: string;
+}
+
+export interface WatchlistSubscription extends StatusEnvelope {
+  id: string;
+  rule: WatchlistRule;
+  unreadCount?: number;
+  lastEventAt?: string;
+  lastEventSeverity?: WatchlistSeverity;
+}
+
+export interface WatchlistResponse extends StatusEnvelope {
+  subscriptions?: WatchlistSubscription[];
+  count?: number;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Sprint 2 — time machine (zoning snapshots + diff)                         */
+/* -------------------------------------------------------------------------- */
+
+export interface ZoningSnapshot extends StatusEnvelope {
+  id: string;
+  parcelId: string;
+  effectiveAt?: string;
+  zoningFunction?: string;
+  emsal?: number;
+  taks?: number;
+  kaks?: number;
+  gabari?: string;
+  planTitle?: string;
+  sourceName?: string;
+  fetchedAt?: string;
+}
+
+export interface ZoningSnapshotListResponse extends StatusEnvelope {
+  snapshots?: ZoningSnapshot[];
+  count?: number;
+}
+
+export interface ZoningDiffField<T = unknown> {
+  field: string;
+  before?: T;
+  after?: T;
+  changed: boolean;
+}
+
+export interface ZoningDiffResponse extends StatusEnvelope {
+  parcelId?: string;
+  fromSnapshotId?: string;
+  toSnapshotId?: string;
+  fromAt?: string;
+  toAt?: string;
+  fields?: ZoningDiffField[];
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   Bell,
@@ -14,7 +14,7 @@ import {
   X,
   PlusCircle,
 } from 'lucide-react';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Input } from '@/components/ui/Input';
 import { IconButton } from '@/components/ui/IconButton';
 import { Tooltip } from '@/components/ui/Tooltip';
@@ -26,13 +26,41 @@ import { ParcelSearchForm } from '@/components/parcel/ParcelSearchForm';
 import { EnvironmentStatusChip } from './EnvironmentStatusChip';
 import { ThemeToggle } from './ThemeToggle';
 
+interface RouteTitle {
+  match: (path: string) => boolean;
+  label: string;
+}
+
+const ROUTE_TITLES: RouteTitle[] = [
+  { match: (p) => p.startsWith('/aski-haritasi'), label: 'Askı Haritası' },
+  { match: (p) => p.startsWith('/watchlist'), label: 'Watchlist' },
+  { match: (p) => p.startsWith('/time-machine'), label: 'Time Machine' },
+  { match: (p) => p.startsWith('/plan-explain'), label: 'Plan Açıklayıcı' },
+  { match: (p) => p.startsWith('/reports'), label: 'Raporlar' },
+  { match: (p) => p.startsWith('/settings'), label: 'Ayarlar' },
+  { match: (p) => p.startsWith('/parcel'), label: 'Parsel detayı' },
+];
+
+function routeTitle(pathname: string | null): string | null {
+  if (!pathname || pathname === '/') return null;
+  for (const item of ROUTE_TITLES) {
+    if (item.match(pathname)) return item.label;
+  }
+  return null;
+}
+
 export function TopAppBar() {
   const router = useRouter();
+  const pathname = usePathname();
+  const sectionTitle = useMemo(() => routeTitle(pathname), [pathname]);
+
   const [query, setQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(null);
   const setLeftSidebarOpen = useUIStore((s) => s.setLeftSidebarOpen);
   const searchOverlayOpen = useUIStore((s) => s.searchOverlayOpen);
   const setSearchOverlayOpen = useUIStore((s) => s.setSearchOverlayOpen);
+  const persistedUserReference = useUIStore((s) => s.userReference);
+  const setPersistedUserReference = useUIStore((s) => s.setUserReference);
   const userReference = useSearchStore((s) => s.userReference);
   const setUserReference = useSearchStore((s) => s.setUserReference);
   const resetSearch = useSearchStore((s) => s.reset);
@@ -40,11 +68,26 @@ export function TopAppBar() {
   const toggle3D = useMapStore((s) => s.toggle3D);
   const reduce = useReducedMotion();
 
+  // On hydration, mirror persisted user reference into the search store so
+  // parcel queries pick up the same identity.
+  useEffect(() => {
+    if (persistedUserReference && persistedUserReference !== userReference) {
+      setUserReference(persistedUserReference);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persistedUserReference]);
+
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!query.trim()) return;
     setSubmittedQuery(query.trim());
     setSearchOverlayOpen(true);
+  }
+
+  function commitUserReference(value: string) {
+    const trimmed = value.trim();
+    setUserReference(trimmed);
+    setPersistedUserReference(trimmed || null);
   }
 
   // Close overlay on Escape.
@@ -87,6 +130,22 @@ export function TopAppBar() {
             </span>
           </Link>
 
+          {/* Route-aware section title (shown beside the brand on non-home routes) */}
+          {sectionTitle ? (
+            <>
+              <span
+                aria-hidden
+                className="hidden h-5 w-px bg-border-subtle md:block"
+              />
+              <span
+                className="hidden truncate text-[14px] font-medium text-text-secondary md:block"
+                title={sectionTitle}
+              >
+                {sectionTitle}
+              </span>
+            </>
+          ) : null}
+
           {/* Search */}
           <form
             onSubmit={onSubmit}
@@ -122,13 +181,14 @@ export function TopAppBar() {
               </div>
             </Tooltip>
             <Tooltip content="Watchlist" side="bottom">
-              <Link
-                href="/watchlist"
+              <button
+                type="button"
+                onClick={() => router.push('/watchlist')}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-bg-subtle hover:text-text-primary focus-visible:shadow-focus focus-visible:outline-none"
                 aria-label="Watchlist"
               >
                 <Star className="h-4 w-4" aria-hidden />
-              </Link>
+              </button>
             </Tooltip>
             <Tooltip content="Raporlar" side="bottom">
               <Link
@@ -146,12 +206,15 @@ export function TopAppBar() {
                 </IconButton>
               </div>
             </Tooltip>
-            <Tooltip content="Bildirimler (Sprint 2)" side="bottom">
-              <div>
-                <IconButton aria-label="Bildirimler" variant="ghost">
-                  <Bell className="h-4 w-4" aria-hidden />
-                </IconButton>
-              </div>
+            <Tooltip content="Bildirimler" side="bottom">
+              <button
+                type="button"
+                onClick={() => router.push('/watchlist')}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-bg-subtle hover:text-text-primary focus-visible:shadow-focus focus-visible:outline-none"
+                aria-label="Bildirimler"
+              >
+                <Bell className="h-4 w-4" aria-hidden />
+              </button>
             </Tooltip>
 
             <div className="hidden h-6 w-px bg-border-subtle md:block" />
@@ -162,9 +225,11 @@ export function TopAppBar() {
             <div
               aria-label="Kullanıcı profili"
               className="grid h-9 w-9 place-items-center rounded-full bg-brand-navy text-text-inverse text-[12px] font-semibold ring-1 ring-border"
-              title={userReference || 'Misafir kullanıcı'}
+              title={userReference || persistedUserReference || 'Misafir kullanıcı'}
             >
-              {userReference ? userReference.slice(0, 2).toUpperCase() : 'GS'}
+              {(userReference || persistedUserReference)
+                ? (userReference || persistedUserReference || '').slice(0, 2).toUpperCase()
+                : 'GS'}
             </div>
           </div>
         </div>
@@ -212,7 +277,8 @@ export function TopAppBar() {
                   label="userReference (opsiyonel)"
                   placeholder="örn. demo-user"
                   value={userReference}
-                  onChange={(event) => setUserReference(event.target.value)}
+                  onChange={(event) => commitUserReference(event.target.value)}
+                  hint="Watchlist ve plan açıklayıcı için kalıcı olarak saklanır"
                   containerClassName="mb-4"
                 />
                 <ParcelSearchForm

@@ -1,19 +1,19 @@
-import { StubPage } from '@/components/shell/StubPage';
+import { HydrationBoundary } from '@tanstack/react-query';
+import { AppShell } from '@/components/shell/AppShell';
+import { TimemachineShell } from '@/components/timemachine/TimemachineShell';
+import { prefetchBootstrap } from '@/lib/query/server';
 
 export const metadata = {
   title: 'Time Machine',
 };
 
-export default function TimeMachinePage() {
+export default async function TimeMachinePage() {
+  const dehydratedState = await prefetchBootstrap();
   return (
-    <StubPage
-      title="Time Machine — Sprint 3"
-      description="Plan değişimi tarihçesi ve karşılaştırma görünümü Sprint 3'te yayınlanacak. Zaman çubuğu ve diff görünümü için backend snapshot servisi tamamlanmalı."
-      nextActions={[
-        'Sprint 3: plan revizyonları snapshot servisi',
-        'Sprint 3: parsel/ada bazlı zaman çubuğu',
-        'Sprint 3: yan yana karşılaştırma',
-      ]}
-    />
+    <HydrationBoundary state={dehydratedState}>
+      <AppShell showLeftSidebar={false} showRightPanel={false} showBottomSheet={false}>
+        <TimemachineShell />
+      </AppShell>
+    </HydrationBoundary>
   );
 }

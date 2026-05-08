@@ -10,10 +10,12 @@ import {
   Star,
   X,
 } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { Tabs, type TabItem } from '@/components/ui/Tabs';
 import { LayerCatalog } from '@/components/map/LayerCatalog';
 import { EmptyState } from '@/components/data/EmptyState';
 import { ReadinessGate } from '@/components/data/ReadinessGate';
+import { AskiFilters } from '@/components/aski/AskiFilters';
 import { useUIStore, type LeftSidebarTab } from '@/lib/store/ui-store';
 import { useWorkspace } from '@/lib/query/hooks';
 import { useSearchStore } from '@/lib/store/search-store';
@@ -40,6 +42,8 @@ export function LeftSidebar({ className, withCloseButton }: LeftSidebarProps) {
   const tab = useUIStore((s) => s.leftSidebarTab);
   const setTab = useUIStore((s) => s.setLeftSidebarTab);
   const setOpen = useUIStore((s) => s.setLeftSidebarOpen);
+  const pathname = usePathname();
+  const isAskiRoute = pathname?.startsWith('/aski-haritasi') ?? false;
 
   return (
     <aside
@@ -76,7 +80,7 @@ export function LeftSidebar({ className, withCloseButton }: LeftSidebarProps) {
         {tab === 'saved' ? <SavedTab /> : null}
         {tab === 'watchlist' ? <WatchlistTab /> : null}
         {tab === 'history' ? <HistoryTab /> : null}
-        {tab === 'filters' ? <FiltersTab /> : null}
+        {tab === 'filters' ? <FiltersTab askiRoute={isAskiRoute} /> : null}
       </div>
     </aside>
   );
@@ -132,19 +136,33 @@ function SavedTab() {
 }
 
 function WatchlistTab() {
+  const userReference = useUIStore((s) => s.userReference);
+  const linkText = userReference
+    ? `Watchlist sayfasını aç (${userReference})`
+    : 'Watchlist sayfasını aç';
   return (
     <PanelContent>
-      <ReadinessGate
-        status="not_ready"
-        notReadyTitle="Watchlist Sprint 2"
-        notReadyDescription="Watchlist CRUD ve bildirim kuralları Sprint 2'de aktive edilecek."
-        nextActions={[
-          'Sprint 2: /eplan/subscriptions ile kullanıcı kuralı oluşturma',
-          'Sprint 2: WebSocket bildirim akışı',
-        ]}
-      >
-        <div />
-      </ReadinessGate>
+      <div className="space-y-3">
+        <div className="rounded-md border border-border-subtle bg-bg-base/50 p-3 text-[12px] text-text-secondary">
+          <Star className="mb-2 h-4 w-4 text-state-warn" aria-hidden />
+          Watchlist kayıtları kullanıcı referansına bağlıdır. Tüm kayıtları yönetmek için ayrı sayfayı açın.
+        </div>
+        <a
+          href="/watchlist"
+          className="inline-flex h-9 items-center justify-center rounded-md bg-brand-navy px-3 text-[13px] font-medium text-text-inverse hover:bg-brand-muted-blue focus-visible:shadow-focus focus-visible:outline-none"
+        >
+          {linkText}
+        </a>
+        {!userReference ? (
+          <ReadinessGate
+            status="requires_credentials"
+            notReadyTitle="userReference gerekli"
+            notReadyDescription="Watchlist sayfasını ilk kez açtığınızda kullanıcı referansını girin; tarayıcıda kalıcı olarak saklanır."
+          >
+            <div />
+          </ReadinessGate>
+        ) : null}
+      </div>
     </PanelContent>
   );
 }
@@ -194,8 +212,15 @@ function HistoryTab() {
   );
 }
 
-function FiltersTab() {
+function FiltersTab({ askiRoute }: { askiRoute: boolean }) {
   const reduce = useReducedMotion();
+  if (askiRoute) {
+    return (
+      <PanelContent>
+        <AskiFilters compact className="border-0 p-0 shadow-none" />
+      </PanelContent>
+    );
+  }
   return (
     <PanelContent>
       <div className="space-y-3">
@@ -211,7 +236,7 @@ function FiltersTab() {
               className="mt-2 rounded-md border border-dashed border-border-subtle p-3 text-[12px] text-text-muted"
             >
               <Building className="mb-2 h-4 w-4" aria-hidden />
-              İl/İlçe/Mahalle hiyerarşi seçici Sprint 2&apos;de bağlanacak.
+              İl/İlçe/Mahalle hiyerarşi seçici Sprint 3&apos;te bağlanacak.
             </motion.div>
           </AnimatePresence>
         </div>
@@ -220,12 +245,12 @@ function FiltersTab() {
             Zaman aralığı
           </h4>
           <div className="mt-2 rounded-md border border-dashed border-border-subtle p-3 text-[12px] text-text-muted">
-            Plan değişim filtreleri için Sprint 2&apos;de time-machine modülü açılacak.
+            Plan değişim filtreleri için Sprint 2 time-machine modülünü açın.
           </div>
         </div>
         <ReadinessGate
           status="not_ready"
-          notReadyTitle="Filtreler — Sprint 2"
+          notReadyTitle="Filtreler — Sprint 3"
           notReadyDescription="Belediye ve plan tipi filtreleri için ingestion modülü tamamlanmalı."
         >
           <div />

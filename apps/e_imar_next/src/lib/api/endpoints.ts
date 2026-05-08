@@ -5,7 +5,15 @@ export {
   explainPlanNote,
   getWorkspace,
   getMapProviders,
+  listSuspensionNotices,
+  listZoningSnapshots,
+  getZoningDiff,
+  listWatchlistSubscriptions,
+  createWatchlistSubscription,
+  deleteWatchlistSubscription,
 } from './client';
+
+export type { SuspensionNoticeQuery } from './client';
 
 export type {
   ApiFailure,
@@ -23,5 +31,19 @@ export type {
   PlanNoteExplainResponse,
   PotentialSummary,
   StatusEnvelope,
+  SuspensionNotice,
+  SuspensionNoticeListResponse,
+  SuspensionPlanType,
+  WatchlistChannel,
+  WatchlistEntityType,
+  WatchlistEventType,
+  WatchlistResponse,
+  WatchlistRule,
+  WatchlistSeverity,
+  WatchlistSubscription,
   WorkspaceResponse,
+  ZoningDiffField,
+  ZoningDiffResponse,
+  ZoningSnapshot,
+  ZoningSnapshotListResponse,
 } from './types';

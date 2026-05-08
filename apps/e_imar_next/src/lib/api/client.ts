@@ -1,12 +1,20 @@
 import type {
   ApiResult,
+  BackendStatus,
   BootstrapResponse,
   MapProvider,
   ParcelWorkflowPayload,
   ParcelWorkflowResponse,
   PlanNoteExplainPayload,
   PlanNoteExplainResponse,
+  SuspensionNoticeListResponse,
+  SuspensionPlanType,
+  WatchlistResponse,
+  WatchlistRule,
+  WatchlistSubscription,
   WorkspaceResponse,
+  ZoningDiffResponse,
+  ZoningSnapshotListResponse,
 } from './types';
 
 const fallbackBaseUrl = 'http://localhost:3000';
@@ -100,4 +108,113 @@ export function getWorkspace(userReference: string, init?: RequestOptions): Prom
 
 export function getMapProviders(init?: RequestOptions): Promise<ApiResult<MapProvider[]>> {
   return request<MapProvider[]>('/map/providers', init);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Sprint 2 — defensive endpoint helpers                                     */
+/*                                                                            */
+/*  These call backend endpoints that may not yet exist. Each call uses the   */
+/*  shared `request<T>` wrapper so a 404 / connectivity failure surfaces as a */
+/*  typed `ApiResult<T>` failure with `status: 'network_error'`. The UI keys  */
+/*  off that to render a `<ReadinessGate>` instead of throwing.               */
+/* -------------------------------------------------------------------------- */
+
+export interface SuspensionNoticeQuery {
+  municipalityId?: string;
+  municipalityIds?: string[];
+  from?: string; // ISO date or datetime
+  to?: string; // ISO date or datetime
+  planTypes?: SuspensionPlanType[];
+  bbox?: [number, number, number, number];
+}
+
+function buildSuspensionQuery(query: SuspensionNoticeQuery): string {
+  const params = new URLSearchParams();
+  if (query.municipalityId) params.set('municipalityId', query.municipalityId);
+  if (query.municipalityIds && query.municipalityIds.length > 0) {
+    params.set('municipalityIds', query.municipalityIds.join(','));
+  }
+  if (query.from) params.set('from', query.from);
+  if (query.to) params.set('to', query.to);
+  if (query.planTypes && query.planTypes.length > 0) {
+    params.set('planTypes', query.planTypes.join(','));
+  }
+  if (query.bbox && query.bbox.length === 4) {
+    params.set('bbox', query.bbox.join(','));
+  }
+  return params.toString();
+}
+
+export function listSuspensionNotices(
+  query: SuspensionNoticeQuery,
+  init?: RequestOptions,
+): Promise<ApiResult<SuspensionNoticeListResponse>> {
+  const qs = buildSuspensionQuery(query);
+  return request<SuspensionNoticeListResponse>(
+    `/eplan/suspension-notices${qs ? `?${qs}` : ''}`,
+    init,
+  );
+}
+
+export function listZoningSnapshots(
+  parcelId: string,
+  init?: RequestOptions,
+): Promise<ApiResult<ZoningSnapshotListResponse>> {
+  return request<ZoningSnapshotListResponse>(
+    `/parcels/${encodeURIComponent(parcelId)}/zoning-snapshots`,
+    init,
+  );
+}
+
+export function getZoningDiff(
+  parcelId: string,
+  from: string,
+  to: string,
+  init?: RequestOptions,
+): Promise<ApiResult<ZoningDiffResponse>> {
+  const params = new URLSearchParams();
+  params.set('from', from);
+  params.set('to', to);
+  return request<ZoningDiffResponse>(
+    `/parcels/${encodeURIComponent(parcelId)}/zoning-diff?${params.toString()}`,
+    init,
+  );
+}
+
+export function listWatchlistSubscriptions(
+  userReference: string,
+  init?: RequestOptions,
+): Promise<ApiResult<WatchlistResponse>> {
+  return request<WatchlistResponse>(
+    `/eplan/subscriptions/${encodeURIComponent(userReference)}`,
+    init,
+  );
+}
+
+export function createWatchlistSubscription(
+  userReference: string,
+  rule: WatchlistRule,
+  init?: RequestOptions,
+): Promise<ApiResult<WatchlistSubscription>> {
+  return request<WatchlistSubscription>('/eplan/subscriptions', {
+    method: 'POST',
+    body: JSON.stringify({ userReference, rule }),
+    ...init,
+  });
+}
+
+export function deleteWatchlistSubscription(
+  userReference: string,
+  subscriptionId: string,
+  init?: RequestOptions,
+): Promise<ApiResult<{ status: BackendStatus }>> {
+  const params = new URLSearchParams();
+  params.set('userReference', userReference);
+  return request<{ status: BackendStatus }>(
+    `/eplan/subscriptions/${encodeURIComponent(subscriptionId)}?${params.toString()}`,
+    {
+      method: 'DELETE',
+      ...init,
+    },
+  );
 }
