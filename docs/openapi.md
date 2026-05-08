@@ -5,34 +5,77 @@ The running NestJS service exposes Swagger UI and JSON at:
 - `GET /docs`
 - `GET /docs-json`
 
-Initial endpoints:
+## Endpoints
 
+### Health
 - `GET /health`
-- `GET /cache/status`
+
+### Sources
 - `GET /sources`
 - `POST /sources/discover`
 - `POST /sources/discover/municipality`
+
+### Municipalities
+- `GET /municipalities` (registry-based)
+- `GET /municipalities/db` (PostGIS-backed)
+- `GET /municipalities/:id/connectors` (registry)
+- `GET /municipalities/:id/connectors/db` (PostGIS-backed with OGC endpoints)
+
+### Parcels
+- `POST /parcels/query` (ada_parsel, coordinate, address, geojson, kml)
+
+### Geo / Spatial Analysis
+- `POST /geo/intersections`
+- `GET /geo/point?lon=&lat=&srid=` (point-in-polygon)
+- `GET /geo/buffer?lon=&lat=&radius=&srid=`
+- `POST /geo/overlay` (zoning overlay)
+
+### Plans
+- `GET /plans/suspensions?limit=`
+- `GET /plans/:planId/sheets`
+- `GET /plans/:planId/notes`
+- `GET /plans/parcel/:parcelId/history`
+
+### Connectors
+- `POST /connectors/:id/sync`
+- `GET /connectors/netcad/strategy`
+- `POST /connectors/:id/netcad/discover`
+- `POST /connectors/:id/ogc/discover`
+- `POST /connectors/ogc/discover-all`
+- `GET /connectors/ogc/stale`
+
+### Jobs
+- `GET /jobs`
+- `GET /jobs/:id`
+
+### Ingestion
 - `GET /ingestion/capabilities`
 - `GET /ingestion/requirements`
 - `GET /ingestion/ai-gis-pipeline`
-- `GET /municipalities`
-- `GET /municipalities/:id/connectors`
-- `POST /parcels/query`
-- `POST /geo/intersections`
-- `GET /plans/suspensions`
-- `GET /jobs`
-- `GET /jobs/:id`
-- `GET /connectors/netcad/strategy`
-- `POST /connectors/:id/netcad/discover`
-- `POST /connectors/:id/sync`
+
+### Analysis / AI-GIS
+- `GET /analysis/pipeline`
+- `GET /analysis/runs?limit=`
+- `GET /analysis/provenance/:parcelId`
+
+### Cache
+- `GET /cache/status`
+
+### Search
 - `GET /search/status`
 - `GET /search/indices`
+
+### Storage
 - `GET /storage/status`
 - `GET /storage/buckets`
+
+### Map
 - `GET /map/tiles/status`
 - `GET /map/layers`
 - `GET /map/providers`
 - `GET /map/providers/styles`
+
+### Observability
 - `GET /observability/status`
 - `GET /observability/metrics`
 

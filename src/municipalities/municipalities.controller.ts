@@ -2,6 +2,7 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ConnectorKind, SourceMetadata } from '../connectors/connector.types';
 import { DiscoveryService } from '../connectors/discovery.service';
+import { MunicipalitiesService } from './municipalities.service';
 
 interface MunicipalitySummary {
   id: string;
@@ -13,7 +14,10 @@ interface MunicipalitySummary {
 @ApiTags('municipalities')
 @Controller('municipalities')
 export class MunicipalitiesController {
-  constructor(private readonly discovery: DiscoveryService) {}
+  constructor(
+    private readonly discovery: DiscoveryService,
+    private readonly municipalitiesService: MunicipalitiesService
+  ) {}
 
   @Get()
   listMunicipalities(): MunicipalitySummary[] {
@@ -41,6 +45,11 @@ export class MunicipalitiesController {
     }));
   }
 
+  @Get('db')
+  dbList() {
+    return this.municipalitiesService.list();
+  }
+
   @Get(':id/connectors')
   listConnectors(@Param('id') id: string) {
     const municipality = this.listMunicipalities().find((candidate) => candidate.id === id);
@@ -64,6 +73,11 @@ export class MunicipalitiesController {
         }))
       )
     };
+  }
+
+  @Get(':id/connectors/db')
+  dbConnectors(@Param('id') id: string) {
+    return this.municipalitiesService.getConnectors(id);
   }
 
   private slugify(value: string): string {

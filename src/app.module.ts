@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AnalysisModule } from './analysis/analysis.module';
 import { CacheModule } from './cache/cache.module';
 import { ConnectorsModule } from './connectors/connectors.module';
 import { DatabaseModule } from './database/database.module';
@@ -20,20 +21,21 @@ import { StorageModule } from './storage/storage.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
-    CacheModule,
     ConnectorsModule,
-    IngestionModule,
     SourcesModule,
     MunicipalitiesModule,
     ParcelsModule,
     GeoModule,
     PlansModule,
     JobsModule,
+    HealthModule,
+    CacheModule,
+    IngestionModule,
     SearchModule,
     StorageModule,
     MapModule,
     ObservabilityModule,
-    HealthModule
+    AnalysisModule
   ]
 })
 export class AppModule {}

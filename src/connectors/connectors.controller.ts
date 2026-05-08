@@ -4,6 +4,7 @@ import { DiscoveryService } from './discovery.service';
 import { JobsService } from '../jobs/jobs.service';
 import { NetcadKeosService } from './netcad-keos.service';
 import { OgcDiscoveryService } from './ogc-discovery.service';
+import { OgcRefreshService } from './ogc-refresh.service';
 
 @ApiTags('connectors')
 @Controller('connectors')
@@ -12,7 +13,8 @@ export class ConnectorsController {
     private readonly discovery: DiscoveryService,
     private readonly jobs: JobsService,
     private readonly netcadKeos: NetcadKeosService,
-    private readonly ogc: OgcDiscoveryService
+    private readonly ogc: OgcDiscoveryService,
+    private readonly ogcRefresh: OgcRefreshService
   ) {}
 
   @Get('netcad/strategy')
@@ -42,13 +44,17 @@ export class ConnectorsController {
   }
 
   @Post(':id/ogc/discover')
-  async discoverOgc(@Param('id') id: string) {
+  discoverOgc(@Param('id') id: string) {
     return this.ogc.discoverForSource(id);
   }
 
-  @Get('ogc/endpoints')
-  async listOgcEndpoints() {
-    // Basit listeleme için şimdilik tüm kayıtları döneceğiz
-    return { message: 'Use municipal_gis_endpoints table for full list' };
+  @Post('ogc/discover-all')
+  discoverAllOgc() {
+    return this.ogcRefresh.discoverAll();
+  }
+
+  @Get('ogc/stale')
+  staleOgcEndpoints() {
+    return this.ogcRefresh.staleEndpoints();
   }
 }
