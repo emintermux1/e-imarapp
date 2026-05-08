@@ -15,6 +15,18 @@ describe('DiscoveryService', () => {
     );
   });
 
+  it('preserves published ports while lowering file homepages to base paths', () => {
+    const service = new DiscoveryService({} as HttpProbeService);
+    const source = service.getSource('suleymanpasa-keos-imar');
+
+    expect(service.buildCandidateEndpoints(source)).toEqual(
+      expect.arrayContaining([
+        'https://keos.suleymanpasa.bel.tr:8080/imardurumu/',
+        'https://keos.suleymanpasa.bel.tr:8080/NetGIS/Services/MapService.ashx'
+      ])
+    );
+  });
+
   it('keeps discovery results tied to registered real sources', async () => {
     const probe = {
       probe: jest.fn(async (endpoint: string) => ({
