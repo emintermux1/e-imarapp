@@ -33,10 +33,10 @@ const TAB_LABELS: Record<SearchMode, string> = {
   Belediye: "Belediye"
 };
 const SUGGESTIONS = [
+  { primary: "İstanbul Şişli Mecidiyeköy 1983/3", mode: "Hepsi" as SearchMode },
   { primary: "Şişli Mecidiyeköy ticaret", mode: "Hepsi" as SearchMode },
   { primary: "Çankaya Çukurambar askı", mode: "Hepsi" as SearchMode },
-  { primary: "İzmir Alsancak karma", mode: "Hepsi" as SearchMode },
-  { primary: "Kadıköy Caddebostan", mode: "Adres" as SearchMode }
+  { primary: "İzmir Alsancak karma", mode: "Hepsi" as SearchMode }
 ];
 
 const PLACEHOLDERS: Record<SearchMode, string> = {
@@ -168,7 +168,7 @@ export function GlobalSearch() {
           >
             <Search className="h-4 w-4 text-fg-muted" />
             <span className="flex-1 text-left text-fg-muted truncate">
-              Ada/parsel, mahalle, koordinat ara…
+              Ada/parsel, mahalle, koordinat veya detaylı sorgu ara…
             </span>
             <Kbd combo={["⌘", "K"]} />
           </button>
@@ -256,7 +256,7 @@ export function GlobalSearch() {
               </>
             ) : results.length === 0 ? (
               <CommandEmpty>
-                Sonuç bulunamadı. Mecidiyeköy, Çukurambar, Alsancak, Caddebostan veya ada/parsel formatı deneyin.
+                Sonuç bulunamadı. “İstanbul Şişli Mecidiyeköy 1983/3”, koordinat veya ada/parsel formatı deneyin.
               </CommandEmpty>
             ) : (
               <ResultGroups
@@ -373,7 +373,14 @@ function ResultRow({
         )}
       </div>
       {result.type === "parcel" && (
-        <ZoningBadge type={result.zoningType} size="xs" />
+        <div className="hidden sm:flex items-center gap-2 shrink-0">
+          {result.meta && (
+            <span className="max-w-[120px] truncate text-[11px] text-fg-muted">
+              {result.meta}
+            </span>
+          )}
+          <ZoningBadge type={result.zoningType} size="xs" />
+        </div>
       )}
       {result.type !== "parcel" && result.meta && (
         <span className="text-[11px] uppercase tracking-wider text-fg-muted">

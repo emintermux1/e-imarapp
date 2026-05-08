@@ -30,8 +30,24 @@ export function MapHud({
   const bearing = useMapStore((s) => s.bearing);
   const mapMode = useUIStore((s) => s.mapMode);
   const setMapMode = useUIStore((s) => s.setMapMode);
+  const [locationStatus, setLocationStatus] = React.useState<string | null>(null);
 
-  function emitMapControl(action: "in" | "out" | "reset" | "north") {
+  React.useEffect(() => {
+    let timeoutId: number | undefined;
+    const onStatus = (event: Event) => {
+      const detail = (event as CustomEvent<{ message?: string }>).detail;
+      setLocationStatus(detail?.message ?? null);
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => setLocationStatus(null), 3200);
+    };
+    window.addEventListener("eimar:map:location-status", onStatus);
+    return () => {
+      window.removeEventListener("eimar:map:location-status", onStatus);
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
+
+  function emitMapControl(action: "in" | "out" | "reset" | "north" | "locate") {
     const evt = new CustomEvent("eimar:map:control", { detail: { action } });
     window.dispatchEvent(evt);
   }
@@ -147,13 +163,22 @@ export function MapHud({
             <button
               type="button"
               aria-label="Konumum"
+              onClick={() => emitMapControl("locate")}
               className="h-9 w-9 inline-flex items-center justify-center rounded-md border border-border-strong bg-surface-2 shadow-card text-fg-secondary hover:bg-surface-3"
             >
               <Locate className="h-4 w-4" />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="left">Konumuma git</TooltipContent>
+          <TooltipContent side="left">{locationStatus ?? "Mevcut konumu göster"}</TooltipContent>
         </Tooltip>
+        {locationStatus && (
+          <span
+            role="status"
+            className="max-w-[160px] rounded-md border border-border-subtle bg-surface-2/95 px-2 py-1 text-[11px] text-fg-secondary shadow-card"
+          >
+            {locationStatus}
+          </span>
+        )}
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild>
             <button

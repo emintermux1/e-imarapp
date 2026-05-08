@@ -32,7 +32,6 @@ export const cartoVoyagerStyle = (): StyleSpecification => ({
   ]
 });
 
-/** Carto Voyager Dark Matter — used for dark theme */
 export const cartoDarkStyle = (): StyleSpecification => ({
   version: 8,
   glyphs: "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
@@ -40,10 +39,22 @@ export const cartoDarkStyle = (): StyleSpecification => ({
     "carto-dark": {
       type: "raster",
       tiles: [
-        "https://a.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",
-        "https://b.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",
-        "https://c.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",
-        "https://d.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png"
+        "https://a.basemaps.cartocdn.com/rastertiles/dark_nolabels/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/rastertiles/dark_nolabels/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/rastertiles/dark_nolabels/{z}/{x}/{y}.png",
+        "https://d.basemaps.cartocdn.com/rastertiles/dark_nolabels/{z}/{x}/{y}.png"
+      ],
+      tileSize: 256,
+      attribution:
+        '© <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a> · © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
+    },
+    "carto-labels": {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/rastertiles/dark_only_labels/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/rastertiles/dark_only_labels/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/rastertiles/dark_only_labels/{z}/{x}/{y}.png",
+        "https://d.basemaps.cartocdn.com/rastertiles/dark_only_labels/{z}/{x}/{y}.png"
       ],
       tileSize: 256,
       attribution:
@@ -57,6 +68,18 @@ export const cartoDarkStyle = (): StyleSpecification => ({
       source: "carto-dark",
       minzoom: 0,
       maxzoom: 22
+    },
+    {
+      id: "carto-labels-layer",
+      type: "raster",
+      source: "carto-labels",
+      minzoom: 0,
+      maxzoom: 22,
+      paint: {
+        "raster-opacity": 0.82,
+        "raster-brightness-min": 0.12,
+        "raster-brightness-max": 1
+      }
     }
   ]
 });
@@ -118,10 +141,10 @@ export const topographicStyle = (): StyleSpecification => ({
 export type BasemapId = "voyager" | "dark" | "satellite" | "topographic";
 
 export const BASEMAPS: Record<BasemapId, { id: BasemapId; label: string; description: string }> = {
-  voyager: { id: "voyager", label: "Vektör", description: "Carto Voyager" },
-  dark: { id: "dark", label: "Karanlık", description: "Carto Dark Matter" },
-  satellite: { id: "satellite", label: "Uydu", description: "Esri World Imagery" },
-  topographic: { id: "topographic", label: "Topografik", description: "OpenTopoMap" }
+  voyager: { id: "voyager", label: "Vektör", description: "Temiz sokak ve etiket zemini" },
+  dark: { id: "dark", label: "Karanlık", description: "Kontrastlı koyu zemin" },
+  satellite: { id: "satellite", label: "Uydu", description: "Gerçek görüntü / arazi izi" },
+  topographic: { id: "topographic", label: "Topografik", description: "Eğim, yükselti ve topoğrafya" }
 };
 
 export function getStyleForBasemap(id: BasemapId): StyleSpecification {

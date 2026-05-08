@@ -16,6 +16,8 @@ import {
   PARCEL_SOURCE,
   ASKI_SOURCE,
   RISK_GRID_SOURCE,
+  TRANSPORT_SOURCE,
+  MUNICIPALITY_SOURCE,
   buildParcelFillLayer,
   buildParcelLineLayer,
   buildParcelLabelLayer,
@@ -24,16 +26,21 @@ import {
   buildAskiFillLayer,
   buildAskiLineLayer,
   buildAskiHatchedLayer,
-  buildRiskGridLayer
+  buildRiskGridLayer,
+  buildTransportLineLayer,
+  buildMunicipalityBoundaryLayer
 } from "@/lib/maplibre/layers";
 import { getAskiCollection } from "@/data/aski-polygons";
 import type { AskiPolygonFeature } from "@/data/aski-polygons";
 import { getRiskGridCollection } from "@/data/risk-grid";
+import { getTransportLineCollection } from "@/data/transport-lines";
+import { getMunicipalityBoundaryCollection } from "@/data/municipality-boundaries";
 import { ZONING_PRESETS } from "@/data/zoning";
 import { getSnapshotForYear } from "@/data/historical-snapshots";
 
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
+const USER_LOCATION_SOURCE = "user-location";
 
 interface MapCanvasProps {
   className?: string;
@@ -129,6 +136,9 @@ export function MapCanvas({
             duration: 700
           });
           break;
+        case "locate":
+          locateUser(map);
+          break;
       }
     };
     window.addEventListener("eimar:map:control", onControl);
@@ -139,6 +149,9 @@ export function MapCanvas({
       }
       ensureAskiLayers(map);
       ensureRiskGridLayer(map);
+      ensureTransportLayer(map);
+      ensureMunicipalityBoundaryLayer(map);
+      ensureUserLocationLayers(map);
       applyVisibilityAndOpacity(map);
     };
     if (map.isStyleLoaded()) {
@@ -152,6 +165,9 @@ export function MapCanvas({
       if (!map.getSource(PARCEL_SOURCE)) registerParcelLayers(map);
       ensureAskiLayers(map);
       ensureRiskGridLayer(map);
+      ensureTransportLayer(map);
+      ensureMunicipalityBoundaryLayer(map);
+      ensureUserLocationLayers(map);
       if (lastSelectedMapIdRef.current != null) {
         map.setFeatureState(
           { source: PARCEL_SOURCE, id: lastSelectedMapIdRef.current },
@@ -455,6 +471,8 @@ export function MapCanvas({
     }
     setOpacityIfExists(map, "parcels-line", "line-opacity", layerOpacity["parcels-line"]);
     setOpacityIfExists(map, "parcels-label", "text-opacity", layerOpacity["parcels-label"]);
+    setOpacityIfExists(map, "metro-hatti", "line-opacity", layerOpacity["metro-hatti"]);
+    setOpacityIfExists(map, "belediye-sinirlari", "line-opacity", layerOpacity["belediye-sinirlari"]);
     setOpacityIfExists(
       map,
       "deprem-risk-grid",
@@ -463,6 +481,12 @@ export function MapCanvas({
         ? Math.min(0.5, layerOpacity["deprem-risk-grid"] * 0.5)
         : undefined
     );
+    const askiOpacity = layerOpacity["askida-overlay"];
+    if (askiOpacity != null) {
+      setOpacityIfExists(map, "askida-overlay-fill", "fill-opacity", Math.min(0.45, askiOpacity * 0.32));
+      setOpacityIfExists(map, "askida-overlay-line", "line-opacity", askiOpacity);
+      setOpacityIfExists(map, "askida-overlay-hatched", "line-opacity", Math.min(0.55, askiOpacity * 0.5));
+    }
   }
 
   return (
@@ -557,6 +581,127 @@ function ensureRiskGridLayer(map: Map) {
   if (!map.getLayer("deprem-risk-grid")) {
     map.addLayer(buildRiskGridLayer(), beforeId);
   }
+}
+
+function ensureTransportLayer(map: Map) {
+  if (!map.getSource(TRANSPORT_SOURCE)) {
+    map.addSource(TRANSPORT_SOURCE, {
+      type: "geojson",
+      data: getTransportLineCollection() as never
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("metro-hatti")) {
+    map.addLayer(buildTransportLineLayer(), beforeId);
+  }
+}
+
+function ensureMunicipalityBoundaryLayer(map: Map) {
+  if (!map.getSource(MUNICIPALITY_SOURCE)) {
+    map.addSource(MUNICIPALITY_SOURCE, {
+      type: "geojson",
+      data: getMunicipalityBoundaryCollection() as never
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("belediye-sinirlari")) {
+    map.addLayer(buildMunicipalityBoundaryLayer(), beforeId);
+  }
+}
+
+function ensureUserLocationLayers(map: Map) {
+  if (!map.getSource(USER_LOCATION_SOURCE)) {
+    map.addSource(USER_LOCATION_SOURCE, {
+      type: "geojson",
+      data: emptyPointCollection()
+    });
+  }
+  if (!map.getLayer("user-location-halo")) {
+    map.addLayer({
+      id: "user-location-halo",
+      type: "circle",
+      source: USER_LOCATION_SOURCE,
+      paint: {
+        "circle-color": "#2563EB",
+        "circle-radius": 18,
+        "circle-opacity": 0.16,
+        "circle-stroke-color": "#FFFFFF",
+        "circle-stroke-width": 1
+      }
+    });
+  }
+  if (!map.getLayer("user-location-dot")) {
+    map.addLayer({
+      id: "user-location-dot",
+      type: "circle",
+      source: USER_LOCATION_SOURCE,
+      paint: {
+        "circle-color": "#2563EB",
+        "circle-radius": 6,
+        "circle-opacity": 1,
+        "circle-stroke-color": "#FFFFFF",
+        "circle-stroke-width": 2
+      }
+    });
+  }
+}
+
+function locateUser(map: Map) {
+  emitLocationStatus("Konum aranıyor…");
+  if (!navigator.geolocation) {
+    emitLocationStatus("Konum desteklenmiyor");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const center: [number, number] = [pos.coords.longitude, pos.coords.latitude];
+      ensureUserLocationLayers(map);
+      const source = map.getSource(USER_LOCATION_SOURCE) as maplibregl.GeoJSONSource | undefined;
+      source?.setData({
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            properties: {
+              accuracy: Math.round(pos.coords.accuracy)
+            },
+            geometry: {
+              type: "Point",
+              coordinates: center
+            }
+          }
+        ]
+      });
+      map.flyTo({
+        center,
+        zoom: Math.max(map.getZoom(), 15),
+        duration: 700,
+        essential: true
+      });
+      emitLocationStatus("Konum bulundu");
+    },
+    (err) => {
+      const message =
+        err.code === err.PERMISSION_DENIED
+          ? "Konum izni reddedildi"
+          : "Konum alınamadı";
+      emitLocationStatus(message);
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+function emitLocationStatus(message: string) {
+  window.dispatchEvent(
+    new CustomEvent("eimar:map:location-status", { detail: { message } })
+  );
+}
+
+function emptyPointCollection(): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  return {
+    type: "FeatureCollection",
+    features: []
+  };
 }
 
 function setOpacityIfExists(

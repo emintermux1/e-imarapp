@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { searchParcels, slugify } from "@/data/parcels";
+import { getAllParcels, searchParcels, slugify } from "@/data/parcels";
 import { PROVINCES } from "@/data/provinces";
 import { DISTRICTS } from "@/data/districts";
 import { NEIGHBORHOODS } from "@/data/neighborhoods";
@@ -9,6 +9,7 @@ import { BELEDIYE_LIST } from "@/data/belediye";
 import { adaParselText } from "@/lib/format";
 import { TURKEY_BOUNDS, inTurkey, safeParseFloat } from "@/lib/utils";
 import type { SearchResult } from "@/types/geo";
+import type { ParcelFeature } from "@/types/parcel";
 
 export type SearchMode = "Hepsi" | "AdaParsel" | "Koordinat" | "Adres" | "Belediye";
 
@@ -20,6 +21,7 @@ interface SearchOptions {
 
 const COORD_REGEX = /^\s*(-?\d+(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d+(?:[.,]\d+)?)\s*$/;
 const ADA_PARSEL_REGEX = /^\s*(\d{1,5})\s*[\/\-\s]\s*(\d{1,5})\s*$/;
+const ADA_PARSEL_TOKEN_REGEX = /(\d{1,5})\s*[\/\-]\s*(\d{1,5})/;
 
 function parseCoord(q: string): { lng: number; lat: number } | null {
   const m = q.match(COORD_REGEX);
@@ -38,26 +40,106 @@ function searchParcelResults(query: string, limit: number): SearchResult[] {
   const q = query.trim().toLocaleLowerCase("tr-TR");
   if (!q) return [];
   const adaParselMatch = q.match(ADA_PARSEL_REGEX);
-  return searchParcels(query, limit)
+  const direct = searchParcels(query, limit)
     .filter((f) => {
       if (!adaParselMatch) return true;
       const p = f.properties;
       return p.ada === adaParselMatch[1] && p.parsel === adaParselMatch[2];
     })
-    .slice(0, limit)
-    .map<SearchResult>((f) => {
-      const p = f.properties;
-      return {
-        id: p.id,
-        type: "parcel",
-        primary: `Ada/Parsel ${adaParselText(p.ada, p.parsel)}`,
-        secondary: `${p.mahalle}, ${p.ilce} / ${p.il}`,
-        meta: p.zoningType,
-        parcelId: p.id,
-        zoningType: p.zoningType,
-        centroid: p.centroid
-      };
-    });
+    .slice(0, limit);
+  const scored = detailedParcelSearch(query, limit);
+  const merged = new Map<string, ParcelFeature>();
+  [...direct, ...scored].forEach((f) => merged.set(f.properties.id, f));
+  return [...merged.values()].slice(0, limit).map(parcelToResult);
+}
+
+function detailedParcelSearch(query: string, limit: number): ParcelFeature[] {
+  const normalized = normalizeSearchText(query);
+  const tokens = normalized
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 1);
+  if (tokens.length === 0) return [];
+  const adaParsel = normalized.match(ADA_PARSEL_TOKEN_REGEX);
+  const scored = getAllParcels()
+    .map((feature) => ({
+      feature,
+      score: scoreParcel(feature, tokens, adaParsel)
+    }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score);
+  return scored.slice(0, limit).map((item) => item.feature);
+}
+
+function scoreParcel(
+  feature: ParcelFeature,
+  tokens: string[],
+  adaParsel: RegExpMatchArray | null
+) {
+  const p = feature.properties;
+  const haystack = normalizeSearchText(
+    [
+      p.id,
+      p.ada,
+      p.parsel,
+      adaParselText(p.ada, p.parsel),
+      `${p.ada}/${p.parsel}`,
+      `${p.ada}-${p.parsel}`,
+      p.mahalle,
+      p.ilce,
+      p.il,
+      p.zoningType,
+      p.planAdi,
+      p.tapuTipi
+    ].join(" ")
+  );
+  let score = 0;
+  let matched = 0;
+  for (const token of tokens) {
+    if (haystack.includes(token)) {
+      matched += 1;
+      score += token.includes("/") || token.includes("-") ? 6 : 1;
+    }
+  }
+  if (adaParsel && p.ada === adaParsel[1] && p.parsel === adaParsel[2]) {
+    score += 14;
+  }
+  if (matched >= Math.max(1, Math.ceil(tokens.length * 0.55))) {
+    score += matched * 2;
+  } else if (!adaParsel) {
+    score = 0;
+  }
+  return score;
+}
+
+function parcelToResult(f: ParcelFeature): SearchResult {
+  const p = f.properties;
+  return {
+    id: p.id,
+    type: "parcel",
+    primary: `Ada/Parsel ${adaParselText(p.ada, p.parsel)}`,
+    secondary: `${p.mahalle}, ${p.ilce} / ${p.il} · ${p.zoningType} · ${p.yuzolcumuM2.toLocaleString("tr-TR")} m²`,
+    meta: p.planAdi,
+    parcelId: p.id,
+    zoningType: p.zoningType,
+    centroid: p.centroid
+  };
+}
+
+function normalizeSearchText(value: string) {
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/[ğ]/g, "g")
+    .replace(/[ş]/g, "s")
+    .replace(/[ç]/g, "c")
+    .replace(/[ö]/g, "o")
+    .replace(/[ü]/g, "u")
+    .replace(/[^\w/\\-\s]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function searchAddressResults(query: string, limit: number): SearchResult[] {
