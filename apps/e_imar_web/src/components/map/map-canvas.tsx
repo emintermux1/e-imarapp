@@ -154,27 +154,11 @@ export function MapCanvas({
     window.addEventListener("eimar:map:control", onControl);
 
     const ensureLayers = () => {
+      if (!map.isStyleLoaded()) return;
       ensureTurkeyFocusLayer(map);
       if (!map.getSource(PARCEL_SOURCE)) {
         registerParcelLayers(map);
       }
-      ensureAskiLayers(map);
-      ensureRiskGridLayer(map);
-      ensureTransportLayer(map);
-      ensureMunicipalityBoundaryLayer(map);
-      ensureUserLocationLayers(map);
-      applyVisibilityAndOpacity(map);
-    };
-    if (map.isStyleLoaded()) {
-      ensureLayers();
-    } else {
-      map.once("load", ensureLayers);
-    }
-
-    map.on("styledata", () => {
-      if (!map.isStyleLoaded()) return;
-      ensureTurkeyFocusLayer(map);
-      if (!map.getSource(PARCEL_SOURCE)) registerParcelLayers(map);
       ensureAskiLayers(map);
       ensureRiskGridLayer(map);
       ensureTransportLayer(map);
@@ -187,7 +171,14 @@ export function MapCanvas({
         );
       }
       applyVisibilityAndOpacity(map);
-    });
+    };
+    if (map.isStyleLoaded()) {
+      ensureLayers();
+    } else {
+      map.once("load", ensureLayers);
+    }
+
+    map.on("style.load", ensureLayers);
 
     let rafId: number | null = null;
     let pendingLngLat: { lng: number; lat: number } | null = null;

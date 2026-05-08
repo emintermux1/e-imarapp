@@ -22,6 +22,10 @@ interface SearchOptions {
 const COORD_REGEX = /^\s*(-?\d+(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d+(?:[.,]\d+)?)\s*$/;
 const ADA_PARSEL_REGEX = /^\s*(\d{1,5})\s*[\/\-\s]\s*(\d{1,5})\s*$/;
 const ADA_PARSEL_TOKEN_REGEX = /(\d{1,5})\s*[\/\-]\s*(\d{1,5})/;
+const PARCEL_SEARCH_INDEX = getAllParcels().map((feature) => ({
+  feature,
+  text: buildParcelSearchText(feature)
+}));
 
 function parseCoord(q: string): { lng: number; lat: number } | null {
   const m = q.match(COORD_REGEX);
@@ -61,10 +65,10 @@ function detailedParcelSearch(query: string, limit: number): ParcelFeature[] {
     .filter((t) => t.length > 1);
   if (tokens.length === 0) return [];
   const adaParsel = normalized.match(ADA_PARSEL_TOKEN_REGEX);
-  const scored = getAllParcels()
+  const scored = PARCEL_SEARCH_INDEX
     .map((feature) => ({
-      feature,
-      score: scoreParcel(feature, tokens, adaParsel)
+      feature: feature.feature,
+      score: scoreParcel(feature.feature, feature.text, tokens, adaParsel)
     }))
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score);
@@ -73,11 +77,33 @@ function detailedParcelSearch(query: string, limit: number): ParcelFeature[] {
 
 function scoreParcel(
   feature: ParcelFeature,
+  haystack: string,
   tokens: string[],
   adaParsel: RegExpMatchArray | null
 ) {
   const p = feature.properties;
-  const haystack = normalizeSearchText(
+  let score = 0;
+  let matched = 0;
+  for (const token of tokens) {
+    if (haystack.includes(token)) {
+      matched += 1;
+      score += token.includes("/") || token.includes("-") ? 6 : 1;
+    }
+  }
+  if (adaParsel && p.ada === adaParsel[1] && p.parsel === adaParsel[2]) {
+    score += 14;
+  }
+  if (matched >= Math.max(1, Math.ceil(tokens.length * 0.55))) {
+    score += matched * 2;
+  } else if (!adaParsel) {
+    score = 0;
+  }
+  return score;
+}
+
+function buildParcelSearchText(feature: ParcelFeature) {
+  const p = feature.properties;
+  return normalizeSearchText(
     [
       p.id,
       p.ada,
@@ -98,23 +124,6 @@ function scoreParcel(
       p.tapuTipi
     ].join(" ")
   );
-  let score = 0;
-  let matched = 0;
-  for (const token of tokens) {
-    if (haystack.includes(token)) {
-      matched += 1;
-      score += token.includes("/") || token.includes("-") ? 6 : 1;
-    }
-  }
-  if (adaParsel && p.ada === adaParsel[1] && p.parsel === adaParsel[2]) {
-    score += 14;
-  }
-  if (matched >= Math.max(1, Math.ceil(tokens.length * 0.55))) {
-    score += matched * 2;
-  } else if (!adaParsel) {
-    score = 0;
-  }
-  return score;
 }
 
 function parcelToResult(f: ParcelFeature): SearchResult {
