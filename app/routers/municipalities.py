@@ -1,36 +1,63 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import AsyncSessionLocal
-from app.services.tucbs_service import TUCBSService
+from sqlalchemy import select
+from typing import Optional, List
+from app.database import get_db
+from app.models.municipality import Municipality
+from app.schemas.municipality import MunicipalityResponse, MunicipalityDiscoveryResponse, ImarStatusResponse
+from app.services.netcad_keos_service import NetcadKeosService
 
 router = APIRouter()
 
-async def get_db():
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
+@router.get("/municipalities", response_model=List[MunicipalityResponse])
+async def list_municipalities(
+    province: Optional[str] = Query(None),
+    district: Optional[str] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
+    db: AsyncSession = Depends(get_db)
+):
+    stmt = select(Municipality).offset(skip).limit(limit)
+    if province:
+        stmt = stmt.where(Municipality.province == province)
+    if district:
+        stmt = stmt.where(Municipality.district == district)
+    result = await db.execute(stmt)
+    return result.scalars().all()
 
-@router.get("/municipalities")
-async def get_municipalities(
+@router.get("/municipalities/{slug}", response_model=MunicipalityResponse)
+async def get_municipality(slug: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Municipality).where(Municipality.slug == slug)
+    )
+    m = result.scalar_one_or_none()
+    if not m:
+        raise HTTPException(status_code=404, detail="Municipality not found")
+    return m
+
+@router.post("/municipalities/{slug}/discover", response_model=MunicipalityDiscoveryResponse)
+async def discover_municipality(slug: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Municipality).where(Municipality.slug == slug)
+    )
+    m = result.scalar_one_or_none()
+    if not m:
+        raise HTTPException(status_code=404, detail="Municipality not found")
+    try:
+        discovery = await NetcadKeosService().discover_municipality(slug)
+        return discovery
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Discovery failed: {str(e)}")
+
+@router.get("/municipalities/{slug}/imar-status", response_model=ImarStatusResponse)
+async def get_imar_status(
+    slug: str,
+    ada: str = Query(...),
+    parsel: str = Query(...),
     db: AsyncSession = Depends(get_db)
 ):
     try:
-        service = TUCBSService()
-        result = await service.get_municipalities()
-        return result
+        status = await NetcadKeosService().get_imar_status(slug, ada, parsel)
+        return status
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/municipalities/{municipality_id}/discover")
-async def discover_municipality(
-    municipality_id: int,
-    db: AsyncSession = Depends(get_db)
-):
-    try:
-        service = TUCBSService()
-        result = await service.discover_municipality(municipality_id)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=502, detail=f"Imar status fetch failed: {str(e)}")
