@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AnalysisService } from './analysis.service';
 
@@ -20,5 +20,30 @@ export class AnalysisController {
   @Get('provenance/:parcelId')
   provenance(@Param('parcelId') parcelId: string): Promise<unknown> {
     return this.analysis.provenance(parcelId);
+  }
+
+  @Post('parcel-potential')
+  parcelPotential(
+    @Body() body: {
+      parcelId?: string;
+      parcelAreaM2?: number;
+      emsal?: number;
+      taks?: number;
+      zoningFunction?: string;
+      averageUnitM2?: number;
+    }
+  ): Promise<unknown> {
+    return this.analysis.parcelPotentialSummary(body);
+  }
+
+  @Post('plan-notes/explain')
+  explainPlanNotes(
+    @Body() body: {
+      noteText: string;
+      audience?: 'citizen' | 'architect' | 'investor';
+      maxBullets?: number;
+    }
+  ): Promise<unknown> {
+    return this.analysis.explainPlanNotes(body);
   }
 }

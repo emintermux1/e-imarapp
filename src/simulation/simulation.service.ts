@@ -1,6 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 
+interface EmsalShareInput {
+  parcelAreaM2: number;
+  emsal: number;
+  taksRatio?: number;
+  floorAreaPerUnitM2?: number;
+  parkingPerUnit?: number;
+  ownerShareRatio?: number;
+  contractorShareRatio?: number;
+  circulationLossRatio?: number;
+}
+
 @Injectable()
 export class SimulationService {
   constructor(private readonly db: DatabaseService) {}
@@ -74,6 +85,54 @@ export class SimulationService {
       parcelId,
       candidates: result.rows,
       note: 'These are adjacent geometry candidates. Legal ownership/merger feasibility must be verified from official records.'
+    };
+  }
+
+  calculateEmsalShare(input: EmsalShareInput): unknown {
+    const parcelAreaM2 = Number(input.parcelAreaM2 || 0);
+    const emsal = Number(input.emsal || 0);
+    const taksRatio = input.taksRatio !== undefined ? Number(input.taksRatio) : null;
+    const floorAreaPerUnitM2 = Number(input.floorAreaPerUnitM2 ?? 100);
+    const parkingPerUnit = Number(input.parkingPerUnit ?? 1);
+    const circulationLossRatio = Number(input.circulationLossRatio ?? 0.2);
+    const ownerShareRatio = Number(input.ownerShareRatio ?? 0.5);
+    const contractorShareRatio = Number(input.contractorShareRatio ?? 0.5);
+
+    if (parcelAreaM2 <= 0 || emsal <= 0) {
+      return { status: 'invalid_input', message: 'parcelAreaM2 and emsal must be greater than zero.' };
+    }
+
+    const totalConstructionAreaM2 = parcelAreaM2 * emsal;
+    const netSellableAreaM2 = totalConstructionAreaM2 * (1 - circulationLossRatio);
+    const maxFootprintM2 = taksRatio ? parcelAreaM2 * taksRatio : null;
+    const estimatedFloors = maxFootprintM2 && maxFootprintM2 > 0
+      ? Math.ceil(totalConstructionAreaM2 / maxFootprintM2)
+      : null;
+    const estimatedIndependentUnits = Math.max(1, Math.floor(netSellableAreaM2 / floorAreaPerUnitM2));
+    const estimatedParkingNeed = Math.ceil(estimatedIndependentUnits * parkingPerUnit);
+
+    const ownerNetAreaM2 = netSellableAreaM2 * ownerShareRatio;
+    const contractorNetAreaM2 = netSellableAreaM2 * contractorShareRatio;
+
+    return {
+      status: 'ok',
+      inputs: {
+        parcelAreaM2, emsal, taksRatio, floorAreaPerUnitM2, parkingPerUnit, circulationLossRatio,
+        ownerShareRatio, contractorShareRatio
+      },
+      output: {
+        totalConstructionAreaM2,
+        netSellableAreaM2,
+        maxFootprintM2,
+        estimatedFloors,
+        estimatedIndependentUnits,
+        estimatedParkingNeed,
+        shareBreakdown: {
+          ownerNetAreaM2,
+          contractorNetAreaM2
+        }
+      },
+      note: 'Values are engineering estimates and must be validated with current plan notes, municipality constraints, and official licenses.'
     };
   }
 }

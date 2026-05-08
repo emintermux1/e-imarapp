@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { SimulationService } from './simulation.service';
 
@@ -15,5 +15,21 @@ export class SimulationController {
   @Get('merge-candidates/:parcelId')
   mergeCandidates(@Param('parcelId') parcelId: string) {
     return this.simulation.mergeCandidates(parcelId);
+  }
+
+  @Post('emsal-share/calculate')
+  calculateEmsalShare(
+    @Body() body: {
+      parcelAreaM2: number;
+      emsal: number;
+      taksRatio?: number;
+      floorAreaPerUnitM2?: number;
+      parkingPerUnit?: number;
+      ownerShareRatio?: number;
+      contractorShareRatio?: number;
+      circulationLossRatio?: number;
+    }
+  ) {
+    return this.simulation.calculateEmsalShare(body);
   }
 }
