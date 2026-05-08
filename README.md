@@ -87,6 +87,15 @@ These are intentionally not hard-coded:
 
 The API exposes `GET /ingestion/requirements` to list sources that cannot be ingested without credentials, legal approval, or commercial tokens.
 
+## Netcad / KEOS data pull
+
+For public KEOS portals without login/bot protection, data is pulled by discovering the backend service endpoints used by the page, not by inventing responses. Use:
+
+- `GET /connectors/netcad/strategy`
+- `POST /connectors/:id/netcad/discover`
+
+The discovery step fetches HTML/JS, extracts `.ashx`, `.asmx`, `NetGIS`, WMS/WFS, ArcGIS, and GeoServer references, probes common KEOS endpoints, and reports the next connector step. See `docs/connectors/netcad-keos.md`.
+
 Map provider keys should be provided through environment variables or a secret manager, never committed:
 
 ```bash

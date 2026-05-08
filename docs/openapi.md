@@ -22,6 +22,8 @@ Initial endpoints:
 - `GET /plans/suspensions`
 - `GET /jobs`
 - `GET /jobs/:id`
+- `GET /connectors/netcad/strategy`
+- `POST /connectors/:id/netcad/discover`
 - `POST /connectors/:id/sync`
 - `GET /search/status`
 - `GET /search/indices`

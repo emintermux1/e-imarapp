@@ -53,7 +53,15 @@ export class DiscoveryService {
 
     if (source.connectorKinds.includes(ConnectorKind.NetcadKeos) || source.homepageUrl.includes('keos')) {
       candidates.add(new URL('/NetGIS/Services/MapService.ashx', base).toString());
+      candidates.add(new URL('/NetGIS/Services/QueryService.ashx', base).toString());
+      candidates.add(new URL('/NetGIS/Services/GeometryService.ashx', base).toString());
       candidates.add(new URL('/imardurumu/Services/ImarDurumu.ashx', base).toString());
+      candidates.add(new URL('/imardurumu/Services/ImarDurumu.asmx', base).toString());
+      candidates.add(new URL('/imardurumu/Service/ImarDurumu.ashx', base).toString());
+      candidates.add(new URL('/imardurumu/Service/ImarDurumu.asmx', base).toString());
+      candidates.add(new URL('/imardurumu/Services/MapService.ashx', base).toString());
+      candidates.add(new URL('/imardurumu/Services/QueryService.ashx', base).toString());
+      candidates.add(new URL('/imardurumu/Services/Proxy.ashx', base).toString());
     }
 
     if (source.connectorKinds.includes(ConnectorKind.MunicipalPortal)) {
