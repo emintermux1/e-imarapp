@@ -10,6 +10,8 @@ export const PARCEL_SOURCE = "parcels";
 export const TURKEY_GRID_SOURCE = "turkey-grid";
 export const ASKI_SOURCE = "aski-overlay";
 export const RISK_GRID_SOURCE = "risk-grid";
+export const TRANSPORT_SOURCE = "transport-lines";
+export const MUNICIPALITY_SOURCE = "municipality-boundaries";
 export const TURKEY_FOCUS_SOURCE = "turkey-focus";
 
 const zoningCases: (string | string[])[] = ["match", ["get", "zoningType"]];
@@ -354,6 +356,52 @@ export const buildRiskGridLayer = (
   }
 });
 
+export const buildTransportLineLayer = (
+  id = "metro-hatti"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: TRANSPORT_SOURCE,
+  layout: {
+    "line-cap": "round",
+    "line-join": "round"
+  },
+  paint: {
+    "line-color": "#2563EB",
+    "line-width": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      6, 1.4,
+      11, 2.4,
+      15, 4.2
+    ] as never,
+    "line-opacity": 0.82,
+    "line-blur": 0.15
+  }
+});
+
+export const buildMunicipalityBoundaryLayer = (
+  id = "belediye-sinirlari"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: MUNICIPALITY_SOURCE,
+  paint: {
+    "line-color": "#0F766E",
+    "line-width": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      6, 1,
+      12, 1.6,
+      16, 2.2
+    ] as never,
+    "line-opacity": 0.75,
+    "line-dasharray": [3, 2] as never
+  }
+});
+
 export interface LayerDescriptor {
   id: string;
   label: string;
@@ -409,16 +457,16 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
   {
     id: "metro-hatti",
     label: "Metro / Raylı Sistem",
-    description: "Yakınlık çizgileri (mock)",
-    defaultVisible: false,
+    description: "Örnek metro ve raylı sistem koridorları",
+    defaultVisible: true,
     defaultOpacity: 0.9,
     group: "Çevre"
   },
   {
     id: "belediye-sinirlari",
     label: "İlçe / Belediye Sınırları",
-    description: "İdari sınırlar (mock)",
-    defaultVisible: false,
+    description: "Örnek ilçe ve belediye sınır çizgileri",
+    defaultVisible: true,
     defaultOpacity: 0.75,
     group: "İdari"
   }

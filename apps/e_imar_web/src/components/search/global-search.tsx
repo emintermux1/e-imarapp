@@ -33,10 +33,11 @@ const TAB_LABELS: Record<SearchMode, string> = {
   Belediye: "Belediye"
 };
 const SUGGESTIONS = [
+  { primary: "İstanbul Şişli Mecidiyeköy 1983/3", mode: "Hepsi" as SearchMode },
+  { primary: "Şişli Mecidiyeköy ticaret", mode: "Hepsi" as SearchMode },
   { primary: "İstanbul TİCK MİA", mode: "Hepsi" as SearchMode },
   { primary: "kıyı kenar çizgisi kontrolü", mode: "Hepsi" as SearchMode },
-  { primary: "1/1000 revizyon", mode: "Hepsi" as SearchMode },
-  { primary: "kentsel dönüşüm rezerv", mode: "Hepsi" as SearchMode }
+  { primary: "1/1000 revizyon", mode: "Hepsi" as SearchMode }
 ];
 
 const PLACEHOLDERS: Record<SearchMode, string> = {
@@ -168,7 +169,7 @@ export function GlobalSearch() {
           >
             <Search className="h-4 w-4 text-fg-muted" />
             <span className="flex-1 text-left text-fg-muted truncate">
-              Ada/parsel, TİCK, MİA, plan kısıtı ara…
+              Ada/parsel, mahalle, TİCK, MİA veya detaylı sorgu ara…
             </span>
             <Kbd combo={["⌘", "K"]} />
           </button>
@@ -256,7 +257,7 @@ export function GlobalSearch() {
               </>
             ) : results.length === 0 ? (
               <CommandEmpty>
-                Sonuç bulunamadı. TİCK, MİA, 1/1000 revizyon, kıyı kenar çizgisi veya ada/parsel formatı deneyin.
+                Sonuç bulunamadı. “İstanbul Şişli Mecidiyeköy 1983/3”, TİCK, MİA, kıyı kenar çizgisi veya koordinat deneyin.
               </CommandEmpty>
             ) : (
               <ResultGroups
@@ -373,7 +374,14 @@ function ResultRow({
         )}
       </div>
       {result.type === "parcel" && (
-        <ZoningBadge type={result.zoningType} size="xs" />
+        <div className="hidden sm:flex items-center gap-2 shrink-0">
+          {result.meta && (
+            <span className="max-w-[120px] truncate text-[11px] text-fg-muted">
+              {result.meta}
+            </span>
+          )}
+          <ZoningBadge type={result.zoningType} size="xs" />
+        </div>
       )}
       {result.meta && (
         <span className="hidden sm:inline text-[10px] uppercase tracking-wider text-fg-muted max-w-[120px] truncate">
