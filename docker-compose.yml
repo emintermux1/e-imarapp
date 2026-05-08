@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      NODE_ENV: production
-      PORT: 3000
+      PYTHON_ENV: production
+      PORT: 8000
       DATABASE_URL: postgres://eimar:eimar@postgres:5432/eimar
       REDIS_URL: redis://redis:6379
       MINIO_ENDPOINT: http://minio:9000
@@ -18,15 +18,11 @@ services:
       CESIUM_ION_TOKEN: ${CESIUM_ION_TOKEN:-}
       HERE_API_KEY: ${HERE_API_KEY:-}
     ports:
-      - "3000:3000"
+      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_started
-      minio:
-        condition: service_started
-      opensearch:
         condition: service_started
 
   postgres:
