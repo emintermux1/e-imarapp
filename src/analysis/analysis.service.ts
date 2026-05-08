@@ -3,6 +3,20 @@ import { ConfigService } from '@nestjs/config';
 import { IntegrationErrorCode } from '../common/error-taxonomy';
 import { DatabaseService } from '../database/database.service';
 
+type AnalysisRunRow = {
+  id: string;
+  source_id: string | null;
+  plan_id: string | null;
+  parcel_id: string | null;
+  analysis_type: string;
+  status: string;
+  input_ref: Record<string, unknown> | null;
+  output: Record<string, unknown> | null;
+  confidence: number | string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 @Injectable()
 export class AnalysisService {
   constructor(
@@ -28,15 +42,20 @@ export class AnalysisService {
   async runs(limit = 50): Promise<unknown> {
     if (!this.db.isConfigured()) return { status: 'not_ready', issue: this.db.notConfiguredIssue() };
 
-    const result = await this.db.query(
-      `select id, source_id, analysis_type, input_reference, status, confidence_score,
-              result_summary, result_payload, created_at, completed_at
+    const normalizedLimit = Number.isFinite(limit) ? Math.max(1, Math.min(200, Math.trunc(limit))) : 50;
+    const result = await this.db.query<AnalysisRunRow>(
+      `select id, source_id, plan_id, parcel_id, analysis_type, status, input_ref, output,
+              confidence, created_at, updated_at
        from ai_analysis_runs
        order by created_at desc limit $1`,
-      [limit]
+      [normalizedLimit]
     );
 
-    return { status: result.rowCount ? 'ok' : 'empty', count: result.rowCount, runs: result.rows };
+    return {
+      status: result.rowCount ? 'ok' : 'empty',
+      count: result.rowCount,
+      runs: result.rows.map((row) => this.toAnalysisRunView(row))
+    };
   }
 
   async provenance(parcelId: string): Promise<unknown> {
@@ -55,10 +74,13 @@ export class AnalysisService {
       [parcelId]
     );
 
-    const analyses = await this.db.query(
-      `select id, analysis_type, status, confidence_score, result_summary, created_at
+    const analyses = await this.db.query<AnalysisRunRow>(
+      `select id, source_id, plan_id, parcel_id, analysis_type, status, input_ref, output,
+              confidence, created_at, updated_at
        from ai_analysis_runs
-       where input_reference = $1
+       where parcel_id = $1::uuid
+          or input_ref ->> 'parcelId' = $1
+          or input_ref ->> 'parcel_id' = $1
        order by created_at desc`,
       [parcelId]
     );
@@ -66,8 +88,8 @@ export class AnalysisService {
     return {
       parcelId,
       dataSources: snapshots.rows,
-      aiAnalyses: analyses.rows,
-      explanation: 'Each data point traces back to a specific source, connector run, and timestamp. AI analysis results include confidence scores.'
+      aiAnalyses: analyses.rows.map((row) => this.toAnalysisRunView(row)),
+      explanation: 'Each data point traces back to a specific source and timestamp. AI analysis summaries and confidence scores are derived from ai_analysis_runs.output, confidence, and lifecycle timestamps.'
     };
   }
 
@@ -240,5 +262,60 @@ export class AnalysisService {
         message: String(error)
       };
     }
+  }
+
+  private toAnalysisRunView(row: AnalysisRunRow) {
+    const inputReference = this.toJsonObject(row.input_ref);
+    const resultPayload = this.toJsonObject(row.output);
+    const terminalStatuses = new Set(['completed', 'failed', 'requires_review']);
+
+    return {
+      id: row.id,
+      sourceId: row.source_id,
+      planId: row.plan_id,
+      parcelId: row.parcel_id ?? this.readString(inputReference.parcelId) ?? this.readString(inputReference.parcel_id) ?? null,
+      analysisType: row.analysis_type,
+      status: row.status,
+      inputReference,
+      confidenceScore: row.confidence === null ? null : Number(row.confidence),
+      resultSummary: this.deriveResultSummary(resultPayload),
+      resultPayload,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      completedAt: terminalStatuses.has(row.status) ? row.updated_at : null
+    };
+  }
+
+  private deriveResultSummary(output: Record<string, unknown>): string | null {
+    const candidates = [
+      output.resultSummary,
+      output.summary,
+      output.plainSummary,
+      output.explanation
+    ];
+
+    for (const candidate of candidates) {
+      if (typeof candidate === 'string' && candidate.trim().length > 0) {
+        return candidate.trim();
+      }
+    }
+
+    if (Array.isArray(output.bullets)) {
+      const bulletText = output.bullets.find((item): item is string => typeof item === 'string' && item.trim().length > 0);
+      if (bulletText) return bulletText.trim();
+    }
+
+    const serialized = JSON.stringify(output);
+    if (serialized === '{}' || serialized === '[]') return null;
+    return serialized.length > 240 ? `${serialized.slice(0, 237)}...` : serialized;
+  }
+
+  private toJsonObject(value: unknown): Record<string, unknown> {
+    if (!value || Array.isArray(value) || typeof value !== 'object') return {};
+    return value as Record<string, unknown>;
+  }
+
+  private readString(value: unknown): string | null {
+    return typeof value === 'string' && value.trim().length > 0 ? value : null;
   }
 }

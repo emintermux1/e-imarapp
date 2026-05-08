@@ -21,11 +21,12 @@ import { SimulationModule } from './simulation/simulation.module';
 import { SourcesModule } from './sources/sources.module';
 import { StorageModule } from './storage/storage.module';
 import { UserDataModule } from './user-data/user-data.module';
+import { validateEnv } from './config/env.validation';
 import { WebsiteModule } from './website/website.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, cache: true, validate: validateEnv }),
     DatabaseModule,
     ConnectorsModule,
     SourcesModule,
