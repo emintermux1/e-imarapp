@@ -6,6 +6,7 @@ import { ParcelsService } from './parcels.service';
 @Module({
   imports: [DatabaseModule],
   controllers: [ParcelsController],
-  providers: [ParcelsService]
+  providers: [ParcelsService],
+  exports: [ParcelsService]
 })
 export class ParcelsModule {}

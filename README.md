@@ -129,3 +129,26 @@ npm run build
 ## Architecture decisions
 
 See `docs/adr/0001-backend-first-geospatial-foundation.md`.
+
+## Website integration (UI-free backend architecture)
+
+The repository now includes a website integration layer (`/website/*`) so a separate web frontend can connect without embedding domain orchestration logic in UI code.
+
+- Architecture and runbook: `docs/website-architecture.md`
+- Bootstrap/capabilities endpoint: `GET /website/bootstrap`
+- Aggregated website workflow endpoint: `POST /website/bff/parcel-workflow`
+- Session token endpoints: `POST /website/session/start`, `POST /website/session/verify`
+
+Required website integration env:
+
+```bash
+WEBSITE_SESSION_SECRET=...
+OPENAI_API_KEY=...          # for plan-note explain
+PUSH_GATEWAY_URL=...        # for push channel delivery
+```
+
+Design preparation for website-first rollout:
+
+- `docs/site-design-phase-1.md`
+- `docs/site-design-language.md`
+- `docs/site-ui-implementation-backlog.md`
