@@ -21,8 +21,8 @@ if [[ ! -f .env ]]; then
 fi
 
 if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
-  echo "==> Starting local data services"
-  docker compose up -d postgres redis minio opensearch
+  echo "==> Starting local platform services"
+  docker compose up -d postgres redis minio opensearch pg_tileserv prometheus grafana
 else
   echo "==> Docker daemon is unavailable; skipping compose startup"
   echo "    Start Docker-enabled agents or run: docker compose up -d"

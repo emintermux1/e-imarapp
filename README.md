@@ -18,6 +18,8 @@ This repository contains the first backend-first foundation for a production-ori
 - MinIO for object storage
 - OpenSearch for search indexing
 - Swagger/OpenAPI
+- pg_tileserv-compatible vector tile serving
+- Prometheus/Grafana observability
 
 ## Local startup
 
@@ -29,6 +31,8 @@ npm run start:dev
 ```
 
 Swagger UI is available at `http://localhost:3000/docs`.
+
+Docker Compose now includes the API service as well as PostGIS, Redis, MinIO, OpenSearch, pg_tileserv, Prometheus, and Grafana.
 
 ## Cursor cloud agent startup
 
@@ -65,6 +69,23 @@ Spatial indexes are created for municipal boundaries, parcels, plans, and zoning
 The code registry is in `src/sources/source-registry.ts`. It starts with official and municipal seed systems, including TKGM, E-Plan, TUCBS, MAKS, e-Devlet/TUCBS, ÇŞİDB CBS, İçişleri e-Belediye, HGM Atlas, İBB Açık Veri, Netcad/KEOS reference patterns, municipal imar/CBS portals, OpenStreetMap, Esri World Imagery, Copernicus, Landsat, Mapbox, MapTiler, HERE, and Cesium ion.
 
 Discovery probes live endpoints and returns explicit status instead of assuming that a URL is usable.
+
+## Credentials and approvals that are still required for live ingestion
+
+These are intentionally not hard-coded:
+
+- TKGM: legal data-sharing compliance plus possible browser session/captcha handling.
+- MAKS: legal/institutional approval and institutional credentials.
+- e-Devlet/TUCBS: legal e-Devlet authentication workflow.
+- İçişleri e-Belediye: institutional login.
+- Copernicus Data Space: official account/OAuth configuration.
+- Mapbox: `MAPBOX_ACCESS_TOKEN`.
+- MapTiler: `MAPTILER_API_KEY`.
+- HERE: `HERE_API_KEY`.
+- Cesium ion: `CESIUM_ION_TOKEN`.
+- Individual municipal portals may require captcha/session/cookie persistence; discovery reports this as `captcha_required` or `requires_credentials`.
+
+The API exposes `GET /ingestion/requirements` to list sources that cannot be ingested without credentials, legal approval, or commercial tokens.
 
 ## API behavior
 

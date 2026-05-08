@@ -13,6 +13,17 @@ export class HealthController {
       status: 'ok',
       service: 'turkiye-e-imar-platform',
       databaseConfigured: this.database.isConfigured(),
+      modules: [
+        'database_postgis',
+        'redis_cache_session',
+        'bullmq_jobs',
+        'source_discovery',
+        'ingestion_pipeline',
+        'opensearch',
+        's3_minio',
+        'map_tiles',
+        'observability'
+      ],
       timestamp: new Date().toISOString()
     };
   }

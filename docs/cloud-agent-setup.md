@@ -16,6 +16,9 @@ The script performs these steps:
    - Redis
    - MinIO
    - OpenSearch
+   - pg_tileserv
+   - Prometheus
+   - Grafana
 5. Runs `npm run typecheck` and `npm test`.
 
 If Docker is not available in the agent runtime, the script leaves a clear message and the API still returns explicit `not_ready` states instead of fake data.
