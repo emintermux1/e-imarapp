@@ -8,6 +8,8 @@ import { ZONING_PRESETS } from "@/data/zoning";
 
 export const PARCEL_SOURCE = "parcels";
 export const TURKEY_GRID_SOURCE = "turkey-grid";
+export const ASKI_SOURCE = "aski-overlay";
+export const RISK_GRID_SOURCE = "risk-grid";
 
 const zoningCases: (string | string[])[] = ["match", ["get", "zoningType"]];
 Object.values(ZONING_PRESETS).forEach((preset) => {
@@ -137,6 +139,126 @@ export const buildParcelHoverDotLayer = (
   }
 });
 
+/**
+ * Askı overlay — fills colored by status, with a separate dashed-line layer
+ * and a hatched pattern overlay for "donusum" status.
+ */
+export const buildAskiFillLayer = (
+  id = "askida-overlay-fill"
+): FillLayerSpecification => ({
+  id,
+  type: "fill",
+  source: ASKI_SOURCE,
+  paint: {
+    "fill-color": [
+      "match",
+      ["get", "askiStatus"],
+      "askida", "rgb(16,42,76)",
+      "onaylandi", "rgb(5,150,105)",
+      "reddedildi", "rgb(185,28,28)",
+      "donusum", "rgb(217,119,6)",
+      "rgb(16,42,76)"
+    ] as never,
+    "fill-opacity": [
+      "match",
+      ["get", "askiStatus"],
+      "askida", 0.25,
+      "onaylandi", 0.18,
+      "reddedildi", 0.18,
+      "donusum", 0.22,
+      0.2
+    ] as never
+  }
+});
+
+export const buildAskiLineLayer = (
+  id = "askida-overlay-line"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: ASKI_SOURCE,
+  paint: {
+    "line-color": [
+      "match",
+      ["get", "askiStatus"],
+      "askida", "rgb(16,42,76)",
+      "onaylandi", "rgb(5,150,105)",
+      "reddedildi", "rgb(185,28,28)",
+      "donusum", "rgb(180,83,9)",
+      "rgb(16,42,76)"
+    ] as never,
+    "line-width": 2.2,
+    "line-opacity": 0.95,
+    "line-dasharray": [
+      "match",
+      ["get", "askiStatus"],
+      "askida", ["literal", [3, 2]] as unknown as never,
+      ["literal", [1, 0]] as unknown as never
+    ] as never
+  }
+});
+
+/**
+ * Hatched overlay for "donusum" status — drawn as a thin pattern of diagonal
+ * line segments. We use a `pattern` PNG we generate in CSS… actually MapLibre
+ * doesn't support inline data URIs in line patterns easily, so we simulate
+ * hatching with a second translucent fill layer that uses a diagonal
+ * `fill-pattern` only when supported. Fallback: a +6% opacity diagonal lines
+ * effect via fill-color stippling. To keep this portable, we instead just
+ * lift the donusum opacity slightly and rely on the strong outline.
+ *
+ * For now we add an additional polygon-outline layer with a wider stroke
+ * dashed pattern only for the "donusum" features.
+ */
+export const buildAskiHatchedLayer = (
+  id = "askida-overlay-hatched"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: ASKI_SOURCE,
+  filter: ["==", ["get", "askiStatus"], "donusum"],
+  paint: {
+    "line-color": "rgb(180,83,9)",
+    "line-width": 5,
+    "line-opacity": 0.35,
+    "line-dasharray": [1.5, 2] as never
+  }
+});
+
+/**
+ * Risk grid heatmap-ish circle layer. Source data is a synthesised circle
+ * grid built client-side (see `data/risk-grid.ts`).
+ */
+export const buildRiskGridLayer = (
+  id = "deprem-risk-grid"
+): CircleLayerSpecification => ({
+  id,
+  type: "circle",
+  source: RISK_GRID_SOURCE,
+  paint: {
+    "circle-color": [
+      "match",
+      ["get", "severity"],
+      5, "#9F1239",
+      4, "#DC2626",
+      3, "#F97316",
+      2, "#FACC15",
+      1, "#86EFAC",
+      "#94A3B8"
+    ] as never,
+    "circle-radius": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      4, ["+", ["*", ["get", "severity"], 4], 4],
+      8, ["+", ["*", ["get", "severity"], 8], 6],
+      12, ["+", ["*", ["get", "severity"], 14], 8]
+    ] as never,
+    "circle-opacity": 0.28,
+    "circle-blur": 0.65
+  }
+});
+
 export interface LayerDescriptor {
   id: string;
   label: string;
@@ -175,18 +297,18 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
   },
   {
     id: "askida-overlay",
-    label: "Askıdaki Planlar",
-    description: "Şu anda askıda olan plan parselleri",
+    label: "Askı Planları",
+    description: "Askıdaki, onaylanmış ve reddedilmiş plan kapsamları",
     defaultVisible: false,
     defaultOpacity: 0.85,
     group: "Plan"
   },
   {
-    id: "deprem-risk",
-    label: "Deprem Risk Katmanı",
-    description: "AFAD bazlı parsel deprem risk gradyanı",
+    id: "deprem-risk-grid",
+    label: "Risk Haritası",
+    description: "AFAD bazlı bölgesel risk dağılımı (mock grid)",
     defaultVisible: false,
-    defaultOpacity: 0.65,
+    defaultOpacity: 0.55,
     group: "Risk"
   },
   {

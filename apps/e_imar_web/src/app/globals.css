@@ -4,6 +4,7 @@
 
 @import "../styles/tokens.css";
 @import "maplibre-gl/dist/maplibre-gl.css";
+@import "../styles/print.css";
 
 @layer base {
   html,
@@ -79,6 +80,16 @@
     -webkit-appearance: none;
     margin: 0;
   }
+
+  /* Reduced motion: collapse all CSS animation/transition durations */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer utilities {
@@ -141,4 +152,27 @@
 .maplibregl-canvas-container.maplibregl-interactive.maplibregl-track-pointer,
 .maplibregl-canvas-container.maplibregl-interactive:active {
   cursor: grabbing;
+}
+
+/* Cesium widget container — hide chrome we don't want */
+.cesium-viewer-toolbar,
+.cesium-viewer-bottom,
+.cesium-viewer-fullscreenContainer,
+.cesium-viewer-vrContainer,
+.cesium-viewer-animationContainer,
+.cesium-viewer-timelineContainer,
+.cesium-viewer-geocoderContainer,
+.cesium-viewer-cesiumWidgetContainer .cesium-widget-credits {
+  display: none !important;
+}
+.cesium-credit-logoContainer,
+.cesium-credit-textContainer,
+.cesium-widget-credits {
+  display: none !important;
+}
+.cesium-viewer {
+  background: transparent !important;
+}
+.cesium-viewer-cesiumWidgetContainer {
+  height: 100% !important;
 }

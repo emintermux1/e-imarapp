@@ -204,7 +204,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
               <AccordionItem value="gecmis">
                 <AccordionTrigger>Geçmiş & Plan Değişiklikleri</AccordionTrigger>
                 <AccordionContent>
-                  <SectionGecmis />
+                  <SectionGecmis parcel={parcel} />
                 </AccordionContent>
               </AccordionItem>
 
