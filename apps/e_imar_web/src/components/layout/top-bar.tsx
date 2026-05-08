@@ -9,7 +9,13 @@ import {
   Layers,
   GitCompareArrows,
   AlertTriangle,
-  Map as MapIcon
+  Map as MapIcon,
+  Keyboard,
+  BookOpen,
+  Database,
+  ShieldCheck,
+  Settings,
+  LogIn
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { BrandMark } from "@/components/layout/brand-mark";
@@ -25,6 +31,14 @@ import {
   TooltipContent,
   TooltipTrigger
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { activeAskiCount, ASKI_POLYGONS } from "@/data/aski-polygons";
 import { cn } from "@/lib/utils";
 
@@ -144,19 +158,8 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
           <BasemapSwitcher />
         </span>
         <ThemeToggle />
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <IconButton label="Yardım" variant="ghost">
-                <HelpCircle className="h-4 w-4" />
-              </IconButton>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">Yardım & Klavye Kısayolları</TooltipContent>
-        </Tooltip>
-        <IconButton label="Profil" variant="ghost">
-          <UserCircle2 className="h-4 w-4" />
-        </IconButton>
+        <HelpMenu />
+        <ProfileMenu />
       </div>
     </header>
   );
@@ -172,6 +175,80 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
     }
     return [sx / Math.max(1, n), sy / Math.max(1, n)];
   }
+}
+
+function HelpMenu() {
+  const setSearchOpen = useUIStore((s) => s.setSearchOpen);
+  const setTimelineYear = useUIStore((s) => s.setTimelineYear);
+  const setCompareMode = useUIStore((s) => s.setCompareMode);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <IconButton label="Yardım" variant="ghost">
+          <HelpCircle className="h-4 w-4" />
+        </IconButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-72">
+        <DropdownMenuLabel>Yardım & Kısayollar</DropdownMenuLabel>
+        <DropdownMenuItem onSelect={() => setSearchOpen(true)}>
+          <Keyboard className="h-4 w-4 text-fg-muted" />
+          <span className="flex-1">Arama komut paleti</span>
+          <span className="rounded-sm border border-border-subtle px-1.5 py-0.5 text-[10px] text-fg-muted">Ctrl K</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => setTimelineYear(2026)}>
+          <BookOpen className="h-4 w-4 text-fg-muted" />
+          Zaman Çizelgesi'ni aç
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => setCompareMode("satellite")}>
+          <GitCompareArrows className="h-4 w-4 text-fg-muted" />
+          Uydu karşılaştırmayı aç
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <div className="px-2.5 py-2 text-[11px] leading-relaxed text-fg-secondary">
+          Harita Türkiye çalışma alanına kilitlidir. Demo katmanlar sentetik veri üretir; resmi TKGM/belediye kaydı değildir.
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function ProfileMenu() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <IconButton label="Profil" variant="ghost">
+          <UserCircle2 className="h-4 w-4" />
+        </IconButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-72">
+        <DropdownMenuLabel>Hesap</DropdownMenuLabel>
+        <div className="px-2.5 py-2">
+          <div className="text-sm font-semibold text-fg-primary">Misafir kullanıcı</div>
+          <div className="mt-1 text-[11px] leading-relaxed text-fg-secondary">
+            Kimlik doğrulama bağlanınca kayıtlı sorgular, raporlar ve watchlist hesabınıza senkronlanacak.
+          </div>
+        </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem disabled>
+          <LogIn className="h-4 w-4 text-fg-muted" />
+          Giriş yap yakında
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled>
+          <Database className="h-4 w-4 text-fg-muted" />
+          Veri kaynakları yakında
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled>
+          <ShieldCheck className="h-4 w-4 text-fg-muted" />
+          Yetki / abonelik yakında
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled>
+          <Settings className="h-4 w-4 text-fg-muted" />
+          Hesap ayarları yakında
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 function ModeToggle({
