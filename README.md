@@ -87,6 +87,17 @@ These are intentionally not hard-coded:
 
 The API exposes `GET /ingestion/requirements` to list sources that cannot be ingested without credentials, legal approval, or commercial tokens.
 
+Map provider keys should be provided through environment variables or a secret manager, never committed:
+
+```bash
+MAPTILER_API_KEY=...
+MAPBOX_ACCESS_TOKEN=...
+CESIUM_ION_TOKEN=...
+HERE_API_KEY=...
+```
+
+Use `GET /map/providers` to confirm whether each key is configured. The API only returns boolean configuration status and never returns secret values.
+
 ## API behavior
 
 If PostGIS or Redis is not configured, API endpoints return a `not_ready` or `unavailable` status with a concrete next action. They do not invent parcel or plan results.

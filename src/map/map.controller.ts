@@ -16,4 +16,14 @@ export class MapController {
   layers() {
     return this.map.layers();
   }
+
+  @Get('providers')
+  providers() {
+    return this.map.providers();
+  }
+
+  @Get('providers/styles')
+  providerStyles() {
+    return this.map.providerStyles();
+  }
 }

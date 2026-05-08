@@ -29,6 +29,8 @@ Initial endpoints:
 - `GET /storage/buckets`
 - `GET /map/tiles/status`
 - `GET /map/layers`
+- `GET /map/providers`
+- `GET /map/providers/styles`
 - `GET /observability/status`
 - `GET /observability/metrics`
 

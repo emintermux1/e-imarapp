@@ -13,6 +13,10 @@ services:
       MINIO_ROOT_PASSWORD: change-me
       OPENSEARCH_URL: http://opensearch:9200
       PG_TILESERV_URL: http://pg_tileserv:7800
+      MAPTILER_API_KEY: ${MAPTILER_API_KEY:-}
+      MAPBOX_ACCESS_TOKEN: ${MAPBOX_ACCESS_TOKEN:-}
+      CESIUM_ION_TOKEN: ${CESIUM_ION_TOKEN:-}
+      HERE_API_KEY: ${HERE_API_KEY:-}
     ports:
       - "3000:3000"
     depends_on:
