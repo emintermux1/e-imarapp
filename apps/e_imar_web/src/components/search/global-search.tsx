@@ -33,9 +33,10 @@ const TAB_LABELS: Record<SearchMode, string> = {
   Belediye: "Belediye"
 };
 const SUGGESTIONS = [
-  { primary: "Beşiktaş Levent 1234/2", mode: "AdaParsel" as SearchMode },
-  { primary: "Çankaya Çukurambar", mode: "Adres" as SearchMode },
-  { primary: "İstanbul Büyükşehir Belediyesi", mode: "Belediye" as SearchMode }
+  { primary: "Şişli Mecidiyeköy ticaret", mode: "Hepsi" as SearchMode },
+  { primary: "Çankaya Çukurambar askı", mode: "Hepsi" as SearchMode },
+  { primary: "İzmir Alsancak karma", mode: "Hepsi" as SearchMode },
+  { primary: "Kadıköy Caddebostan", mode: "Adres" as SearchMode }
 ];
 
 const PLACEHOLDERS: Record<SearchMode, string> = {
@@ -255,7 +256,7 @@ export function GlobalSearch() {
               </>
             ) : results.length === 0 ? (
               <CommandEmpty>
-                Sonuç bulunamadı. Farklı sekme veya ada/parsel formatı deneyin.
+                Sonuç bulunamadı. Mecidiyeköy, Çukurambar, Alsancak, Caddebostan veya ada/parsel formatı deneyin.
               </CommandEmpty>
             ) : (
               <ResultGroups

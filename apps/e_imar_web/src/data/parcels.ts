@@ -1,8 +1,30 @@
-import parcelsRaw from "./parcels.geo.json";
 import type { ParcelFeature, ParcelFeatureCollection, ParcelProps } from "@/types/parcel";
 import { adaParselText, adaParselSlug } from "@/lib/format";
+import { getParcelSourceMetadata, getParcelSourceSnapshot } from "./parcel-source";
 
-const parcels = parcelsRaw as unknown as ParcelFeatureCollection;
+const source = getParcelSourceSnapshot();
+const parcels = source.collection;
+
+const byId = new Map<string, ParcelFeature>();
+const byMapId = new Map<number, ParcelFeature>();
+const byAdaParsel = new Map<string, ParcelFeature[]>();
+const searchIndex: Array<{ feature: ParcelFeature; text: string; adaParsel: string }> = [];
+
+for (const feature of parcels.features) {
+  const p = feature.properties;
+  byId.set(p.id, feature);
+  byMapId.set(Number(feature.id), feature);
+  byMapId.set(p.mapId, feature);
+  const adaKey = `${p.ada}-${p.parsel}`;
+  const list = byAdaParsel.get(adaKey) ?? [];
+  list.push(feature);
+  byAdaParsel.set(adaKey, list);
+  searchIndex.push({
+    feature,
+    adaParsel: adaKey,
+    text: `${p.id} ${adaParselText(p.ada, p.parsel)} ${adaParselSlug(p.ada, p.parsel)} ${p.mahalle} ${p.ilce} ${p.il} ${p.zoningType} ${p.planAdi}`.toLocaleLowerCase("tr-TR")
+  });
+}
 
 export function getAllParcels(): ParcelFeature[] {
   return parcels.features;
@@ -13,7 +35,7 @@ export function getParcelsCollection(): ParcelFeatureCollection {
 }
 
 export function getParcelById(id: string): ParcelFeature | undefined {
-  return parcels.features.find((f) => f.properties.id === id);
+  return byId.get(id);
 }
 
 export function getParcelByMapId(
@@ -21,9 +43,8 @@ export function getParcelByMapId(
 ): ParcelFeature | undefined {
   if (mapId == null) return undefined;
   const numeric = typeof mapId === "string" ? Number(mapId) : mapId;
-  return parcels.features.find(
-    (f) => (f as ParcelFeature & { id?: string | number }).id === numeric
-  );
+  if (!Number.isFinite(numeric)) return undefined;
+  return byMapId.get(numeric);
 }
 
 export function findParcelByAdaParselSlug(
@@ -34,9 +55,7 @@ export function findParcelByAdaParselSlug(
   const cleaned = slug.trim().replace(/\s+/g, "").replace("/", "-");
   const [adaPart, parselPart] = cleaned.split("-");
   if (!adaPart || !parselPart) return undefined;
-  const candidates = parcels.features.filter(
-    (f) => f.properties.ada === adaPart && f.properties.parsel === parselPart
-  );
+  const candidates = byAdaParsel.get(`${adaPart}-${parselPart}`) ?? [];
   if (candidates.length === 0) return undefined;
   if (ilSlug) {
     const il = candidates.find((f) =>
@@ -68,15 +87,18 @@ export function searchParcels(query: string, limit = 8): ParcelFeature[] {
   if (!q) return [];
   const cleaned = q.replace(/\s+/g, "");
   const adaParselNorm = cleaned.replace("/", "-");
-  return parcels.features
-    .filter((f) => {
-      const p = f.properties;
-      const text = `${p.id} ${adaParselText(p.ada, p.parsel)} ${adaParselSlug(p.ada, p.parsel)} ${p.mahalle} ${p.ilce} ${p.il} ${p.zoningType}`.toLocaleLowerCase("tr-TR");
-      return text.includes(q) || text.includes(adaParselNorm);
-    })
-    .slice(0, limit);
+  const results: ParcelFeature[] = [];
+  for (const item of searchIndex) {
+    if (item.text.includes(q) || item.text.includes(adaParselNorm) || item.adaParsel === adaParselNorm) {
+      results.push(item.feature);
+      if (results.length >= limit) break;
+    }
+  }
+  return results;
 }
 
 export function getInitialParcels(): ParcelProps[] {
   return parcels.features.map((f) => f.properties);
 }
+
+export { getParcelSourceMetadata };
