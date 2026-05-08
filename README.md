@@ -150,3 +150,5 @@ PUSH_GATEWAY_URL=...        # for push channel delivery
 Design preparation for website-first rollout:
 
 - `docs/site-design-phase-1.md`
+- `docs/site-design-language.md`
+- `docs/site-ui-implementation-backlog.md`
