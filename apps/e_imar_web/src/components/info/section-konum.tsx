@@ -1,5 +1,6 @@
 import * as React from "react";
 import { DataRow } from "@/components/gis/data-card";
+import { SourceBadge } from "@/components/gis/source-badge";
 import { formatArea, formatLngLatPrecise } from "@/lib/format";
 import type { ParcelProps } from "@/types/parcel";
 
@@ -8,9 +9,14 @@ interface SectionProps {
 }
 
 export function SectionKonum({ parcel }: SectionProps) {
-  const utm = mockUTM(parcel.centroid?.[0] ?? 0, parcel.centroid?.[1] ?? 0);
+  const tm = approximateTurkeyTmCoordinate(parcel.centroid?.[0] ?? 0, parcel.centroid?.[1] ?? 0);
   return (
     <div className="grid gap-0">
+      <DataRow
+        label="Kaynak"
+        value={<SourceBadge status={parcel.sourceStatus ?? "demo"} />}
+        hint={parcel.sourceStatus === "live" ? "Tapu/parsel öznitelikleri canlı API'den gelir" : "Yerel demo parsel seti"}
+      />
       <DataRow label="Ada" value={parcel.ada} />
       <DataRow label="Parsel" value={parcel.parsel} />
       <DataRow label="Pafta" value={parcel.pafta ?? "—"} />
@@ -33,8 +39,13 @@ export function SectionKonum({ parcel }: SectionProps) {
       />
       <DataRow
         label="UTM"
-        value={utm ?? "—"}
-        hint="Yaklaşık ETRS89 / TM Zone"
+        value={
+          <span className="inline-flex items-center gap-2">
+            {tm ?? "—"}
+            {tm && <SourceBadge status="computed" label="Yaklaşık" />}
+          </span>
+        }
+        hint="Yaklaşık gösterim; resmi koordinat dönüşümü değildir"
       />
     </div>
   );
@@ -51,10 +62,8 @@ function tapuLabel(t: ParcelProps["tapuTipi"]) {
   }
 }
 
-function mockUTM(lng: number, lat: number) {
+function approximateTurkeyTmCoordinate(lng: number, lat: number) {
   if (!lng || !lat) return null;
-  // Compute a fake but plausible TM zone coordinate. Türkiye için 6 derecelik
-  // dilim (Zone 30..38), TM_30 başlangıç meridyeni 27°.
   const zone = Math.floor((lng + 180) / 6) + 1;
   const x = Math.round(500_000 + (lng - (zone - 1) * 6 + 180) * 70_000);
   const y = Math.round(lat * 110_000);

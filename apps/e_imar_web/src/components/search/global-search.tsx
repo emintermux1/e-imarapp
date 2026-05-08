@@ -21,6 +21,7 @@ import { useHistoryStore } from "@/stores/history-store";
 import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
 import { ZoningBadge } from "@/components/gis/zoning-badge";
+import { SourceBadge } from "@/components/gis/source-badge";
 import type { SearchResult } from "@/types/geo";
 import { cn } from "@/lib/utils";
 
@@ -58,7 +59,8 @@ export function GlobalSearch() {
   const [active, setActive] = React.useState(0);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
-  const results = useSearch({ query, mode, limit: 12 });
+  const searchState = useSearch({ query, mode, limit: 12 });
+  const { results } = searchState;
   const history = useHistoryStore((s) => s.items);
   const pushHistory = useHistoryStore((s) => s.push);
 
@@ -206,7 +208,7 @@ export function GlobalSearch() {
               </TabsList>
             </Tabs>
             <span className="text-[11px] text-fg-muted hidden sm:inline">
-              {results.length > 0 ? `${results.length} sonuç` : query ? "Sonuç yok" : "İmleciniz hazır"}
+              {searchState.loading ? "API aranıyor…" : results.length > 0 ? `${results.length} sonuç` : query ? "Sonuç yok" : "İmleciniz hazır"}
             </span>
           </div>
 
@@ -255,7 +257,7 @@ export function GlobalSearch() {
               </>
             ) : results.length === 0 ? (
               <CommandEmpty>
-                Sonuç bulunamadı. Farklı sekme veya ada/parsel formatı deneyin.
+                {searchState.message ?? "Sonuç bulunamadı. Farklı sekme veya ada/parsel formatı deneyin."}
               </CommandEmpty>
             ) : (
               <ResultGroups
@@ -273,7 +275,7 @@ export function GlobalSearch() {
               <Kbd combo={["Enter"]} /> seç
             </span>
             <span className="inline-flex items-center gap-1.5">
-              WGS84 / EPSG:4326
+              {searchState.message ?? "WGS84 / EPSG:4326"}
             </span>
           </div>
         </CommandRoot>
@@ -372,7 +374,10 @@ function ResultRow({
         )}
       </div>
       {result.type === "parcel" && (
-        <ZoningBadge type={result.zoningType} size="xs" />
+        <span className="inline-flex items-center gap-1.5">
+          {result.sourceStatus && <SourceBadge status={result.sourceStatus} />}
+          <ZoningBadge type={result.zoningType} size="xs" />
+        </span>
       )}
       {result.type !== "parcel" && result.meta && (
         <span className="text-[11px] uppercase tracking-wider text-fg-muted">

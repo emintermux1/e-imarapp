@@ -32,21 +32,20 @@ npm run start:dev
 
 Swagger UI is available at `http://localhost:3000/docs`.
 
-### Web frontend startup (canonical Next.js app)
+### Web frontend startup (canonical polished GIS app)
 
 ```bash
-cd frontend
-npm install
-npm run dev
+npm install --prefix apps/e_imar_web
+npm run web:dev
 ```
 
-Web app runs at `http://localhost:3000` and connects to FastAPI via `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000/api/v1`).
+The canonical polished GIS UI is `apps/e_imar_web` and runs at `http://localhost:3000`. It connects to FastAPI via `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000/api/v1`) and visibly labels live API, local fallback, computed, and demo data.
 
-`apps/web` is a deprecated Vite prototype. Its npm scripts are shims that start/build `frontend/` so agents and humans do not accidentally open the stale `localhost:5173` app.
+`frontend/` and `apps/web` are deprecated/simple prototypes and are not the product frontend.
 
 ### Legacy prototype frontends
 
-Older experiments remain under `apps/` for historical reference only. Do not use `apps/web`, `apps/web-next`, `apps/e_imar_next`, or `apps/e_imar_web` as the product frontend unless explicitly working on legacy migration.
+Older experiments remain under `apps/` and `frontend/` for historical reference only. Do not use `frontend/`, `apps/web`, `apps/web-next`, or `apps/e_imar_next` as the product frontend.
 
 Docker Compose now includes the API service as well as PostGIS, Redis, MinIO, OpenSearch, pg_tileserv, Prometheus, and Grafana.
 
@@ -149,9 +148,9 @@ See `docs/adr/0001-backend-first-geospatial-foundation.md`.
 
 ## Website app and integration
 
-The canonical product frontend is `frontend/` (Next.js 14 App Router). It consumes the FastAPI `/api/v1/*` endpoints and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data.
+The canonical product frontend is `apps/e_imar_web` (Next.js 14 App Router). It consumes the FastAPI `/api/v1/*` endpoints where available and renders explicit source badges/readiness states instead of silently presenting fallback data as official.
 
-- App README: `frontend/README.md`
+- App README: `apps/e_imar_web/README.md`
 - Architecture and runbook: `docs/website-architecture.md`
 - Bootstrap/capabilities endpoint: `GET /website/bootstrap`
 - Aggregated website workflow endpoint: `POST /website/bff/parcel-workflow`
@@ -162,12 +161,12 @@ The canonical product frontend is `frontend/` (Next.js 14 App Router). It consum
 Run the website locally:
 
 ```bash
-npm install --prefix frontend
+npm install --prefix apps/e_imar_web
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1 npm run web:dev
 npm run web:build
 ```
 
-The root `npm run build` remains the backend build. Website-specific scripts are `web:dev`, `web:build`, `web:preview`, and `web:typecheck`, all pointing at `frontend/`.
+The root `npm run build` remains the backend build. Website-specific scripts are `web:dev`, `web:build`, `web:preview`, and `web:typecheck`, all pointing at `apps/e_imar_web/`.
 
 Required website integration env:
 

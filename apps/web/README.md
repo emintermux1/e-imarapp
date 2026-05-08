@@ -1,13 +1,13 @@
 # Deprecated Vite prototype
 
-`apps/web` is no longer the product frontend. The canonical app is `frontend/` (Next.js 14) and runs on `http://localhost:3000`.
+`apps/web` is no longer the product frontend. The canonical polished GIS app is `apps/e_imar_web` (Next.js 14) and runs on `http://localhost:3000`.
 
-The scripts in this package intentionally delegate to `../../frontend` so that accidentally running this directory does not start the stale Vite app on `localhost:5173`.
+Do not use this Vite prototype for product work. Root `web:*` scripts point to `apps/e_imar_web` so agents and humans do not accidentally open the stale `localhost:5173` app.
 
 Use:
 
 ```bash
-cd ../../frontend
+cd ../e_imar_web
 npm install
 npm run dev
 ```

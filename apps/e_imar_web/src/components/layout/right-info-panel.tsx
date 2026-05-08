@@ -8,7 +8,7 @@ import {
   Star,
   Calculator,
   FileDown,
-  Lock
+  Loader2
 } from "lucide-react";
 import {
   Accordion,
@@ -17,7 +17,6 @@ import {
   AccordionContent
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { ParcelCard } from "@/components/gis/parcel-card";
 import { ZoningBadge } from "@/components/gis/zoning-badge";
 import { IconButton } from "@/components/ui/icon-button";
 import {
@@ -25,6 +24,8 @@ import {
   TooltipContent,
   TooltipTrigger
 } from "@/components/ui/tooltip";
+import { SourceBadge } from "@/components/gis/source-badge";
+import { generateBackendReport } from "@/lib/api/backend-client";
 import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useParcel } from "@/hooks/use-parcel";
@@ -56,6 +57,11 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   const isWatchlisted = parcel ? watchlistHas(parcel.id) : false;
 
   const [emsalOpen, setEmsalOpen] = React.useState(false);
+  const [reportStatus, setReportStatus] = React.useState<{
+    state: "idle" | "loading" | "success" | "error";
+    message?: string;
+    url?: string;
+  }>({ state: "idle" });
 
   if (!parcel) return null;
 
@@ -84,6 +90,38 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
         zoningType: parcel.zoningType,
         yuzolcumuM2: parcel.yuzolcumuM2,
         centroid: parcel.centroid ?? [0, 0]
+      });
+    }
+  }
+
+  async function generateReport() {
+    if (!parcel) return;
+    if (!parcel.backendId) {
+      setReportStatus({
+        state: "error",
+        message: "PDF rapor için canlı API parseli gerekir"
+      });
+      return;
+    }
+    setReportStatus({ state: "loading", message: "PDF rapor hazırlanıyor…" });
+    try {
+      const report = await generateBackendReport({
+        parcel_id: parcel.backendId,
+        report_type: "parcel",
+        include_map: true,
+        include_tapu: true,
+        include_imar: true
+      });
+      if (report.pdf_url) window.open(report.pdf_url, "_blank", "noopener,noreferrer");
+      setReportStatus({
+        state: "success",
+        message: report.pdf_url ? "PDF rapor hazır; bağlantı açıldı" : `Rapor isteği alındı · durum: ${report.status}`,
+        url: report.pdf_url
+      });
+    } catch {
+      setReportStatus({
+        state: "error",
+        message: "PDF rapor servisine ulaşılamıyor"
       });
     }
   }
@@ -143,6 +181,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                 <span className="truncate">
                   {parcel.mahalle} · {parcel.ilce} / {parcel.il}
                 </span>
+                <SourceBadge status={parcel.sourceStatus ?? "demo"} />
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <ZoningBadge type={parcel.zoningType} size="xs" />
@@ -232,19 +271,44 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled
+                    onClick={generateReport}
+                    disabled={reportStatus.state === "loading"}
                     className="w-full"
                   >
-                    <FileDown className="h-4 w-4" /> PDF Rapor
+                    {reportStatus.state === "loading" ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileDown className="h-4 w-4" />
+                    )} PDF Rapor
                   </Button>
                 </span>
               </TooltipTrigger>
               <TooltipContent>
                 <span className="inline-flex items-center gap-1">
-                  <Lock className="h-3 w-3" /> Yakında
+                  {parcel.backendId ? "Canlı API ile rapor üret" : "PDF rapor için canlı API parseli gerekir"}
                 </span>
               </TooltipContent>
             </Tooltip>
+            {reportStatus.message && (
+              <div
+                className={cn(
+                  "col-span-2 rounded-md border px-2.5 py-1.5 text-[11px]",
+                  reportStatus.state === "success"
+                    ? "border-status-success/40 bg-status-success/10 text-status-success"
+                    : reportStatus.state === "error"
+                    ? "border-status-warning/40 bg-status-warning/10 text-status-warning"
+                    : "border-border-subtle bg-surface-2 text-fg-muted"
+                )}
+              >
+                {reportStatus.url ? (
+                  <a href={reportStatus.url} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                    {reportStatus.message}
+                  </a>
+                ) : (
+                  reportStatus.message
+                )}
+              </div>
+            )}
             <Button
               variant="secondary"
               size="sm"
