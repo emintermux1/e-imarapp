@@ -1,7 +1,0 @@
-name: e_imar_core
-description: Shared core contracts and value objects for E-İmar.
-version: 0.1.0
-publish_to: none
-
-environment:
-  sdk: '>=3.5.0 <4.0.0'

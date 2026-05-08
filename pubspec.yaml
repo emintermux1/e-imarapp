@@ -1,5 +1,0 @@
-name: e_imar_workspace
-publish_to: none
-
-environment:
-  sdk: '>=3.5.0 <4.0.0'
