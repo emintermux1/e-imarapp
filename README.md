@@ -32,6 +32,28 @@ npm run start:dev
 
 Swagger UI is available at `http://localhost:3000/docs`.
 
+### Web frontend startup
+
+```bash
+cd apps/web
+npm install
+cp .env.example .env
+npm run dev
+```
+
+Web app runs at `http://localhost:5173` and connects to backend via `VITE_API_BASE_URL` (default `http://localhost:3000`).
+
+### Next.js production frontend startup
+
+```bash
+cd apps/web-next
+npm install
+cp .env.example .env
+npm run dev
+```
+
+Next app connects to backend via `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:3000`).
+
 Docker Compose now includes the API service as well as PostGIS, Redis, MinIO, OpenSearch, pg_tileserv, Prometheus, and Grafana.
 
 ## Cursor cloud agent startup
@@ -96,16 +118,17 @@ For public KEOS portals without login/bot protection, data is pulled by discover
 
 The discovery step fetches HTML/JS, extracts `.ashx`, `.asmx`, `NetGIS`, WMS/WFS, ArcGIS, and GeoServer references, probes common KEOS endpoints, and reports the next connector step. See `docs/connectors/netcad-keos.md`.
 
-Map provider keys should be provided through environment variables or a secret manager, never committed:
+Map provider keys and OpenAI credentials should be provided through environment variables or a secret manager, never committed:
 
 ```bash
 MAPTILER_API_KEY=...
 MAPBOX_ACCESS_TOKEN=...
 CESIUM_ION_TOKEN=...
 HERE_API_KEY=...
+OPENAI_API_KEY=...
 ```
 
-Use `GET /map/providers` to confirm whether each key is configured. The API only returns boolean configuration status and never returns secret values.
+Use `GET /map/providers` or `GET /map/providers/health` to confirm whether each provider key is configured or malformed. These endpoints return configuration diagnostics only and never return secret values.
 
 Local check:
 
@@ -113,7 +136,7 @@ Local check:
 npm run map:check-keys
 ```
 
-If you want to use local `.env`, copy `.env.example` to `.env` and fill the four map provider variables there. `.env` is gitignored.
+If you want to use local `.env`, copy `.env.example` to `.env` and fill the optional provider variables there. `.env` is gitignored. Startup now validates malformed URLs, ports, and placeholder secret values before the app begins serving traffic.
 
 ## API behavior
 
@@ -129,3 +152,45 @@ npm run build
 ## Architecture decisions
 
 See `docs/adr/0001-backend-first-geospatial-foundation.md`.
+
+## Website app and integration
+
+The repository includes a website integration layer (`/website/*`) plus the first production web app at `apps/e_imar_web`. The frontend is React + TypeScript + Vite, consumes the existing BFF endpoints, and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data.
+
+- App README: `apps/e_imar_web/README.md`
+- Architecture and runbook: `docs/website-architecture.md`
+- Bootstrap/capabilities endpoint: `GET /website/bootstrap`
+- Aggregated website workflow endpoint: `POST /website/bff/parcel-workflow`
+- Plan note endpoint: `POST /website/bff/plan-note-explain`
+- Workspace endpoint: `GET /website/workspace/:userReference`
+- Session token endpoints: `POST /website/session/start`, `POST /website/session/verify`
+
+Run the website locally:
+
+```bash
+npm install --prefix apps/e_imar_web
+VITE_API_BASE_URL=http://localhost:3000 npm run web:dev
+npm run web:build
+```
+
+The root `npm run build` remains the backend build. Website-specific scripts are `web:dev`, `web:build`, `web:preview`, and `web:typecheck`.
+
+Required website integration env:
+
+```bash
+WEBSITE_SESSION_SECRET=...
+OPENAI_API_KEY=...          # for plan-note explain
+PUSH_GATEWAY_URL=...        # for push channel delivery
+VITE_API_BASE_URL=http://localhost:3000
+```
+
+Design references for website-first rollout:
+
+- `docs/site-design-phase-1.md`
+- `docs/site-design-language.md`
+- `docs/site-ui-implementation-backlog.md`
+- `docs/ui-contract-homepage-wireframe.md`
+- `docs/ui-contract-map-workspace-props.md`
+- `docs/ui-state-machine-parcel-analysis.md`
+- `docs/ui-ux-maps-full.md`
+- `docs/frontend-task-pack-sprint-1.md`

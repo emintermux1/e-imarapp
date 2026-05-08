@@ -1,0 +1,2436 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": 1,
+      "properties": {
+        "id": "TR-34-BES-1234-2",
+        "ada": "1234",
+        "parsel": "2",
+        "il": "İstanbul",
+        "ilce": "Beşiktaş",
+        "mahalle": "Levent",
+        "pafta": "F22-4/1",
+        "yuzolcumuM2": 664,
+        "tapuTipi": "Arsa",
+        "zoningType": "Yesil",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.04,
+        "kaks": 0.11,
+        "gabariM": 4.8,
+        "katSiniri": 1,
+        "yolCephesiM": 8.4,
+        "planAdi": "1/1000 ölçekli UİP",
+        "planOnayTarihi": "2022-12-28",
+        "yatirimSkoru": 66,
+        "riskler": {
+          "deprem": 5,
+          "heyelan": 0,
+          "sel": 0,
+          "yangin": 1
+        },
+        "cevre": {
+          "metroM": 1262,
+          "hastaneKm": 1.31,
+          "okulKm": 1.44,
+          "parkM": 277,
+          "ulasimSkoru": 65,
+          "gurultuSkoru": 59
+        },
+        "planNotlari": [
+          "Mevzii imar planına tabidir.",
+          "Asma kat ana mekânın 1/3’ünü geçemez.",
+          "TKGM tescilli yapı koruma altındadır.",
+          "Çekme mesafesi: ön bahçe 5 m, yan bahçe 3 m.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır."
+        ],
+        "centroid": [
+          29.017811522633743,
+          41.08763060699588
+        ],
+        "aski": {
+          "durum": "askida",
+          "baslangic": "2026-04-15",
+          "bitis": "2026-06-14",
+          "askiNo": "AS-2026/0148"
+        },
+        "mapId": 1
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              29.017650508652267,
+              41.08751996845694
+            ],
+            [
+              29.017977818265418,
+              41.087528078212536
+            ],
+            [
+              29.01797253661522,
+              41.08774124553482
+            ],
+            [
+              29.017645227002067,
+              41.087733135779224
+            ],
+            [
+              29.017650508652267,
+              41.08751996845694
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 2,
+      "properties": {
+        "id": "TR-34-BES-1237-3",
+        "ada": "1237",
+        "parsel": "3",
+        "il": "İstanbul",
+        "ilce": "Beşiktaş",
+        "mahalle": "Levent",
+        "pafta": "F22-1/2",
+        "yuzolcumuM2": 378,
+        "tapuTipi": "Arsa",
+        "zoningType": "Turizm",
+        "yapilasmaSekli": "Blok",
+        "taks": 0.33,
+        "kaks": 1.88,
+        "gabariM": 16.9,
+        "katSiniri": 5,
+        "yolCephesiM": 5.8,
+        "planAdi": "Revizyon İmar Planı",
+        "planOnayTarihi": "2022-11-11",
+        "yatirimSkoru": 67,
+        "riskler": {
+          "deprem": 3,
+          "heyelan": 0,
+          "sel": 3,
+          "yangin": 1
+        },
+        "cevre": {
+          "metroM": 537,
+          "hastaneKm": 3.4,
+          "okulKm": 1.78,
+          "parkM": 642,
+          "ulasimSkoru": 70,
+          "gurultuSkoru": 65
+        },
+        "planNotlari": [
+          "Yapı yaklaşma sınırı dışında çıkma yapılamaz.",
+          "Çatı arası bağımsız bölüm oluşturulamaz.",
+          "Otopark Yönetmeliği gereği parsel içinde otopark zorunludur.",
+          "Yol kotu üzerinden gabari hesaplanır."
+        ],
+        "centroid": [
+          29.011409722222222,
+          41.08615781893004
+        ],
+        "mapId": 2
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              29.01130973693129,
+              41.08605349760157
+            ],
+            [
+              29.011480546224256,
+              41.08603186672199
+            ],
+            [
+              29.011509707513156,
+              41.08626214025851
+            ],
+            [
+              29.01133889822019,
+              41.08628377113809
+            ],
+            [
+              29.01130973693129,
+              41.08605349760157
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 3,
+      "properties": {
+        "id": "TR-34-BES-1456-2",
+        "ada": "1456",
+        "parsel": "2",
+        "il": "İstanbul",
+        "ilce": "Beşiktaş",
+        "mahalle": "Etiler",
+        "pafta": "F22-2/3",
+        "yuzolcumuM2": 285,
+        "tapuTipi": "Bahce",
+        "zoningType": "Yesil",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.05,
+        "kaks": 0.09,
+        "gabariM": 4.5,
+        "katSiniri": 1,
+        "yolCephesiM": 14.7,
+        "planAdi": "1/1000 ölçekli UİP",
+        "planOnayTarihi": "2018-07-13",
+        "yatirimSkoru": 86,
+        "riskler": {
+          "deprem": 5,
+          "heyelan": 3,
+          "sel": 0,
+          "yangin": 0
+        },
+        "cevre": {
+          "metroM": 500,
+          "hastaneKm": 3.1,
+          "okulKm": 2.32,
+          "parkM": 143,
+          "ulasimSkoru": 44,
+          "gurultuSkoru": 25
+        },
+        "planNotlari": [
+          "Otopark Yönetmeliği gereği parsel içinde otopark zorunludur.",
+          "Mevzii imar planına tabidir.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır.",
+          "Asma kat ana mekânın 1/3’ünü geçemez."
+        ],
+        "centroid": [
+          29.03248631687243,
+          41.079311574074076
+        ],
+        "mapId": 3
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              29.032393845951365,
+              41.07922921650503
+            ],
+            [
+              29.032571508523922,
+              41.0792217073787
+            ],
+            [
+              29.032578787793494,
+              41.079393931643125
+            ],
+            [
+              29.032401125220936,
+              41.07940144076945
+            ],
+            [
+              29.032393845951365,
+              41.07922921650503
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 4,
+      "properties": {
+        "id": "TR-34-BES-1459-3",
+        "ada": "1459",
+        "parsel": "3",
+        "il": "İstanbul",
+        "ilce": "Beşiktaş",
+        "mahalle": "Etiler",
+        "pafta": "F22-3/2",
+        "yuzolcumuM2": 373,
+        "tapuTipi": "Tarla",
+        "zoningType": "Karma",
+        "yapilasmaSekli": "Blok",
+        "taks": 0.44,
+        "kaks": 2.84,
+        "gabariM": 29,
+        "katSiniri": 9,
+        "yolCephesiM": 17.1,
+        "planAdi": "Mevzii İmar Planı",
+        "planOnayTarihi": "2017-02-06",
+        "yatirimSkoru": 81,
+        "riskler": {
+          "deprem": 4,
+          "heyelan": 0,
+          "sel": 2,
+          "yangin": 2
+        },
+        "cevre": {
+          "metroM": 173,
+          "hastaneKm": 2.57,
+          "okulKm": 1.23,
+          "parkM": 200,
+          "ulasimSkoru": 88,
+          "gurultuSkoru": 71
+        },
+        "planNotlari": [
+          "Yapı yaklaşma sınırı dışında çıkma yapılamaz.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır.",
+          "Çekme mesafesi: ön bahçe 5 m, yan bahçe 3 m.",
+          "Çatı arası bağımsız bölüm oluşturulamaz."
+        ],
+        "centroid": [
+          29.030782047325104,
+          41.082610390946506
+        ],
+        "aski": {
+          "durum": "askida",
+          "baslangic": "2026-04-15",
+          "bitis": "2026-06-14",
+          "askiNo": "AS-2026/0148"
+        },
+        "mapId": 4
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              29.03069903211976,
+              41.08249481949797
+            ],
+            [
+              29.030884319096955,
+              41.082511452739936
+            ],
+            [
+              29.03086506253045,
+              41.082725962395045
+            ],
+            [
+              29.030679775553253,
+              41.082709329153076
+            ],
+            [
+              29.03069903211976,
+              41.08249481949797
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 5,
+      "properties": {
+        "id": "TR-34-KAD-2103-2",
+        "ada": "2103",
+        "parsel": "2",
+        "il": "İstanbul",
+        "ilce": "Kadıköy",
+        "mahalle": "Caddebostan",
+        "pafta": "F22-4/1",
+        "yuzolcumuM2": 563,
+        "tapuTipi": "Arsa",
+        "zoningType": "Konut",
+        "yapilasmaSekli": "Bitisik",
+        "taks": 0.37,
+        "kaks": 2.36,
+        "gabariM": 23.4,
+        "katSiniri": 8,
+        "yolCephesiM": 15.4,
+        "planAdi": "Koruma Amaçlı UİP",
+        "planOnayTarihi": "2018-03-23",
+        "yatirimSkoru": 64,
+        "riskler": {
+          "deprem": 5,
+          "heyelan": 3,
+          "sel": 3,
+          "yangin": 0
+        },
+        "cevre": {
+          "metroM": 1052,
+          "hastaneKm": 1.9,
+          "okulKm": 2.81,
+          "parkM": 261,
+          "ulasimSkoru": 70,
+          "gurultuSkoru": 32
+        },
+        "planNotlari": [
+          "Otopark Yönetmeliği gereği parsel içinde otopark zorunludur.",
+          "Çatı arası bağımsız bölüm oluşturulamaz.",
+          "Asma kat ana mekânın 1/3’ünü geçemez."
+        ],
+        "centroid": [
+          29.063926543209874,
+          40.96179501028807
+        ],
+        "aski": {
+          "durum": "askida",
+          "baslangic": "2026-04-15",
+          "bitis": "2026-06-14",
+          "askiNo": "AS-2026/0148"
+        },
+        "mapId": 5
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              29.06375799710222,
+              40.961720402276015
+            ],
+            [
+              29.064064513262704,
+              40.961672787498095
+            ],
+            [
+              29.06409508931753,
+              40.96186961830013
+            ],
+            [
+              29.063788573157044,
+              40.96191723307805
+            ],
+            [
+              29.06375799710222,
+              40.961720402276015
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 6,
+      "properties": {
+        "id": "TR-34-KAD-2106-3",
+        "ada": "2106",
+        "parsel": "3",
+        "il": "İstanbul",
+        "ilce": "Kadıköy",
+        "mahalle": "Caddebostan",
+        "pafta": "F22-3/2",
+        "yuzolcumuM2": 518,
+        "tapuTipi": "Bahce",
+        "zoningType": "Kamu",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.27,
+        "kaks": 0.95,
+        "gabariM": 13.2,
+        "katSiniri": 4,
+        "yolCephesiM": 7.4,
+        "planAdi": "Uygulama İmar Planı",
+        "planOnayTarihi": "2024-05-26",
+        "yatirimSkoru": 53,
+        "riskler": {
+          "deprem": 5,
+          "heyelan": 1,
+          "sel": 2,
+          "yangin": 1
+        },
+        "cevre": {
+          "metroM": 413,
+          "hastaneKm": 4.03,
+          "okulKm": 2.53,
+          "parkM": 286,
+          "ulasimSkoru": 59,
+          "gurultuSkoru": 75
+        },
+        "planNotlari": [
+          "Bodrum kat, doğal zemin altında kalmak şartıyla emsal harici tutulur.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır.",
+          "TKGM tescilli yapı koruma altındadır.",
+          "Asma kat ana mekânın 1/3’ünü geçemez."
+        ],
+        "centroid": [
+          29.060807973251027,
+          40.96785853909466
+        ],
+        "aski": {
+          "durum": "askida",
+          "baslangic": "2026-04-15",
+          "bitis": "2026-06-14",
+          "askiNo": "AS-2026/0148"
+        },
+        "mapId": 6
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              29.060653781331894,
+              40.96777950232177
+            ],
+            [
+              29.060936238966427,
+              40.96774204932838
+            ],
+            [
+              29.06096216517016,
+              40.967937575867545
+            ],
+            [
+              29.060679707535627,
+              40.967975028860934
+            ],
+            [
+              29.060653781331894,
+              40.96777950232177
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 7,
+      "properties": {
+        "id": "TR-34-KAD-2240-2",
+        "ada": "2240",
+        "parsel": "2",
+        "il": "İstanbul",
+        "ilce": "Kadıköy",
+        "mahalle": "Suadiye",
+        "pafta": "F22-2/1",
+        "yuzolcumuM2": 536,
+        "tapuTipi": "Arsa",
+        "zoningType": "Konut",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.33,
+        "kaks": 1.95,
+        "gabariM": 19.6,
+        "katSiniri": 7,
+        "yolCephesiM": 17.3,
+        "planAdi": "1/1000 ölçekli UİP",
+        "planOnayTarihi": "2022-01-08",
+        "yatirimSkoru": 44,
+        "riskler": {
+          "deprem": 3,
+          "heyelan": 2,
+          "sel": 0,
+          "yangin": 0
+        },
+        "cevre": {
+          "metroM": 1243,
+          "hastaneKm": 1.96,
+          "okulKm": 0.38,
+          "parkM": 329,
+          "ulasimSkoru": 45,
+          "gurultuSkoru": 78
+        },
+        "planNotlari": [
+          "Yol kotu üzerinden gabari hesaplanır.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır.",
+          "Mevzii imar planına tabidir."
+        ],
+        "centroid": [
+          29.071820936213992,
+          40.954982613168724
+        ],
+        "mapId": 7
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              29.071690556888516,
+              40.95487147339745
+            ],
+            [
+              29.07194140764772,
+              40.954860804093016
+            ],
+            [
+              29.07195131553947,
+              40.955093752939995
+            ],
+            [
+              29.071700464780264,
+              40.95510442224443
+            ],
+            [
+              29.071690556888516,
+              40.95487147339745
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 8,
+      "properties": {
+        "id": "TR-34-SIS-1980-2",
+        "ada": "1980",
+        "parsel": "2",
+        "il": "İstanbul",
+        "ilce": "Şişli",
+        "mahalle": "Mecidiyeköy",
+        "pafta": "F22-1/1",
+        "yuzolcumuM2": 523,
+        "tapuTipi": "Bina",
+        "zoningType": "Turizm",
+        "yapilasmaSekli": "Blok",
+        "taks": 0.39,
+        "kaks": 1.66,
+        "gabariM": 18.6,
+        "katSiniri": 6,
+        "yolCephesiM": 8.6,
+        "planAdi": "Koruma Amaçlı UİP",
+        "planOnayTarihi": "2015-04-10",
+        "yatirimSkoru": 48,
+        "riskler": {
+          "deprem": 3,
+          "heyelan": 2,
+          "sel": 1,
+          "yangin": 0
+        },
+        "cevre": {
+          "metroM": 218,
+          "hastaneKm": 0.79,
+          "okulKm": 1.81,
+          "parkM": 774,
+          "ulasimSkoru": 41,
+          "gurultuSkoru": 55
+        },
+        "planNotlari": [
+          "Mevzii imar planına tabidir.",
+          "TKGM tescilli yapı koruma altındadır.",
+          "Otopark Yönetmeliği gereği parsel içinde otopark zorunludur.",
+          "Asma kat ana mekânın 1/3’ünü geçemez.",
+          "Bodrum kat, doğal zemin altında kalmak şartıyla emsal harici tutulur.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır."
+        ],
+        "centroid": [
+          28.9991066872428,
+          41.06382083333333
+        ],
+        "mapId": 8
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              28.998964115625355,
+              41.06372892424217
+            ],
+            [
+              28.999208526077624,
+              41.06368517641732
+            ],
+            [
+              28.999249258860246,
+              41.06391274242449
+            ],
+            [
+              28.999004848407978,
+              41.06395649024934
+            ],
+            [
+              28.998964115625355,
+              41.06372892424217
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 9,
+      "properties": {
+        "id": "TR-34-SIS-1983-3",
+        "ada": "1983",
+        "parsel": "3",
+        "il": "İstanbul",
+        "ilce": "Şişli",
+        "mahalle": "Mecidiyeköy",
+        "pafta": "F22-2/4",
+        "yuzolcumuM2": 607,
+        "tapuTipi": "Arsa",
+        "zoningType": "Ticaret",
+        "yapilasmaSekli": "Blok",
+        "taks": 0.56,
+        "kaks": 3.84,
+        "gabariM": 35,
+        "katSiniri": 13,
+        "yolCephesiM": 7.4,
+        "planAdi": "Revizyon İmar Planı",
+        "planOnayTarihi": "2017-12-18",
+        "yatirimSkoru": 89,
+        "riskler": {
+          "deprem": 4,
+          "heyelan": 0,
+          "sel": 3,
+          "yangin": 2
+        },
+        "cevre": {
+          "metroM": 847,
+          "hastaneKm": 3.37,
+          "okulKm": 1.58,
+          "parkM": 574,
+          "ulasimSkoru": 38,
+          "gurultuSkoru": 59
+        },
+        "planNotlari": [
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır.",
+          "Bodrum kat, doğal zemin altında kalmak şartıyla emsal harici tutulur.",
+          "Yapı yaklaşma sınırı dışında çıkma yapılamaz.",
+          "TKGM tescilli yapı koruma altındadır.",
+          "Riskli yapı tespiti gerektiğinde 6306 uygulanır.",
+          "Çatı arası bağımsız bölüm oluşturulamaz."
+        ],
+        "centroid": [
+          28.99320061728395,
+          41.067846862139916
+        ],
+        "aski": {
+          "durum": "askida",
+          "baslangic": "2026-04-15",
+          "bitis": "2026-06-14",
+          "askiNo": "AS-2026/0148"
+        },
+        "mapId": 9
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              28.993038780665504,
+              41.06775620828967
+            ],
+            [
+              28.993335568222104,
+              41.06771959291377
+            ],
+            [
+              28.993362453902396,
+              41.06793751599016
+            ],
+            [
+              28.993065666345796,
+              41.067974131366064
+            ],
+            [
+              28.993038780665504,
+              41.06775620828967
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 10,
+      "properties": {
+        "id": "TR-34-SIS-1700-2",
+        "ada": "1700",
+        "parsel": "2",
+        "il": "İstanbul",
+        "ilce": "Şişli",
+        "mahalle": "Nişantaşı",
+        "pafta": "F22-2/3",
+        "yuzolcumuM2": 604,
+        "tapuTipi": "Arsa",
+        "zoningType": "Sanayi",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.62,
+        "kaks": 1.11,
+        "gabariM": 13.6,
+        "katSiniri": 3,
+        "yolCephesiM": 9,
+        "planAdi": "1/1000 ölçekli UİP",
+        "planOnayTarihi": "2023-08-08",
+        "yatirimSkoru": 55,
+        "riskler": {
+          "deprem": 4,
+          "heyelan": 0,
+          "sel": 3,
+          "yangin": 1
+        },
+        "cevre": {
+          "metroM": 751,
+          "hastaneKm": 0.97,
+          "okulKm": 0.74,
+          "parkM": 732,
+          "ulasimSkoru": 79,
+          "gurultuSkoru": 74
+        },
+        "planNotlari": [
+          "Çekme mesafesi: ön bahçe 5 m, yan bahçe 3 m.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır.",
+          "Asma kat ana mekânın 1/3’ünü geçemez."
+        ],
+        "centroid": [
+          28.985552623456787,
+          41.04476368312757
+        ],
+        "mapId": 10
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              28.985442566721556,
+              41.044623517202275
+            ],
+            [
+              28.985708431649723,
+              41.04467718007214
+            ],
+            [
+              28.985662680192018,
+              41.044903849052865
+            ],
+            [
+              28.98539681526385,
+              41.044850186183
+            ],
+            [
+              28.985442566721556,
+              41.044623517202275
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 11,
+      "properties": {
+        "id": "TR-34-USK-3204-2",
+        "ada": "3204",
+        "parsel": "2",
+        "il": "İstanbul",
+        "ilce": "Üsküdar",
+        "mahalle": "Altunizade",
+        "pafta": "F22-4/2",
+        "yuzolcumuM2": 520,
+        "tapuTipi": "Bahce",
+        "zoningType": "Sanayi",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.52,
+        "kaks": 1.31,
+        "gabariM": 13,
+        "katSiniri": 3,
+        "yolCephesiM": 10.5,
+        "planAdi": "1/1000 ölçekli UİP",
+        "planOnayTarihi": "2019-08-21",
+        "yatirimSkoru": 51,
+        "riskler": {
+          "deprem": 3,
+          "heyelan": 3,
+          "sel": 1,
+          "yangin": 1
+        },
+        "cevre": {
+          "metroM": 468,
+          "hastaneKm": 5.49,
+          "okulKm": 2.46,
+          "parkM": 335,
+          "ulasimSkoru": 65,
+          "gurultuSkoru": 33
+        },
+        "planNotlari": [
+          "Bodrum kat, doğal zemin altında kalmak şartıyla emsal harici tutulur.",
+          "Çatı arası bağımsız bölüm oluşturulamaz.",
+          "TKGM tescilli yapı koruma altındadır.",
+          "Otopark Yönetmeliği gereği parsel içinde otopark zorunludur.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır."
+        ],
+        "centroid": [
+          29.055443312757202,
+          41.01905869341564
+        ],
+        "aski": {
+          "durum": "reddedildi",
+          "baslangic": "2024-11-12",
+          "bitis": "2025-01-11",
+          "askiNo": "AS-2024/1112"
+        },
+        "mapId": 11
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              29.05529270286003,
+              41.01897434000259
+            ],
+            [
+              29.055581275689832,
+              41.01895493856689
+            ],
+            [
+              29.055593922654374,
+              41.01914304682868
+            ],
+            [
+              29.05530534982457,
+              41.01916244826438
+            ],
+            [
+              29.05529270286003,
+              41.01897434000259
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 12,
+      "properties": {
+        "id": "TR-34-BEY-880-2",
+        "ada": "880",
+        "parsel": "2",
+        "il": "İstanbul",
+        "ilce": "Beyoğlu",
+        "mahalle": "Cihangir",
+        "pafta": "F22-2/2",
+        "yuzolcumuM2": 294,
+        "tapuTipi": "Tarla",
+        "zoningType": "Kamu",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.29,
+        "kaks": 1,
+        "gabariM": 11.8,
+        "katSiniri": 3,
+        "yolCephesiM": 15,
+        "planAdi": "Revizyon İmar Planı",
+        "planOnayTarihi": "2014-07-04",
+        "yatirimSkoru": 90,
+        "riskler": {
+          "deprem": 4,
+          "heyelan": 1,
+          "sel": 0,
+          "yangin": 1
+        },
+        "cevre": {
+          "metroM": 96,
+          "hastaneKm": 1.39,
+          "okulKm": 0.9,
+          "parkM": 593,
+          "ulasimSkoru": 59,
+          "gurultuSkoru": 74
+        },
+        "planNotlari": [
+          "Çekme mesafesi: ön bahçe 5 m, yan bahçe 3 m.",
+          "Yol kotu üzerinden gabari hesaplanır.",
+          "Bodrum kat, doğal zemin altında kalmak şartıyla emsal harici tutulur.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır."
+        ],
+        "centroid": [
+          28.97902299382716,
+          41.03312294238683
+        ],
+        "mapId": 12
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              28.978925183472466,
+              41.03304769198509
+            ],
+            [
+              28.979096058000327,
+              41.03302348830171
+            ],
+            [
+              28.979120804181857,
+              41.033198192788575
+            ],
+            [
+              28.978949929653997,
+              41.033222396471956
+            ],
+            [
+              28.978925183472466,
+              41.03304769198509
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 13,
+      "properties": {
+        "id": "TR-06-CAN-5012-2",
+        "ada": "5012",
+        "parsel": "2",
+        "il": "Ankara",
+        "ilce": "Çankaya",
+        "mahalle": "Kavaklıdere",
+        "pafta": "F22-3/3",
+        "yuzolcumuM2": 282,
+        "tapuTipi": "Arsa",
+        "zoningType": "Yesil",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.05,
+        "kaks": 0.11,
+        "gabariM": 4.4,
+        "katSiniri": 1,
+        "yolCephesiM": 13,
+        "planAdi": "1/1000 ölçekli UİP",
+        "planOnayTarihi": "2014-07-10",
+        "yatirimSkoru": 82,
+        "riskler": {
+          "deprem": 2,
+          "heyelan": 1,
+          "sel": 2,
+          "yangin": 2
+        },
+        "cevre": {
+          "metroM": 386,
+          "hastaneKm": 4.76,
+          "okulKm": 1.98,
+          "parkM": 226,
+          "ulasimSkoru": 92,
+          "gurultuSkoru": 22
+        },
+        "planNotlari": [
+          "Asma kat ana mekânın 1/3’ünü geçemez.",
+          "Mevzii imar planına tabidir.",
+          "Çekme mesafesi: ön bahçe 5 m, yan bahçe 3 m.",
+          "Yol kotu üzerinden gabari hesaplanır.",
+          "Riskli yapı tespiti gerektiğinde 6306 uygulanır."
+        ],
+        "centroid": [
+          32.86085884773662,
+          39.910258179012345
+        ],
+        "mapId": 13
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.860784958444064,
+              39.91016439125607
+            ],
+            [
+              32.86095662186173,
+              39.91018965170946
+            ],
+            [
+              32.86093273702918,
+              39.91035196676862
+            ],
+            [
+              32.86076107361151,
+              39.91032670631523
+            ],
+            [
+              32.860784958444064,
+              39.91016439125607
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 14,
+      "properties": {
+        "id": "TR-06-CAN-5015-3",
+        "ada": "5015",
+        "parsel": "3",
+        "il": "Ankara",
+        "ilce": "Çankaya",
+        "mahalle": "Kavaklıdere",
+        "pafta": "F22-4/2",
+        "yuzolcumuM2": 500,
+        "tapuTipi": "Bahce",
+        "zoningType": "Konut",
+        "yapilasmaSekli": "Bitisik",
+        "taks": 0.39,
+        "kaks": 2.33,
+        "gabariM": 26.7,
+        "katSiniri": 7,
+        "yolCephesiM": 11.7,
+        "planAdi": "Mevzii İmar Planı",
+        "planOnayTarihi": "2020-05-11",
+        "yatirimSkoru": 65,
+        "riskler": {
+          "deprem": 3,
+          "heyelan": 0,
+          "sel": 3,
+          "yangin": 2
+        },
+        "cevre": {
+          "metroM": 379,
+          "hastaneKm": 4.63,
+          "okulKm": 1.84,
+          "parkM": 616,
+          "ulasimSkoru": 52,
+          "gurultuSkoru": 61
+        },
+        "planNotlari": [
+          "TKGM tescilli yapı koruma altındadır.",
+          "Yol kotu üzerinden gabari hesaplanır.",
+          "3194 sayılı İmar Kanunu uyarınca uygulanır.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır.",
+          "Mevzii imar planına tabidir.",
+          "Yapı yaklaşma sınırı dışında çıkma yapılamaz."
+        ],
+        "centroid": [
+          32.86958240740741,
+          39.90402494855967
+        ],
+        "aski": {
+          "durum": "onaylandi",
+          "baslangic": "2025-08-01",
+          "bitis": "2025-09-30",
+          "askiNo": "AS-2025/0922"
+        },
+        "mapId": 14
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.869453337053535,
+              39.90392014011576
+            ],
+            [
+              32.8697065242446,
+              39.90391431865011
+            ],
+            [
+              32.86971147776128,
+              39.90412975700359
+            ],
+            [
+              32.869458290570215,
+              39.90413557846924
+            ],
+            [
+              32.869453337053535,
+              39.90392014011576
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 15,
+      "properties": {
+        "id": "TR-06-CAN-5170-2",
+        "ada": "5170",
+        "parsel": "2",
+        "il": "Ankara",
+        "ilce": "Çankaya",
+        "mahalle": "Gaziosmanpaşa",
+        "pafta": "F22-2/1",
+        "yuzolcumuM2": 281,
+        "tapuTipi": "Arsa",
+        "zoningType": "Karma",
+        "yapilasmaSekli": "Blok",
+        "taks": 0.4,
+        "kaks": 2.65,
+        "gabariM": 29.8,
+        "katSiniri": 10,
+        "yolCephesiM": 20.3,
+        "planAdi": "1/1000 ölçekli UİP",
+        "planOnayTarihi": "2017-11-13",
+        "yatirimSkoru": 65,
+        "riskler": {
+          "deprem": 5,
+          "heyelan": 3,
+          "sel": 0,
+          "yangin": 0
+        },
+        "cevre": {
+          "metroM": 796,
+          "hastaneKm": 4.85,
+          "okulKm": 2.18,
+          "parkM": 40,
+          "ulasimSkoru": 86,
+          "gurultuSkoru": 59
+        },
+        "planNotlari": [
+          "Yapı yaklaşma sınırı dışında çıkma yapılamaz.",
+          "Bodrum kat, doğal zemin altında kalmak şartıyla emsal harici tutulur.",
+          "TKGM tescilli yapı koruma altındadır.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır.",
+          "Çekme mesafesi: ön bahçe 5 m, yan bahçe 3 m."
+        ],
+        "centroid": [
+          32.861706738683125,
+          39.89779434156379
+        ],
+        "mapId": 15
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.861615045030945,
+              39.897709879959535
+            ],
+            [
+              32.8617915893834,
+              39.89770300785092
+            ],
+            [
+              32.861798432335306,
+              39.89787880316804
+            ],
+            [
+              32.86162188798285,
+              39.897885675276655
+            ],
+            [
+              32.861615045030945,
+              39.897709879959535
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 16,
+      "properties": {
+        "id": "TR-06-CAN-6022-2",
+        "ada": "6022",
+        "parsel": "2",
+        "il": "Ankara",
+        "ilce": "Çankaya",
+        "mahalle": "Çukurambar",
+        "pafta": "F22-1/3",
+        "yuzolcumuM2": 606,
+        "tapuTipi": "Arsa",
+        "zoningType": "Konut",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.34,
+        "kaks": 1.62,
+        "gabariM": 19.9,
+        "katSiniri": 5,
+        "yolCephesiM": 10.4,
+        "planAdi": "1/1000 ölçekli UİP",
+        "planOnayTarihi": "2018-05-22",
+        "yatirimSkoru": 72,
+        "riskler": {
+          "deprem": 5,
+          "heyelan": 0,
+          "sel": 3,
+          "yangin": 2
+        },
+        "cevre": {
+          "metroM": 1473,
+          "hastaneKm": 1.31,
+          "okulKm": 2.85,
+          "parkM": 162,
+          "ulasimSkoru": 92,
+          "gurultuSkoru": 34
+        },
+        "planNotlari": [
+          "Çatı arası bağımsız bölüm oluşturulamaz.",
+          "Bodrum kat, doğal zemin altında kalmak şartıyla emsal harici tutulur.",
+          "TKGM tescilli yapı koruma altındadır.",
+          "Otopark Yönetmeliği gereği parsel içinde otopark zorunludur.",
+          "Yol kotu üzerinden gabari hesaplanır."
+        ],
+        "centroid": [
+          32.7891475308642,
+          39.91338636831276
+        ],
+        "aski": {
+          "durum": "askida",
+          "baslangic": "2026-04-15",
+          "bitis": "2026-06-14",
+          "askiNo": "AS-2026/0148"
+        },
+        "mapId": 16
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.78898677660353,
+              39.91328860047274
+            ],
+            [
+              32.78931137141973,
+              39.913293865581835
+            ],
+            [
+              32.78930828512487,
+              39.913484136152775
+            ],
+            [
+              32.78898369030867,
+              39.91347887104368
+            ],
+            [
+              32.78898677660353,
+              39.91328860047274
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 17,
+      "properties": {
+        "id": "TR-06-YEN-4408-2",
+        "ada": "4408",
+        "parsel": "2",
+        "il": "Ankara",
+        "ilce": "Yenimahalle",
+        "mahalle": "Demetevler",
+        "pafta": "F22-3/3",
+        "yuzolcumuM2": 409,
+        "tapuTipi": "Tarla",
+        "zoningType": "Ticaret",
+        "yapilasmaSekli": "Blok",
+        "taks": 0.43,
+        "kaks": 3.62,
+        "gabariM": 36.7,
+        "katSiniri": 10,
+        "yolCephesiM": 9.1,
+        "planAdi": "Mevzii İmar Planı",
+        "planOnayTarihi": "2024-04-17",
+        "yatirimSkoru": 47,
+        "riskler": {
+          "deprem": 5,
+          "heyelan": 0,
+          "sel": 0,
+          "yangin": 2
+        },
+        "cevre": {
+          "metroM": 483,
+          "hastaneKm": 3.53,
+          "okulKm": 0.63,
+          "parkM": 696,
+          "ulasimSkoru": 55,
+          "gurultuSkoru": 36
+        },
+        "planNotlari": [
+          "Yapı yaklaşma sınırı dışında çıkma yapılamaz.",
+          "Çatı arası bağımsız bölüm oluşturulamaz.",
+          "Otopark Yönetmeliği gereği parsel içinde otopark zorunludur.",
+          "Riskli yapı tespiti gerektiğinde 6306 uygulanır.",
+          "Mevzii imar planına tabidir.",
+          "3194 sayılı İmar Kanunu uyarınca uygulanır."
+        ],
+        "centroid": [
+          32.77717782921811,
+          39.964382716049386
+        ],
+        "aski": {
+          "durum": "onaylandi",
+          "baslangic": "2025-08-01",
+          "bitis": "2025-09-30",
+          "askiNo": "AS-2025/0922"
+        },
+        "mapId": 17
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.77709128371638,
+              39.96426225187935
+            ],
+            [
+              32.77730063123221,
+              39.96429952106477
+            ],
+            [
+              32.77726437471984,
+              39.964503180219424
+            ],
+            [
+              32.777055027204014,
+              39.964465911034004
+            ],
+            [
+              32.77709128371638,
+              39.96426225187935
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 18,
+      "properties": {
+        "id": "TR-06-YEN-4612-2",
+        "ada": "4612",
+        "parsel": "2",
+        "il": "Ankara",
+        "ilce": "Yenimahalle",
+        "mahalle": "Batıkent",
+        "pafta": "F22-4/4",
+        "yuzolcumuM2": 361,
+        "tapuTipi": "Arsa",
+        "zoningType": "Karma",
+        "yapilasmaSekli": "Blok",
+        "taks": 0.36,
+        "kaks": 2.77,
+        "gabariM": 29.8,
+        "katSiniri": 8,
+        "yolCephesiM": 19.2,
+        "planAdi": "1/1000 ölçekli UİP",
+        "planOnayTarihi": "2024-05-03",
+        "yatirimSkoru": 47,
+        "riskler": {
+          "deprem": 5,
+          "heyelan": 3,
+          "sel": 1,
+          "yangin": 0
+        },
+        "cevre": {
+          "metroM": 184,
+          "hastaneKm": 4.78,
+          "okulKm": 0.41,
+          "parkM": 462,
+          "ulasimSkoru": 63,
+          "gurultuSkoru": 33
+        },
+        "planNotlari": [
+          "Riskli yapı tespiti gerektiğinde 6306 uygulanır.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır.",
+          "Otopark Yönetmeliği gereği parsel içinde otopark zorunludur.",
+          "TKGM tescilli yapı koruma altındadır.",
+          "Asma kat ana mekânın 1/3’ünü geçemez.",
+          "3194 sayılı İmar Kanunu uyarınca uygulanır."
+        ],
+        "centroid": [
+          32.70660154320988,
+          39.981970010288066
+        ],
+        "mapId": 18
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              32.70647195245109,
+              39.98189107095099
+            ],
+            [
+              32.70673859264163,
+              39.981904874760446
+            ],
+            [
+              32.70673113396867,
+              39.982048949625145
+            ],
+            [
+              32.70646449377813,
+              39.982035145815686
+            ],
+            [
+              32.70647195245109,
+              39.98189107095099
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 19,
+      "properties": {
+        "id": "TR-35-KON-7102-2",
+        "ada": "7102",
+        "parsel": "2",
+        "il": "İzmir",
+        "ilce": "Konak",
+        "mahalle": "Alsancak",
+        "pafta": "F22-1/1",
+        "yuzolcumuM2": 481,
+        "tapuTipi": "Tarla",
+        "zoningType": "Ticaret",
+        "yapilasmaSekli": "Blok",
+        "taks": 0.55,
+        "kaks": 3.39,
+        "gabariM": 36.8,
+        "katSiniri": 12,
+        "yolCephesiM": 9.2,
+        "planAdi": "Koruma Amaçlı UİP",
+        "planOnayTarihi": "2015-09-14",
+        "yatirimSkoru": 49,
+        "riskler": {
+          "deprem": 4,
+          "heyelan": 3,
+          "sel": 3,
+          "yangin": 0
+        },
+        "cevre": {
+          "metroM": 560,
+          "hastaneKm": 3.71,
+          "okulKm": 1.37,
+          "parkM": 499,
+          "ulasimSkoru": 84,
+          "gurultuSkoru": 62
+        },
+        "planNotlari": [
+          "Otopark Yönetmeliği gereği parsel içinde otopark zorunludur.",
+          "Çekme mesafesi: ön bahçe 5 m, yan bahçe 3 m.",
+          "Yapı yaklaşma sınırı dışında çıkma yapılamaz."
+        ],
+        "centroid": [
+          27.141331995884773,
+          38.43378688271605
+        ],
+        "aski": {
+          "durum": "askida",
+          "baslangic": "2026-04-15",
+          "bitis": "2026-06-14",
+          "askiNo": "AS-2026/0148"
+        },
+        "mapId": 19
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.141169632422383,
+              38.43372329558268
+            ],
+            [
+              27.14148268149729,
+              38.43369913840781
+            ],
+            [
+              27.141494359347163,
+              38.43385046984942
+            ],
+            [
+              27.141181310272255,
+              38.43387462702429
+            ],
+            [
+              27.141169632422383,
+              38.43372329558268
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 20,
+      "properties": {
+        "id": "TR-35-KON-7105-3",
+        "ada": "7105",
+        "parsel": "3",
+        "il": "İzmir",
+        "ilce": "Konak",
+        "mahalle": "Alsancak",
+        "pafta": "F22-4/1",
+        "yuzolcumuM2": 290,
+        "tapuTipi": "Arsa",
+        "zoningType": "Yesil",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.04,
+        "kaks": 0.09,
+        "gabariM": 4.5,
+        "katSiniri": 1,
+        "yolCephesiM": 22,
+        "planAdi": "Mevzii İmar Planı",
+        "planOnayTarihi": "2018-02-19",
+        "yatirimSkoru": 44,
+        "riskler": {
+          "deprem": 4,
+          "heyelan": 2,
+          "sel": 2,
+          "yangin": 1
+        },
+        "cevre": {
+          "metroM": 688,
+          "hastaneKm": 5.31,
+          "okulKm": 1.94,
+          "parkM": 667,
+          "ulasimSkoru": 93,
+          "gurultuSkoru": 37
+        },
+        "planNotlari": [
+          "Riskli yapı tespiti gerektiğinde 6306 uygulanır.",
+          "Yol kotu üzerinden gabari hesaplanır.",
+          "Çekme mesafesi: ön bahçe 5 m, yan bahçe 3 m."
+        ],
+        "centroid": [
+          27.146022067901235,
+          38.438399794238684
+        ],
+        "aski": {
+          "durum": "onaylandi",
+          "baslangic": "2025-08-01",
+          "bitis": "2025-09-30",
+          "askiNo": "AS-2025/0922"
+        },
+        "mapId": 20
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.14593495358022,
+              38.438315334758485
+            ],
+            [
+              27.146119369133235,
+              38.43832730438441
+            ],
+            [
+              27.14610918222225,
+              38.43848425371888
+            ],
+            [
+              27.145924766669236,
+              38.43847228409296
+            ],
+            [
+              27.14593495358022,
+              38.438315334758485
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 21,
+      "properties": {
+        "id": "TR-35-KON-7280-2",
+        "ada": "7280",
+        "parsel": "2",
+        "il": "İzmir",
+        "ilce": "Konak",
+        "mahalle": "Güzelyalı",
+        "pafta": "F22-2/3",
+        "yuzolcumuM2": 599,
+        "tapuTipi": "Tarla",
+        "zoningType": "Turizm",
+        "yapilasmaSekli": "Blok",
+        "taks": 0.39,
+        "kaks": 1.76,
+        "gabariM": 17.2,
+        "katSiniri": 6,
+        "yolCephesiM": 13.6,
+        "planAdi": "Kentsel Dönüşüm UİP",
+        "planOnayTarihi": "2018-09-23",
+        "yatirimSkoru": 50,
+        "riskler": {
+          "deprem": 2,
+          "heyelan": 1,
+          "sel": 1,
+          "yangin": 2
+        },
+        "cevre": {
+          "metroM": 1136,
+          "hastaneKm": 2.44,
+          "okulKm": 0.43,
+          "parkM": 280,
+          "ulasimSkoru": 90,
+          "gurultuSkoru": 76
+        },
+        "planNotlari": [
+          "3194 sayılı İmar Kanunu uyarınca uygulanır.",
+          "Yapı yaklaşma sınırı dışında çıkma yapılamaz.",
+          "Otopark Yönetmeliği gereği parsel içinde otopark zorunludur.",
+          "TKGM tescilli yapı koruma altındadır."
+        ],
+        "centroid": [
+          27.126079423868312,
+          38.407861471193414
+        ],
+        "aski": {
+          "durum": "reddedildi",
+          "baslangic": "2024-11-12",
+          "bitis": "2025-01-11",
+          "askiNo": "AS-2024/1112"
+        },
+        "mapId": 21
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.12590805256762,
+              38.407798221440224
+            ],
+            [
+              27.12621365026993,
+              38.40773756829963
+            ],
+            [
+              27.126250795169003,
+              38.4079247209466
+            ],
+            [
+              27.125945197466695,
+              38.4079853740872
+            ],
+            [
+              27.12590805256762,
+              38.407798221440224
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 22,
+      "properties": {
+        "id": "TR-35-KAR-8001-2",
+        "ada": "8001",
+        "parsel": "2",
+        "il": "İzmir",
+        "ilce": "Karşıyaka",
+        "mahalle": "Bostanlı",
+        "pafta": "F22-4/1",
+        "yuzolcumuM2": 532,
+        "tapuTipi": "Arsa",
+        "zoningType": "Kamu",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.34,
+        "kaks": 0.89,
+        "gabariM": 13.3,
+        "katSiniri": 4,
+        "yolCephesiM": 13,
+        "planAdi": "Uygulama İmar Planı",
+        "planOnayTarihi": "2023-08-04",
+        "yatirimSkoru": 42,
+        "riskler": {
+          "deprem": 3,
+          "heyelan": 3,
+          "sel": 3,
+          "yangin": 0
+        },
+        "cevre": {
+          "metroM": 979,
+          "hastaneKm": 5.82,
+          "okulKm": 2.87,
+          "parkM": 556,
+          "ulasimSkoru": 74,
+          "gurultuSkoru": 57
+        },
+        "planNotlari": [
+          "Otopark Yönetmeliği gereği parsel içinde otopark zorunludur.",
+          "Riskli yapı tespiti gerektiğinde 6306 uygulanır.",
+          "Yapı yaklaşma sınırı dışında çıkma yapılamaz.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır."
+        ],
+        "centroid": [
+          27.101759053497943,
+          38.46665221193416
+        ],
+        "aski": {
+          "durum": "onaylandi",
+          "baslangic": "2025-08-01",
+          "bitis": "2025-09-30",
+          "askiNo": "AS-2025/0922"
+        },
+        "mapId": 22
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.10162321458372,
+              38.46655296227615
+            ],
+            [
+              27.101897925345945,
+              38.4665572523898
+            ],
+            [
+              27.101894892412165,
+              38.466751461592175
+            ],
+            [
+              27.101620181649942,
+              38.466747171478524
+            ],
+            [
+              27.10162321458372,
+              38.46655296227615
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 23,
+      "properties": {
+        "id": "TR-35-KAR-8210-2",
+        "ada": "8210",
+        "parsel": "2",
+        "il": "İzmir",
+        "ilce": "Karşıyaka",
+        "mahalle": "Mavişehir",
+        "pafta": "F22-3/3",
+        "yuzolcumuM2": 399,
+        "tapuTipi": "Bahce",
+        "zoningType": "Turizm",
+        "yapilasmaSekli": "Blok",
+        "taks": 0.4,
+        "kaks": 1.54,
+        "gabariM": 17.5,
+        "katSiniri": 5,
+        "yolCephesiM": 15.3,
+        "planAdi": "Revizyon İmar Planı",
+        "planOnayTarihi": "2023-01-22",
+        "yatirimSkoru": 75,
+        "riskler": {
+          "deprem": 2,
+          "heyelan": 0,
+          "sel": 1,
+          "yangin": 2
+        },
+        "cevre": {
+          "metroM": 151,
+          "hastaneKm": 5.88,
+          "okulKm": 2.46,
+          "parkM": 737,
+          "ulasimSkoru": 75,
+          "gurultuSkoru": 73
+        },
+        "planNotlari": [
+          "Bodrum kat, doğal zemin altında kalmak şartıyla emsal harici tutulur.",
+          "Asma kat ana mekânın 1/3’ünü geçemez.",
+          "Çatı arası bağımsız bölüm oluşturulamaz.",
+          "Mevzii imar planına tabidir.",
+          "3194 sayılı İmar Kanunu uyarınca uygulanır.",
+          "Yol kotu üzerinden gabari hesaplanır."
+        ],
+        "centroid": [
+          27.083650000000002,
+          38.47781476337449
+        ],
+        "aski": {
+          "durum": "onaylandi",
+          "baslangic": "2025-08-01",
+          "bitis": "2025-09-30",
+          "askiNo": "AS-2025/0922"
+        },
+        "mapId": 23
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.083529895703165,
+              38.47773038248657
+            ],
+            [
+              27.083745206206707,
+              38.47770304518183
+            ],
+            [
+              27.08377010429684,
+              38.47789914426241
+            ],
+            [
+              27.083554793793297,
+              38.477926481567145
+            ],
+            [
+              27.083529895703165,
+              38.47773038248657
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 24,
+      "properties": {
+        "id": "TR-35-BOR-9105-2",
+        "ada": "9105",
+        "parsel": "2",
+        "il": "İzmir",
+        "ilce": "Bornova",
+        "mahalle": "Ergene",
+        "pafta": "F22-3/2",
+        "yuzolcumuM2": 512,
+        "tapuTipi": "Bahce",
+        "zoningType": "Tarim",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.04,
+        "kaks": 0.1,
+        "gabariM": 7,
+        "katSiniri": 2,
+        "yolCephesiM": 7.6,
+        "planAdi": "Revizyon İmar Planı",
+        "planOnayTarihi": "2015-09-12",
+        "yatirimSkoru": 77,
+        "riskler": {
+          "deprem": 2,
+          "heyelan": 3,
+          "sel": 3,
+          "yangin": 0
+        },
+        "cevre": {
+          "metroM": 755,
+          "hastaneKm": 3.43,
+          "okulKm": 1.89,
+          "parkM": 473,
+          "ulasimSkoru": 67,
+          "gurultuSkoru": 77
+        },
+        "planNotlari": [
+          "Yapı yaklaşma sınırı dışında çıkma yapılamaz.",
+          "Çatı arası bağımsız bölüm oluşturulamaz.",
+          "Bodrum kat, doğal zemin altında kalmak şartıyla emsal harici tutulur.",
+          "3194 sayılı İmar Kanunu uyarınca uygulanır."
+        ],
+        "centroid": [
+          27.210306378600823,
+          38.47577978395062
+        ],
+        "mapId": 24
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              27.21017669420739,
+              38.47567028062721
+            ],
+            [
+              27.210458417405572,
+              38.47570433051075
+            ],
+            [
+              27.210436062994255,
+              38.47588928727403
+            ],
+            [
+              27.210154339796073,
+              38.47585523739049
+            ],
+            [
+              27.21017669420739,
+              38.47567028062721
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 25,
+      "properties": {
+        "id": "TR-16-NIL-1308-2",
+        "ada": "1308",
+        "parsel": "2",
+        "il": "Bursa",
+        "ilce": "Nilüfer",
+        "mahalle": "Görükle",
+        "pafta": "F22-3/2",
+        "yuzolcumuM2": 389,
+        "tapuTipi": "Arsa",
+        "zoningType": "Konut",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.28,
+        "kaks": 1.53,
+        "gabariM": 17.8,
+        "katSiniri": 6,
+        "yolCephesiM": 20,
+        "planAdi": "1/1000 ölçekli UİP",
+        "planOnayTarihi": "2022-07-22",
+        "yatirimSkoru": 46,
+        "riskler": {
+          "deprem": 5,
+          "heyelan": 2,
+          "sel": 3,
+          "yangin": 0
+        },
+        "cevre": {
+          "metroM": 1440,
+          "hastaneKm": 5.15,
+          "okulKm": 1.95,
+          "parkM": 692,
+          "ulasimSkoru": 53,
+          "gurultuSkoru": 27
+        },
+        "planNotlari": [
+          "Riskli yapı tespiti gerektiğinde 6306 uygulanır.",
+          "Çekme mesafesi: ön bahçe 5 m, yan bahçe 3 m.",
+          "Asma kat ana mekânın 1/3’ünü geçemez.",
+          "Bodrum kat, doğal zemin altında kalmak şartıyla emsal harici tutulur.",
+          "Çatı arası bağımsız bölüm oluşturulamaz."
+        ],
+        "centroid": [
+          28.879097119341566,
+          40.22734830246913
+        ],
+        "mapId": 25
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              28.878985653552117,
+              40.22725722068735
+            ],
+            [
+              28.87918875586644,
+              40.22723729228717
+            ],
+            [
+              28.879208585131014,
+              40.227439384250914
+            ],
+            [
+              28.87900548281669,
+              40.22745931265109
+            ],
+            [
+              28.878985653552117,
+              40.22725722068735
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 26,
+      "properties": {
+        "id": "TR-16-NIL-1510-2",
+        "ada": "1510",
+        "parsel": "2",
+        "il": "Bursa",
+        "ilce": "Nilüfer",
+        "mahalle": "Özlüce",
+        "pafta": "F22-1/1",
+        "yuzolcumuM2": 312,
+        "tapuTipi": "Arsa",
+        "zoningType": "Konut",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.3,
+        "kaks": 2.06,
+        "gabariM": 19.8,
+        "katSiniri": 5,
+        "yolCephesiM": 17.2,
+        "planAdi": "Uygulama İmar Planı",
+        "planOnayTarihi": "2022-04-01",
+        "yatirimSkoru": 92,
+        "riskler": {
+          "deprem": 3,
+          "heyelan": 2,
+          "sel": 0,
+          "yangin": 2
+        },
+        "cevre": {
+          "metroM": 522,
+          "hastaneKm": 4.95,
+          "okulKm": 2.3,
+          "parkM": 763,
+          "ulasimSkoru": 68,
+          "gurultuSkoru": 49
+        },
+        "planNotlari": [
+          "Otopark Yönetmeliği gereği parsel içinde otopark zorunludur.",
+          "TKGM tescilli yapı koruma altındadır.",
+          "Yol kotu üzerinden gabari hesaplanır.",
+          "Bodrum kat, doğal zemin altında kalmak şartıyla emsal harici tutulur.",
+          "3194 sayılı İmar Kanunu uyarınca uygulanır."
+        ],
+        "centroid": [
+          28.930116975308643,
+          40.21252247942387
+        ],
+        "mapId": 26
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              28.929992453944863,
+              40.2124675035581
+            ],
+            [
+              28.93021638261276,
+              40.21242949499644
+            ],
+            [
+              28.930241496672423,
+              40.21257745528963
+            ],
+            [
+              28.930017568004526,
+              40.21261546385129
+            ],
+            [
+              28.929992453944863,
+              40.2124675035581
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 27,
+      "properties": {
+        "id": "TR-16-OSM-2012-2",
+        "ada": "2012",
+        "parsel": "2",
+        "il": "Bursa",
+        "ilce": "Osmangazi",
+        "mahalle": "Soğanlı",
+        "pafta": "F22-3/3",
+        "yuzolcumuM2": 569,
+        "tapuTipi": "Arsa",
+        "zoningType": "Karma",
+        "yapilasmaSekli": "Blok",
+        "taks": 0.35,
+        "kaks": 3.21,
+        "gabariM": 26.5,
+        "katSiniri": 9,
+        "yolCephesiM": 17.9,
+        "planAdi": "Revizyon İmar Planı",
+        "planOnayTarihi": "2014-06-22",
+        "yatirimSkoru": 92,
+        "riskler": {
+          "deprem": 5,
+          "heyelan": 1,
+          "sel": 2,
+          "yangin": 1
+        },
+        "cevre": {
+          "metroM": 1303,
+          "hastaneKm": 2.88,
+          "okulKm": 2.92,
+          "parkM": 109,
+          "ulasimSkoru": 67,
+          "gurultuSkoru": 76
+        },
+        "planNotlari": [
+          "Mevzii imar planına tabidir.",
+          "TKGM tescilli yapı koruma altındadır.",
+          "Çatı arası bağımsız bölüm oluşturulamaz.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır."
+        ],
+        "centroid": [
+          29.048161522633745,
+          40.185980606995884
+        ],
+        "aski": {
+          "durum": "reddedildi",
+          "baslangic": "2024-11-12",
+          "bitis": "2025-01-11",
+          "askiNo": "AS-2024/1112"
+        },
+        "mapId": 27
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              29.048034232083804,
+              40.185854190108145
+            ],
+            [
+              29.048318173135446,
+              40.18589317282679
+            ],
+            [
+              29.048288813183685,
+              40.18610702388362
+            ],
+            [
+              29.048004872132044,
+              40.18606804116498
+            ],
+            [
+              29.048034232083804,
+              40.185854190108145
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 28,
+      "properties": {
+        "id": "TR-07-MUR-4502-2",
+        "ada": "4502",
+        "parsel": "2",
+        "il": "Antalya",
+        "ilce": "Muratpaşa",
+        "mahalle": "Lara",
+        "pafta": "F22-4/1",
+        "yuzolcumuM2": 252,
+        "tapuTipi": "Bahce",
+        "zoningType": "Karma",
+        "yapilasmaSekli": "Blok",
+        "taks": 0.46,
+        "kaks": 2.87,
+        "gabariM": 25.7,
+        "katSiniri": 10,
+        "yolCephesiM": 17.7,
+        "planAdi": "Uygulama İmar Planı",
+        "planOnayTarihi": "2021-04-19",
+        "yatirimSkoru": 43,
+        "riskler": {
+          "deprem": 3,
+          "heyelan": 3,
+          "sel": 2,
+          "yangin": 2
+        },
+        "cevre": {
+          "metroM": 989,
+          "hastaneKm": 3.76,
+          "okulKm": 0.38,
+          "parkM": 300,
+          "ulasimSkoru": 85,
+          "gurultuSkoru": 70
+        },
+        "planNotlari": [
+          "Asma kat ana mekânın 1/3’ünü geçemez.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır.",
+          "Bodrum kat, doğal zemin altında kalmak şartıyla emsal harici tutulur.",
+          "Yapı yaklaşma sınırı dışında çıkma yapılamaz.",
+          "3194 sayılı İmar Kanunu uyarınca uygulanır.",
+          "Mevzii imar planına tabidir."
+        ],
+        "centroid": [
+          30.785507818930043,
+          36.86143801440329
+        ],
+        "aski": {
+          "durum": "onaylandi",
+          "baslangic": "2025-08-01",
+          "bitis": "2025-09-30",
+          "askiNo": "AS-2025/0922"
+        },
+        "mapId": 28
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              30.785417312691123,
+              36.86137177120738
+            ],
+            [
+              30.785583945205854,
+              36.86135564735637
+            ],
+            [
+              30.785598325168962,
+              36.8615042575992
+            ],
+            [
+              30.78543169265423,
+              36.86152038145021
+            ],
+            [
+              30.785417312691123,
+              36.86137177120738
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 29,
+      "properties": {
+        "id": "TR-07-MUR-410-2",
+        "ada": "410",
+        "parsel": "2",
+        "il": "Antalya",
+        "ilce": "Muratpaşa",
+        "mahalle": "Kaleiçi",
+        "pafta": "F22-3/1",
+        "yuzolcumuM2": 358,
+        "tapuTipi": "Bina",
+        "zoningType": "Kamu",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.3,
+        "kaks": 0.78,
+        "gabariM": 13.3,
+        "katSiniri": 4,
+        "yolCephesiM": 17.3,
+        "planAdi": "Mevzii İmar Planı",
+        "planOnayTarihi": "2022-05-19",
+        "yatirimSkoru": 50,
+        "riskler": {
+          "deprem": 2,
+          "heyelan": 1,
+          "sel": 3,
+          "yangin": 0
+        },
+        "cevre": {
+          "metroM": 1195,
+          "hastaneKm": 2.72,
+          "okulKm": 2.11,
+          "parkM": 697,
+          "ulasimSkoru": 88,
+          "gurultuSkoru": 65
+        },
+        "planNotlari": [
+          "Riskli yapı tespiti gerektiğinde 6306 uygulanır.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır.",
+          "3194 sayılı İmar Kanunu uyarınca uygulanır.",
+          "Yapı yaklaşma sınırı dışında çıkma yapılamaz.",
+          "Otopark Yönetmeliği gereği parsel içinde otopark zorunludur."
+        ],
+        "centroid": [
+          30.70413950617284,
+          36.883119084362136
+        ],
+        "aski": {
+          "durum": "askida",
+          "baslangic": "2026-04-15",
+          "bitis": "2026-06-14",
+          "askiNo": "AS-2026/0148"
+        },
+        "mapId": 29
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              30.704061571741846,
+              36.8830111679701
+            ],
+            [
+              30.704244536629787,
+              36.883037302173875
+            ],
+            [
+              30.704217440603834,
+              36.88322700075417
+            ],
+            [
+              30.704034475715893,
+              36.883200866550396
+            ],
+            [
+              30.704061571741846,
+              36.8830111679701
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 30,
+      "properties": {
+        "id": "TR-07-KON-5502-2",
+        "ada": "5502",
+        "parsel": "2",
+        "il": "Antalya",
+        "ilce": "Konyaaltı",
+        "mahalle": "Liman",
+        "pafta": "F22-3/3",
+        "yuzolcumuM2": 638,
+        "tapuTipi": "Arsa",
+        "zoningType": "Konut",
+        "yapilasmaSekli": "Ayrik",
+        "taks": 0.34,
+        "kaks": 1.75,
+        "gabariM": 18,
+        "katSiniri": 6,
+        "yolCephesiM": 7.3,
+        "planAdi": "Koruma Amaçlı UİP",
+        "planOnayTarihi": "2017-03-26",
+        "yatirimSkoru": 68,
+        "riskler": {
+          "deprem": 3,
+          "heyelan": 3,
+          "sel": 1,
+          "yangin": 1
+        },
+        "cevre": {
+          "metroM": 1131,
+          "hastaneKm": 3.95,
+          "okulKm": 2.72,
+          "parkM": 267,
+          "ulasimSkoru": 96,
+          "gurultuSkoru": 45
+        },
+        "planNotlari": [
+          "Yapı yaklaşma sınırı dışında çıkma yapılamaz.",
+          "3194 sayılı İmar Kanunu uyarınca uygulanır.",
+          "Mevzii imar planına tabidir.",
+          "Riskli yapı tespiti gerektiğinde 6306 uygulanır.",
+          "Çekme mesafesi: ön bahçe 5 m, yan bahçe 3 m.",
+          "Toplanma alanı mesafesi 350 m içinde sağlanmalıdır."
+        ],
+        "centroid": [
+          30.653035905349793,
+          36.860873508230455
+        ],
+        "mapId": 30
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              30.652898436339587,
+              36.86075570828143
+            ],
+            [
+              30.65318027807167,
+              36.860764278775015
+            ],
+            [
+              30.653173374359998,
+              36.86099130817948
+            ],
+            [
+              30.652891532627915,
+              36.860982737685895
+            ],
+            [
+              30.652898436339587,
+              36.86075570828143
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
