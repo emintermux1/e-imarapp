@@ -1,17 +1,15 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import Base
 
 class Municipality(Base):
     __tablename__ = "municipalities"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    province = Column(String)
-    district = Column(String)
-    slug = Column(String, unique=True)
-    keos_url = Column(String)
-    wms_url = Column(String)
-    wfs_url = Column(String)
-    ogc_capabilities_json = Column(String)  # Store as JSON string
-    
-    # Add other relevant fields as needed
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(index=True)
+    province: Mapped[str | None] = mapped_column()
+    district: Mapped[str | None] = mapped_column()
+    slug: Mapped[str] = mapped_column(unique=True, index=True)
+    keos_url: Mapped[str | None] = mapped_column()
+    wms_url: Mapped[str | None] = mapped_column()
+    wfs_url: Mapped[str | None] = mapped_column()
+    ogc_capabilities_json: Mapped[str | None] = mapped_column()
