@@ -146,3 +146,7 @@ WEBSITE_SESSION_SECRET=...
 OPENAI_API_KEY=...          # for plan-note explain
 PUSH_GATEWAY_URL=...        # for push channel delivery
 ```
+
+Design preparation for website-first rollout:
+
+- `docs/site-design-phase-1.md`
