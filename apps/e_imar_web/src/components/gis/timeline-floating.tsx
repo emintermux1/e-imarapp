@@ -10,15 +10,15 @@ import { useUIStore } from "@/stores/ui-store";
 import { useMapStore } from "@/stores/map-store";
 
 const MIN = 2010;
-const MAX = 2024;
-const KEY_YEARS = [2010, 2014, 2017, 2020, 2022, 2024];
+const MAX = 2026;
+const KEY_YEARS = [2010, 2014, 2017, 2020, 2022, 2024, 2026];
 
 /**
- * Floating Time Machine bar that sits 24px above the bottom-right HUD cluster.
+ * Floating Zaman Çizelgesi bar that sits 24px above the bottom-right HUD cluster.
  * Drives `useUIStore.timelineYear` and `compareMode`.
  *
  * UX:
- * - Hidden until the user clicks "Time Machine" in the topbar (or anywhere
+ * - Hidden until the user clicks "Zaman Çizelgesi" in the topbar (or anywhere
  *   else that calls `setTimelineYear(...)` for the first time).
  * - When `timelineYear === null` we render only the FAB-style entry pill
  *   instead, so the timeline doesn't crowd the map.
@@ -60,14 +60,14 @@ export function TimelineFloating() {
       >
         <button
           type="button"
-          onClick={() => setTimelineYear(2024)}
+          onClick={() => setTimelineYear(MAX)}
           className={cn(
             "inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-border-strong bg-surface-2 shadow-card text-[12px]",
             "text-fg-secondary hover:text-fg-primary hover:bg-surface-3 transition-colors"
           )}
         >
           <History className="h-3.5 w-3.5" />
-          Time Machine'i Aç
+          Zaman Çizelgesi'ni Aç
         </button>
       </motion.div>
     );
@@ -90,7 +90,7 @@ export function TimelineFloating() {
             <div className="flex items-center gap-2 min-w-0">
               <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-fg-muted">
                 <History className="h-3.5 w-3.5" />
-                Time Machine
+                Zaman Çizelgesi
               </span>
               <span className="text-base font-semibold tabular-nums text-fg-primary">
                 {timelineYear}

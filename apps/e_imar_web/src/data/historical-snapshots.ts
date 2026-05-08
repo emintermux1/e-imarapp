@@ -1,7 +1,7 @@
 import type { ZoningType } from "@/types/parcel";
 
 /**
- * Time Machine için parsel başına yıl bazlı durum görünüm anlık verileri.
+ * Zaman Çizelgesi için parsel başına yıl bazlı durum görünüm anlık verileri.
  *
  * Her parselin gerçek API entegrasyonunda farklı yıllarda farklı plan
  * notları, askı sürecinde olabilmesi mümkündür; mock veride sınırlı bir
@@ -40,9 +40,9 @@ export interface PlanChangeEntry {
   kategori: "Revizyon" | "Tadilat" | "İlk Plan" | "İptal" | "Onay";
 }
 
-const yearsAvailable = [2010, 2014, 2017, 2020, 2022, 2024] as const;
+const yearsAvailable = [2010, 2014, 2017, 2020, 2022, 2024, 2026] as const;
 
-export const HISTORICAL_YEAR_RANGE = { min: 2010, max: 2024 } as const;
+export const HISTORICAL_YEAR_RANGE = { min: 2010, max: 2026 } as const;
 
 /**
  * Mock snapshots — only a subset of parcels have explicit history. Others

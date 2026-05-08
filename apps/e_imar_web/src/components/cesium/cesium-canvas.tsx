@@ -133,7 +133,7 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
         lng,
         sunMonth,
         sunHour,
-        2024
+        2026
       );
       viewer.clock.currentTime = julian;
       viewer.clock.shouldAnimate = false;

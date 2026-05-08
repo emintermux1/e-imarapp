@@ -19,7 +19,7 @@ interface UIState {
   /** 2D MapLibre vs 3D Cesium. */
   mapMode: MapMode;
 
-  /** Currently selected year for the Time Machine timeline (null = current). */
+  /** Currently selected year for the Zaman Çizelgesi timeline (null = current). */
   timelineYear: number | null;
   /** When in compare mode, the year displayed on the right pane. */
   timelineCompareYear: number | null;
