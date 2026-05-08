@@ -139,12 +139,12 @@ export class OgcDiscoveryService {
 
     const walk = (node: any) => {
       if (node.SRS) {
-        if (Array.isArray(node.SRS)) srs.push(...node.SRS);
-        else srs.push(node.SRS);
+        if (Array.isArray(node.SRS)) srs.push(...node.SRS.flatMap((entry: string) => this.splitSrsTokens(entry)));
+        else srs.push(...this.splitSrsTokens(node.SRS));
       }
       if (node.CRS) {
-        if (Array.isArray(node.CRS)) srs.push(...node.CRS);
-        else srs.push(node.CRS);
+        if (Array.isArray(node.CRS)) srs.push(...node.CRS.flatMap((entry: string) => this.splitSrsTokens(entry)));
+        else srs.push(...this.splitSrsTokens(node.CRS));
       }
       if (node.Layer) {
         if (Array.isArray(node.Layer)) node.Layer.forEach(walk);
@@ -173,12 +173,20 @@ export class OgcDiscoveryService {
 
   private buildGetCapabilitiesUrl(base: string, path: string): string {
     const clean = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${clean}?request=GetCapabilities&service=WMS`;
+    const separator = clean.includes('?') ? '&' : '?';
+    return `${base}${clean}${separator}request=GetCapabilities&service=WMS`;
   }
 
   private toBaseUrl(url: string): string {
     const u = new URL(url);
     return `${u.protocol}//${u.host}`;
+  }
+
+  private splitSrsTokens(value: string): string[] {
+    return value
+      .split(/[\s,]+/)
+      .map((token) => token.trim())
+      .filter((token) => token.length > 0);
   }
 
   private async persistEndpoint(
