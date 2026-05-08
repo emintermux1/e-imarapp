@@ -1,34 +1,12 @@
-# Flutter/Dart
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-.pub/
-build/
+node_modules/
+dist/
 coverage/
-
-# Generated (only commit intentionally generated files)
-*.g.dart
-*.freezed.dart
-
-# IDE
-.idea/
-.vscode/
-*.iml
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Env/secrets
 .env
-.env.*
-!.env.example
-firebase_options.dart.local
-*.keystore
-*.jks
-key.properties
-
-# Logs
-*.log
+.env.local
+.env.production
+.env.staging
+.env.development
+npm-debug.log*
+*.tsbuildinfo
+.DS_Store
+tmp/
