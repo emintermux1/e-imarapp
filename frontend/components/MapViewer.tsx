@@ -10,9 +10,31 @@ interface MapViewerProps {
   geojson?: Record<string, unknown>;
   wmsUrl?: string;
   wmsLayer?: string;
+  basemap?: "osm" | "light" | "dark";
+  nearbyFeatures?: Array<{
+    id: number;
+    lon: number;
+    lat: number;
+    title: string;
+    subtitle?: string;
+  }>;
 }
 
-export function MapViewer({ center = [28.9784, 41.0082], zoom = 12, geojson, wmsUrl, wmsLayer }: MapViewerProps) {
+const basemapTileUrls: Record<NonNullable<MapViewerProps["basemap"]>, string> = {
+  osm: "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  light: "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+  dark: "https://a.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png",
+};
+
+export function MapViewer({
+  center = [28.9784, 41.0082],
+  zoom = 12,
+  geojson,
+  wmsUrl,
+  wmsLayer,
+  basemap = "light",
+  nearbyFeatures = [],
+}: MapViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -25,18 +47,18 @@ export function MapViewer({ center = [28.9784, 41.0082], zoom = 12, geojson, wms
       style: {
         version: 8,
         sources: {
-          osm: {
+          basemap: {
             type: "raster",
-            tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
+            tiles: [basemapTileUrls[basemap]],
             tileSize: 256,
             attribution: "&copy; OpenStreetMap contributors",
           },
         },
         layers: [
           {
-            id: "osm",
+            id: "basemap",
             type: "raster",
-            source: "osm",
+            source: "basemap",
           },
         ],
       },
@@ -69,6 +91,31 @@ export function MapViewer({ center = [28.9784, 41.0082], zoom = 12, geojson, wms
         });
         map.addLayer({ id: "wms-layer", type: "raster", source: "wms", paint: { "raster-opacity": 0.7 } });
       }
+
+      map.addSource("nearby-results", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      map.addLayer({
+        id: "nearby-results-circle",
+        type: "circle",
+        source: "nearby-results",
+        paint: {
+          "circle-radius": 6,
+          "circle-color": "#06b6d4",
+          "circle-stroke-color": "#0f172a",
+          "circle-stroke-width": 1.5,
+        },
+      });
+
+      map.on("click", "nearby-results-circle", (event) => {
+        const feature = event.features?.[0];
+        if (!feature || feature.geometry.type !== "Point") return;
+        const coords = feature.geometry.coordinates as [number, number];
+        const title = String(feature.properties?.title || "Sonuç");
+        const subtitle = feature.properties?.subtitle ? `<br/>${String(feature.properties.subtitle)}` : "";
+        new maplibregl.Popup({ closeButton: true }).setLngLat(coords).setHTML(`<strong>${title}</strong>${subtitle}`).addTo(map);
+      });
     });
 
     mapRef.current = map;
@@ -85,6 +132,35 @@ export function MapViewer({ center = [28.9784, 41.0082], zoom = 12, geojson, wms
     map.setCenter([center[0], center[1]]);
     map.setZoom(zoom);
   }, [center, zoom]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    const source = map.getSource("basemap") as maplibregl.RasterTileSource | undefined;
+    if (!source) return;
+    source.setTiles([basemapTileUrls[basemap]]);
+  }, [basemap]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    const source = map.getSource("nearby-results") as maplibregl.GeoJSONSource | undefined;
+    if (!source) return;
+    source.setData({
+      type: "FeatureCollection",
+      features: nearbyFeatures.map((feature) => ({
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [feature.lon, feature.lat],
+        },
+        properties: {
+          title: feature.title,
+          subtitle: feature.subtitle ?? "",
+        },
+      })),
+    });
+  }, [nearbyFeatures]);
 
   return (
     <div className="relative w-full h-full rounded-xl overflow-hidden border border-[var(--border-subtle)]">
