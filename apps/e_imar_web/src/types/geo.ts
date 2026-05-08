@@ -17,6 +17,7 @@ export interface SearchResultBase {
   secondary?: string;
   meta?: string;
   centroid?: [number, number];
+  bbox?: BBox;
 }
 
 export interface ParcelSearchResult extends SearchResultBase {

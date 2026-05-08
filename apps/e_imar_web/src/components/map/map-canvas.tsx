@@ -86,6 +86,7 @@ export function MapCanvas({
   const setCursorLngLat = useMapStore((s) => s.setCursorLngLat);
   const setViewState = useMapStore((s) => s.setViewState);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
+  const rightPanelOpen = useUIStore((s) => s.rightPanelOpen);
 
   const layerVisibility = useUIStore((s) => s.layerVisibility);
   const layerOpacity = useUIStore((s) => s.layerOpacity);
@@ -130,19 +131,19 @@ export function MapCanvas({
       if (!detail) return;
       switch (detail.action) {
         case "in":
-          map.zoomIn({ duration: 200 });
+          map.zoomIn({ duration: getMotionDuration(200) });
           break;
         case "out":
-          map.zoomOut({ duration: 200 });
+          map.zoomOut({ duration: getMotionDuration(200) });
           break;
         case "north":
-          map.rotateTo(0, { duration: 300 });
+          map.rotateTo(0, { duration: getMotionDuration(300) });
           break;
         case "reset":
           map.fitBounds(TURKEY_FIT_BOUNDS, {
             bearing: 0,
             pitch: 0,
-            duration: 700,
+            duration: getMotionDuration(700),
             padding: 24
           });
           break;
@@ -238,11 +239,11 @@ export function MapCanvas({
       setRightPanelOpen(true);
       if (parcel.properties.centroid) {
         const [lng, lat] = parcel.properties.centroid;
-        const padding = window.innerWidth >= 1280 ? { top: 40, bottom: 40, left: 320, right: 440 } : { top: 40, bottom: 40, left: 24, right: 24 };
+        const padding = getViewportPadding(true);
         map.flyTo({
           center: [lng, lat],
           zoom: Math.max(map.getZoom(), 16),
-          duration: 600,
+          duration: getMotionDuration(600),
           padding
         });
       }
@@ -364,17 +365,33 @@ export function MapCanvas({
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map || !flyTarget) return;
-    const padding = window.innerWidth >= 1280 ? { top: 40, bottom: 40, left: 320, right: 440 } : { top: 40, bottom: 40, left: 24, right: 24 };
+    const padding = getViewportPadding(rightPanelOpen);
+    if (flyTarget.bounds) {
+      map.fitBounds(
+        [
+          [flyTarget.bounds.west, flyTarget.bounds.south],
+          [flyTarget.bounds.east, flyTarget.bounds.north]
+        ],
+        {
+          maxZoom: flyTarget.zoom ?? 16.2,
+          bearing: flyTarget.bearing ?? map.getBearing(),
+          pitch: flyTarget.pitch ?? map.getPitch(),
+          padding,
+          duration: getMotionDuration(750)
+        }
+      );
+      return;
+    }
     map.flyTo({
       center: flyTarget.center,
       zoom: flyTarget.zoom ?? Math.max(map.getZoom(), 14),
       bearing: flyTarget.bearing,
       pitch: flyTarget.pitch,
       padding,
-      duration: 700,
+      duration: getMotionDuration(700),
       essential: true
     });
-  }, [flyTarget]);
+  }, [flyTarget, rightPanelOpen]);
 
   React.useEffect(() => {
     const map = mapRef.current;
@@ -475,8 +492,11 @@ export function MapCanvas({
     }
     setOpacityIfExists(map, "parcels-line", "line-opacity", layerOpacity["parcels-line"]);
     setOpacityIfExists(map, "parcels-label", "text-opacity", layerOpacity["parcels-label"]);
+    setOpacityIfExists(map, "plan-constraint-line", "line-opacity", layerOpacity["plan-constraint-line"]);
+    setOpacityIfExists(map, "plan-donati-label", "text-opacity", layerOpacity["plan-donati-label"]);
     setOpacityIfExists(map, "metro-hatti", "line-opacity", layerOpacity["metro-hatti"]);
     setOpacityIfExists(map, "belediye-sinirlari", "line-opacity", layerOpacity["belediye-sinirlari"]);
+    setOpacityIfExists(map, "turkey-frame", "line-opacity", layerOpacity["turkey-frame"]);
     setOpacityIfExists(
       map,
       "deprem-risk-grid",
@@ -697,7 +717,7 @@ function locateUser(map: Map) {
       map.flyTo({
         center,
         zoom: Math.max(map.getZoom(), 15),
-        duration: 700,
+        duration: getMotionDuration(700),
         essential: true
       });
       emitLocationStatus("Konum bulundu");
@@ -711,6 +731,28 @@ function locateUser(map: Map) {
     },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
   );
+}
+
+function getViewportPadding(rightPanelOpen: boolean) {
+  if (window.innerWidth >= 1280) {
+    return {
+      top: 40,
+      bottom: 40,
+      left: 320,
+      right: rightPanelOpen ? 440 : 72
+    };
+  }
+  if (window.innerWidth >= 1024) {
+    return { top: 32, bottom: 32, left: 72, right: rightPanelOpen ? 360 : 32 };
+  }
+  return { top: 32, bottom: 32, left: 20, right: 20 };
+}
+
+function getMotionDuration(duration: number) {
+  if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return Math.min(220, Math.round(duration * 0.35));
+  }
+  return duration;
 }
 
 function emitLocationStatus(message: string) {

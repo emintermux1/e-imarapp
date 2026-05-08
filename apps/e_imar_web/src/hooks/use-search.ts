@@ -129,6 +129,17 @@ function buildParcelSearchText(feature: ParcelFeature) {
 
 function parcelToResult(f: ParcelFeature): SearchResult {
   const p = f.properties;
+  const ring = f.geometry.coordinates[0] ?? [];
+  const bbox = ring.reduce(
+    (acc, [lng, lat]) => ({
+      west: Math.min(acc.west, lng),
+      south: Math.min(acc.south, lat),
+      east: Math.max(acc.east, lng),
+      north: Math.max(acc.north, lat)
+    }),
+    { west: Number.POSITIVE_INFINITY, south: Number.POSITIVE_INFINITY, east: Number.NEGATIVE_INFINITY, north: Number.NEGATIVE_INFINITY }
+  );
+  const hasBbox = Number.isFinite(bbox.west);
   return {
     id: p.id,
     type: "parcel",
@@ -137,7 +148,8 @@ function parcelToResult(f: ParcelFeature): SearchResult {
     meta: p.planScale ? `${p.planScale} · ${p.planStatus ?? p.zoningType}` : p.zoningType,
     parcelId: p.id,
     zoningType: p.zoningType,
-    centroid: p.centroid
+    centroid: p.centroid,
+    bbox: hasBbox ? bbox : undefined
   };
 }
 

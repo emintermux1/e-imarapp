@@ -8,7 +8,10 @@ import {
   Star,
   Calculator,
   FileDown,
-  Lock
+  Lock,
+  Building2,
+  ShieldAlert,
+  Route
 } from "lucide-react";
 import {
   Accordion,
@@ -153,6 +156,27 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             </div>
           </header>
 
+          <section className="grid grid-cols-3 gap-2 px-3 py-2 border-b border-border-subtle bg-surface-1/20">
+            <MetricCard
+              icon={<Building2 className="h-3.5 w-3.5" />}
+              label="Yapı Potansiyeli"
+              value={`${Math.round(parcel.yuzolcumuM2 * parcel.kaks).toLocaleString("tr-TR")} m²`}
+              hint={`KAKS ${parcel.kaks.toFixed(2)} · TAKS ${parcel.taks.toFixed(2)}`}
+            />
+            <MetricCard
+              icon={<ShieldAlert className="h-3.5 w-3.5" />}
+              label="Risk Bileşimi"
+              value={`D${parcel.riskler.deprem} · S${parcel.riskler.sel}`}
+              hint={`Heyelan ${parcel.riskler.heyelan} · Yangın ${parcel.riskler.yangin}`}
+            />
+            <MetricCard
+              icon={<Route className="h-3.5 w-3.5" />}
+              label="Erişilebilirlik"
+              value={`${Math.round(parcel.cevre.ulasimSkoru)}/100`}
+              hint={`Metro ${Math.round(parcel.cevre.metroM)} m · Park ${Math.round(parcel.cevre.parkM)} m`}
+            />
+          </section>
+
           <ScrollArea className="flex-1">
             <Accordion
               type="multiple"
@@ -273,5 +297,32 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
         </motion.aside>
       )}
     </AnimatePresence>
+  );
+}
+
+function MetricCard({
+  icon,
+  label,
+  value,
+  hint
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <article className="rounded-md border border-border-subtle bg-surface-2 px-2.5 py-2 min-w-0">
+      <div className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-fg-muted">
+        {icon}
+        <span className="truncate">{label}</span>
+      </div>
+      <p className="mt-1 text-xs font-semibold tabular-nums text-fg-primary truncate">
+        {value}
+      </p>
+      <p className="mt-0.5 text-[10px] text-fg-muted leading-snug">
+        {hint}
+      </p>
+    </article>
   );
 }

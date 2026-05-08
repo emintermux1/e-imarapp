@@ -109,7 +109,12 @@ export function GlobalSearch() {
       setSelectedParcelId(r.parcelId);
       setRightPanelOpen(true);
       if (r.centroid) {
-        flyTo({ center: r.centroid, zoom: 16, parcelId: r.parcelId });
+        flyTo({
+          center: r.centroid,
+          bounds: r.bbox,
+          zoom: 16,
+          parcelId: r.parcelId
+        });
       }
     } else if (r.type === "coordinate") {
       setSelectedParcelId(null);
