@@ -105,4 +105,13 @@ The running NestJS service exposes Swagger UI and JSON at:
 - `GET /observability/status`
 - `GET /observability/metrics`
 
+### Website Backend (No UI BFF)
+- `GET /website/architecture`
+- `GET /website/bootstrap?userReference=`
+- `POST /website/session/start`
+- `POST /website/session/verify`
+- `POST /website/bff/parcel-workflow`
+- `POST /website/bff/plan-note-explain`
+- `GET /website/workspace/:userReference`
+
 The API intentionally returns explicit readiness/error states when real data has not been ingested. It does not synthesize parcel or zoning answers.

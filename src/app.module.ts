@@ -21,6 +21,7 @@ import { SimulationModule } from './simulation/simulation.module';
 import { SourcesModule } from './sources/sources.module';
 import { StorageModule } from './storage/storage.module';
 import { UserDataModule } from './user-data/user-data.module';
+import { WebsiteModule } from './website/website.module';
 
 @Module({
   imports: [
@@ -45,7 +46,8 @@ import { UserDataModule } from './user-data/user-data.module';
     ReportsModule,
     SimulationModule,
     UserDataModule,
-    SatelliteModule
+    SatelliteModule,
+    WebsiteModule
   ]
 })
 export class AppModule {}
