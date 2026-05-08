@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { EplanService } from './eplan.service';
 import { TucbsCrossRefService } from './tucbs-cross-ref.service';
@@ -58,6 +58,25 @@ export class EplanController {
   @Post('notify')
   async triggerNotifications() {
     return this.eplan.triggerWatchlistNotifications();
+  }
+
+  @Post('subscriptions')
+  upsertSubscription(
+    @Body() body: {
+      userReference: string;
+      channel: 'webhook' | 'push';
+      target: string;
+      platform?: string;
+      metadata?: Record<string, unknown>;
+      active?: boolean;
+    }
+  ) {
+    return this.eplan.upsertNotificationSubscription(body);
+  }
+
+  @Get('subscriptions')
+  listSubscriptions(@Query('userReference') userReference: string) {
+    return this.eplan.listNotificationSubscriptions(userReference);
   }
 
   @Get('tucbs/capabilities')

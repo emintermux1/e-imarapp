@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { IntegrationErrorCode } from '../common/error-taxonomy';
 import { DatabaseService } from '../database/database.service';
 
 @Injectable()
 export class AnalysisService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly config: ConfigService
+  ) {}
 
   pipeline() {
     return {
@@ -65,5 +69,176 @@ export class AnalysisService {
       aiAnalyses: analyses.rows,
       explanation: 'Each data point traces back to a specific source, connector run, and timestamp. AI analysis results include confidence scores.'
     };
+  }
+
+  async parcelPotentialSummary(input: {
+    parcelId?: string;
+    parcelAreaM2?: number;
+    emsal?: number;
+    taks?: number;
+    zoningFunction?: string;
+    averageUnitM2?: number;
+  }): Promise<unknown> {
+    let payload = { ...input };
+
+    if (input.parcelId && this.db.isConfigured()) {
+      const result = await this.db.query(
+        `select ST_Area(p.geom::geography) as parcel_area_m2,
+                pzs.emsal, pzs.taks, zl.zoning_function
+         from parcels p
+         left join lateral (
+           select * from parcel_zoning_snapshots pzs
+           where pzs.parcel_id = p.id
+           order by pzs.created_at desc
+           limit 1
+         ) pzs on true
+         left join zoning_layers zl on zl.id = pzs.zoning_layer_id
+         where p.id = $1::uuid`,
+        [input.parcelId]
+      );
+      if ((result.rowCount ?? 0) > 0) {
+        const row = result.rows[0] as Record<string, string | number | null>;
+        payload = {
+          ...payload,
+          parcelAreaM2: Number(payload.parcelAreaM2 ?? row.parcel_area_m2 ?? 0),
+          emsal: Number(payload.emsal ?? row.emsal ?? 0),
+          taks: row.taks !== null && row.taks !== undefined ? Number(payload.taks ?? row.taks) : payload.taks,
+          zoningFunction: String(payload.zoningFunction ?? row.zoning_function ?? 'unknown')
+        };
+      }
+    }
+
+    const parcelAreaM2 = Number(payload.parcelAreaM2 ?? 0);
+    const emsal = Number(payload.emsal ?? 0);
+    const taks = payload.taks !== undefined ? Number(payload.taks) : undefined;
+    const averageUnitM2 = Number(payload.averageUnitM2 ?? 95);
+    const grossBuildableM2 = parcelAreaM2 > 0 && emsal > 0 ? parcelAreaM2 * emsal : 0;
+    const footprintM2 = taks && parcelAreaM2 > 0 ? parcelAreaM2 * taks : undefined;
+    const estimatedFloors = footprintM2 && footprintM2 > 0 ? Math.ceil(grossBuildableM2 / footprintM2) : null;
+    const estimatedUnits = grossBuildableM2 > 0 ? Math.max(1, Math.floor((grossBuildableM2 * 0.78) / averageUnitM2)) : 0;
+    const parkingNeed = Math.ceil(estimatedUnits * 1.0);
+    const zoning = (payload.zoningFunction || '').toLowerCase();
+    const recommendedUse = zoning.includes('ticari')
+      ? 'ticari'
+      : zoning.includes('konut')
+        ? 'konut'
+        : 'karma';
+    const riskScore = Math.min(
+      100,
+      Math.max(
+        5,
+        (emsal <= 0 ? 40 : 0) +
+        (!taks ? 20 : 0) +
+        (estimatedFloors && estimatedFloors > 12 ? 15 : 0) +
+        (recommendedUse === 'karma' ? 10 : 0)
+      )
+    );
+
+    return {
+      status: grossBuildableM2 > 0 ? 'ok' : 'requires_data',
+      summary: {
+        maxBuildingType: recommendedUse === 'ticari' ? 'ticari_blok' : recommendedUse === 'konut' ? 'konut_blok' : 'karma_blok',
+        estimatedFloors,
+        estimatedIndependentUnits: estimatedUnits,
+        estimatedParkingNeed: parkingNeed,
+        recommendedUse,
+        riskScore
+      },
+      assumptions: {
+        averageUnitM2,
+        netEfficiencyRatio: 0.78,
+        parkingPerUnit: 1.0
+      },
+      provenance: {
+        parcelId: input.parcelId ?? null,
+        zoningFunction: payload.zoningFunction ?? null
+      }
+    };
+  }
+
+  async explainPlanNotes(input: {
+    noteText: string;
+    audience?: 'citizen' | 'architect' | 'investor';
+    maxBullets?: number;
+  }): Promise<unknown> {
+    const noteText = (input.noteText || '').trim();
+    if (!noteText) return { status: 'invalid_input', message: 'noteText is required.' };
+
+    const apiKey = this.config.get<string>('OPENAI_API_KEY');
+    if (!apiKey) {
+      return {
+        status: 'requires_credentials',
+        issue: {
+          code: IntegrationErrorCode.RequiresCredentials,
+          message: 'OPENAI_API_KEY is not configured.'
+        }
+      };
+    }
+
+    const model = this.config.get<string>('OPENAI_MODEL') || 'gpt-4.1-mini';
+    const bulletCount = Math.min(12, Math.max(4, input.maxBullets ?? 6));
+    const audience = input.audience ?? 'citizen';
+
+    const systemPrompt = 'You explain Turkish zoning plan notes in clear Turkish. Be accurate, concise, and avoid legal overclaiming.';
+    const userPrompt = [
+      `Hedef kitle: ${audience}.`,
+      `Lütfen aşağıdaki imar notunu sade Türkçe ile açıkla.`,
+      `JSON formatında dön: {"plainSummary": "...", "bullets": ["..."], "risks": ["..."], "uncertainties": ["..."]}.`,
+      `Maksimum madde sayısı: ${bulletCount}.`,
+      `İmar Notu:\n${noteText}`
+    ].join('\n\n');
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model,
+          temperature: 0.2,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (!response.ok) {
+        return {
+          status: 'provider_error',
+          provider: 'openai',
+          httpStatus: response.status
+        };
+      }
+
+      const json = await response.json() as {
+        choices?: Array<{ message?: { content?: string } }>;
+      };
+      const content = json.choices?.[0]?.message?.content;
+      if (!content) return { status: 'provider_error', provider: 'openai', message: 'No content returned.' };
+
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(content);
+      } catch {
+        parsed = { plainSummary: content, bullets: [], risks: [], uncertainties: [] };
+      }
+
+      return {
+        status: 'ok',
+        provider: 'openai',
+        model,
+        explanation: parsed
+      };
+    } catch (error) {
+      return {
+        status: 'provider_error',
+        provider: 'openai',
+        message: String(error)
+      };
+    }
   }
 }

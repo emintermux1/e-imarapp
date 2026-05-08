@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as cheerio from 'cheerio';
+import { ConfigService } from '@nestjs/config';
 import { IntegrationErrorCode } from '../common/error-taxonomy';
 import { DatabaseService } from '../database/database.service';
 
@@ -29,7 +30,10 @@ interface ScrapedPlan {
 export class EplanService {
   private readonly logger = new Logger(EplanService.name);
 
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly config: ConfigService
+  ) {}
 
   async scrapeAskidakiPlanlar(province?: string, district?: string): Promise<unknown> {
     const url = this.buildSearchUrl('askida', province, district);
@@ -153,17 +157,45 @@ export class EplanService {
     );
 
     let notified = 0;
-    for (const row of unnotified.rows as { change_id: string; webhook_url?: string; notify_channels: string[] }[]) {
+    for (const row of unnotified.rows as { change_id: string; user_reference: string; webhook_url?: string; notify_channels: string[] }[]) {
       if (row.webhook_url && row.notify_channels.includes('webhook')) {
         try {
-          await fetch(row.webhook_url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(row)
-          });
+          await this.sendWebhook(row.webhook_url, row);
+          await this.logDelivery(row.change_id, null, 'webhook', row.webhook_url, row, 'sent', null);
         } catch (err) {
           this.logger.warn(`Webhook failed for change ${row.change_id}: ${err}`);
+          await this.logDelivery(row.change_id, null, 'webhook', row.webhook_url, row, 'failed', { error: String(err) });
         }
+      }
+
+      const subs = await this.db.query(
+        `select id, channel, target, platform
+         from notification_subscriptions
+         where user_reference = $1 and active = true`,
+        [row.user_reference]
+      );
+
+      for (const sub of subs.rows as { id: string; channel: 'webhook' | 'push'; target: string; platform?: string }[]) {
+        if (sub.channel === 'webhook') {
+          try {
+            await this.sendWebhook(sub.target, row);
+            await this.logDelivery(row.change_id, sub.id, sub.channel, sub.target, row, 'sent', null);
+          } catch (err) {
+            await this.logDelivery(row.change_id, sub.id, sub.channel, sub.target, row, 'failed', { error: String(err) });
+          }
+          continue;
+        }
+
+        const push = await this.sendPush(sub.target, row, sub.platform);
+        await this.logDelivery(
+          row.change_id,
+          sub.id,
+          sub.channel,
+          sub.target,
+          row,
+          push.status,
+          push.response
+        );
       }
 
       await this.db.query(`update plan_changes_log set notified = true where id = $1`, [row.change_id]);
@@ -171,6 +203,57 @@ export class EplanService {
     }
 
     return { notified };
+  }
+
+  async upsertNotificationSubscription(input: {
+    userReference: string;
+    channel: 'webhook' | 'push';
+    target: string;
+    platform?: string;
+    metadata?: Record<string, unknown>;
+    active?: boolean;
+  }): Promise<unknown> {
+    if (!this.db.isConfigured()) return { status: 'not_ready', issue: this.db.notConfiguredIssue() };
+    if (!input.userReference || !input.channel || !input.target) {
+      return { status: 'invalid_input', message: 'userReference, channel, and target are required.' };
+    }
+
+    const result = await this.db.query(
+      `insert into notification_subscriptions
+        (user_reference, channel, target, platform, metadata, active)
+       values ($1, $2, $3, $4, $5, coalesce($6, true))
+       on conflict (user_reference, channel, target) do update set
+         platform = excluded.platform,
+         metadata = excluded.metadata,
+         active = excluded.active,
+         updated_at = now()
+       returning id, user_reference, channel, target, platform, active, created_at, updated_at`,
+      [
+        input.userReference,
+        input.channel,
+        input.target,
+        input.platform ?? null,
+        JSON.stringify(input.metadata ?? {}),
+        input.active ?? true
+      ]
+    );
+
+    return { status: 'ok', subscription: result.rows[0] };
+  }
+
+  async listNotificationSubscriptions(userReference: string): Promise<unknown> {
+    if (!this.db.isConfigured()) return { status: 'not_ready', issue: this.db.notConfiguredIssue() };
+    if (!userReference) return { status: 'invalid_input', message: 'userReference is required.' };
+
+    const result = await this.db.query(
+      `select id, user_reference, channel, target, platform, active, metadata, created_at, updated_at
+       from notification_subscriptions
+       where user_reference = $1
+       order by created_at desc`,
+      [userReference]
+    );
+
+    return { status: 'ok', count: result.rowCount, subscriptions: result.rows };
   }
 
   async searchPlans(query: {
@@ -338,5 +421,66 @@ export class EplanService {
 
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private async sendWebhook(url: string, payload: unknown): Promise<void> {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  private async sendPush(token: string, payload: unknown, platform?: string): Promise<{
+    status: 'sent' | 'failed' | 'requires_provider';
+    response: Record<string, unknown> | null;
+  }> {
+    const gateway = this.config.get<string>('PUSH_GATEWAY_URL');
+    if (!gateway) {
+      return {
+        status: 'requires_provider',
+        response: { message: 'PUSH_GATEWAY_URL not configured.', platform: platform ?? null }
+      };
+    }
+
+    try {
+      const res = await fetch(gateway, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          platform: platform ?? 'unknown',
+          title: 'İmar değişikliği bildirimi',
+          body: 'Takip ettiğiniz bölgede yeni plan değişikliği var.',
+          payload
+        })
+      });
+      return {
+        status: res.ok ? 'sent' : 'failed',
+        response: { httpStatus: res.status }
+      };
+    } catch (error) {
+      return {
+        status: 'failed',
+        response: { error: String(error) }
+      };
+    }
+  }
+
+  private async logDelivery(
+    changeId: string,
+    subscriptionId: string | null,
+    channel: string,
+    target: string,
+    payload: unknown,
+    status: 'sent' | 'failed' | 'queued' | 'requires_provider',
+    response: Record<string, unknown> | null
+  ): Promise<void> {
+    await this.db.query(
+      `insert into notification_deliveries
+        (change_id, subscription_id, channel, target, payload, status, response)
+       values ($1, $2, $3, $4, $5, $6, $7)`,
+      [changeId, subscriptionId, channel, target, JSON.stringify(payload), status, response ? JSON.stringify(response) : null]
+    );
   }
 }

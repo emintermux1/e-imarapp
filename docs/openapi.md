@@ -57,6 +57,8 @@ The running NestJS service exposes Swagger UI and JSON at:
 - `GET /analysis/pipeline`
 - `GET /analysis/runs?limit=`
 - `GET /analysis/provenance/:parcelId`
+- `POST /analysis/parcel-potential`
+- `POST /analysis/plan-notes/explain`
 
 ### Reports
 - `POST /reports/request`
@@ -65,6 +67,12 @@ The running NestJS service exposes Swagger UI and JSON at:
 ### Simulation / Premium Spatial Tools
 - `GET /simulation/building-envelope/:parcelId`
 - `GET /simulation/merge-candidates/:parcelId`
+- `POST /simulation/emsal-share/calculate`
+
+### e-Plan Watchlist / Notification v1
+- `POST /eplan/subscriptions`
+- `GET /eplan/subscriptions?userReference=`
+- `POST /eplan/notify`
 
 ### User Data
 - `POST /users/history`
