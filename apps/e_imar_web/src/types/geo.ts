@@ -12,7 +12,7 @@ export interface BBox {
 
 export interface SearchResultBase {
   id: string;
-  type: "parcel" | "address" | "coordinate" | "belediye";
+  type: "parcel" | "address" | "coordinate" | "belediye" | "location";
   primary: string;
   secondary?: string;
   meta?: string;
@@ -43,8 +43,18 @@ export interface CoordinateSearchResult extends SearchResultBase {
   lat: number;
 }
 
+export interface LocationSearchResult extends SearchResultBase {
+  type: "location";
+  kind: "il" | "ilce" | "mahalle";
+  zoom: number;
+  il?: string;
+  ilce?: string;
+  mahalle?: string;
+}
+
 export type SearchResult =
   | ParcelSearchResult
   | AddressSearchResult
   | BelediyeSearchResult
-  | CoordinateSearchResult;
+  | CoordinateSearchResult
+  | LocationSearchResult;
