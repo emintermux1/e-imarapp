@@ -18,7 +18,8 @@ import {
   Camera,
   Share2,
   Check,
-  MousePointer2
+  MousePointer2,
+  GitCompareArrows
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { IconButton } from "@/components/ui/icon-button";
@@ -57,6 +58,9 @@ export function MapHud({
   const mapMode = useUIStore((s) => s.mapMode);
   const askiMode = useUIStore((s) => s.askiMode);
   const setMapMode = useUIStore((s) => s.setMapMode);
+  const setCompareMode = useUIStore((s) => s.setCompareMode);
+  const setTimelineYear = useUIStore((s) => s.setTimelineYear);
+  const setTimelineCompareYear = useUIStore((s) => s.setTimelineCompareYear);
   const [locationStatus, setLocationStatus] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -324,7 +328,17 @@ export function MapHud({
             </div>
             <div className="mt-1 tabular-nums text-fg-primary">{multiSelectedParcelIds.length} parsel seçili</div>
             <p className="mt-1 leading-relaxed">{selectionNotice ?? drawingMessage ?? (activeTool !== "idle" ? "Haritada nokta seçin. Ölçümler yaklaşık WGS84 hesabıdır." : "Shift+sürükle ile dikdörtgen seçim yapın.")}</p>
-            <button type="button" className="mt-2 w-full rounded-sm border border-border-subtle bg-surface-1 px-2 py-1 text-[10px] uppercase tracking-wider text-fg-muted hover:text-fg-primary">
+            <button
+              type="button"
+              disabled={multiSelectedParcelIds.length < 2}
+              onClick={() => {
+                setTimelineYear(2017);
+                setTimelineCompareYear(2026);
+                setCompareMode("timeMachine");
+              }}
+              className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-sm border border-border-subtle bg-surface-1 px-2 py-1 text-[10px] uppercase tracking-wider text-fg-muted hover:text-fg-primary disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <GitCompareArrows className="h-3.5 w-3.5" />
               Karşılaştırmayı başlat
             </button>
           </div>

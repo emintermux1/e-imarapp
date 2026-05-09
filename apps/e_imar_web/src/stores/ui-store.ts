@@ -15,6 +15,7 @@ interface UIState {
   layerOpacity: Record<string, number>;
   layerVisibility: Record<string, boolean>;
   legendCollapsed: boolean;
+  fullscreenMap: boolean;
 
   /** 2D MapLibre vs 3D Cesium. */
   mapMode: MapMode;
@@ -49,6 +50,7 @@ interface UIState {
   setLayerOpacity: (id: string, opacity: number) => void;
   setLayerVisibility: (id: string, visible: boolean) => void;
   setLegendCollapsed: (v: boolean) => void;
+  setFullscreenMap: (v: boolean) => void;
 
   setMapMode: (m: MapMode) => void;
   setTimelineYear: (y: number | null) => void;
@@ -110,6 +112,7 @@ export const useUIStore = create<UIState>()(
       layerOpacity: initialOpacity,
       layerVisibility: initialVisibility,
       legendCollapsed: false,
+      fullscreenMap: false,
 
       mapMode: "2d",
       timelineYear: null,
@@ -140,6 +143,7 @@ export const useUIStore = create<UIState>()(
           layerVisibility: { ...s.layerVisibility, [id]: visible }
         })),
       setLegendCollapsed: (v) => set({ legendCollapsed: v }),
+      setFullscreenMap: (v) => set({ fullscreenMap: v }),
 
       setMapMode: (m) => set({ mapMode: m }),
       setTimelineYear: (y) => set({ timelineYear: y }),

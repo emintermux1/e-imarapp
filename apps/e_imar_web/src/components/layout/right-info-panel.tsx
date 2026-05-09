@@ -47,6 +47,7 @@ import {
 import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useParcel } from "@/hooks/use-parcel";
+import { getParcelById } from "@/data/parcels";
 import { useWatchlistStore } from "@/stores/watchlist-store";
 import { useBackendParcelStore } from "@/stores/backend-parcel-store";
 import { useAskiStore } from "@/stores/aski-store";
@@ -79,6 +80,10 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
 
   const parcelFeature = useParcel(selectedId);
   const parcel = parcelFeature?.properties ?? null;
+  const comparisonParcels = multiSelectedParcelIds
+    .map((id) => getParcelById(id)?.properties)
+    .filter((item): item is NonNullable<typeof parcel> => Boolean(item))
+    .slice(0, 4);
   const isWatchlisted = parcel ? watchlistHas(parcel.id) : false;
   const backendGeometry = useBackendParcelStore((s) => s.getGeometry(selectedId));
   const backendResponse = useBackendParcelStore((s) => s.getResponse(selectedId));
@@ -106,10 +111,14 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
     state: "idle" | "loading" | "success" | "error";
     message?: string;
   }>({ state: "idle" });
+  const [panelLoading, setPanelLoading] = React.useState(false);
 
   React.useEffect(() => {
     setReportStatus({ state: "idle" });
     setWatchlistStatus({ state: "idle" });
+    setPanelLoading(Boolean(selectedId));
+    const timer = window.setTimeout(() => setPanelLoading(false), 320);
+    return () => window.clearTimeout(timer);
   }, [selectedId]);
 
   React.useEffect(() => {
@@ -421,7 +430,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
               <div className="flex items-center justify-between gap-2 rounded-md border border-[rgb(var(--accent-blue))]/30 bg-[rgb(var(--accent-blue)/0.08)] px-2.5 py-2 text-xs">
                 <span className="inline-flex items-center gap-1.5 text-fg-primary"><GitCompareArrows className="h-3.5 w-3.5" /> {multiSelectedParcelIds.length} parsel seçili</span>
                 <div className="flex items-center gap-2">
-                  <button type="button" className="font-medium text-fg-primary underline underline-offset-2">Karşılaştır</button>
+                  <button type="button" className="font-medium text-fg-primary underline underline-offset-2">Kart açık</button>
                   <button type="button" onClick={clearMultiSelection} className="text-fg-muted hover:text-fg-primary">Temizle</button>
                 </div>
               </div>
@@ -434,6 +443,10 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             />
           </header>
 
+          {panelLoading ? (
+            <ParcelPanelSkeleton />
+          ) : (
+            <>
           <section className="grid grid-cols-3 gap-2 px-3 py-2 border-b border-border-subtle bg-surface-1/20">
             <MetricCard
               icon={<Building2 className="h-3.5 w-3.5" />}
@@ -456,6 +469,9 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
           </section>
 
           <SectionParcelSummary parcel={parcelData!} />
+          {comparisonParcels.length >= 2 && (
+            <ParcelComparisonCard parcels={comparisonParcels} onClear={clearMultiSelection} />
+          )}
 
           <ScrollArea className="flex-1">
             {!backendGeometry && parcelData!.backendId && (
@@ -633,6 +649,8 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
               </div>
             )}
           </footer>
+            </>
+          )}
 
           <EmsalCalculatorPanel
             open={emsalOpen}
@@ -727,6 +745,91 @@ function LatestRegionsEmptyState({
   );
 }
 
+function ParcelPanelSkeleton() {
+  return (
+    <div className="flex-1 space-y-3 px-3 py-3">
+      <div className="grid grid-cols-3 gap-2">
+        {[0, 1, 2].map((item) => (
+          <SkeletonBlock key={item} className="h-[72px]" />
+        ))}
+      </div>
+      <SkeletonBlock className="h-28" />
+      <div className="grid grid-cols-2 gap-2">
+        {[0, 1, 2, 3, 4, 5].map((item) => (
+          <SkeletonBlock key={item} className="h-16" />
+        ))}
+      </div>
+      <div className="rounded-md border border-border-subtle bg-surface-1/60 px-3 py-2 text-[11px] text-fg-muted">
+        <span className="inline-flex items-center gap-1.5">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Parsel detay kartları hazırlanıyor…
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonBlock({ className }: { className?: string }) {
+  return (
+    <div className={cn("overflow-hidden rounded-md border border-border-subtle bg-surface-2", className)}>
+      <div className="h-full w-1/2 animate-[skeleton-pan_1.2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+      <style>{`@keyframes skeleton-pan {
+        0% { transform: translateX(-120%); }
+        100% { transform: translateX(260%); }
+      }`}</style>
+    </div>
+  );
+}
+
+function ParcelComparisonCard({
+  parcels,
+  onClear
+}: {
+  parcels: Array<NonNullable<ReturnType<typeof getParcelById>>["properties"]>;
+  onClear: () => void;
+}) {
+  return (
+    <section className="border-b border-border-subtle bg-surface-2 px-3 py-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div>
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-fg-primary">
+            <GitCompareArrows className="h-3.5 w-3.5 text-fg-muted" />
+            Parsel karşılaştırma
+          </div>
+          <p className="mt-0.5 text-[11px] text-fg-muted">2-4 seçili parsel; demo/derived değerler açık etiketlenir.</p>
+        </div>
+        <button type="button" onClick={onClear} className="text-[11px] font-medium text-fg-muted underline underline-offset-2 hover:text-fg-primary">
+          Temizle
+        </button>
+      </div>
+      <div className="grid gap-2">
+        {parcels.map((item) => (
+          <article key={item.id} className="rounded-md border border-border-subtle bg-surface-1 px-2.5 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-semibold tabular-nums text-fg-primary">{adaParselText(item.ada, item.parsel)}</span>
+              <SourceBadge status={item.sourceStatus ?? "demo"} className="h-4 px-1.5 text-[8px]" />
+            </div>
+            <div className="mt-2 grid grid-cols-4 gap-1.5 text-[10px]">
+              <CompareMetric label="Alan" value={formatArea(item.yuzolcumuM2)} />
+              <CompareMetric label="TAKS" value={item.taks > 0 ? item.taks.toFixed(2) : "unavailable"} />
+              <CompareMetric label="KAKS" value={item.kaks > 0 ? item.kaks.toFixed(2) : "unavailable"} />
+              <CompareMetric label="Risk" value={`D${item.riskler.deprem}/S${item.riskler.sel}`} />
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CompareMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-sm border border-border-subtle bg-surface-2 px-1.5 py-1">
+      <div className="uppercase tracking-wider text-fg-muted">{label}</div>
+      <div className="mt-0.5 truncate font-semibold tabular-nums text-fg-primary">{value}</div>
+    </div>
+  );
+}
 function ParcelWorkflowStrip({
   parcel,
   hasGeometry,
