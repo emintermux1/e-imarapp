@@ -113,6 +113,70 @@ export interface SourceHealthRecord {
   requires_credentials?: boolean;
 }
 
+export interface OgcLayerSummary {
+  name?: string | null;
+  title?: string | null;
+  srs?: string[];
+  crs?: string[];
+  bbox?: Record<string, unknown> | null;
+  queryable?: boolean;
+  abstract?: string | null;
+  sources?: string[];
+}
+
+export interface MunicipalGISEndpointRecord {
+  id: string;
+  source_id: string;
+  municipality_id?: number | null;
+  base_url: string;
+  wms_url: string;
+  wms_get_capabilities_url: string;
+  wms_version?: string | null;
+  wfs_url?: string | null;
+  wfs_get_capabilities_url?: string | null;
+  available_layers: OgcLayerSummary[];
+  supported_srs: string[];
+  supported_formats: string[];
+  status: string;
+  discovered_at: string;
+  refresh_after: string;
+  last_error?: string | null;
+  metadata: Record<string, unknown>;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface MunicipalGISDiscoveryResponse {
+  slug: string;
+  name: string;
+  tested_patterns: number;
+  live_endpoints: Array<Record<string, unknown>>;
+  keos_url?: string | null;
+  wms_url?: string | null;
+  wfs_url?: string | null;
+  discovered_at: string;
+  refresh_after?: string | null;
+  ogc?: {
+    status?: string;
+    base_url?: string | null;
+    wms_url?: string | null;
+    wms_get_capabilities_url?: string | null;
+    wms_version?: string | null;
+    wfs_url?: string | null;
+    wfs_get_capabilities_url?: string | null;
+    available_layers?: OgcLayerSummary[];
+    supported_srs?: string[];
+    supported_formats?: string[];
+    metadata?: Record<string, unknown>;
+    last_error?: string | null;
+    tested_urls?: string[];
+    discovered_at?: string;
+    refresh_after?: string;
+  };
+}
+
+export interface MunicipalGISEndpointListResponse extends Array<MunicipalGISEndpointRecord> {}
+
 export interface ComplianceSimulationResponse {
   compliant?: boolean;
   is_compliant?: boolean;

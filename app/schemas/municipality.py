@@ -1,6 +1,9 @@
-from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from __future__ import annotations
+
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel
 
 class MunicipalityResponse(BaseModel):
     id: int
@@ -25,6 +28,32 @@ class MunicipalityDiscoveryResponse(BaseModel):
     wms_url: Optional[str] = None
     wfs_url: Optional[str] = None
     discovered_at: str
+    refresh_after: Optional[str] = None
+    ogc: Optional[Dict[str, Any]] = None
+
+
+class MunicipalGISEndpointResponse(BaseModel):
+    id: str
+    source_id: str
+    municipality_id: Optional[int] = None
+    base_url: str
+    wms_url: str
+    wms_get_capabilities_url: str
+    wms_version: Optional[str] = None
+    wfs_url: Optional[str] = None
+    wfs_get_capabilities_url: Optional[str] = None
+    available_layers: List[Dict[str, Any]]
+    supported_srs: List[str]
+    supported_formats: List[str]
+    status: str
+    discovered_at: datetime
+    refresh_after: datetime
+    last_error: Optional[str] = None
+    metadata: Dict[str, Any]
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
 
 class ImarStatusResponse(BaseModel):
     belediye: str

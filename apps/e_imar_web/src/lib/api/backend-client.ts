@@ -1,6 +1,9 @@
 import type {
   BackendMapLayerResponse,
   ComplianceSimulationResponse,
+  MunicipalGISDiscoveryResponse,
+  MunicipalGISEndpointListResponse,
+  MunicipalGISEndpointRecord,
   LatestRegionsResponse,
   ParcelResponse,
   PlanResponse,
@@ -162,6 +165,22 @@ export function getSourceHealth() {
 
 export function discoverSource(sourceId: string) {
   return apiFetch<Record<string, unknown>>(`/sources/${sourceId}/discover`, { method: "POST" });
+}
+
+export function discoverMunicipalityGis(slug: string, force = false) {
+  return apiFetch<MunicipalGISDiscoveryResponse>(`/municipalities/${slug}/discover${queryString({ force })}`, {
+    method: "POST"
+  });
+}
+
+export function listMunicipalityGisEndpoints(slug: string) {
+  return apiFetch<MunicipalGISEndpointListResponse>(`/municipalities/${slug}/gis-endpoints`);
+}
+
+export function refreshMunicipalityGisEndpoints(slug: string) {
+  return apiFetch<MunicipalGISDiscoveryResponse>(`/municipalities/${slug}/gis-endpoints/refresh`, {
+    method: "POST"
+  });
 }
 
 export function getLiveMapLayers() {
