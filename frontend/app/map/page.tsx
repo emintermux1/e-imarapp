@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { MapViewer } from "@/components/MapViewer";
-import { getMapLayers, searchParcel } from "@/lib/api";
-import { Layers, RefreshCw, Search, ShieldCheck } from "lucide-react";
-import type { ParcelResponse } from "@/lib/types";
+import { discoverSource, getMapLayers, getSourceMunicipalities, searchParcel } from "@/lib/api";
+import { Layers, RefreshCw, Search, ShieldCheck, Radar } from "lucide-react";
+import type { ParcelResponse, SourceMunicipalitySummary } from "@/lib/types";
 
 export default function MapPage() {
   const [layers, setLayers] = useState<{ name: string; title?: string }[]>([]);
@@ -15,6 +15,8 @@ export default function MapPage() {
   const [il, setIl] = useState("");
   const [ilce, setIlce] = useState("");
   const [parcelFeatures, setParcelFeatures] = useState<GeoJSON.Feature[]>([]);
+  const [sources, setSources] = useState<SourceMunicipalitySummary[]>([]);
+  const [sourceProbeMessage, setSourceProbeMessage] = useState("");
 
   const loadLayers = async () => {
     setLoading(true);
@@ -44,6 +46,33 @@ export default function MapPage() {
     }
   };
 
+  const loadSources = async () => {
+    setLoading(true);
+    try {
+      const res = await getSourceMunicipalities();
+      setSources(res.municipalities);
+    } catch (e) {
+      alert("Kaynak listesi alınamadı: " + String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const probeSource = async (id: string) => {
+    setSourceProbeMessage("Kaynak probe çalışıyor...");
+    try {
+      const res = await discoverSource(id);
+      const available = res.probes.filter((probe) =>
+        ["available", "method_contract_required"].includes(probe.status)
+      ).length;
+      setSourceProbeMessage(
+        `${res.source.name}: ${available}/${res.probes.length} endpoint erişilebilir görünüyor.`
+      );
+    } catch (e) {
+      setSourceProbeMessage(`Probe başarısız: ${String(e)}`);
+    }
+  };
+
   return (
     <div className="h-[calc(100vh-4rem)] -mx-6 -my-6 md:-mx-8 md:-my-8 flex flex-col animate-fade-in-up bg-[linear-gradient(180deg,#120608_0%,#0A0A0F_65%)]">
       <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-3 bg-black/55 border-b border-red-950/60">
@@ -68,6 +97,13 @@ export default function MapPage() {
             className="flex items-center gap-1.5 text-sm bg-red-800/80 border border-red-600/70 rounded-lg px-3 py-1.5 hover:bg-red-700/80 transition-colors disabled:opacity-50"
           >
             <Search size={14} /> Parselleri Çek
+          </button>
+          <button
+            onClick={loadSources}
+            disabled={loading}
+            className="flex items-center gap-1.5 text-sm bg-black/60 border border-red-900/80 rounded-lg px-3 py-1.5 hover:bg-red-950/45 transition-colors disabled:opacity-50"
+          >
+            <Radar size={14} /> Kaynakları Yükle
           </button>
         </div>
       </div>
@@ -114,7 +150,7 @@ export default function MapPage() {
           />
         </div>
         {layers.length > 0 && (
-          <div className="w-72 border-l border-red-950/60 bg-black/45 overflow-y-auto p-4">
+          <div className="w-80 border-l border-red-950/60 bg-black/45 overflow-y-auto p-4 space-y-4">
             <h2 className="text-sm font-medium mb-3 text-red-200">WMS/WFS Katmanları</h2>
             <div className="space-y-2">
               {layers.map((layer) => (
@@ -128,6 +164,41 @@ export default function MapPage() {
               <p>• Hover glow, animated border ve pulse seçimi aktif.</p>
               <p>• Shift + sürükle ile çoklu parsel seçim aktif.</p>
               <p>• Yoğun bölgelerde cluster gösterimi aktif.</p>
+            </div>
+            <div className="mt-2 border-t border-red-950/70 pt-3">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-red-100">Ulusal + Belediye Kaynakları</h3>
+                <span className="text-[11px] text-red-200/70">{sources.length} kayıt</span>
+              </div>
+              <div className="space-y-2 max-h-72 overflow-auto pr-1">
+                {sources.slice(0, 40).map((source) => (
+                  <div key={source.id} className="rounded-md border border-red-950/70 bg-black/35 p-2">
+                    <p className="text-xs font-medium text-red-100">{source.name}</p>
+                    <p className="text-[11px] text-red-200/70">
+                      {source.province ?? "—"} / {source.district ?? "—"} · {source.vendor ?? "municipal"}
+                    </p>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <a
+                        href={source.homepageUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] text-red-300 underline underline-offset-2"
+                      >
+                        Portal
+                      </a>
+                      <button
+                        onClick={() => probeSource(source.id)}
+                        className="text-[11px] px-2 py-1 rounded border border-red-800/80 hover:bg-red-900/40"
+                      >
+                        Probe
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {sourceProbeMessage && (
+                <p className="mt-2 text-[11px] text-red-200/90">{sourceProbeMessage}</p>
+              )}
             </div>
           </div>
         )}

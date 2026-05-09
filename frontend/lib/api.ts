@@ -208,3 +208,25 @@ export async function getHistory() {
 export async function getNearby(lat: number, lon: number, radius = 1000) {
   return apiFetch<{ center: { lat: number; lon: number }; radius_m: number; results: import("./types").NearbyResult[] }>(`/user-data/nearby?lat=${lat}&lon=${lon}&radius_m=${radius}`);
 }
+
+// Source registry
+export async function getSourceMunicipalities(params?: {
+  province?: string;
+  vendor?: string;
+  accessStatus?: string;
+}) {
+  const qs = new URLSearchParams();
+  if (params?.province) qs.set("province", params.province);
+  if (params?.vendor) qs.set("vendor", params.vendor);
+  if (params?.accessStatus) qs.set("accessStatus", params.accessStatus);
+  const suffix = qs.toString();
+  return apiFetch<import("./types").SourceMunicipalityListResponse>(
+    `/sources/municipalities${suffix ? `?${suffix}` : ""}`
+  );
+}
+
+export async function discoverSource(sourceId: string) {
+  return apiFetch<import("./types").SourceProbeResponse>(`/connectors/${encodeURIComponent(sourceId)}/discover`, {
+    method: "POST"
+  });
+}

@@ -146,3 +146,39 @@ export interface NearbyResult {
   municipality?: string;
   distance_m: number;
 }
+
+export interface SourceMunicipalitySummary {
+  id: string;
+  name: string;
+  homepageUrl: string;
+  province?: string;
+  district?: string;
+  municipalitySlug?: string;
+  vendor?: string;
+  accessStatus: string;
+  capabilities: string[];
+  connectorKinds: string[];
+}
+
+export interface SourceMunicipalityListResponse {
+  status: string;
+  count: number;
+  municipalities: SourceMunicipalitySummary[];
+}
+
+export interface SourceProbeResponse {
+  source: {
+    id: string;
+    name: string;
+    homepageUrl: string;
+  };
+  candidates: string[];
+  probes: Array<{
+    endpoint: string;
+    status: string;
+    detectedKinds: string[];
+    statusCode?: number;
+    note?: string;
+  }>;
+  generatedAt: string;
+}
