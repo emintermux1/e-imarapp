@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sun, Moon, Eye, ChevronDown, Box } from "lucide-react";
+import { Sun, Moon, Eye, ChevronDown, Box, Clock } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { useUIStore } from "@/stores/ui-store";
 import { useMapStore } from "@/stores/map-store";
 import { useParcel } from "@/hooks/use-parcel";
@@ -13,6 +14,13 @@ import { cn } from "@/lib/utils";
 const MONTH_LABELS = [
   "Oca", "Şub", "Mar", "Nis", "May", "Haz",
   "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"
+];
+
+// Quick sun presets for common analysis times
+const SUN_PRESETS = [
+  { label: "Sabah", hour: 8, icon: "🌅" },
+  { label: "Öğle", hour: 12, icon: "☀️" },
+  { label: "Akşam", hour: 17, icon: "🌇" }
 ];
 
 /**
@@ -103,6 +111,25 @@ export function Section3DAnalizleri() {
                   />
                 }
               >
+                {/* Quick sun presets */}
+                <div className="flex gap-1.5">
+                  {SUN_PRESETS.map((preset) => (
+                    <Button
+                      key={preset.hour}
+                      variant={sunHour === preset.hour ? "primary" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        setSunHour(preset.hour);
+                        if (!shadowEnabled) setShadowEnabled(true);
+                      }}
+                      className="flex-1 text-[10px] px-2 py-1.5 h-auto"
+                    >
+                      <span className="mr-1">{preset.icon}</span>
+                      {preset.label}
+                    </Button>
+                  ))}
+                </div>
+
                 <div className="flex items-center gap-3 text-[11px] tabular-nums text-fg-secondary">
                   <span className="text-fg-muted uppercase tracking-wider text-[10px]">
                     Saat
@@ -138,8 +165,8 @@ export function Section3DAnalizleri() {
                   </span>
                 </div>
                 {!shadowEnabled && (
-                  <p className="text-[10px] text-fg-muted">
-                    Anahtarı açın: gerçek zamanlı gölgeleme açılır.
+                  <p className="text-[10px] text-fg-muted leading-snug">
+                    💡 Gölge analizini etkinleştirerek gerçek zamanlı gölgeleme görebilirsiniz.
                   </p>
                 )}
               </Section>
@@ -148,7 +175,7 @@ export function Section3DAnalizleri() {
                 <SwitchRow
                   icon={<Box className="h-3.5 w-3.5 text-fg-muted" />}
                   label="Emsal Envelope"
-                  hint="TAKS × kat × 3 m wireframe"
+                  hint="Maksimum inşaat potansiyelini göster"
                   checked={emsalWireframe}
                   onCheckedChange={setEmsalWireframe}
                 />
@@ -161,14 +188,20 @@ export function Section3DAnalizleri() {
                 />
               </div>
               {parcel && (
-                <div className="border-t border-border-subtle pt-2 grid grid-cols-2 gap-2 text-[10px]">
-                  <Stat label="Seçili parsel" value={`${parcel.ada}/${parcel.parsel}`} />
-                  <Stat label="Maks. kat" value={`${parcel.katSiniri} kat`} />
-                  <Stat label="Gabari" value={`${parcel.gabariM.toFixed(1)} m`} />
-                  <Stat
-                    label="3D envelope"
-                    value={`${Math.round(parcel.yuzolcumuM2 * parcel.kaks).toLocaleString("tr-TR")} m²`}
-                  />
+                <div className="border-t border-border-subtle pt-2">
+                  <div className="text-[10px] uppercase tracking-wider text-fg-muted font-medium mb-2">
+                    <Clock className="h-3 w-3 inline mr-1" />
+                    Seçili Parsel
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-[10px]">
+                    <Stat label="Ada / Parsel" value={`${parcel.ada}/${parcel.parsel}`} />
+                    <Stat label="Maks. Kat" value={`${parcel.katSiniri}`} />
+                    <Stat label="Gabari" value={`${parcel.gabariM.toFixed(0)} m`} />
+                    <Stat
+                      label="Max Yapı Alanı"
+                      value={`${Math.round(parcel.yuzolcumuM2 * parcel.kaks).toLocaleString("tr-TR")} m²`}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -182,8 +215,8 @@ export function Section3DAnalizleri() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded border border-border-subtle bg-surface-1/60 px-2 py-1.5">
-      <div className="uppercase tracking-wider text-fg-muted">{label}</div>
-      <div className="mt-0.5 text-fg-primary font-medium tabular-nums">{value}</div>
+      <div className="uppercase tracking-wider text-fg-muted text-[9px]">{label}</div>
+      <div className="mt-0.5 text-fg-primary font-medium tabular-nums text-xs">{value}</div>
     </div>
   );
 }
@@ -208,7 +241,9 @@ function Section({
         </span>
         {control}
       </div>
-      {children}
+      <div className="flex flex-col gap-2">
+        {children}
+      </div>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { ZONING_PRESETS } from "@/data/zoning";
 export const PARCEL_SOURCE = "parcels";
 export const TURKEY_GRID_SOURCE = "turkey-grid";
 export const ASKI_SOURCE = "aski-overlay";
+export const ACTIVE_PLAN_SOURCE = "active-plan-overlay";
 export const RISK_GRID_SOURCE = "risk-grid";
 export const TRANSPORT_SOURCE = "transport-lines";
 export const MUNICIPALITY_SOURCE = "municipality-boundaries";
@@ -323,6 +324,35 @@ export const buildAskiHatchedLayer = (
   }
 });
 
+export const buildActivePlanPointLayer = (
+  id = "yururlukte-plan-points"
+): CircleLayerSpecification => ({
+  id,
+  type: "circle",
+  source: ACTIVE_PLAN_SOURCE,
+  paint: {
+    "circle-color": "#D20A11",
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 3.2, 8, 4.8, 13, 6.4] as never,
+    "circle-opacity": 0.92,
+    "circle-stroke-color": "#FFFFFF",
+    "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 5, 0.8, 10, 1.4] as never,
+    "circle-stroke-opacity": 0.95
+  }
+});
+
+export const buildActivePlanHaloLayer = (
+  id = "yururlukte-plan-halo"
+): CircleLayerSpecification => ({
+  id,
+  type: "circle",
+  source: ACTIVE_PLAN_SOURCE,
+  paint: {
+    "circle-color": "#D20A11",
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 7, 8, 10, 13, 14] as never,
+    "circle-opacity": ["interpolate", ["linear"], ["zoom"], 5, 0.18, 10, 0.1] as never
+  }
+});
+
 /**
  * Risk grid heatmap-ish circle layer. Source data is a synthesised circle
  * grid built client-side (see `data/risk-grid.ts`).
@@ -467,6 +497,14 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     defaultVisible: true,
     defaultOpacity: 1,
     group: "Parsel"
+  },
+  {
+    id: "yururlukte-plan-points",
+    label: "Yürürlükteki Planlar",
+    description: "Türkiye genelindeki yürürlükteki NİP/UİP kayıt noktaları",
+    defaultVisible: true,
+    defaultOpacity: 0.95,
+    group: "Plan"
   },
   {
     id: "askida-overlay",

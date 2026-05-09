@@ -1,5 +1,6 @@
 import { adaParselText } from "@/lib/format";
 import type { ParcelFeature } from "@/types/parcel";
+import type { FlyTarget } from "@/stores/map-store";
 import { DEMO_PARCEL_CLUSTERS, type ParcelClusterSeed } from "./parcel-seeds";
 import { getLocationBoundary, type LocationBounds } from "./location-boundaries";
 import { slugify, getAllParcels } from "./parcels";
@@ -23,6 +24,12 @@ export interface LocationTargetQuery {
   il?: string;
   ilce?: string;
   mahalle?: string;
+}
+
+export interface LocationJumpOptions {
+  zoom?: number;
+  bounds?: FlyTarget["bounds"];
+  parcelId?: string;
 }
 
 interface ClusterGroup {
@@ -85,6 +92,18 @@ export function getLocationTargetForParcel(
     return findBestLocationTarget({ il: p.il, ilce: p.ilce });
   }
   return findBestLocationTarget({ il: p.il });
+}
+
+export function buildFlyTargetFromLocationTarget(
+  target: LocationTarget,
+  options: LocationJumpOptions = {}
+): Omit<FlyTarget, "seq"> {
+  return {
+    center: target.center,
+    zoom: options.zoom ?? target.zoom,
+    bounds: options.bounds,
+    parcelId: options.parcelId ?? target.parcelId
+  };
 }
 
 export function findBestLocationTarget({
@@ -275,10 +294,30 @@ function averageCenters(centers: Array<[number, number]>): [number, number] {
   return [lng / centers.length, lat / centers.length];
 }
 
-function getPolygonCentroid(parcel: ParcelFeature): [number, number] | undefined {
+export function getPolygonCentroid(parcel: ParcelFeature): [number, number] | undefined {
   const ring = parcel.geometry.coordinates[0];
   if (!ring || ring.length === 0) return undefined;
   return averageCenters(ring as Array<[number, number]>);
+}
+
+export function getRingCentroid(ring: Array<[number, number]>): [number, number] | undefined {
+  if (!ring || ring.length === 0) return undefined;
+  return averageCenters(ring);
+}
+
+export function getRingBounds(ring: Array<[number, number]>) {
+  if (!ring || ring.length === 0) return undefined;
+  let west = 180;
+  let east = -180;
+  let south = 90;
+  let north = -90;
+  for (const [lng, lat] of ring) {
+    if (lng < west) west = lng;
+    if (lng > east) east = lng;
+    if (lat < south) south = lat;
+    if (lat > north) north = lat;
+  }
+  return { west, east, south, north };
 }
 
 function cityZoom(il: string) {

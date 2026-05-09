@@ -412,6 +412,12 @@ function ResultRow({
           </div>
         )}
       </div>
+      {result.type === "location" && (
+        <span className="inline-flex items-center gap-1 rounded-sm border border-border-subtle bg-surface-1 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-fg-secondary shrink-0">
+          {result.meta ?? "Konum"}
+          <ArrowRight className="h-3 w-3" />
+        </span>
+      )}
       {result.type === "parcel" && (
         <div className="hidden sm:flex items-center gap-2 shrink-0">
           {result.meta && (
