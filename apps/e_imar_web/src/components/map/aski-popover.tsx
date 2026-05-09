@@ -18,6 +18,11 @@ import {
   ASKI_STATUS_STYLE,
   askiRemainingDays
 } from "@/data/aski-polygons";
+import {
+  buildFlyTargetFromLocationTarget,
+  getRingBounds,
+  getRingCentroid
+} from "@/data/location-navigation";
 import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
 import { getParcelById } from "@/data/parcels";
@@ -79,6 +84,26 @@ export function AskiPopover({ feature, position, onClose }: AskiPopoverProps) {
     if (f?.properties.centroid) {
       flyTo({ center: f.properties.centroid, zoom: 16 });
     }
+    onClose();
+  }
+
+  function openRegion() {
+    const bounds = getRingBounds(feature.ring);
+    const center = getRingCentroid(feature.ring) ?? feature.ring[0];
+    if (!center) return;
+    setSelectedParcelId(null);
+    setRightPanelOpen(false);
+    flyTo(
+      buildFlyTargetFromLocationTarget(
+        {
+          label: feature.label,
+          center,
+          zoom: 14.7,
+          kind: "mahalle"
+        },
+        bounds ? { bounds, zoom: 14.7 } : { zoom: 14.7 }
+      )
+    );
     onClose();
   }
 
@@ -160,6 +185,13 @@ export function AskiPopover({ feature, position, onClose }: AskiPopoverProps) {
           />
         </div>
         <footer className="px-3 pb-3 pt-1 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={openRegion}
+            className="inline-flex items-center gap-1 h-7 px-2.5 rounded-sm text-[12px] font-medium transition-colors bg-surface-1 hover:bg-surface-3 text-fg-primary border border-border-subtle"
+          >
+            Bölgeye Git <ArrowRight className="h-3.5 w-3.5" />
+          </button>
           <button
             type="button"
             onClick={openParcel}
