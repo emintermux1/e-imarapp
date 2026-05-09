@@ -44,7 +44,8 @@ async def discover_municipality(slug: str, db: AsyncSession = Depends(get_db)):
     if not m:
         raise HTTPException(status_code=404, detail="Municipality not found")
     try:
-        discovery = await NetcadKeosService().discover_municipality(slug)
+        async with NetcadKeosService() as service:
+            discovery = await service.discover_municipality(slug)
         return discovery
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Discovery failed: {str(e)}")
@@ -57,7 +58,8 @@ async def get_imar_status(
     db: AsyncSession = Depends(get_db)
 ):
     try:
-        status = await NetcadKeosService().get_imar_status(slug, ada, parsel)
+        async with NetcadKeosService() as service:
+            status = await service.get_imar_status(slug, ada, parsel)
         return status
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Imar status fetch failed: {str(e)}")

@@ -8,15 +8,17 @@ import {
   History,
   SlidersHorizontal,
   ChevronDown,
+  DatabaseZap,
   Database
 } from "lucide-react";
+import Link from "next/link";
 import { LayerToggleList } from "@/components/map/layer-toggle-list";
 import { WatchlistSection } from "./watchlist-section";
 import { SavedQueriesSection } from "./saved-queries-section";
 import { HistorySection } from "./history-section";
 import { FiltersSection } from "./filters-section";
+import { SourceStatusPanel } from "./source-status-panel";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
 
 interface SectionDef {
   id: string;
@@ -34,6 +36,13 @@ export function SidebarSections({ collapsed = false }: { collapsed?: boolean }) 
       title: "Katmanlar",
       icon: <Layers className="h-4 w-4" />,
       body: <LayerToggleList />,
+      defaultOpen: true
+    },
+    {
+      id: "sources",
+      title: "Canlı Veri Kaynakları",
+      icon: <DatabaseZap className="h-4 w-4" />,
+      body: <SourceStatusPanel />,
       defaultOpen: true
     },
     {
@@ -58,8 +67,15 @@ export function SidebarSections({ collapsed = false }: { collapsed?: boolean }) 
       defaultOpen: false
     },
     {
+      id: "filters",
+      title: "Filtreler",
+      icon: <SlidersHorizontal className="h-4 w-4" />,
+      body: <FiltersSection />,
+      defaultOpen: false
+    },
+    {
       id: "kaynaklar",
-      title: "Veri Kaynakları",
+      title: "Kaynaklar Ekranı",
       icon: <Database className="h-4 w-4" />,
       body: (
         <div className="rounded-md border border-border-subtle bg-surface-2 p-3 text-sm text-fg-secondary">
@@ -68,7 +84,7 @@ export function SidebarSections({ collapsed = false }: { collapsed?: boolean }) 
         </div>
       ),
       defaultOpen: false
-    },
+    }
   ];
 
   if (collapsed) return <CollapsedRail sections={sections} />;

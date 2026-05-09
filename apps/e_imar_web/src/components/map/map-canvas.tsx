@@ -6,8 +6,6 @@ import type { Map, MapMouseEvent } from "maplibre-gl";
 import { Layers } from "lucide-react";
 import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
-import type { AskiPolygonFeature } from "@/data/aski-polygons";
-import { getRiskGridCollection } from "@/data/risk-grid";
 import {
   getParcelsCollection,
   getParcelById,
@@ -18,47 +16,71 @@ import {
   findBestLocationTarget,
   getMapLabelTargets
 } from "@/data/location-navigation";
-import { useActiveAskiGeoJSON } from "@/lib/api/hooks";
+import { fetchMunicipalityCoverage } from "@/lib/api/eimar";
+import { BELEDIYE_LIST } from "@/data/belediye";
+import { PROVINCES } from "@/data/provinces";
 import { getStyleForBasemap, type BasemapId } from "@/lib/maplibre/styles";
 import {
   PARCEL_SOURCE,
+  ASKI_SOURCE,
+  RISK_GRID_SOURCE,
+  LIVE_SOURCE_REGISTRY_SOURCE,
   LOCATION_LABEL_SOURCE,
   MUNICIPALITY_SOURCE,
   MUNICIPALITY_COVERAGE_SOURCE,
-  RISK_GRID_SOURCE,
   buildParcelFillLayer,
   buildParcelLineLayer,
   buildParcelLabelLayer,
   buildParcelSelectedAccentLayer,
   buildParcelHoverDotLayer,
+  buildAskiFillLayer,
+  buildAskiLineLayer,
+  buildAskiHatchedLayer,
+  buildRiskGridLayer,
   buildLocationCityLabelLayer,
   buildLocationDistrictLabelLayer,
   buildLocationNeighborhoodLabelLayer,
   buildPlanConstraintLineLayer,
-  buildRiskGridLayer,
   buildMunicipalityBoundaryLayer,
   buildMunicipalityCoverageCircleLayer,
   buildMunicipalityCoverageLabelLayer
 } from "@/lib/maplibre/layers";
 import { describeSemanticFocus } from "@/lib/maplibre/semantic-focus";
-import { fetchMunicipalityCoverage } from "@/lib/api/eimar";
-import { BELEDIYE_LIST } from "@/data/belediye";
-import { PROVINCES } from "@/data/provinces";
+import { getAskiCollection } from "@/data/aski-polygons";
+import type { AskiPolygonFeature } from "@/data/aski-polygons";
+import { getRiskGridCollection } from "@/data/risk-grid";
+import { ZONING_PRESETS } from "@/data/zoning";
+import { getSnapshotForYear } from "@/data/historical-snapshots";
+import { useBackendParcelStore } from "@/stores/backend-parcel-store";
+import { useSourceStore } from "@/stores/source-store";
+import { useLatestRegionsStore } from "@/stores/latest-regions-store";
+import { parseBackendParcelId } from "@/lib/api/parcel-normalizer";
+import { geoJsonBounds, geoJsonCentroid, toFeatureCollection } from "@/lib/geojson";
 
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
+const BACKEND_SELECTED_SOURCE = "backend-selected-parcel";
+const LIVE_PLAN_REGIONS_SOURCE = "live-plan-regions";
 
 interface MapCanvasProps {
   className?: string;
   cursorReadoutRef?: React.RefObject<HTMLSpanElement>;
   zoomReadoutRef?: React.RefObject<HTMLSpanElement>;
-  onAskiClick?: (feature: AskiPolygonFeature, pos: { x: number; y: number }) => void;
+  /**
+   * Callback fired when an askı polygon is clicked. Hosts can render a side
+   * popover with details. Position is screen-space relative to the document.
+   */
+  onAskiClick?: (
+    feature: AskiPolygonFeature,
+    pos: { x: number; y: number }
+  ) => void;
 }
 
 export function MapCanvas({
   className,
   cursorReadoutRef,
-  zoomReadoutRef
+  zoomReadoutRef,
+  onAskiClick
 }: MapCanvasProps) {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const mapRef = React.useRef<Map | null>(null);
@@ -68,6 +90,10 @@ export function MapCanvas({
 
   const basemap = useMapStore((s) => s.basemap);
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
+  const selectedBackendFeature = useBackendParcelStore((s) => s.getFeature(selectedParcelId));
+  const liveLayers = useSourceStore((s) => s.liveLayers);
+  const loadLiveLayers = useSourceStore((s) => s.loadLiveLayers);
+  const selectedLatestRegion = useLatestRegionsStore((s) => s.selectedRegion);
   const flyTarget = useMapStore((s) => s.flyTarget);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
   const setHoveredParcelId = useMapStore((s) => s.setHoveredParcelId);
@@ -77,11 +103,13 @@ export function MapCanvas({
 
   const layerVisibility = useUIStore((s) => s.layerVisibility);
   const layerOpacity = useUIStore((s) => s.layerOpacity);
+  const askiMode = useUIStore((s) => s.askiMode);
+  const timelineYear = useUIStore((s) => s.timelineYear);
   const activeConstraintFilter = useUIStore((s) => s.activeConstraintFilter);
   const activePlanNoteFilter = useUIStore((s) => s.activePlanNoteFilter);
   const activeRiskFocus = useUIStore((s) => s.activeRiskFocus);
   const clearSemanticFocus = useUIStore((s) => s.clearSemanticFocus);
-  const askiGeoJsonQuery = useActiveAskiGeoJSON();
+
   const semanticFocus = React.useMemo(
     () =>
       describeSemanticFocus({
@@ -91,7 +119,9 @@ export function MapCanvas({
       }),
     [activeConstraintFilter, activePlanNoteFilter, activeRiskFocus]
   );
-  const [municipalityGeoJson, setMunicipalityGeoJson] = React.useState<GeoJSON.FeatureCollection<GeoJSON.Point> | null>(null);
+
+  const [municipalityGeoJson, setMunicipalityGeoJson] =
+    React.useState<GeoJSON.FeatureCollection<GeoJSON.Point> | null>(null);
 
   React.useEffect(() => {
     let mounted = true;
@@ -110,8 +140,11 @@ export function MapCanvas({
     };
   }, []);
 
-  // Lazy import: ensure CSS is present (already imported in globals).
-  // Initialize the map once.
+  const onAskiClickRef = React.useRef(onAskiClick);
+  React.useEffect(() => {
+    onAskiClickRef.current = onAskiClick;
+  }, [onAskiClick]);
+
   React.useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     let map: Map;
@@ -139,7 +172,6 @@ export function MapCanvas({
 
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
 
-    // Wire up HUD events
     const onControl = (e: Event) => {
       const detail = (e as CustomEvent<{ action: string }>).detail;
       if (!detail) return;
@@ -167,47 +199,45 @@ export function MapCanvas({
     };
     window.addEventListener("eimar:map:control", onControl);
 
-    // Synchronous source/layer setup. MapLibre queues these internally
-    // until the style finishes loading. This avoids losing the load event
-    // because of React 18 StrictMode double-mount in dev.
-    const ensureParcels = () => {
+    const ensureLayers = () => {
       if (!map.getSource(PARCEL_SOURCE)) {
         registerParcelLayers(map);
       }
+      ensureAskiLayers(map);
+      registerSemanticLayers(map);
       if (!map.getSource(LOCATION_LABEL_SOURCE)) {
         registerLocationLayers(map);
       }
-      registerSemanticLayers(map);
       if (!map.getSource(MUNICIPALITY_SOURCE)) {
         registerMunicipalityCoverageLayers(map);
       }
-      registerAskiLayers(map);
+      ensureLiveSourceLayers(map);
+      ensureBackendSelectedLayer(map);
+      ensureLatestRegionsLayer(map);
       applyLocationLabelTheme(map, basemap);
       applyVisibilityAndOpacity(map);
     };
     if (map.isStyleLoaded()) {
-      ensureParcels();
+      ensureLayers();
     } else {
-      map.once("load", ensureParcels);
+      map.once("load", ensureLayers);
     }
 
     map.on("styledata", () => {
-      // After basemap change (setStyle), the parcel source/layers are
-      // wiped. Re-register them.
       if (!map.isStyleLoaded()) return;
-      if (!map.getSource(PARCEL_SOURCE)) {
-        registerParcelLayers(map);
-      }
+      if (!map.getSource(PARCEL_SOURCE)) registerParcelLayers(map);
+      ensureAskiLayers(map);
+      registerSemanticLayers(map);
       if (!map.getSource(LOCATION_LABEL_SOURCE)) {
         registerLocationLayers(map);
       }
-      registerSemanticLayers(map);
       if (!map.getSource(MUNICIPALITY_SOURCE)) {
         registerMunicipalityCoverageLayers(map);
       }
-      registerAskiLayers(map);
+      ensureLiveSourceLayers(map);
+      ensureBackendSelectedLayer(map);
+      ensureLatestRegionsLayer(map);
       applyLocationLabelTheme(map, basemap);
-      // Re-apply selection state on style swap
       if (lastSelectedMapIdRef.current != null) {
         map.setFeatureState(
           { source: PARCEL_SOURCE, id: lastSelectedMapIdRef.current },
@@ -218,7 +248,6 @@ export function MapCanvas({
       applySemanticFocusStyles(map, semanticFocus);
     });
 
-    // mousemove — write coords directly to DOM (avoid React re-renders)
     let rafId: number | null = null;
     let pendingLngLat: { lng: number; lat: number } | null = null;
     const onMouseMove = (e: MapMouseEvent) => {
@@ -240,7 +269,6 @@ export function MapCanvas({
     map.on("mousemove", onMouseMove);
     map.on("mouseout", onMouseLeave);
 
-    // hover/click handlers on parcel-fill layer
     const onParcelMouseMove = (e: maplibregl.MapLayerMouseEvent) => {
       if (!e.features?.length) return;
       const id = e.features[0].id as string | number | undefined;
@@ -287,6 +315,7 @@ export function MapCanvas({
         });
       }
     };
+
     const onLocationMouseMove = () => {
       map.getCanvas().style.cursor = "pointer";
     };
@@ -296,7 +325,15 @@ export function MapCanvas({
     const onLocationClick = (e: maplibregl.MapLayerMouseEvent) => {
       const feature = e.features?.[0];
       const props = feature?.properties as
-        | { il?: string; ilce?: string; mahalle?: string; centerLng?: number; centerLat?: number; zoom?: number; kind?: string }
+        | {
+            il?: string;
+            ilce?: string;
+            mahalle?: string;
+            centerLng?: number;
+            centerLat?: number;
+            zoom?: number;
+            kind?: string;
+          }
         | undefined;
       if (!props) return;
       const target = findBestLocationTarget({ il: props.il, ilce: props.ilce, mahalle: props.mahalle });
@@ -311,7 +348,10 @@ export function MapCanvas({
         pitch,
         duration: 650,
         essential: true,
-        padding: window.innerWidth >= 1280 ? { top: 40, bottom: 40, left: 320, right: 440 } : { top: 40, bottom: 40, left: 24, right: 24 }
+        padding:
+          window.innerWidth >= 1280
+            ? { top: 40, bottom: 40, left: 320, right: 440 }
+            : { top: 40, bottom: 40, left: 24, right: 24 }
       });
     };
 
@@ -323,6 +363,69 @@ export function MapCanvas({
       map.on("mouseleave", layerId, onLocationMouseLeave);
       map.on("click", layerId, onLocationClick);
     }
+
+    // Askı polygon click — open side popover
+    const onAskiInteract = (e: maplibregl.MapLayerMouseEvent) => {
+      const f = e.features?.[0];
+      if (!f) return;
+      const props = f.properties as Record<string, unknown> & {
+        id?: string;
+        durum?: string;
+        belediye?: string;
+        baslangic?: string;
+        bitis?: string;
+        label?: string;
+        matchedParcelId?: string;
+        planAdi?: string;
+      };
+      onAskiClickRef.current?.(
+        {
+          id: String(props.id ?? ""),
+          label: String(props.label ?? "Askı kaydı"),
+          durum: (props.durum as AskiPolygonFeature["durum"]) ?? "askida",
+          baslangic: String(props.baslangic ?? ""),
+          bitis: String(props.bitis ?? ""),
+          belediye: String(props.belediye ?? ""),
+          ilSlug: String(
+            (props as { ilSlug?: string }).ilSlug ?? ""
+          ),
+          ilceSlug: String(
+            (props as { ilceSlug?: string }).ilceSlug ?? ""
+          ),
+          ring: [],
+          matchedParcelId: props.matchedParcelId as string | undefined,
+          planAdi: props.planAdi as string | undefined,
+          provenance: ((props as { provenance?: AskiPolygonFeature["provenance"] }).provenance ?? "demo")
+        },
+        { x: e.point.x, y: e.point.y }
+      );
+    };
+    const onAskiHover = () => {
+      map.getCanvas().style.cursor = "pointer";
+    };
+    const onAskiLeave = () => {
+      map.getCanvas().style.cursor = "";
+    };
+    map.on("click", "askida-overlay-fill", onAskiInteract);
+    map.on("mouseenter", "askida-overlay-fill", onAskiHover);
+    map.on("mouseleave", "askida-overlay-fill", onAskiLeave);
+
+    const onSourceClick = (e: maplibregl.MapLayerMouseEvent) => {
+      const f = e.features?.[0];
+      if (!f) return;
+      const props = f.properties as Record<string, string | undefined>;
+      const homepage = props.homepage_url;
+      new maplibregl.Popup({ closeButton: true, closeOnClick: true })
+        .setLngLat(e.lngLat)
+        .setHTML(`<div style="font:12px sans-serif;min-width:190px"><strong>${props.name ?? "Veri kaynağı"}</strong><br/><span>${props.status ?? "external_only"}</span>${homepage ? `<br/><a href="${homepage}" target="_blank" rel="noreferrer">Resmi portalı aç</a>` : ""}</div>`)
+        .addTo(map);
+    };
+    const onSourceEnter = () => { map.getCanvas().style.cursor = "pointer"; };
+    const onSourceLeave = () => { map.getCanvas().style.cursor = ""; };
+    map.on("click", "live-source-markers", onSourceClick);
+    map.on("mouseenter", "live-source-markers", onSourceEnter);
+    map.on("mouseleave", "live-source-markers", onSourceLeave);
+
     map.on("zoomend", () => {
       const z = map.getZoom();
       if (zoomReadoutRef?.current) {
@@ -337,13 +440,15 @@ export function MapCanvas({
     map.on("rotateend", () => setViewState({ bearing: +map.getBearing().toFixed(1) }));
     map.on("pitchend", () => setViewState({ pitch: +map.getPitch().toFixed(1) }));
     map.on("moveend", () => {
-      // also push cursor coords store occasionally for UI uses
       const c = map.getCenter();
       setCursorLngLat([c.lng, c.lat]);
     });
 
     return () => {
       window.removeEventListener("eimar:map:control", onControl);
+      map.off("click", "live-source-markers", onSourceClick);
+      map.off("mouseenter", "live-source-markers", onSourceEnter);
+      map.off("mouseleave", "live-source-markers", onSourceLeave);
       map.remove();
       mapRef.current = null;
       (window as Window & { __mlMap?: Map }).__mlMap = undefined;
@@ -351,7 +456,6 @@ export function MapCanvas({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Basemap change → setStyle (the styledata handler re-adds custom sources/layers)
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -359,14 +463,12 @@ export function MapCanvas({
     applyLocationLabelTheme(map, basemap);
   }, [basemap]);
 
-  // Selection state syncing
+  // Selection sync
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-
     const apply = () => {
       if (!map.getSource(PARCEL_SOURCE)) return;
-      // Find the numeric mapId for the selected (string) parcel id
       const newMapId = selectedParcelId
         ? getParcelById(selectedParcelId)?.properties.mapId ?? null
         : null;
@@ -387,12 +489,59 @@ export function MapCanvas({
         );
       }
     };
-
     if (map.isStyleLoaded()) apply();
     else map.once("load", apply);
   }, [selectedParcelId]);
 
-  // FlyTo target
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      ensureBackendSelectedLayer(map);
+      const source = map.getSource(BACKEND_SELECTED_SOURCE) as maplibregl.GeoJSONSource | undefined;
+      const feature =
+        selectedParcelId && parseBackendParcelId(selectedParcelId) != null
+          ? selectedBackendFeature
+          : null;
+      source?.setData(toFeatureCollection(feature as unknown as GeoJSON.Feature | null));
+      if (feature) {
+        const bounds = geometryBounds(feature.geometry);
+        const padding = window.innerWidth >= 1280 ? { top: 72, bottom: 72, left: 320, right: 440 } : { top: 56, bottom: 56, left: 24, right: 24 };
+        if (bounds) {
+          map.fitBounds(bounds, { padding, duration: 700, maxZoom: 17 });
+        } else if (feature.properties.centroid) {
+          map.flyTo({ center: feature.properties.centroid, zoom: Math.max(map.getZoom(), 16), padding, duration: 700 });
+        }
+      }
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [selectedBackendFeature, selectedParcelId]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      ensureLatestRegionsLayer(map);
+      const source = map.getSource(LIVE_PLAN_REGIONS_SOURCE) as maplibregl.GeoJSONSource | undefined;
+      source?.setData(toFeatureCollection(selectedLatestRegion?.has_geometry ? selectedLatestRegion.geom_geojson ?? null : null));
+      if (selectedLatestRegion?.has_geometry) {
+        const padding = window.innerWidth >= 1280 ? { top: 72, bottom: 72, left: 320, right: 440 } : { top: 56, bottom: 56, left: 24, right: 24 };
+        const bounds = geometryBounds(selectedLatestRegion.geom_geojson ?? null);
+        if (bounds) {
+          map.fitBounds(bounds, { padding, duration: 700, maxZoom: 15 });
+          return;
+        }
+        const centroid = geoJsonCentroid(selectedLatestRegion.geom_geojson ?? null);
+        if (centroid) {
+          map.flyTo({ center: centroid, zoom: Math.max(map.getZoom(), 14), padding, duration: 700 });
+        }
+      }
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [selectedLatestRegion]);
+
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map || !flyTarget) return;
@@ -409,10 +558,81 @@ export function MapCanvas({
   }, [flyTarget]);
 
   React.useEffect(() => {
+    void loadLiveLayers();
+  }, [loadLiveLayers]);
+
+  React.useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
-    updateAskiSource(map, askiGeoJsonQuery.data?.ok ? askiGeoJsonQuery.data.data : null);
-  }, [askiGeoJsonQuery.data]);
+    if (!map) return;
+    const apply = () => {
+      ensureLiveSourceLayers(map);
+      const source = map.getSource(LIVE_SOURCE_REGISTRY_SOURCE) as maplibregl.GeoJSONSource | undefined;
+      source?.setData(buildLiveSourceFeatureCollection(liveLayers));
+      applyVisibilityAndOpacity(map);
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [liveLayers]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => applyVisibilityAndOpacity(map);
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [layerVisibility, layerOpacity, askiMode, semanticFocus]);
+
+  // Timeline year → re-color parcel fill expression by historical snapshot
+  // We don't replace the source; instead we toggle a `historicalColor`
+  // expression by rebuilding fill-color paint property.
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      if (!map.isStyleLoaded() || !map.getLayer("parcels-fill")) return;
+      if (timelineYear == null) {
+        try {
+          map.setPaintProperty(
+            "parcels-fill",
+            "fill-color",
+            buildParcelFillLayer().paint!["fill-color"] as never
+          );
+        } catch {
+          /* swallow */
+        }
+        return;
+      }
+      // Build a per-feature historical zoning lookup. We can't use feature
+      // expressions to read a JS map at paint time, so we build a `match`
+      // expression keyed on parcel id.
+      const fc = getParcelsCollection();
+      const matchExpr: (string | string[] | number)[] = [
+        "match",
+        ["get", "id"]
+      ];
+      for (const f of fc.features) {
+        const parcelId = f.properties.id;
+        const snap = getSnapshotForYear(parcelId, timelineYear);
+        const zoning = snap?.zoningType ?? f.properties.zoningType;
+        const fill =
+          ZONING_PRESETS[zoning as keyof typeof ZONING_PRESETS]?.fill ??
+          ZONING_PRESETS.Konut.fill;
+        matchExpr.push(parcelId, fill);
+      }
+      matchExpr.push("#FFE9A8");
+      try {
+        map.setPaintProperty(
+          "parcels-fill",
+          "fill-color",
+          matchExpr as unknown as never
+        );
+      } catch {
+        /* swallow */
+      }
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [timelineYear]);
 
   React.useEffect(() => {
     const map = mapRef.current;
@@ -420,23 +640,41 @@ export function MapCanvas({
     updateMunicipalitySource(map, municipalityGeoJson);
   }, [municipalityGeoJson]);
 
-  const applyVisibilityAndOpacity = React.useCallback((map: Map) => {
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => applySemanticFocusStyles(map, semanticFocus);
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [semanticFocus]);
+
+  function applyVisibilityAndOpacity(map: Map) {
     Object.entries(layerVisibility).forEach(([id, vis]) => {
+      // The askida-overlay descriptor maps to two MapLibre layers
       if (id === "askida-overlay") {
-        for (const layerId of ["aski-overlay-fill", "aski-overlay-line"]) {
-          if (!map.getLayer(layerId)) continue;
-          map.setLayoutProperty(layerId, "visibility", vis ? "visible" : "none");
-        }
+        const reallyVisible = askiMode || vis;
+        ["askida-overlay-fill", "askida-overlay-line", "askida-overlay-hatched"].forEach(
+          (layerId) => {
+            if (!map.getLayer(layerId)) return;
+            map.setLayoutProperty(
+              layerId,
+              "visibility",
+              reallyVisible ? "visible" : "none"
+            );
+          }
+        );
         return;
       }
-      if (id === "deprem-risk-grid") {
-        if (!map.getLayer(id)) return;
-        map.setLayoutProperty(id, "visibility", vis ? "visible" : "none");
+      if (id === "live-source-markers") {
+        ["live-source-markers", "live-source-labels"].forEach((layerId) => {
+          if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", vis ? "visible" : "none");
+        });
         return;
       }
       if (!map.getLayer(id)) return;
       map.setLayoutProperty(id, "visibility", vis ? "visible" : "none");
     });
+
     const fillOpacity = layerOpacity["parcels-fill"];
     if (fillOpacity != null && map.getLayer("parcels-fill")) {
       try {
@@ -449,37 +687,22 @@ export function MapCanvas({
           fillOpacity
         ] as never);
       } catch {
+        /* swallow */
       }
     }
     setOpacityIfExists(map, "parcels-line", "line-opacity", layerOpacity["parcels-line"]);
     setOpacityIfExists(map, "parcels-label", "text-opacity", layerOpacity["parcels-label"]);
-    setOpacityIfExists(map, "aski-overlay-fill", "fill-opacity", layerOpacity["askida-overlay"] ?? 0.2);
-    setOpacityIfExists(map, "aski-overlay-line", "line-opacity", layerOpacity["askida-overlay"] ?? 0.85);
+    setOpacityIfExists(
+      map,
+      "deprem-risk-grid",
+      "circle-opacity",
+      layerOpacity["deprem-risk-grid"] != null
+        ? Math.min(0.5, layerOpacity["deprem-risk-grid"] * 0.5)
+        : undefined
+    );
+    setOpacityIfExists(map, "live-source-markers", "circle-opacity", layerOpacity["live-source-markers"]);
     applySemanticFocusStyles(map, semanticFocus);
-  }, [layerOpacity, layerVisibility, semanticFocus]);
-
-  React.useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    applyLocationLabelTheme(map, basemap);
-  }, [basemap]);
-
-  React.useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    const apply = () => applySemanticFocusStyles(map, semanticFocus);
-    if (map.isStyleLoaded()) apply();
-    else map.once("idle", apply);
-  }, [semanticFocus]);
-
-  // Layer visibility / opacity sync
-  React.useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    const apply = () => applyVisibilityAndOpacity(map);
-    if (map.isStyleLoaded()) apply();
-    else map.once("idle", apply);
-  }, [applyVisibilityAndOpacity]);
+  }
 
   return (
     <div
@@ -536,8 +759,6 @@ function registerParcelLayers(map: Map) {
     map.addSource(PARCEL_SOURCE, {
       type: "geojson",
       data: fc,
-      // Tile generation hints — empirically these settings produce visible
-      // tiles for our small (~20m) parcel polygons across zoom 5..19.
       tolerance: 0,
       buffer: 256,
       maxzoom: 20,
@@ -558,6 +779,26 @@ function registerParcelLayers(map: Map) {
   }
   if (!map.getLayer("parcels-label")) {
     map.addLayer(buildParcelLabelLayer("parcels-label"));
+  }
+}
+
+function ensureAskiLayers(map: Map) {
+  if (!map.getSource(ASKI_SOURCE)) {
+    map.addSource(ASKI_SOURCE, {
+      type: "geojson",
+      data: getAskiCollection() as never
+    });
+  }
+  // Add layers below the parcel-label so labels stay on top
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("askida-overlay-fill")) {
+    map.addLayer(buildAskiFillLayer(), beforeId);
+  }
+  if (!map.getLayer("askida-overlay-line")) {
+    map.addLayer(buildAskiLineLayer(), beforeId);
+  }
+  if (!map.getLayer("askida-overlay-hatched")) {
+    map.addLayer(buildAskiHatchedLayer(), beforeId);
   }
 }
 
@@ -594,16 +835,17 @@ function registerSemanticLayers(map: Map) {
     const source = map.getSource(RISK_GRID_SOURCE) as maplibregl.GeoJSONSource | undefined;
     source?.setData(getRiskGridCollection() as unknown as GeoJSON.FeatureCollection);
   }
+  const beforeId = map.getLayer("parcels-fill") ? "parcels-fill" : undefined;
   if (!map.getLayer("deprem-risk-grid")) {
-    map.addLayer(buildRiskGridLayer("deprem-risk-grid"));
+    map.addLayer(buildRiskGridLayer("deprem-risk-grid"), beforeId);
   }
   if (!map.getLayer("plan-constraint-line")) {
     map.addLayer(buildPlanConstraintLineLayer("plan-constraint-line"));
   }
 }
 
-function applyLocationLabelTheme(map: Map, basemap: BasemapId) {
-  const dark = basemap === "dark";
+function applyLocationLabelTheme(map: Map, basemapId: BasemapId) {
+  const dark = basemapId === "dark";
   const labelColor = dark ? "#F8FAFC" : "#0F172A";
   const labelSecondary = dark ? "#E2E8F0" : "#102A4C";
   const haloColor = dark ? "rgba(15,23,42,0.95)" : "rgba(255,255,255,0.95)";
@@ -614,6 +856,7 @@ function applyLocationLabelTheme(map: Map, basemap: BasemapId) {
       map.setPaintProperty(layerId, "text-color", layerId === "location-label-city" ? labelColor : labelSecondary);
       map.setPaintProperty(layerId, "text-halo-color", haloColor);
     } catch {
+      /* ignore style transition errors */
     }
   }
 }
@@ -639,21 +882,6 @@ function buildLocationLabelCollection(): GeoJSON.FeatureCollection {
     }
   }));
   return { type: "FeatureCollection", features };
-}
-
-function setOpacityIfExists(
-  map: Map,
-  layerId: string,
-  prop: string,
-  value: number | undefined
-) {
-  if (value == null) return;
-  if (!map.getLayer(layerId)) return;
-  try {
-    map.setPaintProperty(layerId, prop as never, value as never);
-  } catch {
-    /* swallow paint property errors during style transitions */
-  }
 }
 
 function applySemanticFocusStyles(
@@ -684,6 +912,7 @@ function applySemanticFocusStyles(
           ]
     );
   } catch {
+    /* ignore */
   }
 
   if (map.getLayer("parcels-selected-accent")) {
@@ -707,39 +936,8 @@ function applySemanticFocusStyles(
           : ["case", ["boolean", ["feature-state", "selected"], false], 2.6, 0]
       );
     } catch {
+      /* ignore */
     }
-  }
-}
-
-function registerAskiLayers(map: Map) {
-  if (!map.getSource("aski-overlay-source")) {
-    map.addSource("aski-overlay-source", {
-      type: "geojson",
-      data: { type: "FeatureCollection", features: [] }
-    });
-  }
-  if (!map.getLayer("aski-overlay-fill")) {
-    map.addLayer({
-      id: "aski-overlay-fill",
-      type: "fill",
-      source: "aski-overlay-source",
-      paint: {
-        "fill-color": "#C8102E",
-        "fill-opacity": 0.2
-      }
-    } as never);
-  }
-  if (!map.getLayer("aski-overlay-line")) {
-    map.addLayer({
-      id: "aski-overlay-line",
-      type: "line",
-      source: "aski-overlay-source",
-      paint: {
-        "line-color": "#C8102E",
-        "line-width": 1.5,
-        "line-opacity": 0.9
-      }
-    } as never);
   }
 }
 
@@ -756,11 +954,12 @@ function registerMunicipalityCoverageLayers(map: Map) {
       data: { type: "FeatureCollection", features: [] }
     });
   }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
   if (!map.getLayer("municipality-coverage-circles")) {
-    map.addLayer(buildMunicipalityCoverageCircleLayer("municipality-coverage-circles", MUNICIPALITY_COVERAGE_SOURCE));
+    map.addLayer(buildMunicipalityCoverageCircleLayer("municipality-coverage-circles"), beforeId);
   }
   if (!map.getLayer("municipality-coverage-labels")) {
-    map.addLayer(buildMunicipalityCoverageLabelLayer("municipality-coverage-labels", MUNICIPALITY_COVERAGE_SOURCE));
+    map.addLayer(buildMunicipalityCoverageLabelLayer("municipality-coverage-labels"), beforeId);
   }
   if (!map.getLayer("belediye-sinirlari")) {
     map.addLayer(buildMunicipalityBoundaryLayer("belediye-sinirlari"));
@@ -777,7 +976,19 @@ function updateMunicipalitySource(
 }
 
 function buildMunicipalityCoverageCollection(
-  entries: Array<{ id: string; name: string; province?: string; district?: string; municipalitySlug?: string; capability?: { registered?: boolean; publicCandidate?: boolean; protected?: boolean; imarQuerySupport?: string } }>
+  entries: Array<{
+    id: string;
+    name: string;
+    province?: string;
+    district?: string;
+    municipalitySlug?: string;
+    capability?: {
+      registered?: boolean;
+      publicCandidate?: boolean;
+      protected?: boolean;
+      imarQuerySupport?: string;
+    };
+  }>
 ): GeoJSON.FeatureCollection<GeoJSON.Point> {
   const features = entries.map((entry) => {
     const fallback = municipalityCentroid(entry.name, entry.province, entry.district, entry.municipalitySlug);
@@ -818,7 +1029,12 @@ function buildFallbackMunicipalityPoints() {
   }));
 }
 
-function coverageStatus(capability?: { registered?: boolean; publicCandidate?: boolean; protected?: boolean; imarQuerySupport?: string }) {
+function coverageStatus(capability?: {
+  registered?: boolean;
+  publicCandidate?: boolean;
+  protected?: boolean;
+  imarQuerySupport?: string;
+}) {
   if (capability?.protected) return "protected";
   if (capability?.imarQuerySupport === "method_contract_required") return "method_contract_required";
   if (capability?.publicCandidate) return "public_candidate";
@@ -826,7 +1042,12 @@ function coverageStatus(capability?: { registered?: boolean; publicCandidate?: b
   return "unknown";
 }
 
-function coverageStatusLabel(capability?: { registered?: boolean; publicCandidate?: boolean; protected?: boolean; imarQuerySupport?: string }) {
+function coverageStatusLabel(capability?: {
+  registered?: boolean;
+  publicCandidate?: boolean;
+  protected?: boolean;
+  imarQuerySupport?: string;
+}) {
   if (capability?.protected) return "korumalı";
   if (capability?.imarQuerySupport === "method_contract_required") return "method contract";
   if (capability?.publicCandidate) return "public aday";
@@ -834,23 +1055,200 @@ function coverageStatusLabel(capability?: { registered?: boolean; publicCandidat
   return "bilinmiyor";
 }
 
-function municipalityCentroid(name: string, province?: string, district?: string, municipalitySlug?: string): [number, number] {
+function municipalityCentroid(
+  name: string,
+  province?: string,
+  district?: string,
+  municipalitySlug?: string
+): [number, number] {
   const normalized = [name, province, district, municipalitySlug].filter(Boolean).join(" ").toLocaleLowerCase("tr-TR");
-  const entry = [
-    ...BELEDIYE_LIST.map((record) => [record.id, record.ad] as const),
-    ...PROVINCES.map((record) => [record.slug, record.name] as const)
-  ].find(([, label]) => normalized.includes(label.toLocaleLowerCase("tr-TR")));
-  const hit = entry?.[0];
-  const provinceMatch = PROVINCES.find((record) =>
-    normalized.includes(record.slug) || normalized.includes(record.name.toLocaleLowerCase("tr-TR"))
+  const provinceMatch = PROVINCES.find(
+    (record) =>
+      normalized.includes(record.slug) || normalized.includes(record.name.toLocaleLowerCase("tr-TR"))
   );
   return provinceMatch?.centroid ?? [35.0, 39.0];
 }
 
-function updateAskiSource(map: Map, payload: { type: "FeatureCollection"; features: GeoJSON.Feature[] } | null) {
-  const source = map.getSource("aski-overlay-source") as maplibregl.GeoJSONSource | undefined;
-  if (!source) return;
-  source.setData(payload && Array.isArray(payload.features) ? payload : { type: "FeatureCollection", features: [] });
+function ensureLiveSourceLayers(map: Map) {
+  if (!map.getSource(LIVE_SOURCE_REGISTRY_SOURCE)) {
+    map.addSource(LIVE_SOURCE_REGISTRY_SOURCE, {
+      type: "geojson",
+      data: { type: "FeatureCollection", features: [] }
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("live-source-markers")) {
+    map.addLayer(
+      {
+        id: "live-source-markers",
+        type: "circle",
+        source: LIVE_SOURCE_REGISTRY_SOURCE,
+        paint: {
+          "circle-color": [
+            "match",
+            ["get", "status"],
+            "live", "#10B981",
+            "timeout", "#F59E0B",
+            "blocked", "#EF4444",
+            "requires_auth", "#EF4444",
+            "requires_approval", "#EF4444",
+            "#0EA5E9"
+          ] as never,
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 5, 8, 8, 12, 12] as never,
+          "circle-stroke-color": "#FFFFFF",
+          "circle-stroke-width": 1.5,
+          "circle-opacity": 0.9
+        }
+      },
+      beforeId
+    );
+  }
+  if (!map.getLayer("live-source-labels")) {
+    map.addLayer({
+      id: "live-source-labels",
+      type: "symbol",
+      source: LIVE_SOURCE_REGISTRY_SOURCE,
+      minzoom: 6,
+      layout: {
+        "text-field": ["get", "short_name"],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": 10,
+        "text-offset": [0, 1.1],
+        "text-anchor": "top",
+        "text-allow-overlap": false
+      },
+      paint: {
+        "text-color": "#0F172A",
+        "text-halo-color": "rgba(255,255,255,0.9)",
+        "text-halo-width": 1.2
+      }
+    });
+  }
+}
+
+function buildLiveSourceFeatureCollection(layers: Array<{ id: string | number; source_id?: string; name?: string; title?: string; status?: string; homepage_url?: string; center?: [number, number]; province?: string; district?: string; kind?: string }>): GeoJSON.FeatureCollection {
+  const seen = new Set<string>();
+  const features = layers
+    .filter((layer) => Array.isArray(layer.center) && layer.center.length === 2)
+    .filter((layer) => {
+      const key = layer.source_id ?? String(layer.id);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .map((layer) => ({
+      type: "Feature" as const,
+      geometry: { type: "Point" as const, coordinates: layer.center as [number, number] },
+      properties: {
+        id: String(layer.id),
+        source_id: layer.source_id ?? String(layer.id),
+        name: layer.name ?? layer.title ?? "Veri kaynağı",
+        short_name: (layer.name ?? layer.title ?? "Kaynak").replace(/ (KEOS|WebGIS|İmar Durumu|CBS|Portalı).*/i, ""),
+        status: layer.status ?? "external_only",
+        homepage_url: layer.homepage_url ?? "",
+        province: layer.province ?? "",
+        district: layer.district ?? "",
+        kind: layer.kind ?? ""
+      }
+    }));
+  return { type: "FeatureCollection", features };
+}
+
+function ensureBackendSelectedLayer(map: Map) {
+  if (!map.getSource(BACKEND_SELECTED_SOURCE)) {
+    map.addSource(BACKEND_SELECTED_SOURCE, {
+      type: "geojson",
+      data: { type: "FeatureCollection", features: [] }
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("backend-selected-fill")) {
+    map.addLayer(
+      {
+        id: "backend-selected-fill",
+        type: "fill",
+        source: BACKEND_SELECTED_SOURCE,
+        paint: {
+          "fill-color": "#0EA5E9",
+          "fill-opacity": 0.34
+        }
+      },
+      beforeId
+    );
+  }
+  if (!map.getLayer("backend-selected-outline")) {
+    map.addLayer(
+      {
+        id: "backend-selected-outline",
+        type: "line",
+        source: BACKEND_SELECTED_SOURCE,
+        paint: {
+          "line-color": "#38BDF8",
+          "line-width": 3,
+          "line-opacity": 1
+        }
+      },
+      beforeId
+    );
+  }
+}
+
+function ensureLatestRegionsLayer(map: Map) {
+  if (!map.getSource(LIVE_PLAN_REGIONS_SOURCE)) {
+    map.addSource(LIVE_PLAN_REGIONS_SOURCE, {
+      type: "geojson",
+      data: { type: "FeatureCollection", features: [] }
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("live-plan-regions-fill")) {
+    map.addLayer(
+      {
+        id: "live-plan-regions-fill",
+        type: "fill",
+        source: LIVE_PLAN_REGIONS_SOURCE,
+        paint: {
+          "fill-color": "#8B5CF6",
+          "fill-opacity": 0.18
+        }
+      },
+      beforeId
+    );
+  }
+  if (!map.getLayer("live-plan-regions-outline")) {
+    map.addLayer(
+      {
+        id: "live-plan-regions-outline",
+        type: "line",
+        source: LIVE_PLAN_REGIONS_SOURCE,
+        paint: {
+          "line-color": "#A78BFA",
+          "line-width": 2.5,
+          "line-opacity": 0.95
+        }
+      },
+      beforeId
+    );
+  }
+}
+
+function geometryBounds(geometry: GeoJSON.Geometry | GeoJSON.Feature | GeoJSON.FeatureCollection | Record<string, unknown> | null): maplibregl.LngLatBoundsLike | null {
+  return geoJsonBounds(geometry);
+}
+
+function setOpacityIfExists(
+  map: Map,
+  layerId: string,
+  prop: string,
+  value: number | undefined
+) {
+  if (value == null) return;
+  if (!map.getLayer(layerId)) return;
+  try {
+    map.setPaintProperty(layerId, prop as never, value as never);
+  } catch {
+    /* swallow */
+  }
 }
 
 export function setMapBasemap(_id: BasemapId) {

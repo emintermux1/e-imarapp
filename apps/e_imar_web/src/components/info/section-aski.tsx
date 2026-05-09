@@ -1,5 +1,5 @@
 import * as React from "react";
-import { AlertTriangle, CalendarClock, CheckCircle2, Filter, MapPinned, XCircle } from "lucide-react";
+import { AlertTriangle, CalendarClock, CheckCircle2, Filter, Loader2, MapPinned, RefreshCw, XCircle } from "lucide-react";
 import type { ParcelProps } from "@/types/parcel";
 import { DataRow } from "@/components/gis/data-card";
 import { formatDate, daysUntil } from "@/lib/format";
@@ -10,6 +10,7 @@ import {
   formatProvenanceBadge,
   summarizeAskiProvenance
 } from "@/lib/aski-tracking";
+import { useAskiStore } from "@/stores/aski-store";
 
 const ALL_STATUSES = ["all", "askida", "onaylandi", "reddedildi", "donusum"] as const;
 
@@ -46,6 +47,10 @@ export function SectionAski({ parcel }: { parcel: ParcelProps }) {
     []
   );
 
+  const liveStatus = useAskiStore((s) => s.status);
+  const liveMessage = useAskiStore((s) => s.message);
+  const livePlans = useAskiStore((s) => s.plans);
+  const refreshLivePlans = useAskiStore((s) => s.refresh);
   const aski = parcel.aski;
   const hasKnownMatch = exactParcelMatches.length > 0 || Boolean(aski);
 
@@ -60,8 +65,41 @@ export function SectionAski({ parcel }: { parcel: ParcelProps }) {
           Bu görünüm map overlay kayıtlarını yerel demo/derived provenance ile gösterir; resmi canlı askı verisi olmadığı yerde veri uydurulmaz.
         </p>
         <div className="mt-2 inline-flex items-center rounded-full border border-border-subtle bg-bg px-2 py-0.5 text-[10px] uppercase tracking-wider text-fg-muted">
-          live_sync: not_ready · overlay provenance: demo/derived
+live_sync: {liveStatus} · overlay provenance: demo/derived
         </div>
+      </div>
+
+
+      <div className="rounded-md border border-border-subtle bg-surface-1/50 px-3 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="text-xs font-medium text-fg-primary">
+              {liveStatus === "live" ? `${livePlans.length} canlı askı planı` : liveStatus === "unavailable" ? "Canlı askı erişilemiyor" : "Askı API kontrolü"}
+            </p>
+            <p className="mt-0.5 text-[11px] text-fg-muted">
+              {liveMessage ?? "Yenile ile /plans/aski üzerinden canlı planları kontrol edin."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void refreshLivePlans()}
+            disabled={liveStatus === "loading"}
+            className="inline-flex h-7 items-center gap-1 rounded-sm border border-border-subtle px-2 text-[11px] text-fg-secondary hover:bg-surface-2 disabled:opacity-60"
+          >
+            {liveStatus === "loading" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            Yenile
+          </button>
+        </div>
+        {liveStatus === "live" && livePlans.length > 0 && (
+          <div className="mt-2 max-h-24 overflow-auto space-y-1">
+            {livePlans.slice(0, 4).map((plan) => (
+              <div key={plan.id} className="flex items-center justify-between gap-2 rounded-sm bg-surface-2 px-2 py-1 text-[11px]">
+                <span className="truncate">{plan.plan_type ?? "Askı planı"} #{plan.id}</span>
+                <span className="text-fg-muted">{plan.status ?? "canlı"}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid gap-2 rounded-md border border-border-subtle bg-surface-2 p-3 text-[11px] sm:grid-cols-4">

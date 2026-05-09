@@ -11,6 +11,7 @@ export const TURKEY_GRID_SOURCE = "turkey-grid";
 export const ASKI_SOURCE = "aski-overlay";
 export const ACTIVE_PLAN_SOURCE = "active-plan-overlay";
 export const RISK_GRID_SOURCE = "risk-grid";
+export const LIVE_SOURCE_REGISTRY_SOURCE = "live-source-registry";
 export const TRANSPORT_SOURCE = "transport-lines";
 export const MUNICIPALITY_SOURCE = "municipality-boundaries";
 export const MUNICIPALITY_COVERAGE_SOURCE = "municipality-coverage";
@@ -670,6 +671,14 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Örnek ilçe ve belediye sınır çizgileri",
     defaultVisible: true,
     defaultOpacity: 0.75,
+    group: "İdari"
+  },
+  {
+    id: "live-source-markers",
+    label: "Canlı Kaynak Noktaları",
+    description: "Seed edilen gerçek belediye/TKGM/e-Plan/TUCBS portal işaretleri",
+    defaultVisible: true,
+    defaultOpacity: 0.9,
     group: "İdari"
   },
   {

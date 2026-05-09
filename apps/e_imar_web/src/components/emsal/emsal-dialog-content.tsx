@@ -1,8 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Calculator, RotateCcw, AlertTriangle } from "lucide-react";
+import { Calculator, RotateCcw, AlertTriangle, ShieldCheck, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { humanizeApiError, simulateBackendCompliance } from "@/lib/api/backend-client";
+import { useBackendParcelStore } from "@/stores/backend-parcel-store";
 import { computeEmsal, validateEmsalInput, EMSAL_DEFAULTS } from "@/lib/math/emsal";
 import {
   formatTL,
@@ -90,6 +92,7 @@ export interface EmsalDialogContentProps {
 }
 
 export function EmsalDialogContent({ parcel, embed }: EmsalDialogContentProps) {
+  const getBackendGeometry = useBackendParcelStore((s) => s.getGeometry);
   const initial = React.useMemo(() => {
     if (parcel) {
       return {
@@ -141,6 +144,12 @@ export function EmsalDialogContent({ parcel, embed }: EmsalDialogContentProps) {
 
   const errors = validateEmsalInput(input);
   const result = errors.length === 0 ? computeEmsal(input) : null;
+  const backendGeometry = parcel?.id ? getBackendGeometry(parcel.id) : null;
+  const [compliance, setCompliance] = React.useState<{
+    state: "idle" | "loading" | "success" | "error";
+    compliant?: boolean;
+    messages: string[];
+  }>({ state: "idle", messages: [] });
 
   function reset() {
     setArsa(initial.arsa);
@@ -152,6 +161,37 @@ export function EmsalDialogContent({ parcel, embed }: EmsalDialogContentProps) {
     setInsMaliyet(initial.insMaliyet);
     setSatisFiyati(initial.satisFiyati);
     setYolCephesi(initial.yolCephesi);
+  }
+
+  async function validateWithBackend() {
+    if (!parcel || !backendGeometry || !result) return;
+    setCompliance({ state: "loading", messages: ["Canlı API uygunluk kontrolü çalışıyor…"] });
+    try {
+      const response = await simulateBackendCompliance({
+        parcel_id: parcel.backendId,
+        geometry: backendGeometry,
+        parcel_area_m2: input.arsaM2,
+        emsal: input.kaks,
+        kaks: input.kaks,
+        taks: input.taks,
+        gabari_m: input.gabariM,
+        floors: result.hesaplananKatSayisi,
+        floor_height_m: input.katYuksekligiM
+      });
+      const violations = [...(response.violations ?? []), ...(response.warnings ?? [])]
+        .map((item) => typeof item === "string" ? item : item.message ?? item.rule ?? JSON.stringify(item));
+      const compliant = response.compliant ?? response.is_compliant ?? violations.length === 0;
+      setCompliance({
+        state: "success",
+        compliant,
+        messages: violations.length > 0 ? violations : [compliant ? "API kontrolü: belirgin ihlal bulunmadı" : "API kontrolü tamamlandı"]
+      });
+    } catch (error) {
+      setCompliance({
+        state: "error",
+        messages: [`${humanizeApiError(error)} Yerel hesap sonuçları korunuyor.`]
+      });
+    }
   }
 
   return (
@@ -315,6 +355,49 @@ export function EmsalDialogContent({ parcel, embed }: EmsalDialogContentProps) {
                 </ul>
               </div>
             )}
+            <div className="rounded-md border border-border-subtle bg-surface-2 px-3 py-2.5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="text-[10px] uppercase tracking-wider text-fg-muted">
+                    Resmi Uygunluk Kontrolü
+                  </span>
+                  <p className="text-[11px] text-fg-muted">
+                    {backendGeometry
+                      ? "Canlı geometri ile FastAPI simülasyonu"
+                      : "Canlı API geometrisi olmayan parsellerde doğrulama kapalı"}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={validateWithBackend}
+                  disabled={!backendGeometry || !result || compliance.state === "loading"}
+                >
+                  {compliance.state === "loading" ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                  )}
+                  API ile doğrula
+                </Button>
+              </div>
+              {compliance.messages.length > 0 && (
+                <div
+                  className={cn(
+                    "mt-2 rounded-sm border px-2 py-1.5 text-[12px]",
+                    compliance.state === "success" && compliance.compliant
+                      ? "border-status-success/40 bg-status-success/10 text-status-success"
+                      : compliance.state === "error" || compliance.compliant === false
+                      ? "border-status-warning/40 bg-status-warning/10 text-status-warning"
+                      : "border-border-subtle bg-surface-1 text-fg-secondary"
+                  )}
+                >
+                  {compliance.messages.map((message, index) => (
+                    <div key={`${message}-${index}`}>{message}</div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </section>

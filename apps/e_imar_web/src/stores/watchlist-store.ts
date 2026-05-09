@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { getBackendWatchlist } from "@/lib/api/backend-client";
 import type { AskiAlertIntent, ProvenanceKind } from "../lib/aski-tracking";
 
 export interface WatchlistEntry {
@@ -31,6 +32,7 @@ interface WatchlistState {
   add: (entry: WatchlistAddEntry) => void;
   remove: (id: string) => void;
   has: (id: string) => boolean;
+  hydrateBackend: () => Promise<void>;
   clear: () => void;
   updateAlertIntents: (id: string, alertIntents: AskiAlertIntent[]) => void;
   toggleAlertIntent: (id: string, intent: AskiAlertIntent) => void;
@@ -63,6 +65,13 @@ export const useWatchlistStore = create<WatchlistState>()(
       remove: (id) =>
         set((s) => ({ items: s.items.filter((i) => i.id !== id) })),
       has: (id) => get().items.some((i) => i.id === id),
+      hydrateBackend: async () => {
+        try {
+          await getBackendWatchlist();
+        } catch {
+          // Local watchlist must stay non-blocking when backend is unavailable.
+        }
+      },
       clear: () => set({ items: [] }),
       updateAlertIntents: (id, alertIntents) =>
         set((s) => ({
