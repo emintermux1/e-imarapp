@@ -39,7 +39,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { activeAskiCount, ASKI_POLYGONS } from "@/data/aski-polygons";
+import { activeAskiCount } from "@/data/aski-polygons";
+import { TURKEY_FIT_BOUNDS } from "@/lib/geo/turkey";
 import { cn } from "@/lib/utils";
 
 export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) {
@@ -55,11 +56,21 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
 
   const aktifAski = activeAskiCount();
 
-  function focusNearestAski() {
-    const next = ASKI_POLYGONS.find((p) => p.durum === "askida");
-    if (!next) return;
-    const center = midRing(next.ring);
-    flyTo({ center, zoom: 14 });
+  function focusTurkeyPlans() {
+    setSelectedParcelId(null);
+    flyTo({
+      center: [
+        (TURKEY_FIT_BOUNDS[0][0] + TURKEY_FIT_BOUNDS[1][0]) / 2,
+        (TURKEY_FIT_BOUNDS[0][1] + TURKEY_FIT_BOUNDS[1][1]) / 2
+      ],
+      bounds: {
+        west: TURKEY_FIT_BOUNDS[0][0],
+        south: TURKEY_FIT_BOUNDS[0][1],
+        east: TURKEY_FIT_BOUNDS[1][0],
+        north: TURKEY_FIT_BOUNDS[1][1]
+      },
+      zoom: 6
+    });
   }
 
   return (
@@ -95,7 +106,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               type="button"
               onClick={() => {
                 setAskiMode(!askiMode);
-                if (!askiMode) focusNearestAski();
+                if (!askiMode) focusTurkeyPlans();
               }}
               aria-pressed={askiMode}
               className={cn(
@@ -115,7 +126,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
             </button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            {askiMode ? "Askı modunu kapat" : "Askı haritasını aç ve en yakın askıya yakınlaş"}
+            {askiMode ? "Askı modunu kapat" : "Askı haritasını Türkiye genelinde göster"}
           </TooltipContent>
         </Tooltip>
 
@@ -163,18 +174,6 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
       </div>
     </header>
   );
-
-  function midRing(ring: [number, number][]): [number, number] {
-    let sx = 0;
-    let sy = 0;
-    let n = 0;
-    for (const [a, b] of ring) {
-      sx += a;
-      sy += b;
-      n += 1;
-    }
-    return [sx / Math.max(1, n), sy / Math.max(1, n)];
-  }
 }
 
 function HelpMenu() {

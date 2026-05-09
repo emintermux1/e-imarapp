@@ -15,6 +15,7 @@ import { getStyleForBasemap, type BasemapId } from "@/lib/maplibre/styles";
 import {
   PARCEL_SOURCE,
   ASKI_SOURCE,
+  ACTIVE_PLAN_SOURCE,
   RISK_GRID_SOURCE,
   TRANSPORT_SOURCE,
   MUNICIPALITY_SOURCE,
@@ -30,12 +31,15 @@ import {
   buildAskiFillLayer,
   buildAskiLineLayer,
   buildAskiHatchedLayer,
+  buildActivePlanPointLayer,
+  buildActivePlanHaloLayer,
   buildRiskGridLayer,
   buildTransportLineLayer,
   buildMunicipalityBoundaryLayer
 } from "@/lib/maplibre/layers";
 import { getAskiCollection } from "@/data/aski-polygons";
 import type { AskiPolygonFeature } from "@/data/aski-polygons";
+import { getActivePlanCollection } from "@/data/active-plans";
 import { getRiskGridCollection } from "@/data/risk-grid";
 import { getTransportLineCollection } from "@/data/transport-lines";
 import { getMunicipalityBoundaryCollection } from "@/data/municipality-boundaries";
@@ -161,6 +165,7 @@ export function MapCanvas({
         registerParcelLayers(map);
       }
       ensureAskiLayers(map);
+      ensureActivePlanLayers(map);
       ensureRiskGridLayer(map);
       ensureTransportLayer(map);
       ensureMunicipalityBoundaryLayer(map);
@@ -471,6 +476,13 @@ export function MapCanvas({
         );
         return;
       }
+      if (id === "yururlukte-plan-points") {
+        ["yururlukte-plan-halo", "yururlukte-plan-points"].forEach((layerId) => {
+          if (!map.getLayer(layerId)) return;
+          map.setLayoutProperty(layerId, "visibility", vis ? "visible" : "none");
+        });
+        return;
+      }
       if (!map.getLayer(id)) return;
       map.setLayoutProperty(id, "visibility", vis ? "visible" : "none");
     });
@@ -494,6 +506,15 @@ export function MapCanvas({
     setOpacityIfExists(map, "parcels-label", "text-opacity", layerOpacity["parcels-label"]);
     setOpacityIfExists(map, "plan-constraint-line", "line-opacity", layerOpacity["plan-constraint-line"]);
     setOpacityIfExists(map, "plan-donati-label", "text-opacity", layerOpacity["plan-donati-label"]);
+    setOpacityIfExists(map, "yururlukte-plan-points", "circle-opacity", layerOpacity["yururlukte-plan-points"]);
+    setOpacityIfExists(
+      map,
+      "yururlukte-plan-halo",
+      "circle-opacity",
+      layerOpacity["yururlukte-plan-points"] != null
+        ? Math.min(0.2, layerOpacity["yururlukte-plan-points"] * 0.18)
+        : undefined
+    );
     setOpacityIfExists(map, "metro-hatti", "line-opacity", layerOpacity["metro-hatti"]);
     setOpacityIfExists(map, "belediye-sinirlari", "line-opacity", layerOpacity["belediye-sinirlari"]);
     setOpacityIfExists(map, "turkey-frame", "line-opacity", layerOpacity["turkey-frame"]);
@@ -609,6 +630,22 @@ function ensureAskiLayers(map: Map) {
   }
   if (!map.getLayer("askida-overlay-hatched")) {
     map.addLayer(buildAskiHatchedLayer(), beforeId);
+  }
+}
+
+function ensureActivePlanLayers(map: Map) {
+  if (!map.getSource(ACTIVE_PLAN_SOURCE)) {
+    map.addSource(ACTIVE_PLAN_SOURCE, {
+      type: "geojson",
+      data: getActivePlanCollection() as never
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("yururlukte-plan-halo")) {
+    map.addLayer(buildActivePlanHaloLayer(), beforeId);
+  }
+  if (!map.getLayer("yururlukte-plan-points")) {
+    map.addLayer(buildActivePlanPointLayer(), beforeId);
   }
 }
 
