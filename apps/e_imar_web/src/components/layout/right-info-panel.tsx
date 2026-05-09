@@ -10,7 +10,10 @@ import {
   FileDown,
   Loader2,
   Clock3,
-  Database
+  Database,
+  Building2,
+  ShieldAlert,
+  Route
 } from "lucide-react";
 import {
   Accordion,
@@ -49,6 +52,7 @@ import { SectionAski } from "@/components/info/section-aski";
 import { SectionCevre } from "@/components/info/section-cevre";
 import { SectionGecmis } from "@/components/info/section-gecmis";
 import { SectionYatirimSkoru } from "@/components/info/section-yatirim-skoru";
+import { SectionParcelSummary } from "@/components/info/section-parcel-summary";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmsalCalculatorPanel } from "@/components/emsal/emsal-calculator-panel";
 import { cn } from "@/lib/utils";
@@ -267,6 +271,29 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             />
           </header>
 
+          <section className="grid grid-cols-3 gap-2 px-3 py-2 border-b border-border-subtle bg-surface-1/20">
+            <MetricCard
+              icon={<Building2 className="h-3.5 w-3.5" />}
+              label="Yapı Potansiyeli"
+              value={`${Math.round(parcel.yuzolcumuM2 * parcel.kaks).toLocaleString("tr-TR")} m²`}
+              hint={`KAKS ${parcel.kaks.toFixed(2)} · TAKS ${parcel.taks.toFixed(2)}`}
+            />
+            <MetricCard
+              icon={<ShieldAlert className="h-3.5 w-3.5" />}
+              label="Risk Bileşimi"
+              value={`D${parcel.riskler.deprem} · S${parcel.riskler.sel}`}
+              hint={`Heyelan ${parcel.riskler.heyelan} · Yangın ${parcel.riskler.yangin}`}
+            />
+            <MetricCard
+              icon={<Route className="h-3.5 w-3.5" />}
+              label="Erişilebilirlik"
+              value={`${Math.round(parcel.cevre.ulasimSkoru)}/100`}
+              hint={`Metro ${Math.round(parcel.cevre.metroM)} m · Park ${Math.round(parcel.cevre.parkM)} m`}
+            />
+          </section>
+
+          <SectionParcelSummary parcel={parcel} />
+
           <ScrollArea className="flex-1">
             {!backendGeometry && parcel.backendId && (
               <div className="mx-3 mt-3 rounded-md border border-status-warning/40 bg-status-warning/10 px-3 py-2 text-[11px] text-status-warning">
@@ -452,6 +479,34 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
         </motion.aside>
       )}
     </AnimatePresence>
+  );
+}
+
+
+function MetricCard({
+  icon,
+  label,
+  value,
+  hint
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <article className="rounded-md border border-border-subtle bg-surface-2 px-2.5 py-2 min-w-0">
+      <div className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-fg-muted">
+        {icon}
+        <span className="truncate">{label}</span>
+      </div>
+      <p className="mt-1 text-xs font-semibold tabular-nums text-fg-primary truncate">
+        {value}
+      </p>
+      <p className="mt-0.5 text-[10px] text-fg-muted leading-snug">
+        {hint}
+      </p>
+    </article>
   );
 }
 

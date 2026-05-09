@@ -32,20 +32,21 @@ npm run start:dev
 
 Swagger UI is available at `http://localhost:3000/docs`.
 
-### Web frontend startup (canonical polished GIS app)
+### Web frontend startup (canonical Next.js app)
 
 ```bash
-npm install --prefix apps/e_imar_web
-npm run web:dev
+cd frontend
+npm install
+npm run dev
 ```
 
-The canonical polished GIS UI is `apps/e_imar_web` and runs at `http://localhost:3000`. It connects to FastAPI via `NEXT_PUBLIC_API_BASE_URL || http://localhost:8000/api/v1` and visibly labels live API, local fallback, computed, and demo data in search, map selection, right-panel workflow, and trust/source cards.
+Web app runs at `http://localhost:3000` and connects to FastAPI via `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000/api/v1`).
 
-`frontend/` and `apps/web` are deprecated/simple prototypes and are not the product frontend.
+`apps/web` is a deprecated Vite prototype. Its npm scripts are shims that start/build `frontend/` so agents and humans do not accidentally open the stale `localhost:5173` app.
 
 ### Legacy prototype frontends
 
-Older experiments remain under `apps/` and `frontend/` for historical reference only. Do not use `frontend/`, `apps/web`, `apps/web-next`, or `apps/e_imar_next` as the product frontend.
+Older experiments remain under `apps/` for historical reference only. Do not use `apps/web`, `apps/web-next`, `apps/e_imar_next`, or `apps/e_imar_web` as the product frontend unless explicitly working on legacy migration.
 
 Docker Compose now includes the API service as well as PostGIS, Redis, MinIO, OpenSearch, pg_tileserv, Prometheus, and Grafana.
 
@@ -81,11 +82,9 @@ Spatial indexes are created for municipal boundaries, parcels, plans, and zoning
 
 ## Real source registry
 
-The FastAPI registry is in `app/services/source_registry.py` and seeds the supplied real Turkish municipal/national sources: Pendik, Esenler, Çanakkale, Pamukkale, Çerkezköy, Kahramankazan, Alanya, Konak, Merkezefendi, Altınordu, Aksaray, Şehitkamil, İBB, Ankara, İzmir, Çankaya, Sultangazi, Başakşehir, Tuşba, Süleymanpaşa, Mustafa Kemal Paşa, Keçiören, Gelibolu, Çaycuma, TKGM Parsel Sorgu/data-sharing docs, e-Plan, TUCBS Public API/Atlas, ÇŞB CBS, Yerel Veri Platformları, BulutKBS, and MAKS.
+The code registry is in `src/sources/source-registry.ts`. It starts with official and municipal seed systems, including TKGM Parsel Sorgu and data-sharing rules, current/legacy E-Plan, TUCBS Public API and main portal, Atlas, ÇŞB CBS, Akıllı Şehirler local data platforms, BulutKBS, MAKS, Netcad references, municipal KEOS/WebGIS/eKent/KBS portals, OpenStreetMap, Esri World Imagery, Copernicus, Landsat, Mapbox, MapTiler, HERE, and Cesium ion. New municipal seeds include Süleymanpaşa, Mustafakemalpaşa, Gelibolu, Çaycuma, and Keçiören.
 
-FastAPI exposes `GET /api/v1/sources`, `GET /api/v1/sources/health`, `POST /api/v1/sources/{source_id}/discover`, and `GET /api/v1/map/live-layers`. Discovery fetches public HTML/JS where possible, extracts `.ashx`, `.asmx`, `NetGIS`, WMS/WFS, ArcGIS REST, and GeoServer candidates, then reports explicit statuses (`live`, `blocked`, `timeout`, `not_found`, `requires_auth`, `cors_browser_only`, `parse_error`) instead of assuming that a URL is usable. Restricted sources remain marked as requiring credentials, legal approval, or portal-only access.
-
-The canonical `apps/e_imar_web` UI renders these sources in the `Canlı Veri Kaynakları` panel and on-map source markers. If live endpoints are unavailable, the app keeps local/demo parcels visible and labels them as fallback rather than faking official data.
+Discovery probes live endpoints and returns explicit status instead of assuming that a URL is usable.
 
 ## Credentials and approvals that are still required for live ingestion
 
@@ -108,10 +107,16 @@ The API exposes `GET /ingestion/requirements` to list sources that cannot be ing
 
 For public KEOS portals without login/bot protection, data is pulled by discovering the backend service endpoints used by the page, not by inventing responses. Use:
 
+- `GET /sources/municipalities/:id/capability` where `:id` is a source id or `municipalitySlug`.
+- `GET /sources/municipality-coverage?province=&district=&vendor=` for capability-enriched municipal coverage.
+- `POST /sources/candidates/normalize` to preview a contributed source URL without writing to the registry.
+- `POST /website/bff/municipal-parcel-workflow` for honest ada/parsel BFF status aggregation.
 - `GET /connectors/netcad/strategy`
 - `POST /connectors/:id/netcad/discover`
+- `POST /connectors/:id/netcad/resolve-methods` for ASMX `?WSDL` and public HTML/JS payload hint discovery.
+- `POST /connectors/:id/ogc/catalog` for WMS/WFS GetCapabilities layer catalog parsing.
 
-The discovery step fetches HTML/JS, extracts `.ashx`, `.asmx`, `NetGIS`, WMS/WFS, ArcGIS, and GeoServer references, probes common KEOS endpoints, and reports the next connector step. See `docs/connectors/netcad-keos.md`.
+The discovery step fetches public HTML and same-origin JS only, extracts `.ashx`, `.asmx`, `NetGIS`, WMS/WFS, ArcGIS, and GeoServer references, preserves published ports in candidate URLs, probes common KEOS endpoints, and reports the next connector step. Resolver/catalog responses mark public metadata separately from official data, include provenance, and only SHA-256 hash real response bodies. Protected flows return `protected`, `captcha_required`, `requires_credentials`, or `requires_legal_agreement` rather than bypassing access controls or fabricating data. See `docs/connectors/netcad-keos.md`.
 
 Map provider keys and OpenAI credentials should be provided through environment variables or a secret manager, never committed:
 
@@ -135,7 +140,7 @@ If you want to use local `.env`, copy `.env.example` to `.env` and fill the opti
 
 ## API behavior
 
-If PostGIS or Redis is not configured, API endpoints return a `not_ready` or `unavailable` status with a concrete next action. They do not invent parcel or plan results.
+If PostGIS or Redis is not configured, API endpoints return a `not_ready` or `unavailable` status with a concrete next action. They do not invent parcel or plan results. Municipal parcel workflows return `method_contract_required`, `protected`, `source_not_found`, or `not_ready` when registry, TKGM geometry, or Netcad/KEOS contracts are not verified; demo/derived/public metadata is never labeled as official data.
 
 ## Tests
 
@@ -150,12 +155,13 @@ See `docs/adr/0001-backend-first-geospatial-foundation.md`.
 
 ## Website app and integration
 
-The canonical product frontend is `apps/e_imar_web` (Next.js 14 App Router). It consumes the FastAPI `/api/v1/*` endpoints where available and renders explicit source badges/readiness states instead of silently presenting fallback data as official.
+The canonical product frontend is `frontend/` (Next.js 14 App Router). It consumes the FastAPI `/api/v1/*` endpoints and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data.
 
-- App README: `apps/e_imar_web/README.md`
+- App README: `frontend/README.md`
 - Architecture and runbook: `docs/website-architecture.md`
 - Bootstrap/capabilities endpoint: `GET /website/bootstrap`
 - Aggregated website workflow endpoint: `POST /website/bff/parcel-workflow`
+- Municipal ada/parsel readiness workflow: `POST /website/bff/municipal-parcel-workflow`
 - Plan note endpoint: `POST /website/bff/plan-note-explain`
 - Workspace endpoint: `GET /website/workspace/:userReference`
 - Session token endpoints: `POST /website/session/start`, `POST /website/session/verify`
@@ -163,12 +169,12 @@ The canonical product frontend is `apps/e_imar_web` (Next.js 14 App Router). It 
 Run the website locally:
 
 ```bash
-npm install --prefix apps/e_imar_web
-npm run web:dev
+npm install --prefix frontend
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1 npm run web:dev
 npm run web:build
 ```
 
-The root `npm run build` remains the backend build. Website-specific scripts are `web:dev`, `web:build`, `web:preview`, and `web:typecheck`, all pointing at `apps/e_imar_web/`.
+The root `npm run build` remains the backend build. Website-specific scripts are `web:dev`, `web:build`, `web:preview`, and `web:typecheck`, all pointing at `frontend/`.
 
 Required website integration env:
 
