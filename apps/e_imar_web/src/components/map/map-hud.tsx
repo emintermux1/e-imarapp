@@ -18,6 +18,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { BASEMAPS } from "@/lib/maplibre/styles";
+import { LocationExplorerPopover } from "@/components/map/location-explorer-popover";
 
 export function MapHud({
   cursorReadoutRef,
@@ -179,6 +180,7 @@ export function MapHud({
             {locationStatus}
           </span>
         )}
+        <LocationExplorerPopover />
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild>
             <button

@@ -16,6 +16,7 @@ export const TRANSPORT_SOURCE = "transport-lines";
 export const MUNICIPALITY_SOURCE = "municipality-boundaries";
 export const MUNICIPALITY_COVERAGE_SOURCE = "municipality-coverage";
 export const TURKEY_FOCUS_SOURCE = "turkey-focus";
+export const LOCATION_LABEL_SOURCE = "location-labels";
 
 const zoningCases: (string | string[])[] = ["match", ["get", "zoningType"]];
 Object.values(ZONING_PRESETS).forEach((preset) => {
@@ -138,6 +139,88 @@ export const buildParcelLabelLayer = (
     "text-halo-color": "rgba(255,255,255,0.85)",
     "text-halo-width": 1.4,
     "text-halo-blur": 0.4
+  }
+});
+
+export const buildLocationCityLabelLayer = (
+  id = "location-label-city"
+): SymbolLayerSpecification => ({
+  id,
+  type: "symbol",
+  source: LOCATION_LABEL_SOURCE,
+  minzoom: 4.2,
+  maxzoom: 8.6,
+  filter: ["==", ["get", "kind"], "il"],
+  layout: {
+    "text-field": ["get", "label"],
+    "text-font": ["Noto Sans SemiBold"],
+    "text-size": ["interpolate", ["linear"], ["zoom"], 4.2, 11, 8.5, 14],
+    "text-allow-overlap": false,
+    "text-padding": 4,
+    "text-optional": false
+  },
+  paint: {
+    "text-color": "#0F172A",
+    "text-halo-color": "rgba(255,255,255,0.95)",
+    "text-halo-width": 1.6,
+    "text-halo-blur": 0.35
+  }
+});
+
+export const buildLocationDistrictLabelLayer = (
+  id = "location-label-district"
+): SymbolLayerSpecification => ({
+  id,
+  type: "symbol",
+  source: LOCATION_LABEL_SOURCE,
+  minzoom: 7.2,
+  maxzoom: 12.7,
+  filter: ["==", ["get", "kind"], "ilce"],
+  layout: {
+    "text-field": [
+      "concat",
+      ["get", "label"],
+      " · ",
+      ["to-string", ["get", "count"]]
+    ],
+    "text-font": ["Noto Sans Medium"],
+    "text-size": ["interpolate", ["linear"], ["zoom"], 7.2, 10.5, 12.6, 13.2],
+    "text-allow-overlap": false,
+    "text-padding": 4
+  },
+  paint: {
+    "text-color": "#102A4C",
+    "text-halo-color": "rgba(255,255,255,0.95)",
+    "text-halo-width": 1.5,
+    "text-halo-blur": 0.4
+  }
+});
+
+export const buildLocationNeighborhoodLabelLayer = (
+  id = "location-label-neighborhood"
+): SymbolLayerSpecification => ({
+  id,
+  type: "symbol",
+  source: LOCATION_LABEL_SOURCE,
+  minzoom: 11,
+  filter: ["==", ["get", "kind"], "mahalle"],
+  layout: {
+    "text-field": [
+      "concat",
+      ["get", "label"],
+      " · ",
+      ["to-string", ["get", "count"]]
+    ],
+    "text-font": ["Noto Sans Regular"],
+    "text-size": ["interpolate", ["linear"], ["zoom"], 11, 9.5, 15.8, 12.6],
+    "text-allow-overlap": false,
+    "text-padding": 3
+  },
+  paint: {
+    "text-color": "#334155",
+    "text-halo-color": "rgba(255,255,255,0.96)",
+    "text-halo-width": 1.4,
+    "text-halo-blur": 0.35
   }
 });
 
