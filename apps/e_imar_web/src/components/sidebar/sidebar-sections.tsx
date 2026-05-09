@@ -7,7 +7,8 @@ import {
   Bookmark,
   History,
   SlidersHorizontal,
-  ChevronDown
+  ChevronDown,
+  Database
 } from "lucide-react";
 import { LayerToggleList } from "@/components/map/layer-toggle-list";
 import { WatchlistSection } from "./watchlist-section";
@@ -15,6 +16,7 @@ import { SavedQueriesSection } from "./saved-queries-section";
 import { HistorySection } from "./history-section";
 import { FiltersSection } from "./filters-section";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface SectionDef {
   id: string;
@@ -56,12 +58,17 @@ export function SidebarSections({ collapsed = false }: { collapsed?: boolean }) 
       defaultOpen: false
     },
     {
-      id: "filters",
-      title: "Filtreler",
-      icon: <SlidersHorizontal className="h-4 w-4" />,
-      body: <FiltersSection />,
+      id: "kaynaklar",
+      title: "Veri Kaynakları",
+      icon: <Database className="h-4 w-4" />,
+      body: (
+        <div className="rounded-md border border-border-subtle bg-surface-2 p-3 text-sm text-fg-secondary">
+          <p>Canlı probe edilen kaynak registry ekranı.</p>
+          <Link href="/kaynaklar" className="mt-2 inline-flex text-xs font-medium text-blue-600 hover:underline">Kaynaklar ekranını aç</Link>
+        </div>
+      ),
       defaultOpen: false
-    }
+    },
   ];
 
   if (collapsed) return <CollapsedRail sections={sections} />;
