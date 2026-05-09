@@ -22,6 +22,7 @@ import { PROVINCES } from "@/data/provinces";
 import { getStyleForBasemap, type BasemapId } from "@/lib/maplibre/styles";
 import {
   PARCEL_SOURCE,
+  SELECTED_POINT_SOURCE,
   ASKI_SOURCE,
   RISK_GRID_SOURCE,
   LIVE_SOURCE_REGISTRY_SOURCE,
@@ -31,7 +32,10 @@ import {
   buildParcelFillLayer,
   buildParcelLineLayer,
   buildParcelLabelLayer,
+  buildParcelSelectedGlowLayer,
   buildParcelSelectedAccentLayer,
+  buildSelectedPointHaloLayer,
+  buildSelectedPointCoreLayer,
   buildParcelHoverDotLayer,
   buildAskiFillLayer,
   buildAskiLineLayer,
@@ -55,12 +59,14 @@ import { useBackendParcelStore } from "@/stores/backend-parcel-store";
 import { useSourceStore } from "@/stores/source-store";
 import { useLatestRegionsStore } from "@/stores/latest-regions-store";
 import { parseBackendParcelId } from "@/lib/api/parcel-normalizer";
+import { findNearestParcel } from "@/lib/analysis/selected-place-analysis";
 import { geoJsonBounds, geoJsonCentroid, toFeatureCollection } from "@/lib/geojson";
 
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
 const BACKEND_SELECTED_SOURCE = "backend-selected-parcel";
 const LIVE_PLAN_REGIONS_SOURCE = "live-plan-regions";
+const EMPTY_FEATURE_COLLECTION: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
 interface MapCanvasProps {
   className?: string;
@@ -96,6 +102,8 @@ export function MapCanvas({
   const selectedLatestRegion = useLatestRegionsStore((s) => s.selectedRegion);
   const flyTarget = useMapStore((s) => s.flyTarget);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const selectedPoint = useMapStore((s) => s.selectedPoint);
+  const setSelectedPoint = useMapStore((s) => s.setSelectedPoint);
   const setHoveredParcelId = useMapStore((s) => s.setHoveredParcelId);
   const setCursorLngLat = useMapStore((s) => s.setCursorLngLat);
   const setViewState = useMapStore((s) => s.setViewState);
@@ -159,7 +167,10 @@ export function MapCanvas({
         maxZoom: 19,
         minZoom: 3,
         hash: false,
-        fadeDuration: 200
+        fadeDuration: 120,
+        preserveDrawingBuffer: false,
+        antialias: true,
+        refreshExpiredTiles: false
       });
     } catch (err) {
       const message =
@@ -200,44 +211,35 @@ export function MapCanvas({
     window.addEventListener("eimar:map:control", onControl);
 
     const ensureLayers = () => {
-      if (!map.getSource(PARCEL_SOURCE)) {
-        registerParcelLayers(map);
+      if (!map.isStyleLoaded()) return;
+      try {
+        if (!map.getSource(PARCEL_SOURCE)) {
+          registerParcelLayers(map);
+        }
+        ensureAskiLayers(map);
+        registerSemanticLayers(map);
+        if (!map.getSource(LOCATION_LABEL_SOURCE)) {
+          registerLocationLayers(map);
+        }
+        if (!map.getSource(MUNICIPALITY_SOURCE)) {
+          registerMunicipalityCoverageLayers(map);
+        }
+        ensureLiveSourceLayers(map);
+        ensureBackendSelectedLayer(map);
+        ensureSelectedPointLayer(map);
+        ensureLatestRegionsLayer(map);
+        applyLocationLabelTheme(map, basemap);
+        applyVisibilityAndOpacity(map);
+      } catch (error) {
+        console.warn("E-İmar map overlay registration delayed", error);
       }
-      ensureAskiLayers(map);
-      registerSemanticLayers(map);
-      if (!map.getSource(LOCATION_LABEL_SOURCE)) {
-        registerLocationLayers(map);
-      }
-      if (!map.getSource(MUNICIPALITY_SOURCE)) {
-        registerMunicipalityCoverageLayers(map);
-      }
-      ensureLiveSourceLayers(map);
-      ensureBackendSelectedLayer(map);
-      ensureLatestRegionsLayer(map);
-      applyLocationLabelTheme(map, basemap);
-      applyVisibilityAndOpacity(map);
     };
-    if (map.isStyleLoaded()) {
-      ensureLayers();
-    } else {
-      map.once("load", ensureLayers);
-    }
+    map.on("load", ensureLayers);
+    map.on("idle", ensureLayers);
 
     map.on("styledata", () => {
       if (!map.isStyleLoaded()) return;
-      if (!map.getSource(PARCEL_SOURCE)) registerParcelLayers(map);
-      ensureAskiLayers(map);
-      registerSemanticLayers(map);
-      if (!map.getSource(LOCATION_LABEL_SOURCE)) {
-        registerLocationLayers(map);
-      }
-      if (!map.getSource(MUNICIPALITY_SOURCE)) {
-        registerMunicipalityCoverageLayers(map);
-      }
-      ensureLiveSourceLayers(map);
-      ensureBackendSelectedLayer(map);
-      ensureLatestRegionsLayer(map);
-      applyLocationLabelTheme(map, basemap);
+      ensureLayers();
       if (lastSelectedMapIdRef.current != null) {
         map.setFeatureState(
           { source: PARCEL_SOURCE, id: lastSelectedMapIdRef.current },
@@ -303,6 +305,7 @@ export function MapCanvas({
       const parcel = getParcelByMapId(mapId);
       if (!parcel) return;
       setSelectedParcelId(parcel.properties.id);
+      setSelectedPoint(null);
       setRightPanelOpen(true);
       if (parcel.properties.centroid) {
         const [lng, lat] = parcel.properties.centroid;
@@ -339,6 +342,7 @@ export function MapCanvas({
       const target = findBestLocationTarget({ il: props.il, ilce: props.ilce, mahalle: props.mahalle });
       if (!target) return;
       setSelectedParcelId(null);
+      setSelectedPoint(null);
       setRightPanelOpen(false);
       const { center, zoom, bearing, pitch } = buildFlyTargetFromLocationTarget(target, { zoom: props.zoom });
       map.flyTo({
@@ -358,6 +362,32 @@ export function MapCanvas({
     map.on("mousemove", "parcels-fill", onParcelMouseMove);
     map.on("mouseleave", "parcels-fill", onParcelMouseLeave);
     map.on("click", "parcels-fill", onParcelClick);
+    const onMapClick = (e: MapMouseEvent) => {
+      const interactiveFeatures = map.queryRenderedFeatures(e.point, {
+        layers: [
+          "parcels-fill",
+          "askida-overlay-fill",
+          "live-source-markers",
+          "location-label-city",
+          "location-label-district",
+          "location-label-neighborhood",
+          "municipality-coverage-circles"
+        ].filter((layerId) => Boolean(map.getLayer(layerId)))
+      });
+      if (interactiveFeatures.length > 0) {
+        const layerId = interactiveFeatures[0].layer.id;
+        if (layerId !== "municipality-coverage-circles") return;
+      }
+      const nearby = findNearestParcel(e.lngLat.lng, e.lngLat.lat, 2500);
+      setSelectedPoint({
+        lng: e.lngLat.lng,
+        lat: e.lngLat.lat,
+        source: "map",
+        nearestParcelId: nearby?.parcel.id
+      });
+      setRightPanelOpen(true);
+    };
+    map.on("click", onMapClick);
     for (const layerId of ["location-label-city", "location-label-district", "location-label-neighborhood"]) {
       map.on("mousemove", layerId, onLocationMouseMove);
       map.on("mouseleave", layerId, onLocationMouseLeave);
@@ -446,6 +476,9 @@ export function MapCanvas({
 
     return () => {
       window.removeEventListener("eimar:map:control", onControl);
+      map.off("load", ensureLayers);
+      map.off("idle", ensureLayers);
+      map.off("click", onMapClick);
       map.off("click", "live-source-markers", onSourceClick);
       map.off("mouseenter", "live-source-markers", onSourceEnter);
       map.off("mouseleave", "live-source-markers", onSourceLeave);
@@ -492,6 +525,19 @@ export function MapCanvas({
     if (map.isStyleLoaded()) apply();
     else map.once("load", apply);
   }, [selectedParcelId]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      ensureSelectedPointLayer(map);
+      const source = map.getSource(SELECTED_POINT_SOURCE) as maplibregl.GeoJSONSource | undefined;
+      source?.setData(buildSelectedPointFeatureCollection(selectedPoint));
+    };
+    if (map.getSource(SELECTED_POINT_SOURCE)) apply();
+    else if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [selectedPoint]);
 
   React.useEffect(() => {
     const map = mapRef.current;
@@ -771,6 +817,9 @@ function registerParcelLayers(map: Map) {
   if (!map.getLayer("parcels-line")) {
     map.addLayer(buildParcelLineLayer("parcels-line"));
   }
+  if (!map.getLayer("parcels-selected-glow")) {
+    map.addLayer(buildParcelSelectedGlowLayer("parcels-selected-glow"));
+  }
   if (!map.getLayer("parcels-selected-accent")) {
     map.addLayer(buildParcelSelectedAccentLayer("parcels-selected-accent"));
   }
@@ -780,6 +829,44 @@ function registerParcelLayers(map: Map) {
   if (!map.getLayer("parcels-label")) {
     map.addLayer(buildParcelLabelLayer("parcels-label"));
   }
+}
+
+function ensureSelectedPointLayer(map: Map) {
+  if (!map.getSource(SELECTED_POINT_SOURCE)) {
+    map.addSource(SELECTED_POINT_SOURCE, {
+      type: "geojson",
+      data: EMPTY_FEATURE_COLLECTION
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("selected-point-halo")) {
+    map.addLayer(buildSelectedPointHaloLayer("selected-point-halo"), beforeId);
+  }
+  if (!map.getLayer("selected-point-core")) {
+    map.addLayer(buildSelectedPointCoreLayer("selected-point-core"), beforeId);
+  }
+}
+
+function buildSelectedPointFeatureCollection(
+  point: { lng: number; lat: number; source: string; nearestParcelId?: string } | null
+): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  if (!point) return EMPTY_FEATURE_COLLECTION as GeoJSON.FeatureCollection<GeoJSON.Point>;
+  return {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        properties: {
+          source: point.source,
+          nearestParcelId: point.nearestParcelId ?? ""
+        },
+        geometry: {
+          type: "Point",
+          coordinates: [point.lng, point.lat]
+        }
+      }
+    ]
+  };
 }
 
 function ensureAskiLayers(map: Map) {
@@ -921,12 +1008,12 @@ function applySemanticFocusStyles(
         "parcels-selected-accent",
         "line-color",
         focus?.key.startsWith("risk:")
-          ? "#DC2626"
+          ? "#FCA5A5"
           : focus?.key.startsWith("constraint:")
-            ? "#0F766E"
+            ? "#5EEAD4"
             : focus?.key === "aski"
-              ? "#D97706"
-              : "#C8102E"
+              ? "#FCD34D"
+              : "#F8FAFC"
       );
       map.setPaintProperty(
         "parcels-selected-accent",

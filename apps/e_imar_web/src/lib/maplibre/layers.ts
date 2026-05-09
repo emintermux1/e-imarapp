@@ -7,6 +7,7 @@ import type {
 import { ZONING_PRESETS } from "@/data/zoning";
 
 export const PARCEL_SOURCE = "parcels";
+export const SELECTED_POINT_SOURCE = "selected-point";
 export const TURKEY_GRID_SOURCE = "turkey-grid";
 export const ASKI_SOURCE = "aski-overlay";
 export const ACTIVE_PLAN_SOURCE = "active-plan-overlay";
@@ -70,6 +71,30 @@ export const buildParcelLineLayer = (id = "parcels-line"): LineLayerSpecificatio
   }
 });
 
+export const buildParcelSelectedGlowLayer = (
+  id = "parcels-selected-glow"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: PARCEL_SOURCE,
+  paint: {
+    "line-color": "#38BDF8",
+    "line-width": [
+      "case",
+      ["boolean", ["feature-state", "selected"], false],
+      ["interpolate", ["linear"], ["zoom"], 12, 5, 16, 10, 19, 16],
+      0
+    ] as never,
+    "line-blur": 3.8,
+    "line-opacity": [
+      "case",
+      ["boolean", ["feature-state", "selected"], false],
+      0.55,
+      0
+    ]
+  }
+});
+
 export const buildParcelSelectedAccentLayer = (
   id = "parcels-selected-accent"
 ): LineLayerSpecification => ({
@@ -77,20 +102,53 @@ export const buildParcelSelectedAccentLayer = (
   type: "line",
   source: PARCEL_SOURCE,
   paint: {
-    "line-color": "#C8102E",
+    "line-color": "#F8FAFC",
     "line-width": [
       "case",
       ["boolean", ["feature-state", "selected"], false],
-      2.6,
+      3.1,
       0
     ],
-    "line-blur": 0.3,
+    "line-blur": 0.2,
     "line-opacity": [
       "case",
       ["boolean", ["feature-state", "selected"], false],
       1,
       0
     ]
+  }
+});
+
+export const buildSelectedPointHaloLayer = (
+  id = "selected-point-halo"
+): CircleLayerSpecification => ({
+  id,
+  type: "circle",
+  source: SELECTED_POINT_SOURCE,
+  paint: {
+    "circle-color": "#38BDF8",
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 18, 12, 26, 17, 34] as never,
+    "circle-blur": 0.62,
+    "circle-opacity": 0.32,
+    "circle-stroke-color": "#E0F2FE",
+    "circle-stroke-width": 1,
+    "circle-stroke-opacity": 0.24
+  }
+});
+
+export const buildSelectedPointCoreLayer = (
+  id = "selected-point-core"
+): CircleLayerSpecification => ({
+  id,
+  type: "circle",
+  source: SELECTED_POINT_SOURCE,
+  paint: {
+    "circle-color": "#0EA5E9",
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 5, 12, 7, 17, 9] as never,
+    "circle-stroke-color": "#F8FAFC",
+    "circle-stroke-width": 2,
+    "circle-opacity": 0.98,
+    "circle-stroke-opacity": 0.95
   }
 });
 
