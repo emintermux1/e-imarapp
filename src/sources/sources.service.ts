@@ -30,6 +30,32 @@ export interface MunicipalityCapability {
   nextAction: string;
 }
 
+export interface SourceCandidateNormalizationPreview {
+  status: 'ok' | 'invalid_input';
+  message?: string;
+  normalizedUrl?: string;
+  vendor?: 'netcad' | 'ekent' | 'webgis' | 'kbs' | 'municipal' | 'unknown';
+  municipalitySlug?: string;
+  sourceIdCandidate?: string;
+  connectorKinds?: ConnectorKind[];
+  capabilities?: string[];
+  accessStatusGuess?: SourceAccessStatus;
+  accessStatusReason?: string;
+  wouldRegister?: {
+    id: string;
+    name: string;
+    jurisdiction: 'municipal';
+    category: 'municipal_gis';
+    homepageUrl: string;
+    connectorKinds: ConnectorKind[];
+    access: { status: SourceAccessStatus; notes: string };
+    capabilities: string[];
+    metadata: { province?: string; district?: string; municipalitySlug?: string; vendor?: string };
+  };
+  probeCandidates?: string[];
+  note?: string;
+}
+
 @Injectable()
 export class SourcesService {
   list() {
@@ -98,12 +124,13 @@ export class SourcesService {
     return this.municipalityCapabilityForSource(source);
   }
 
-  normalizeCandidate(input: { url: string; name?: string; province?: string; district?: string; probe?: boolean }) {
+  normalizeCandidate(input: { url: string; name?: string; province?: string; district?: string; probe?: boolean }): SourceCandidateNormalizationPreview {
     const normalizedUrl = this.normalizeUrl(input.url);
     if (!normalizedUrl) return { status: 'invalid_input', message: 'Geçerli bir http/https URL gereklidir.' };
     const vendor = this.guessVendor(normalizedUrl);
     const municipalitySlug = this.guessMunicipalitySlug(normalizedUrl, input.name, input.district);
     const sourceId = `${municipalitySlug || 'unknown'}-${vendor === 'unknown' ? 'municipal' : vendor}-candidate`;
+    const accessAssessment = this.guessAccessStatus(normalizedUrl, input.name, input.province, input.district, vendor);
     const connectorKinds = vendor === 'netcad' || vendor === 'webgis'
       ? [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal]
       : vendor === 'ekent'
@@ -115,11 +142,11 @@ export class SourcesService {
     const wouldRegister = {
       id: sourceId,
       name: input.name || `${input.district || municipalitySlug || 'Belediye'} imar kaynağı`,
-      jurisdiction: 'municipal',
-      category: 'municipal_gis',
+      jurisdiction: 'municipal' as const,
+      category: 'municipal_gis' as const,
       homepageUrl: normalizedUrl,
       connectorKinds,
-      access: { status: 'unknown', notes: 'User-submitted public candidate. Live probe and legal/protection checks required before ingestion.' },
+      access: { status: accessAssessment.status, notes: accessAssessment.reason },
       capabilities,
       metadata: { province: input.province, district: input.district, municipalitySlug, vendor }
     };
@@ -132,9 +159,11 @@ export class SourcesService {
       sourceIdCandidate: sourceId,
       connectorKinds,
       capabilities,
+      accessStatusGuess: accessAssessment.status,
+      accessStatusReason: accessAssessment.reason,
       wouldRegister,
       probeCandidates,
-      note: 'Registry otomatik güncellenmez; captcha/login/kapalı endpoint varsa otomatik çağrı yapılmamalıdır.'
+      note: 'Bu sadece bir önizlemedir; registry otomatik güncellenmez ve canlı probe ile doğrulama yapmadan kaynak katkısı oluşturulmaz.'
     };
   }
 
@@ -207,6 +236,26 @@ export class SourcesService {
     if (value.includes('kbs')) return 'kbs';
     if (value.includes('bel.tr') || value.includes('belediye')) return 'municipal';
     return 'unknown';
+  }
+
+  private guessAccessStatus(
+    url: string,
+    name?: string,
+    province?: string,
+    district?: string,
+    vendor?: 'netcad' | 'ekent' | 'webgis' | 'kbs' | 'municipal' | 'unknown'
+  ): { status: SourceAccessStatus; reason: string } {
+    const haystack = [url, name, province, district, vendor].filter(Boolean).join(' ').toLocaleLowerCase('tr-TR');
+    if (/(captcha|giri[şs]|login|sign[- ]?in|auth|oauth|otp|member|uyelik|ü yelik|uylik|sso)/i.test(haystack)) {
+      return { status: 'requires_credentials', reason: 'URL, ad veya belediye ipucu kimlik doğrulama/protected işaretleri içeriyor.' };
+    }
+    if (/(kvkk|mevzuat|dokuman|document|docs|swagger|wsdl|api|metadata|catalog|katalog)/i.test(haystack)) {
+      return { status: 'public_metadata', reason: 'Görünen ipucu daha çok katalog, dokümantasyon veya metaveri sayfasına benziyor.' };
+    }
+    if ((/\.bel\.tr|\.gov\.tr/i.test(url) && /(keos|webgis|ekent|kbs|imar|cbs)/i.test(url)) || /(keos|webgis|ekent|kbs|imar|cbs)/i.test(haystack)) {
+      return { status: 'public', reason: 'Portal paterni erişilebilir görünüyor; bu yine de canlı doğrulama gerektiren bir tahmindir.' };
+    }
+    return { status: 'unknown', reason: 'Canlı probe olmadan erişim durumu güvenle doğrulanamıyor.' };
   }
 
   private guessMunicipalitySlug(url: string, name?: string, district?: string): string {

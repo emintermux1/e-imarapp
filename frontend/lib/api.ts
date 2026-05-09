@@ -78,6 +78,19 @@ export async function getMunicipalityImarStatus(slug: string, ada: string, parse
   return apiFetch<import("./types").ImarStatusResponse>(`/municipalities/${slug}/imar-status?ada=${ada}&parsel=${parsel}`);
 }
 
+export async function normalizeSourceCandidate(body: {
+  url: string;
+  name?: string;
+  province?: string;
+  district?: string;
+  probe?: boolean;
+}) {
+  return apiFetch<import("./types").SourceCandidateNormalizationResponse>("/sources/candidates/normalize", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
 // Map
 export async function getMapLayers() {
   return apiFetch<{ service_type: string; identification?: Record<string, unknown>; layers: import("./types").LayerInfo[]; url: string }>("/map/layers");
