@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { kindLabel, searchLocationTargets } from "@/data/location-navigation";
+import { getLocationBoundary } from "@/data/location-boundaries";
 import { getAllParcels, searchParcels, slugify } from "@/data/parcels";
 import { PROVINCES } from "@/data/provinces";
 import { DISTRICTS } from "@/data/districts";
@@ -181,6 +182,7 @@ function searchLocationResults(query: string, limit: number): SearchResult[] {
       meta: kindLabel(target.kind),
       centroid: target.center,
       zoom: target.zoom,
+      bbox: target.bounds,
       kind: target.kind,
       il: target.il,
       ilce: target.ilce,
@@ -196,14 +198,16 @@ function searchAddressResults(query: string, limit: number): SearchResult[] {
   const out: SearchResult[] = [];
   PROVINCES.forEach((il) => {
     if (il.name.toLocaleLowerCase("tr-TR").includes(q) || il.slug.includes(q)) {
+      const boundary = getLocationBoundary({ il: il.name });
       out.push({
         id: `prov:${il.slug}`,
         type: "address",
         primary: `${il.name} (İl)`,
         secondary: `Plaka ${il.code}`,
-        il: il.slug,
+        il: il.name,
         ilce: "",
-        centroid: il.centroid
+        centroid: il.centroid,
+        bbox: boundary?.bounds
       });
     }
   });
@@ -214,14 +218,17 @@ function searchAddressResults(query: string, limit: number): SearchResult[] {
       d.ilSlug.includes(q)
     ) {
       const prov = PROVINCES.find((p) => p.slug === d.ilSlug);
+      const ilName = prov?.name ?? d.ilSlug;
+      const boundary = getLocationBoundary({ il: ilName, ilce: d.name });
       out.push({
         id: `dist:${d.ilSlug}-${d.slug}`,
         type: "address",
-        primary: `${d.name}, ${prov?.name ?? d.ilSlug}`,
+        primary: `${d.name}, ${ilName}`,
         secondary: "İlçe",
-        il: d.ilSlug,
-        ilce: d.slug,
-        centroid: d.centroid
+        il: ilName,
+        ilce: d.name,
+        centroid: d.centroid,
+        bbox: boundary?.bounds
       });
     }
   });
@@ -234,15 +241,19 @@ function searchAddressResults(query: string, limit: number): SearchResult[] {
       const dist = DISTRICTS.find(
         (d) => d.slug === n.ilceSlug && d.ilSlug === n.ilSlug
       );
+      const ilName = prov?.name ?? n.ilSlug;
+      const ilceName = dist?.name ?? n.ilceSlug;
+      const boundary = getLocationBoundary({ il: ilName, ilce: ilceName, mahalle: n.name });
       out.push({
         id: `nh:${n.ilSlug}-${n.ilceSlug}-${n.slug}`,
         type: "address",
         primary: `${n.name} Mahallesi`,
-        secondary: `${dist?.name ?? n.ilceSlug}, ${prov?.name ?? n.ilSlug}`,
-        il: n.ilSlug,
-        ilce: n.ilceSlug,
-        mahalle: n.slug,
-        centroid: n.centroid
+        secondary: `${ilceName}, ${ilName}`,
+        il: ilName,
+        ilce: ilceName,
+        mahalle: n.name,
+        centroid: n.centroid,
+        bbox: boundary?.bounds
       });
     }
   });

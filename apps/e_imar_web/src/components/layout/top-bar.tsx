@@ -51,6 +51,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
   const askiMode = useUIStore((s) => s.askiMode);
   const setAskiMode = useUIStore((s) => s.setAskiMode);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
   const flyTo = useMapStore((s) => s.flyTo);
 
   const aktifAski = activeAskiCount();
@@ -59,6 +60,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
     const next = ASKI_POLYGONS.find((p) => p.durum === "askida");
     if (!next) return;
     const center = midRing(next.ring);
+    setSelectedArea(null);
     flyTo({ center, zoom: 14 });
   }
 

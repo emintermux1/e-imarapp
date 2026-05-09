@@ -18,6 +18,7 @@ import {
   RISK_GRID_SOURCE,
   TRANSPORT_SOURCE,
   MUNICIPALITY_SOURCE,
+  SELECTED_AREA_SOURCE,
   TURKEY_FOCUS_SOURCE,
   buildParcelFillLayer,
   buildParcelLineLayer,
@@ -32,13 +33,16 @@ import {
   buildAskiHatchedLayer,
   buildRiskGridLayer,
   buildTransportLineLayer,
-  buildMunicipalityBoundaryLayer
+  buildMunicipalityBoundaryLayer,
+  buildSelectedAreaFillLayer,
+  buildSelectedAreaLineLayer
 } from "@/lib/maplibre/layers";
 import { getAskiCollection } from "@/data/aski-polygons";
 import type { AskiPolygonFeature } from "@/data/aski-polygons";
 import { getRiskGridCollection } from "@/data/risk-grid";
 import { getTransportLineCollection } from "@/data/transport-lines";
 import { getMunicipalityBoundaryCollection } from "@/data/municipality-boundaries";
+import { emptySelectedAreaCollection } from "@/data/location-boundaries";
 import { ZONING_PRESETS } from "@/data/zoning";
 import { getSnapshotForYear } from "@/data/historical-snapshots";
 import {
@@ -80,8 +84,10 @@ export function MapCanvas({
 
   const basemap = useMapStore((s) => s.basemap);
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
+  const selectedArea = useMapStore((s) => s.selectedArea);
   const flyTarget = useMapStore((s) => s.flyTarget);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
   const setHoveredParcelId = useMapStore((s) => s.setHoveredParcelId);
   const setCursorLngLat = useMapStore((s) => s.setCursorLngLat);
   const setViewState = useMapStore((s) => s.setViewState);
@@ -148,6 +154,7 @@ export function MapCanvas({
           });
           break;
         case "locate":
+          setSelectedArea(null);
           locateUser(map);
           break;
       }
@@ -164,6 +171,7 @@ export function MapCanvas({
       ensureRiskGridLayer(map);
       ensureTransportLayer(map);
       ensureMunicipalityBoundaryLayer(map);
+      ensureSelectedAreaLayers(map);
       ensureUserLocationLayers(map);
       if (lastSelectedMapIdRef.current != null) {
         map.setFeatureState(
@@ -235,6 +243,7 @@ export function MapCanvas({
       const mapId = f.id as string | number;
       const parcel = getParcelByMapId(mapId);
       if (!parcel) return;
+      setSelectedArea(null);
       setSelectedParcelId(parcel.properties.id);
       setRightPanelOpen(true);
       if (parcel.properties.centroid) {
@@ -361,6 +370,21 @@ export function MapCanvas({
     if (map.isStyleLoaded()) apply();
     else map.once("load", apply);
   }, [selectedParcelId]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      if (!map.getSource(SELECTED_AREA_SOURCE)) ensureSelectedAreaLayers(map);
+      const source = map.getSource(SELECTED_AREA_SOURCE) as maplibregl.GeoJSONSource | undefined;
+      source?.setData({
+        type: "FeatureCollection",
+        features: selectedArea ? [selectedArea.feature] : []
+      });
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [selectedArea]);
 
   React.useEffect(() => {
     const map = mapRef.current;
@@ -648,6 +672,22 @@ function ensureMunicipalityBoundaryLayer(map: Map) {
   const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
   if (!map.getLayer("belediye-sinirlari")) {
     map.addLayer(buildMunicipalityBoundaryLayer(), beforeId);
+  }
+}
+
+function ensureSelectedAreaLayers(map: Map) {
+  if (!map.getSource(SELECTED_AREA_SOURCE)) {
+    map.addSource(SELECTED_AREA_SOURCE, {
+      type: "geojson",
+      data: emptySelectedAreaCollection()
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("selected-area-fill")) {
+    map.addLayer(buildSelectedAreaFillLayer(), beforeId);
+  }
+  if (!map.getLayer("selected-area-line")) {
+    map.addLayer(buildSelectedAreaLineLayer(), beforeId);
   }
 }
 

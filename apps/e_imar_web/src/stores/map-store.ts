@@ -20,10 +20,21 @@ export interface FlyTarget {
   seq: number;
 }
 
+export interface SelectedArea {
+  id: string;
+  kind: "il" | "ilce" | "mahalle";
+  label: string;
+  il?: string;
+  ilce?: string;
+  mahalle?: string;
+  feature: GeoJSON.Feature<GeoJSON.Polygon>;
+}
+
 interface MapState {
   basemap: BasemapId;
   hoveredParcelId: string | null;
   selectedParcelId: string | null;
+  selectedArea: SelectedArea | null;
   flyTarget: FlyTarget | null;
   cursorLngLat: [number, number] | null;
   zoom: number;
@@ -32,6 +43,7 @@ interface MapState {
   setBasemap: (b: BasemapId) => void;
   setHoveredParcelId: (id: string | null) => void;
   setSelectedParcelId: (id: string | null) => void;
+  setSelectedArea: (area: SelectedArea | null) => void;
   flyTo: (target: Omit<FlyTarget, "seq">) => void;
   setCursorLngLat: (v: [number, number] | null) => void;
   setViewState: (v: { zoom?: number; bearing?: number; pitch?: number }) => void;
@@ -45,6 +57,7 @@ export const useMapStore = create<MapState>()(
       basemap: "voyager",
       hoveredParcelId: null,
       selectedParcelId: null,
+      selectedArea: null,
       flyTarget: null,
       cursorLngLat: null,
       zoom: 5.5,
@@ -53,6 +66,7 @@ export const useMapStore = create<MapState>()(
       setBasemap: (b) => set({ basemap: b }),
       setHoveredParcelId: (id) => set({ hoveredParcelId: id }),
       setSelectedParcelId: (id) => set({ selectedParcelId: id }),
+      setSelectedArea: (area) => set({ selectedArea: area }),
       flyTo: (target) =>
         set({ flyTarget: { ...target, seq: ++seqCounter } }),
       setCursorLngLat: (v) => set({ cursorLngLat: v }),

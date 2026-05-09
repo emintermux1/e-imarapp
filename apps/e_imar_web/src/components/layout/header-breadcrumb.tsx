@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { ChevronRight } from "lucide-react";
+import { getLocationBoundary } from "@/data/location-boundaries";
 import { getLocationTargetForParcel, kindLabel, type LocationLevel, type LocationTarget } from "@/data/location-navigation";
 import { useParcel } from "@/hooks/use-parcel";
 import { adaParselText } from "@/lib/format";
@@ -19,6 +20,7 @@ interface BreadcrumbPart {
 export function HeaderBreadcrumb() {
   const selectedId = useMapStore((s) => s.selectedParcelId);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
   const flyTo = useMapStore((s) => s.flyTo);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
   const parcel = useParcel(selectedId);
@@ -63,14 +65,29 @@ export function HeaderBreadcrumb() {
   function handleClick(part: BreadcrumbPart) {
     if (!part.target || !part.level) return;
     if (part.level === "parcel") {
+      setSelectedArea(null);
       if (part.target.parcelId) setSelectedParcelId(part.target.parcelId);
       setRightPanelOpen(true);
       flyTo({ center: part.target.center, zoom: part.target.zoom, parcelId: part.target.parcelId });
       return;
     }
+    const boundary = part.target.bounds && part.target.kind !== "parcel" ? getLocationBoundary({
+      il: part.target.il,
+      ilce: part.target.ilce,
+      mahalle: part.target.mahalle
+    }) : undefined;
+    setSelectedArea(boundary ? {
+      id: boundary.id,
+      kind: boundary.kind,
+      label: boundary.label,
+      il: boundary.il,
+      ilce: boundary.ilce,
+      mahalle: boundary.mahalle,
+      feature: boundary.feature
+    } : null);
     setSelectedParcelId(null);
     setRightPanelOpen(false);
-    flyTo({ center: part.target.center, zoom: part.target.zoom });
+    flyTo({ center: part.target.center, bounds: part.target.bounds, zoom: part.target.zoom });
   }
 
   return (

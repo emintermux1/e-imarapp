@@ -12,6 +12,7 @@ export const ASKI_SOURCE = "aski-overlay";
 export const RISK_GRID_SOURCE = "risk-grid";
 export const TRANSPORT_SOURCE = "transport-lines";
 export const MUNICIPALITY_SOURCE = "municipality-boundaries";
+export const SELECTED_AREA_SOURCE = "selected-area";
 export const TURKEY_FOCUS_SOURCE = "turkey-focus";
 
 const zoningCases: (string | string[])[] = ["match", ["get", "zoningType"]];
@@ -399,6 +400,35 @@ export const buildMunicipalityBoundaryLayer = (
     ] as never,
     "line-opacity": 0.75,
     "line-dasharray": [3, 2] as never
+  }
+});
+
+export const buildSelectedAreaFillLayer = (
+  id = "selected-area-fill"
+): FillLayerSpecification => ({
+  id,
+  type: "fill",
+  source: SELECTED_AREA_SOURCE,
+  paint: {
+    "fill-color": "#EF4444",
+    "fill-opacity": ["interpolate", ["linear"], ["zoom"], 9, 0.2, 15, 0.14] as never
+  }
+});
+
+export const buildSelectedAreaLineLayer = (
+  id = "selected-area-line"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: SELECTED_AREA_SOURCE,
+  layout: {
+    "line-join": "round",
+    "line-cap": "round"
+  },
+  paint: {
+    "line-color": "#EF0000",
+    "line-width": ["interpolate", ["linear"], ["zoom"], 8, 2.2, 14, 3.2, 18, 4.4] as never,
+    "line-opacity": 0.95
   }
 });
 

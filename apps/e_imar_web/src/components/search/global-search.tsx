@@ -20,6 +20,7 @@ import { useSearch, type SearchMode } from "@/hooks/use-search";
 import { useHistoryStore } from "@/stores/history-store";
 import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
+import { getLocationBoundary } from "@/data/location-boundaries";
 import { ZoningBadge } from "@/components/gis/zoning-badge";
 import type { SearchResult } from "@/types/geo";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,7 @@ export function GlobalSearch() {
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
   const flyTo = useMapStore((s) => s.flyTo);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
 
   const [mode, setMode] = React.useState<SearchMode>("Hepsi");
   const [query, setQuery] = React.useState("");
@@ -106,6 +108,7 @@ export function GlobalSearch() {
     setSearchOpen(false);
     setQuery("");
     if (r.type === "parcel") {
+      setSelectedArea(null);
       setSelectedParcelId(r.parcelId);
       setRightPanelOpen(true);
       if (r.centroid) {
@@ -117,17 +120,38 @@ export function GlobalSearch() {
         });
       }
     } else if (r.type === "coordinate") {
+      setSelectedArea(null);
       setSelectedParcelId(null);
       setRightPanelOpen(false);
       flyTo({ center: [r.lng, r.lat], zoom: 14 });
     } else if (r.type === "location" && r.centroid) {
+      const boundary = getLocationBoundary({ il: r.il, ilce: r.ilce, mahalle: r.mahalle });
+      setSelectedArea(boundary ? {
+        id: boundary.id,
+        kind: boundary.kind,
+        label: boundary.label,
+        il: boundary.il,
+        ilce: boundary.ilce,
+        mahalle: boundary.mahalle,
+        feature: boundary.feature
+      } : null);
       setSelectedParcelId(null);
       setRightPanelOpen(false);
-      flyTo({ center: r.centroid, zoom: r.zoom });
+      flyTo({ center: r.centroid, bounds: r.bbox ?? boundary?.bounds, zoom: r.zoom });
     } else if (r.centroid) {
+      const boundary = r.type === "address" ? getLocationBoundary({ il: r.il, ilce: r.ilce, mahalle: r.mahalle }) : undefined;
+      setSelectedArea(boundary ? {
+        id: boundary.id,
+        kind: boundary.kind,
+        label: boundary.label,
+        il: boundary.il,
+        ilce: boundary.ilce,
+        mahalle: boundary.mahalle,
+        feature: boundary.feature
+      } : null);
       setSelectedParcelId(null);
       setRightPanelOpen(false);
-      flyTo({ center: r.centroid, zoom: r.type === "address" ? 12 : 11 });
+      flyTo({ center: r.centroid, bounds: r.bbox ?? boundary?.bounds, zoom: r.type === "address" ? 12 : 11 });
     }
   }
 

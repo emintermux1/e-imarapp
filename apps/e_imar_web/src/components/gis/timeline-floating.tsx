@@ -32,6 +32,7 @@ export function TimelineFloating() {
   const setCompareMode = useUIStore((s) => s.setCompareMode);
   const mapMode = useUIStore((s) => s.mapMode);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
   const selected = useMapStore((s) => s.selectedParcelId);
 
   const [playing, setPlaying] = React.useState(false);
@@ -126,6 +127,7 @@ export function TimelineFloating() {
                   setTimelineYear(null);
                   setCompareMode("off");
                   setCompareYear(null);
+                  setSelectedArea(null);
                   setSelectedParcelId(selected);
                 }}
                 className="h-7 w-7 inline-flex items-center justify-center rounded text-fg-muted hover:bg-surface-1 hover:text-fg-primary"
