@@ -54,6 +54,7 @@ export function MapViewer({
 
   const validatedGeo = useMemo(() => validateAndRepairGeoJson(geojson), [geojson]);
 
+  /* MapLibre: mount once. Sync center/zoom/geojson/opacity/WMS via dedicated effects below. */
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     const map = new maplibregl.Map({
@@ -217,6 +218,7 @@ export function MapViewer({
       map.remove();
       mapRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional single mount; props synced below
   }, []);
 
   function bindInteractions(map: maplibregl.Map) {

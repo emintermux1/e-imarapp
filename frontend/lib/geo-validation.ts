@@ -47,6 +47,12 @@ export function validateAndRepairGeoJson(input: unknown): ValidationResult {
       });
     }
 
+    const metaIssues = validateParcelMetadata(props);
+    issues.push(...metaIssues);
+
+    const bboxIssues = validateGeometryRoughExtent(repaired.geometry);
+    issues.push(...bboxIssues);
+
     repairedFeatures.push(repaired);
   }
 
@@ -234,4 +240,88 @@ function hashGeometry(value: unknown): string {
   } catch {
     return "hash-error";
   }
+}
+
+/** Administrative metadata gaps — does not reject geometry; lowers audit clarity only. */
+function validateParcelMetadata(props: Record<string, unknown>): ValidationIssue[] {
+  const out: ValidationIssue[] = [];
+  const ada = props.ada != null && String(props.ada).trim() !== "";
+  const parsel = props.parsel != null && String(props.parsel).trim() !== "";
+  if (!ada || !parsel) {
+    out.push({
+      code: "INCOMPLETE_PARCEL_ID",
+      message: "Ada veya parsel alanı eksik; mükerrer/iş kuralları için zayıf anahtar.",
+      severity: "warning"
+    });
+  }
+  const il = props.il ?? props.province;
+  const ilce = props.ilce ?? props.district;
+  if ((il == null || String(il).trim() === "") && (ilce == null || String(ilce).trim() === "")) {
+    out.push({
+      code: "MISSING_ADMIN_BOUNDARY",
+      message: "İl / ilçe metadata bilgisi yok; belediye doğrulaması için eksik.",
+      severity: "info"
+    });
+  }
+  return out;
+}
+
+/** Rough WGS84 sanity — Turkey-centric bbox with margin for islands / border corridors. */
+function validateGeometryRoughExtent(geometry: GeoJSON.Polygon | GeoJSON.MultiPolygon): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const lngLatBounds = { minLng: 25.5, maxLng: 45.5, minLat: 35.5, maxLat: 43.5 };
+  let minLng = Infinity;
+  let maxLng = -Infinity;
+  let minLat = Infinity;
+  let maxLat = -Infinity;
+
+  const consumeRing = (ring: GeoJSON.Position[]) => {
+    for (const pos of ring) {
+      const lng = pos[0];
+      const lat = pos[1];
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) continue;
+      minLng = Math.min(minLng, lng);
+      maxLng = Math.max(maxLng, lng);
+      minLat = Math.min(minLat, lat);
+      maxLat = Math.max(maxLat, lat);
+    }
+  };
+
+  if (geometry.type === "Polygon") {
+    for (const ring of geometry.coordinates) consumeRing(ring);
+  } else {
+    for (const polygon of geometry.coordinates) {
+      for (const ring of polygon) consumeRing(ring);
+    }
+  }
+
+  if (!Number.isFinite(minLng)) return issues;
+  if (
+    minLng < lngLatBounds.minLng ||
+    maxLng > lngLatBounds.maxLng ||
+    minLat < lngLatBounds.minLat ||
+    maxLat > lngLatBounds.maxLat
+  ) {
+    issues.push({
+      code: "EXTENT_OUTSIDE_TR_BOX",
+      message:
+        "Geometri beklenen Türkiye WGS84 kutusunun dışında — CRS karışması veya yanlış projeksiyon olabilir.",
+      severity: "warning"
+    });
+  }
+  return issues;
+}
+
+/**
+ * Export for tests / tooling: ring orientation sign (positive = counter-clockwise in GIS convention for outer ring).
+ */
+export function ringSignedArea(ring: GeoJSON.Position[]): number {
+  if (ring.length < 3) return 0;
+  let sum = 0;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [x1, y1] = ring[i];
+    const [x2, y2] = ring[i + 1];
+    sum += x1 * y2 - x2 * y1;
+  }
+  return sum / 2;
 }

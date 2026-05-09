@@ -6,9 +6,12 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/apps/e_imar_web/src/$1'
   },
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.test.json'
-    }
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.test.json'
+      }
+    ]
   }
 };
