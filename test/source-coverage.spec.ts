@@ -32,6 +32,7 @@ describe('source coverage summary', () => {
     expect(ids.has('gelibolu-keos-imar')).toBe(true);
     expect(ids.has('caycuma-keos')).toBe(true);
     expect(result.municipalities[0]).toHaveProperty('connectorKinds');
+    expect(result.municipalities[0]).toHaveProperty('capability.imarQuerySupport');
   });
 
   it('keeps summary and municipality routes ahead of dynamic id lookup', () => {
@@ -39,8 +40,33 @@ describe('source coverage summary', () => {
 
     expect(controller.summary()).toHaveProperty('sourceCoverage.totalSources', SOURCE_REGISTRY.length);
     expect(controller.coverage()).toHaveProperty('sourceCoverage.totalSources', SOURCE_REGISTRY.length);
-    expect(controller.municipalities(undefined, undefined, undefined)).toHaveProperty('count');
+    expect(controller.municipalities(undefined, undefined, undefined, undefined)).toHaveProperty('count');
+    expect(controller.municipalityCoverage('İstanbul', undefined, 'netcad', undefined)).toHaveProperty('count');
     expect(() => controller.get('summary')).toThrow("Source 'summary' is not registered.");
+  });
+
+  it('returns municipality capability status without live probe assumptions', () => {
+    const service = new SourcesService();
+    const capability = service.municipalityCapability('pendik');
+
+    expect(capability.registered).toBe(true);
+    expect(capability.source?.id).toBe('pendik-keos-imar');
+    expect(capability.lastHealth).toBeNull();
+    expect(capability.imarQuerySupport).toBe('method_contract_required');
+    expect(capability.parcelGeometrySupport).toBe('tkgm_candidate');
+    expect(capability.reasonNoData).toContain('method contract');
+  });
+
+  it('normalizes source candidate preview without registry writes', () => {
+    const service = new SourcesService();
+    const preview = service.normalizeCandidate({ url: 'https://keos.ornek.bel.tr/imardurumu/', name: 'Örnek Belediyesi', province: 'Ankara', district: 'Örnek', probe: true }) as any;
+
+    expect(preview.status).toBe('ok');
+    expect(preview.vendor).toBe('netcad');
+    expect(preview.municipalitySlug).toBe('ornek');
+    expect(preview.wouldRegister.id).toBe('ornek-netcad-candidate');
+    expect(preview.probeCandidates.length).toBeGreaterThan(0);
+    expect(() => service.get('ornek-netcad-candidate')).toThrow();
   });
 
   it('does not store secret values beyond environment variable names', () => {
@@ -119,10 +145,11 @@ describe('website bootstrap source coverage', () => {
       sources
     );
 
-    const bootstrap = (await service.bootstrap()) as { sourceCoverage?: { totalSources: number; publicCandidateCount: number } };
+    const bootstrap = (await service.bootstrap()) as { sourceCoverage?: { totalSources: number; publicCandidateCount: number }; websiteCapabilities?: { municipalParcelWorkflow: boolean } };
 
     expect(bootstrap.sourceCoverage?.totalSources).toBe(SOURCE_REGISTRY.length);
     expect(bootstrap.sourceCoverage?.publicCandidateCount).toBeGreaterThan(0);
+    expect(bootstrap.websiteCapabilities?.municipalParcelWorkflow).toBe(true);
     expect(map.tileServerStatus).toHaveBeenCalledTimes(1);
   });
 });

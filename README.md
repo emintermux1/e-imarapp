@@ -107,10 +107,16 @@ The API exposes `GET /ingestion/requirements` to list sources that cannot be ing
 
 For public KEOS portals without login/bot protection, data is pulled by discovering the backend service endpoints used by the page, not by inventing responses. Use:
 
+- `GET /sources/municipalities/:id/capability` where `:id` is a source id or `municipalitySlug`.
+- `GET /sources/municipality-coverage?province=&district=&vendor=` for capability-enriched municipal coverage.
+- `POST /sources/candidates/normalize` to preview a contributed source URL without writing to the registry.
+- `POST /website/bff/municipal-parcel-workflow` for honest ada/parsel BFF status aggregation.
 - `GET /connectors/netcad/strategy`
 - `POST /connectors/:id/netcad/discover`
+- `POST /connectors/:id/netcad/resolve-methods` for ASMX `?WSDL` and public HTML/JS payload hint discovery.
+- `POST /connectors/:id/ogc/catalog` for WMS/WFS GetCapabilities layer catalog parsing.
 
-The discovery step fetches public HTML and same-origin JS only, extracts `.ashx`, `.asmx`, `NetGIS`, WMS/WFS, ArcGIS, and GeoServer references, preserves published ports in candidate URLs, probes common KEOS endpoints, and reports the next connector step. Protected flows return `captcha_required`, `requires_credentials`, or `requires_legal_agreement` rather than fabricated data. See `docs/connectors/netcad-keos.md`.
+The discovery step fetches public HTML and same-origin JS only, extracts `.ashx`, `.asmx`, `NetGIS`, WMS/WFS, ArcGIS, and GeoServer references, preserves published ports in candidate URLs, probes common KEOS endpoints, and reports the next connector step. Resolver/catalog responses mark public metadata separately from official data, include provenance, and only SHA-256 hash real response bodies. Protected flows return `protected`, `captcha_required`, `requires_credentials`, or `requires_legal_agreement` rather than bypassing access controls or fabricating data. See `docs/connectors/netcad-keos.md`.
 
 Map provider keys and OpenAI credentials should be provided through environment variables or a secret manager, never committed:
 
@@ -134,7 +140,7 @@ If you want to use local `.env`, copy `.env.example` to `.env` and fill the opti
 
 ## API behavior
 
-If PostGIS or Redis is not configured, API endpoints return a `not_ready` or `unavailable` status with a concrete next action. They do not invent parcel or plan results.
+If PostGIS or Redis is not configured, API endpoints return a `not_ready` or `unavailable` status with a concrete next action. They do not invent parcel or plan results. Municipal parcel workflows return `method_contract_required`, `protected`, `source_not_found`, or `not_ready` when registry, TKGM geometry, or Netcad/KEOS contracts are not verified; demo/derived/public metadata is never labeled as official data.
 
 ## Tests
 
@@ -155,6 +161,7 @@ The canonical product frontend is `frontend/` (Next.js 14 App Router). It consum
 - Architecture and runbook: `docs/website-architecture.md`
 - Bootstrap/capabilities endpoint: `GET /website/bootstrap`
 - Aggregated website workflow endpoint: `POST /website/bff/parcel-workflow`
+- Municipal ada/parsel readiness workflow: `POST /website/bff/municipal-parcel-workflow`
 - Plan note endpoint: `POST /website/bff/plan-note-explain`
 - Workspace endpoint: `GET /website/workspace/:userReference`
 - Session token endpoints: `POST /website/session/start`, `POST /website/session/verify`
