@@ -67,4 +67,13 @@ describe('WebsiteService', () => {
     expect(result.parcelGeometryAttempt.status).toBe('not_ready');
     expect(result.provenance).toEqual([]);
   });
+
+  it('returns parcel report with printable html', async () => {
+    const service = makeService({ sources: new SourcesService() });
+    const result = await service.parcelReport({ query: { type: 'ada_parsel', ada: '1', parselNo: '2' } }) as { status: string; printableHtml: string; disclaimer: string };
+
+    expect(result.status).toBeDefined();
+    expect(result.printableHtml).toContain('Parsel raporu');
+    expect(result.disclaimer).toContain('resmi belge değildir');
+  });
 });

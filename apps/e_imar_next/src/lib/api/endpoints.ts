@@ -1,6 +1,7 @@
 export {
   apiBaseUrl,
   getBootstrap,
+  runParcelReport,
   runParcelWorkflow,
   explainPlanNote,
   getWorkspace,
@@ -17,6 +18,8 @@ export type {
   MapProvider,
   ParcelQueryResult,
   ParcelQueryType,
+  ParcelReportRequest,
+  ParcelReportResponse,
   ParcelWorkflowPayload,
   ParcelWorkflowResponse,
   PlanNoteExplainPayload,

@@ -17,6 +17,7 @@ import {
   Layers,
   Satellite,
   Home,
+  Link2,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -27,6 +28,7 @@ const navItems = [
   { href: "/parsel", label: "Parsel Ara", icon: Search },
   { href: "/plans", label: "İmar Planları", icon: Layers },
   { href: "/municipalities", label: "Belediyeler", icon: Building2 },
+  { href: "/sources", label: "Source Preview", icon: Link2 },
   { href: "/simulation", label: "3D Simülasyon", icon: Globe },
   { href: "/satellite", label: "Uydu Analizi", icon: Satellite },
   { href: "/analysis", label: "Analiz", icon: BarChart3 },

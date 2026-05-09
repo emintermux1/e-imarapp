@@ -6,6 +6,7 @@ import {
   getBootstrap,
   getMapProviders,
   getWorkspace,
+  runParcelReport,
   runParcelWorkflow,
 } from '@/lib/api/client';
 import type {
@@ -13,6 +14,8 @@ import type {
   ApiResult,
   BootstrapResponse,
   MapProvider,
+  ParcelReportRequest,
+  ParcelReportResponse,
   ParcelWorkflowPayload,
   ParcelWorkflowResponse,
   PlanNoteExplainPayload,
@@ -98,5 +101,11 @@ export function useParcelWorkflowResult(cacheKey: string | undefined) {
 export function usePlanExplainMutation() {
   return useMutation<PlanNoteExplainResponse, ApiFailure, PlanNoteExplainPayload>({
     mutationFn: async (payload: PlanNoteExplainPayload) => unwrap(await explainPlanNote(payload)),
+  });
+}
+
+export function useParcelReportMutation() {
+  return useMutation<ParcelReportResponse, ApiFailure, ParcelReportRequest>({
+    mutationFn: async (payload: ParcelReportRequest) => unwrap(await runParcelReport(payload)),
   });
 }

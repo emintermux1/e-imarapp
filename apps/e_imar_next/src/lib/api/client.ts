@@ -2,6 +2,8 @@ import type {
   ApiResult,
   BootstrapResponse,
   MapProvider,
+  ParcelReportRequest,
+  ParcelReportResponse,
   ParcelWorkflowPayload,
   ParcelWorkflowResponse,
   PlanNoteExplainPayload,
@@ -88,6 +90,17 @@ export function explainPlanNote(
   init?: RequestOptions,
 ): Promise<ApiResult<PlanNoteExplainResponse>> {
   return request<PlanNoteExplainResponse>('/website/bff/plan-note-explain', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    ...init,
+  });
+}
+
+export function runParcelReport(
+  payload: ParcelReportRequest,
+  init?: RequestOptions,
+): Promise<ApiResult<ParcelReportResponse>> {
+  return request<ParcelReportResponse>('/website/bff/parcel-report', {
     method: 'POST',
     body: JSON.stringify(payload),
     ...init,

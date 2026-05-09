@@ -205,7 +205,7 @@ export class AnalysisService {
     const userPrompt = [
       `Hedef kitle: ${audience}.`,
       `Lütfen aşağıdaki imar notunu sade Türkçe ile açıkla.`,
-      `JSON formatında dön: {"plainSummary": "...", "bullets": ["..."], "risks": ["..."], "uncertainties": ["..."]}.`,
+      `JSON formatında dön: {"sadeOzeti": "...", "yapilasmaKosullari": ["..."], "riskler": ["..."], "gerekliKurumGorusleri": ["..."], "bilinmeyenler": ["..."]}.`,
       `Maksimum madde sayısı: ${bulletCount}.`,
       `İmar Notu:\n${noteText}`
     ].join('\n\n');
@@ -246,14 +246,15 @@ export class AnalysisService {
       try {
         parsed = JSON.parse(content);
       } catch {
-        parsed = { plainSummary: content, bullets: [], risks: [], uncertainties: [] };
+        parsed = { sadeOzeti: content, yapilasmaKosullari: [], riskler: [], gerekliKurumGorusleri: [], bilinmeyenler: [] };
       }
 
+      const explanation = this.normalizePlanNoteExplanation(parsed);
       return {
         status: 'ok',
         provider: 'openai',
         model,
-        explanation: parsed
+        explanation
       };
     } catch (error) {
       return {
@@ -317,5 +318,34 @@ export class AnalysisService {
 
   private readString(value: unknown): string | null {
     return typeof value === 'string' && value.trim().length > 0 ? value : null;
+  }
+
+  private normalizePlanNoteExplanation(value: unknown): {
+    sadeOzeti: string;
+    yapilasmaKosullari: string[];
+    riskler: string[];
+    gerekliKurumGorusleri: string[];
+    bilinmeyenler: string[];
+  } {
+    const record = value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+    const toList = (input: unknown): string[] =>
+      Array.isArray(input)
+        ? input.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map((item) => item.trim())
+        : [];
+    const firstText = (...keys: string[]): string => {
+      for (const key of keys) {
+        const candidate = record[key];
+        if (typeof candidate === 'string' && candidate.trim().length > 0) return candidate.trim();
+      }
+      return '';
+    };
+
+    return {
+      sadeOzeti: firstText('sadeOzeti', 'plainSummary', 'summary', 'explanation'),
+      yapilasmaKosullari: toList(record.yapilasmaKosullari ?? record.bullets ?? record.conditions),
+      riskler: toList(record.riskler ?? record.risks),
+      gerekliKurumGorusleri: toList(record.gerekliKurumGorusleri ?? record.requiredOpinions ?? record.requiredInstitutions),
+      bilinmeyenler: toList(record.bilinmeyenler ?? record.uncertainties ?? record.unknowns)
+    };
   }
 }
