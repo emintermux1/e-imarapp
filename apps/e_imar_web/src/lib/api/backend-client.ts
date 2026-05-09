@@ -3,7 +3,9 @@ import type {
   ComplianceSimulationResponse,
   ParcelResponse,
   PlanResponse,
-  ReportResponse
+  ReportResponse,
+  SourceHealthRecord,
+  SourceRegistryRecord
 } from "@/types/api";
 
 export const API_BASE =
@@ -146,7 +148,23 @@ export function simulateBackendCompliance(body: Record<string, unknown>) {
 }
 
 export function getBackendMapLayers() {
-  return apiFetch<BackendMapLayerResponse[]>("/map/layers");
+  return apiFetch<{ layers?: BackendMapLayerResponse[] } | BackendMapLayerResponse[]>("/map/layers");
+}
+
+export function listSources() {
+  return apiFetch<SourceRegistryRecord[]>("/sources");
+}
+
+export function getSourceHealth() {
+  return apiFetch<SourceHealthRecord[]>("/sources/health");
+}
+
+export function discoverSource(sourceId: string) {
+  return apiFetch<Record<string, unknown>>(`/sources/${sourceId}/discover`, { method: "POST" });
+}
+
+export function getLiveMapLayers() {
+  return apiFetch<BackendMapLayerResponse[]>("/map/live-layers");
 }
 
 export function getBackendPlans() {

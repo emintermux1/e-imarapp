@@ -7,13 +7,15 @@ import {
   Bookmark,
   History,
   SlidersHorizontal,
-  ChevronDown
+  ChevronDown,
+  DatabaseZap
 } from "lucide-react";
 import { LayerToggleList } from "@/components/map/layer-toggle-list";
 import { WatchlistSection } from "./watchlist-section";
 import { SavedQueriesSection } from "./saved-queries-section";
 import { HistorySection } from "./history-section";
 import { FiltersSection } from "./filters-section";
+import { SourceStatusPanel } from "./source-status-panel";
 import { cn } from "@/lib/utils";
 
 interface SectionDef {
@@ -32,6 +34,13 @@ export function SidebarSections({ collapsed = false }: { collapsed?: boolean }) 
       title: "Katmanlar",
       icon: <Layers className="h-4 w-4" />,
       body: <LayerToggleList />,
+      defaultOpen: true
+    },
+    {
+      id: "sources",
+      title: "Veri Kaynakları",
+      icon: <DatabaseZap className="h-4 w-4" />,
+      body: <SourceStatusPanel />,
       defaultOpen: true
     },
     {

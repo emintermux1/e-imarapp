@@ -38,12 +38,52 @@ export interface ReportResponse {
 
 export interface BackendMapLayerResponse {
   id: string | number;
+  source_id?: string;
   name?: string;
   title?: string;
   type?: string;
   status?: string;
   source?: string;
+  url?: string;
+  homepage_url?: string;
+  center?: [number, number];
+  province?: string;
+  district?: string;
+  kind?: string;
+  requires_proxy?: boolean;
+  requires_approval?: boolean;
+  requires_credentials?: boolean;
+  layers?: string[];
   [key: string]: unknown;
+}
+
+export interface SourceRegistryRecord {
+  id: string;
+  name: string;
+  kind: string;
+  province?: string | null;
+  district?: string | null;
+  slug: string;
+  homepage_url: string;
+  base_url: string;
+  candidate_endpoints?: string[];
+  notes?: string;
+  requires_approval?: boolean;
+  requires_credentials?: boolean;
+  center?: [number, number] | null;
+}
+
+export interface SourceHealthRecord {
+  source_id: string;
+  name: string;
+  slug: string;
+  kind: string;
+  homepage_url: string;
+  status: string;
+  http_status?: number | null;
+  checked_url?: string;
+  requires_approval?: boolean;
+  requires_credentials?: boolean;
 }
 
 export interface ComplianceSimulationResponse {

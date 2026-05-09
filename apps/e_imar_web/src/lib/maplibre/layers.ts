@@ -10,6 +10,7 @@ export const PARCEL_SOURCE = "parcels";
 export const TURKEY_GRID_SOURCE = "turkey-grid";
 export const ASKI_SOURCE = "aski-overlay";
 export const RISK_GRID_SOURCE = "risk-grid";
+export const LIVE_SOURCE_REGISTRY_SOURCE = "live-source-registry";
 
 const zoningCases: (string | string[])[] = ["match", ["get", "zoningType"]];
 Object.values(ZONING_PRESETS).forEach((preset) => {
@@ -325,6 +326,14 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "İdari sınırlar (mock)",
     defaultVisible: false,
     defaultOpacity: 0.75,
+    group: "İdari"
+  },
+  {
+    id: "live-source-markers",
+    label: "Canlı Kaynak Noktaları",
+    description: "Seed edilen gerçek belediye/TKGM/e-Plan/TUCBS portal işaretleri",
+    defaultVisible: true,
+    defaultOpacity: 0.9,
     group: "İdari"
   }
 ];

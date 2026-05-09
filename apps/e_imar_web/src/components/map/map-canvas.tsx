@@ -16,6 +16,7 @@ import {
   PARCEL_SOURCE,
   ASKI_SOURCE,
   RISK_GRID_SOURCE,
+  LIVE_SOURCE_REGISTRY_SOURCE,
   buildParcelFillLayer,
   buildParcelLineLayer,
   buildParcelLabelLayer,
@@ -32,6 +33,7 @@ import { getRiskGridCollection } from "@/data/risk-grid";
 import { ZONING_PRESETS } from "@/data/zoning";
 import { getSnapshotForYear } from "@/data/historical-snapshots";
 import { useBackendParcelStore } from "@/stores/backend-parcel-store";
+import { useSourceStore } from "@/stores/source-store";
 import { parseBackendParcelId } from "@/lib/api/parcel-normalizer";
 
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
@@ -67,6 +69,8 @@ export function MapCanvas({
   const basemap = useMapStore((s) => s.basemap);
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
   const selectedBackendFeature = useBackendParcelStore((s) => s.getFeature(selectedParcelId));
+  const liveLayers = useSourceStore((s) => s.liveLayers);
+  const loadLiveLayers = useSourceStore((s) => s.loadLiveLayers);
   const flyTarget = useMapStore((s) => s.flyTarget);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
   const setHoveredParcelId = useMapStore((s) => s.setHoveredParcelId);
@@ -143,6 +147,7 @@ export function MapCanvas({
       }
       ensureAskiLayers(map);
       ensureRiskGridLayer(map);
+      ensureLiveSourceLayers(map);
       ensureBackendSelectedLayer(map);
       applyVisibilityAndOpacity(map);
     };
@@ -157,6 +162,7 @@ export function MapCanvas({
       if (!map.getSource(PARCEL_SOURCE)) registerParcelLayers(map);
       ensureAskiLayers(map);
       ensureRiskGridLayer(map);
+      ensureLiveSourceLayers(map);
       ensureBackendSelectedLayer(map);
       if (lastSelectedMapIdRef.current != null) {
         map.setFeatureState(
@@ -284,6 +290,22 @@ export function MapCanvas({
     map.on("mouseenter", "askida-overlay-fill", onAskiHover);
     map.on("mouseleave", "askida-overlay-fill", onAskiLeave);
 
+    const onSourceClick = (e: maplibregl.MapLayerMouseEvent) => {
+      const f = e.features?.[0];
+      if (!f) return;
+      const props = f.properties as Record<string, string | undefined>;
+      const homepage = props.homepage_url;
+      new maplibregl.Popup({ closeButton: true, closeOnClick: true })
+        .setLngLat(e.lngLat)
+        .setHTML(`<div style="font:12px sans-serif;min-width:190px"><strong>${props.name ?? "Veri kaynağı"}</strong><br/><span>${props.status ?? "external_only"}</span>${homepage ? `<br/><a href="${homepage}" target="_blank" rel="noreferrer">Resmi portalı aç</a>` : ""}</div>`)
+        .addTo(map);
+    };
+    const onSourceEnter = () => { map.getCanvas().style.cursor = "pointer"; };
+    const onSourceLeave = () => { map.getCanvas().style.cursor = ""; };
+    map.on("click", "live-source-markers", onSourceClick);
+    map.on("mouseenter", "live-source-markers", onSourceEnter);
+    map.on("mouseleave", "live-source-markers", onSourceLeave);
+
     map.on("zoomend", () => {
       const z = map.getZoom();
       if (zoomReadoutRef?.current) {
@@ -304,6 +326,9 @@ export function MapCanvas({
 
     return () => {
       window.removeEventListener("eimar:map:control", onControl);
+      map.off("click", "live-source-markers", onSourceClick);
+      map.off("mouseenter", "live-source-markers", onSourceEnter);
+      map.off("mouseleave", "live-source-markers", onSourceLeave);
       map.remove();
       mapRef.current = null;
       (window as Window & { __mlMap?: Map }).__mlMap = undefined;
@@ -391,6 +416,23 @@ export function MapCanvas({
   }, [flyTarget]);
 
   React.useEffect(() => {
+    void loadLiveLayers();
+  }, [loadLiveLayers]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      ensureLiveSourceLayers(map);
+      const source = map.getSource(LIVE_SOURCE_REGISTRY_SOURCE) as maplibregl.GeoJSONSource | undefined;
+      source?.setData(buildLiveSourceFeatureCollection(liveLayers));
+      applyVisibilityAndOpacity(map);
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [liveLayers]);
+
+  React.useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     const apply = () => applyVisibilityAndOpacity(map);
@@ -468,6 +510,12 @@ export function MapCanvas({
         );
         return;
       }
+      if (id === "live-source-markers") {
+        ["live-source-markers", "live-source-labels"].forEach((layerId) => {
+          if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", vis ? "visible" : "none");
+        });
+        return;
+      }
       if (!map.getLayer(id)) return;
       map.setLayoutProperty(id, "visibility", vis ? "visible" : "none");
     });
@@ -497,6 +545,7 @@ export function MapCanvas({
         ? Math.min(0.5, layerOpacity["deprem-risk-grid"] * 0.5)
         : undefined
     );
+    setOpacityIfExists(map, "live-source-markers", "circle-opacity", layerOpacity["live-source-markers"]);
   }
 
   return (
@@ -591,6 +640,91 @@ function ensureRiskGridLayer(map: Map) {
   if (!map.getLayer("deprem-risk-grid")) {
     map.addLayer(buildRiskGridLayer(), beforeId);
   }
+}
+
+function ensureLiveSourceLayers(map: Map) {
+  if (!map.getSource(LIVE_SOURCE_REGISTRY_SOURCE)) {
+    map.addSource(LIVE_SOURCE_REGISTRY_SOURCE, {
+      type: "geojson",
+      data: { type: "FeatureCollection", features: [] }
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("live-source-markers")) {
+    map.addLayer(
+      {
+        id: "live-source-markers",
+        type: "circle",
+        source: LIVE_SOURCE_REGISTRY_SOURCE,
+        paint: {
+          "circle-color": [
+            "match",
+            ["get", "status"],
+            "live", "#10B981",
+            "timeout", "#F59E0B",
+            "blocked", "#EF4444",
+            "requires_auth", "#EF4444",
+            "requires_approval", "#EF4444",
+            "#0EA5E9"
+          ] as never,
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 5, 8, 8, 12, 12] as never,
+          "circle-stroke-color": "#FFFFFF",
+          "circle-stroke-width": 1.5,
+          "circle-opacity": 0.9
+        }
+      },
+      beforeId
+    );
+  }
+  if (!map.getLayer("live-source-labels")) {
+    map.addLayer({
+      id: "live-source-labels",
+      type: "symbol",
+      source: LIVE_SOURCE_REGISTRY_SOURCE,
+      minzoom: 6,
+      layout: {
+        "text-field": ["get", "short_name"],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": 10,
+        "text-offset": [0, 1.1],
+        "text-anchor": "top",
+        "text-allow-overlap": false
+      },
+      paint: {
+        "text-color": "#0F172A",
+        "text-halo-color": "rgba(255,255,255,0.9)",
+        "text-halo-width": 1.2
+      }
+    });
+  }
+}
+
+function buildLiveSourceFeatureCollection(layers: Array<{ id: string | number; source_id?: string; name?: string; title?: string; status?: string; homepage_url?: string; center?: [number, number]; province?: string; district?: string; kind?: string }>): GeoJSON.FeatureCollection {
+  const seen = new Set<string>();
+  const features = layers
+    .filter((layer) => Array.isArray(layer.center) && layer.center.length === 2)
+    .filter((layer) => {
+      const key = layer.source_id ?? String(layer.id);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .map((layer) => ({
+      type: "Feature" as const,
+      geometry: { type: "Point" as const, coordinates: layer.center as [number, number] },
+      properties: {
+        id: String(layer.id),
+        source_id: layer.source_id ?? String(layer.id),
+        name: layer.name ?? layer.title ?? "Veri kaynağı",
+        short_name: (layer.name ?? layer.title ?? "Kaynak").replace(/ (KEOS|WebGIS|İmar Durumu|CBS|Portalı).*/i, ""),
+        status: layer.status ?? "external_only",
+        homepage_url: layer.homepage_url ?? "",
+        province: layer.province ?? "",
+        district: layer.district ?? "",
+        kind: layer.kind ?? ""
+      }
+    }));
+  return { type: "FeatureCollection", features };
 }
 
 function ensureBackendSelectedLayer(map: Map) {
