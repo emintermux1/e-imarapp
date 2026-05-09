@@ -241,7 +241,7 @@ class LiveGisLayerRepository implements GisLayerRepository {
       if (body.length > 50000) {
         collection = await parseGeoJsonInIsolate(body);
       } else {
-        collection = _parseGeoJsonMainThread(body);
+        collection = await _parseGeoJsonMainThread(body);
       }
 
       if (_cache != null && !collection.hasError) {
@@ -300,5 +300,41 @@ class LiveGisLayerRepository implements GisLayerRepository {
 
     final collection = await fetchFeatures(layer, query);
     return jsonEncode(collection.toJson());
+  }
+}
+
+class MockGisLayerRepository implements GisLayerRepository {
+  @override
+  Future<List<GisLayerDescriptor>> availableLayers() async {
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+    return officialRiskLayerPresets;
+  }
+
+  @override
+  String buildRequestUrl(GisLayerDescriptor layer, GisLayerQuery query) {
+    return buildGisRequestUrl(layer, query);
+  }
+
+  @override
+  Future<GisFeatureCollection> fetchFeatures(
+    GisLayerDescriptor layer,
+    GisLayerQuery query,
+  ) async {
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    return GisFeatureCollection.withError(
+      'GIS sağlayıcısı kullanılamıyor: ${layer.name}',
+    );
+  }
+
+  @override
+  Future<String> fetchGeoJson(
+    GisLayerDescriptor layer, {
+    required double latitude,
+    required double longitude,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    return jsonEncode(
+      GisFeatureCollection.withError('Mock GIS layer: ${layer.name}').toJson(),
+    );
   }
 }
