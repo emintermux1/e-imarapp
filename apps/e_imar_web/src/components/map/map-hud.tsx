@@ -9,16 +9,18 @@ import {
   Crosshair,
   Box,
   Locate,
-  Map as MapIcon
+  Map as MapIcon,
+  Info
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { IconButton } from "@/components/ui/icon-button";
-import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { BASEMAPS } from "@/lib/maplibre/styles";
 import { LocationExplorerPopover } from "@/components/map/location-explorer-popover";
+import { useMapStore } from "@/stores/map-store";
+import { useLatestRegionsStore } from "@/stores/latest-regions-store";
 
 export function MapHud({
   cursorReadoutRef,
@@ -28,8 +30,11 @@ export function MapHud({
   zoomReadoutRef: React.RefObject<HTMLSpanElement>;
 }) {
   const basemap = useMapStore((s) => s.basemap);
+  const selectedParcelId = useMapStore((s) => s.selectedParcelId);
   const bearing = useMapStore((s) => s.bearing);
+  const selectedLatestRegion = useLatestRegionsStore((s) => s.selectedRegion);
   const mapMode = useUIStore((s) => s.mapMode);
+  const askiMode = useUIStore((s) => s.askiMode);
   const setMapMode = useUIStore((s) => s.setMapMode);
   const [locationStatus, setLocationStatus] = React.useState<string | null>(null);
 
@@ -76,6 +81,12 @@ export function MapHud({
           <span className="text-fg-muted">·</span>
           <span className="text-fg-secondary">{BASEMAPS[basemap].description}</span>
         </ChipPill>
+        <MapContextHint
+          selectedParcelId={selectedParcelId}
+          latestRegionLabel={selectedLatestRegion?.label}
+          latestRegionHasGeometry={selectedLatestRegion?.has_geometry}
+          askiMode={askiMode}
+        />
       </div>
 
       {/* Top-right: zoom controls + compass + 3D toggle */}
@@ -250,6 +261,34 @@ function ChipPill({
     >
       {children}
     </span>
+  );
+}
+
+function MapContextHint({
+  selectedParcelId,
+  latestRegionLabel,
+  latestRegionHasGeometry,
+  askiMode
+}: {
+  selectedParcelId: string | null;
+  latestRegionLabel?: string;
+  latestRegionHasGeometry?: boolean;
+  askiMode: boolean;
+}) {
+  const copy = selectedParcelId
+    ? "Seçili parsel vurgulanıyor; sağ panel resmi/veri kaynağı durumunu gösterir."
+    : latestRegionLabel
+    ? latestRegionHasGeometry
+      ? "Yalnız seçili yeni imar bölgesi çiziliyor; listeyi değiştirerek geometriyi yenileyin."
+      : "Seçili yeni bölgenin geometrisi yok; kayıt panelde kalır, harita kirletilmez."
+    : askiMode
+    ? "Askı modu açık; aktif askı poligonları tıklanabilir."
+    : "Arama yapın, askı modunu açın veya tek bir yeni imar bölgesi seçin.";
+  return (
+    <div className="pointer-events-none hidden max-w-[360px] items-start gap-2 rounded-md border border-border-subtle bg-surface-2/95 px-2.5 py-2 text-[11px] leading-snug text-fg-secondary shadow-pop backdrop-blur-[2px] md:flex">
+      <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[rgb(var(--accent-blue))]" />
+      <span className="line-clamp-2">{copy}</span>
+    </div>
   );
 }
 
