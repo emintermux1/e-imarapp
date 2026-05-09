@@ -116,14 +116,44 @@ export interface PlanNoteExplainResponse extends StatusEnvelope {
   model?: string;
   explanation?:
     | {
-        plainSummary?: string;
-        bullets?: string[];
-        risks?: string[];
-        uncertainties?: string[];
+        sadeOzeti?: string;
+        yapilasmaKosullari?: string[];
+        riskler?: string[];
+        gerekliKurumGorusleri?: string[];
+        bilinmeyenler?: string[];
         [key: string]: unknown;
       }
     | string
     | Record<string, unknown>;
+}
+
+export interface ParcelReportRequest {
+  query: {
+    type?: string;
+    ada?: string;
+    parselNo?: string;
+    municipalityId?: string;
+    province?: string;
+    district?: string;
+    mahalle?: string;
+  };
+  parcelWorkflow?: Record<string, unknown> | null;
+  municipalWorkflow?: Record<string, unknown> | null;
+}
+
+export interface ParcelReportResponse extends StatusEnvelope {
+  reportId?: string;
+  generatedAt?: string;
+  title?: string;
+  disclaimer?: string;
+  query?: Record<string, unknown>;
+  sections?: Array<{
+    title?: string;
+    fields?: Array<{ label?: string; value?: string; status?: BackendStatus }>;
+  }>;
+  provenance?: Array<Record<string, unknown>>;
+  printableHtml?: string;
+  downloadFilename?: string;
 }
 
 export interface WorkspaceResponse extends StatusEnvelope {

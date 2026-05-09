@@ -3,6 +3,7 @@ import type { ParcelWorkflowPayload } from '@/lib/api/types';
 export const queryKeys = {
   bootstrap: (userReference?: string) => ['bootstrap', userReference || 'anon'] as const,
   parcelWorkflow: (key: string) => ['parcel-workflow', key] as const,
+  parcelReport: (key: string) => ['parcel-report', key] as const,
   workspace: (userReference: string) => ['workspace', userReference] as const,
   mapProviders: () => ['map-providers'] as const,
   planExplain: (key: string) => ['plan-explain', key] as const,

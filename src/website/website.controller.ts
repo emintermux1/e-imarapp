@@ -63,6 +63,25 @@ export class WebsiteController {
     return this.website.municipalParcelWorkflow(body);
   }
 
+  @Post('bff/parcel-report')
+  parcelReport(
+    @Body() body: {
+      query: {
+        type?: string;
+        ada?: string;
+        parselNo?: string;
+        municipalityId?: string;
+        province?: string;
+        district?: string;
+        mahalle?: string;
+      };
+      parcelWorkflow?: Record<string, unknown> | null;
+      municipalWorkflow?: Record<string, unknown> | null;
+    }
+  ) {
+    return this.website.parcelReport(body);
+  }
+
   @Post('bff/plan-note-explain')
   planNoteExplain(
     @Body() body: {
