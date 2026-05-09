@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import type { ParcelResponse } from "@/types/api";
-import { backendParcelToFeature, parseBackendParcelId } from "@/lib/api/parcel-normalizer";
+import { backendParcelToFeature, extractGeometry, parseBackendParcelId } from "@/lib/api/parcel-normalizer";
 import type { ParcelFeature } from "@/types/parcel";
 
 interface BackendParcelState {
@@ -37,7 +37,9 @@ export const useBackendParcelStore = create<BackendParcelState>()((set, get) => 
     return numeric == null ? null : get().parcels[numeric] ?? null;
   },
   getGeometry: (id) => {
-    const feature = get().getFeature(id);
-    return feature?.geometry?.coordinates.length ? feature.geometry : null;
+    const numeric = parseBackendParcelId(id);
+    if (numeric == null) return null;
+    const parcel = get().parcels[numeric];
+    return parcel ? extractGeometry(parcel.geometri) : null;
   }
 }));

@@ -1,6 +1,7 @@
 import type {
   BackendMapLayerResponse,
   ComplianceSimulationResponse,
+  LatestRegionsResponse,
   ParcelResponse,
   PlanResponse,
   ReportResponse,
@@ -73,7 +74,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   return payload as T;
 }
 
-function queryString(params: Record<string, string | number | undefined>) {
+function queryString(params: Record<string, string | number | boolean | undefined>) {
   const qs = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== "") qs.set(key, String(value));
@@ -96,7 +97,7 @@ export function lookupBackendParcel(params: {
 }
 
 export function getBackendParcelGeometry(parcelId: number) {
-  return apiFetch<GeoJSON.Geometry | GeoJSON.Feature | Record<string, unknown>>(
+  return apiFetch<GeoJSON.Geometry | GeoJSON.Feature | GeoJSON.FeatureCollection | Record<string, unknown>>(
     `/parsel/geometry/${parcelId}`
   );
 }
@@ -173,4 +174,14 @@ export function getBackendPlans() {
 
 export function getBackendAskiPlans() {
   return apiFetch<PlanResponse[]>("/plans/aski");
+}
+
+export function getBackendLatestRegions(params: {
+  limit?: number;
+  province?: string;
+  district?: string;
+  municipality_slug?: string;
+  has_geometry?: boolean;
+} = {}) {
+  return apiFetch<LatestRegionsResponse>(`/plans/latest-regions${queryString(params)}`);
 }

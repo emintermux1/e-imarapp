@@ -10,7 +10,7 @@ export interface ParcelResponse {
   nitelik?: string;
   alan_m2?: number;
   tapu_durumu?: string;
-  geometri?: GeoJSON.Geometry | GeoJSON.Feature | Record<string, unknown>;
+  geometri?: GeoJSON.Geometry | GeoJSON.Feature | GeoJSON.FeatureCollection | Record<string, unknown>;
   pafta?: string;
   mevkii?: string;
 }
@@ -24,7 +24,34 @@ export interface PlanResponse {
   aski_end?: string;
   pdf_url?: string;
   gml_url?: string;
-  geom_geojson?: GeoJSON.Geometry | GeoJSON.Feature | Record<string, unknown>;
+  geom_geojson?: GeoJSON.Geometry | GeoJSON.Feature | GeoJSON.FeatureCollection | Record<string, unknown>;
+}
+
+export interface LatestRegionResponse {
+  id: number;
+  label: string;
+  municipality_id?: number;
+  municipality_name?: string;
+  municipality_slug?: string;
+  province?: string;
+  district?: string;
+  plan_type?: string;
+  status?: string;
+  aski_start?: string;
+  aski_end?: string;
+  pdf_url?: string;
+  gml_url?: string;
+  source: DataSourceStatus;
+  has_geometry: boolean;
+  geom_geojson?: GeoJSON.Geometry | GeoJSON.Feature | GeoJSON.FeatureCollection | Record<string, unknown>;
+}
+
+export interface LatestRegionsResponse {
+  items: LatestRegionResponse[];
+  total: number;
+  geometry_count: number;
+  status: DataSourceStatus;
+  message?: string;
 }
 
 export interface ReportResponse {
