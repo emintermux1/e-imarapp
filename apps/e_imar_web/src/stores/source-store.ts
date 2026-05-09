@@ -3,18 +3,24 @@
 import { create } from "zustand";
 import {
   discoverSource as discoverSourceApi,
+  discoverMunicipalityGis,
   getLiveMapLayers,
   getSourceHealth,
   humanizeApiError,
   listSources
 } from "@/lib/api/backend-client";
-import type { BackendMapLayerResponse, SourceHealthRecord, SourceRegistryRecord } from "@/types/api";
+import type {
+  BackendMapLayerResponse,
+  MunicipalGISDiscoveryResponse,
+  SourceHealthRecord,
+  SourceRegistryRecord
+} from "@/types/api";
 
 interface SourceState {
   sources: SourceRegistryRecord[];
   health: Record<string, SourceHealthRecord>;
   liveLayers: BackendMapLayerResponse[];
-  discoveries: Record<string, Record<string, unknown>>;
+  discoveries: Record<string, MunicipalGISDiscoveryResponse | Record<string, unknown>>;
   loading: boolean;
   healthLoading: boolean;
   error?: string;
@@ -22,6 +28,7 @@ interface SourceState {
   loadSources: () => Promise<void>;
   refreshHealth: () => Promise<void>;
   discover: (sourceId: string) => Promise<void>;
+  discoverMunicipalityGis: (slug: string, force?: boolean) => Promise<void>;
   loadLiveLayers: () => Promise<void>;
 }
 
@@ -59,6 +66,16 @@ export const useSourceStore = create<SourceState>()((set, get) => ({
       await get().loadLiveLayers();
     } catch (error) {
       set({ error: humanizeApiError(error, "Kaynak keşfi tamamlanamadı; portalı yeni sekmede açabilirsiniz.") });
+    }
+  },
+  discoverMunicipalityGis: async (slug: string, force = false) => {
+    set({ error: undefined });
+    try {
+      const discovery = await discoverMunicipalityGis(slug, force);
+      set((state) => ({ discoveries: { ...state.discoveries, [slug]: discovery }, lastChecked: new Date().toISOString() }));
+      await get().loadLiveLayers();
+    } catch (error) {
+      set({ error: humanizeApiError(error, "Belediye OGC keşfi tamamlanamadı.") });
     }
   },
   loadLiveLayers: async () => {
