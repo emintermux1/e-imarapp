@@ -13,6 +13,7 @@ export const ACTIVE_PLAN_SOURCE = "active-plan-overlay";
 export const RISK_GRID_SOURCE = "risk-grid";
 export const TRANSPORT_SOURCE = "transport-lines";
 export const MUNICIPALITY_SOURCE = "municipality-boundaries";
+export const MUNICIPALITY_COVERAGE_SOURCE = "municipality-coverage";
 export const TURKEY_FOCUS_SOURCE = "turkey-focus";
 
 const zoningCases: (string | string[])[] = ["match", ["get", "zoningType"]];
@@ -34,6 +35,7 @@ export const buildParcelFillLayer = (id = "parcels-fill"): FillLayerSpecificatio
   id,
   type: "fill",
   source: PARCEL_SOURCE,
+  minzoom: 12,
   paint: {
     "fill-color": zoningFillExpression,
     "fill-opacity": [
@@ -429,6 +431,69 @@ export const buildMunicipalityBoundaryLayer = (
     ] as never,
     "line-opacity": 0.75,
     "line-dasharray": [3, 2] as never
+  }
+});
+
+export const buildMunicipalityCoverageCircleLayer = (
+  id = "municipality-coverage-circles",
+  source = MUNICIPALITY_COVERAGE_SOURCE
+): CircleLayerSpecification => ({
+  id,
+  type: "circle",
+  source,
+  minzoom: 5,
+  maxzoom: 11.2,
+  paint: {
+    "circle-color": [
+      "match",
+      ["get", "coverageStatus"],
+      "public_candidate", "#0EA5E9",
+      "protected", "#F59E0B",
+      "method_contract_required", "#8B5CF6",
+      "registered", "#0F766E",
+      "#64748B"
+    ] as never,
+    "circle-radius": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      5, 4,
+      8, 6,
+      11, 9
+    ] as never,
+    "circle-opacity": 0.85,
+    "circle-stroke-color": "#FFFFFF",
+    "circle-stroke-width": 1.25
+  }
+});
+
+export const buildMunicipalityCoverageLabelLayer = (
+  id = "municipality-coverage-labels",
+  source = MUNICIPALITY_COVERAGE_SOURCE
+): SymbolLayerSpecification => ({
+  id,
+  type: "symbol",
+  source,
+  minzoom: 6,
+  maxzoom: 11.5,
+  layout: {
+    "text-field": ["coalesce", ["get", "label"], ["get", "name"]],
+    "text-font": ["Noto Sans Regular"],
+    "text-size": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      6, 9,
+      11, 12
+    ] as never,
+    "text-offset": [0, 1.0] as never,
+    "text-anchor": "top",
+    "text-allow-overlap": false
+  },
+  paint: {
+    "text-color": "#0F172A",
+    "text-halo-color": "rgba(255,255,255,0.92)",
+    "text-halo-width": 1.6
   }
 });
 

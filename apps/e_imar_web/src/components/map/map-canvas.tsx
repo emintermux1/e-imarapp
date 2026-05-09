@@ -15,12 +15,20 @@ import { useActiveAskiGeoJSON } from "@/lib/api/hooks";
 import { getStyleForBasemap, type BasemapId } from "@/lib/maplibre/styles";
 import {
   PARCEL_SOURCE,
+  MUNICIPALITY_SOURCE,
+  MUNICIPALITY_COVERAGE_SOURCE,
   buildParcelFillLayer,
   buildParcelLineLayer,
   buildParcelLabelLayer,
   buildParcelSelectedAccentLayer,
-  buildParcelHoverDotLayer
+  buildParcelHoverDotLayer,
+  buildMunicipalityBoundaryLayer,
+  buildMunicipalityCoverageCircleLayer,
+  buildMunicipalityCoverageLabelLayer
 } from "@/lib/maplibre/layers";
+import { fetchMunicipalityCoverage } from "@/lib/api/eimar";
+import { BELEDIYE_LIST } from "@/data/belediye";
+import { PROVINCES } from "@/data/provinces";
 
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
@@ -29,6 +37,10 @@ interface MapCanvasProps {
   className?: string;
   cursorReadoutRef?: React.RefObject<HTMLSpanElement>;
   zoomReadoutRef?: React.RefObject<HTMLSpanElement>;
+  onAskiClick?: (
+    feature: import("@/data/aski-polygons").AskiPolygonFeature,
+    pos: { x: number; y: number }
+  ) => void;
 }
 
 export function MapCanvas({
@@ -54,6 +66,24 @@ export function MapCanvas({
   const layerVisibility = useUIStore((s) => s.layerVisibility);
   const layerOpacity = useUIStore((s) => s.layerOpacity);
   const askiGeoJsonQuery = useActiveAskiGeoJSON();
+  const [municipalityGeoJson, setMunicipalityGeoJson] = React.useState<GeoJSON.FeatureCollection<GeoJSON.Point> | null>(null);
+
+  React.useEffect(() => {
+    let mounted = true;
+    fetchMunicipalityCoverage()
+      .then((result) => {
+        if (!mounted) return;
+        const municipalities = result.ok ? result.data.municipalities : buildFallbackMunicipalityPoints();
+        setMunicipalityGeoJson(buildMunicipalityCoverageCollection(municipalities));
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setMunicipalityGeoJson(buildMunicipalityCoverageCollection(buildFallbackMunicipalityPoints()));
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Lazy import: ensure CSS is present (already imported in globals).
   // Initialize the map once.
@@ -118,6 +148,9 @@ export function MapCanvas({
       if (!map.getSource(PARCEL_SOURCE)) {
         registerParcelLayers(map);
       }
+      if (!map.getSource(MUNICIPALITY_SOURCE)) {
+        registerMunicipalityCoverageLayers(map);
+      }
       registerAskiLayers(map);
       applyVisibilityAndOpacity(map);
     };
@@ -133,6 +166,9 @@ export function MapCanvas({
       if (!map.isStyleLoaded()) return;
       if (!map.getSource(PARCEL_SOURCE)) {
         registerParcelLayers(map);
+      }
+      if (!map.getSource(MUNICIPALITY_SOURCE)) {
+        registerMunicipalityCoverageLayers(map);
       }
       registerAskiLayers(map);
       // Re-apply selection state on style swap
@@ -308,6 +344,12 @@ export function MapCanvas({
     updateAskiSource(map, askiGeoJsonQuery.data?.ok ? askiGeoJsonQuery.data.data : null);
   }, [askiGeoJsonQuery.data]);
 
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    updateMunicipalitySource(map, municipalityGeoJson);
+  }, [municipalityGeoJson]);
+
   const applyVisibilityAndOpacity = React.useCallback((map: Map) => {
     Object.entries(layerVisibility).forEach(([id, vis]) => {
       if (!map.getLayer(id)) return;
@@ -450,6 +492,110 @@ function registerAskiLayers(map: Map) {
       }
     } as never);
   }
+}
+
+function registerMunicipalityCoverageLayers(map: Map) {
+  if (!map.getSource(MUNICIPALITY_SOURCE)) {
+    map.addSource(MUNICIPALITY_SOURCE, {
+      type: "geojson",
+      data: { type: "FeatureCollection", features: [] }
+    });
+  }
+  if (!map.getSource(MUNICIPALITY_COVERAGE_SOURCE)) {
+    map.addSource(MUNICIPALITY_COVERAGE_SOURCE, {
+      type: "geojson",
+      data: { type: "FeatureCollection", features: [] }
+    });
+  }
+  if (!map.getLayer("municipality-coverage-circles")) {
+    map.addLayer(buildMunicipalityCoverageCircleLayer("municipality-coverage-circles", MUNICIPALITY_COVERAGE_SOURCE));
+  }
+  if (!map.getLayer("municipality-coverage-labels")) {
+    map.addLayer(buildMunicipalityCoverageLabelLayer("municipality-coverage-labels", MUNICIPALITY_COVERAGE_SOURCE));
+  }
+  if (!map.getLayer("belediye-sinirlari")) {
+    map.addLayer(buildMunicipalityBoundaryLayer("belediye-sinirlari"));
+  }
+}
+
+function updateMunicipalitySource(
+  map: Map,
+  payload: GeoJSON.FeatureCollection<GeoJSON.Point> | null
+) {
+  const source = map.getSource(MUNICIPALITY_COVERAGE_SOURCE) as maplibregl.GeoJSONSource | undefined;
+  if (!source) return;
+  source.setData(payload ?? { type: "FeatureCollection", features: [] });
+}
+
+function buildMunicipalityCoverageCollection(
+  entries: Array<{ id: string; name: string; province?: string; district?: string; municipalitySlug?: string; capability?: { registered?: boolean; publicCandidate?: boolean; protected?: boolean; imarQuerySupport?: string } }>
+): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  const features = entries.map((entry) => {
+    const fallback = municipalityCentroid(entry.name, entry.province, entry.district, entry.municipalitySlug);
+    return {
+      type: "Feature" as const,
+      properties: {
+        id: entry.id,
+        name: entry.name,
+        label: `${entry.name} · ${coverageStatusLabel(entry.capability)}`,
+        coverageStatus: coverageStatus(entry.capability),
+        registered: entry.capability?.registered ?? true,
+        publicCandidate: entry.capability?.publicCandidate ?? false,
+        protected: entry.capability?.protected ?? false,
+        imarQuerySupport: entry.capability?.imarQuerySupport ?? "unknown"
+      },
+      geometry: {
+        type: "Point" as const,
+        coordinates: fallback
+      }
+    };
+  });
+  return { type: "FeatureCollection", features };
+}
+
+function buildFallbackMunicipalityPoints() {
+  return BELEDIYE_LIST.map((entry) => ({
+    id: entry.id,
+    name: entry.ad,
+    province: PROVINCES.find((province) => province.slug === entry.ilSlug)?.name ?? entry.ilSlug,
+    district: "",
+    municipalitySlug: entry.id,
+    capability: {
+      registered: true,
+      publicCandidate: false,
+      protected: false,
+      imarQuerySupport: "unknown"
+    }
+  }));
+}
+
+function coverageStatus(capability?: { registered?: boolean; publicCandidate?: boolean; protected?: boolean; imarQuerySupport?: string }) {
+  if (capability?.protected) return "protected";
+  if (capability?.imarQuerySupport === "method_contract_required") return "method_contract_required";
+  if (capability?.publicCandidate) return "public_candidate";
+  if (capability?.registered) return "registered";
+  return "unknown";
+}
+
+function coverageStatusLabel(capability?: { registered?: boolean; publicCandidate?: boolean; protected?: boolean; imarQuerySupport?: string }) {
+  if (capability?.protected) return "korumalı";
+  if (capability?.imarQuerySupport === "method_contract_required") return "method contract";
+  if (capability?.publicCandidate) return "public aday";
+  if (capability?.registered) return "kayıtlı";
+  return "bilinmiyor";
+}
+
+function municipalityCentroid(name: string, province?: string, district?: string, municipalitySlug?: string): [number, number] {
+  const normalized = [name, province, district, municipalitySlug].filter(Boolean).join(" ").toLocaleLowerCase("tr-TR");
+  const entry = [
+    ...BELEDIYE_LIST.map((record) => [record.id, record.ad] as const),
+    ...PROVINCES.map((record) => [record.slug, record.name] as const)
+  ].find(([, label]) => normalized.includes(label.toLocaleLowerCase("tr-TR")));
+  const hit = entry?.[0];
+  const provinceMatch = PROVINCES.find((record) =>
+    normalized.includes(record.slug) || normalized.includes(record.name.toLocaleLowerCase("tr-TR"))
+  );
+  return provinceMatch?.centroid ?? [35.0, 39.0];
 }
 
 function updateAskiSource(map: Map, payload: { type: "FeatureCollection"; features: GeoJSON.Feature[] } | null) {
