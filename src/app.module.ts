@@ -10,6 +10,7 @@ import { HealthModule } from './health/health.module';
 import { IngestionModule } from './ingestion/ingestion.module';
 import { JobsModule } from './jobs/jobs.module';
 import { MapModule } from './map/map.module';
+import { MarketModule } from './market/market.module';
 import { MunicipalitiesModule } from './municipalities/municipalities.module';
 import { ObservabilityModule } from './observability/observability.module';
 import { ParcelsModule } from './parcels/parcels.module';
@@ -41,6 +42,7 @@ import { WebsiteModule } from './website/website.module';
     SearchModule,
     StorageModule,
     MapModule,
+    MarketModule,
     ObservabilityModule,
     AnalysisModule,
     EplanModule,

@@ -60,6 +60,9 @@ import { SectionParcelSummary } from "@/components/info/section-parcel-summary";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmsalCalculatorPanel } from "@/components/emsal/emsal-calculator-panel";
 import { cn } from "@/lib/utils";
+import { getParcelMarket } from "@/lib/market-client";
+import type { ParcelMarketResponse } from "@/types/api";
+import { MarketPanel } from "@/components/market/market-panel";
 
 export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   const open = useUIStore((s) => s.rightPanelOpen);
@@ -96,6 +99,8 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
     url?: string;
     id?: number;
   }>({ state: "idle" });
+  const [marketResponse, setMarketResponse] = React.useState<ParcelMarketResponse | null>(null);
+  const [marketLoading, setMarketLoading] = React.useState(false);
   const [watchlistStatus, setWatchlistStatus] = React.useState<{
     state: "idle" | "loading" | "success" | "error";
     message?: string;
@@ -105,6 +110,37 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
     setReportStatus({ state: "idle" });
     setWatchlistStatus({ state: "idle" });
   }, [selectedId]);
+
+  React.useEffect(() => {
+    let alive = true;
+    async function loadMarket() {
+      if (!parcel) {
+        setMarketResponse(null);
+        return;
+      }
+      setMarketLoading(true);
+      try {
+        const response = await getParcelMarket({
+          parcelId: parcel.id,
+          il: parcel.il,
+          ilce: parcel.ilce,
+          mahalle: parcel.mahalle,
+          ada: parcel.ada,
+          parsel: parcel.parsel,
+          areaM2: parcel.yuzolcumuM2,
+          zoningType: parcel.zoningType,
+          centroid: parcel.centroid ?? null
+        });
+        if (alive) setMarketResponse(response);
+      } finally {
+        if (alive) setMarketLoading(false);
+      }
+    }
+    void loadMarket();
+    return () => {
+      alive = false;
+    };
+  }, [parcel]);
 
   React.useEffect(() => {
     void hydrateWatchlist();
@@ -500,6 +536,19 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                 <AccordionTrigger>Yatırım Skoru</AccordionTrigger>
                 <AccordionContent>
                   <SectionYatirimSkoru parcel={parcelData!} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="piyasa">
+                <AccordionTrigger>Market Cockpit</AccordionTrigger>
+                <AccordionContent>
+                  {marketLoading && !marketResponse ? (
+                    <div className="rounded-md border border-border-subtle bg-surface-1/50 px-3 py-4 text-sm text-fg-secondary">
+                      Market payload yükleniyor…
+                    </div>
+                  ) : (
+                    <MarketPanel response={marketResponse} />
+                  )}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
