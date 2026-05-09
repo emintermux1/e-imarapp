@@ -313,6 +313,7 @@ function ResultGroups({
   const headings: Record<SearchResult["type"], string> = {
     coordinate: "Koordinat",
     parcel: "Parsel",
+    location: "Konum",
     address: "Adres",
     belediye: "Belediye"
   };
