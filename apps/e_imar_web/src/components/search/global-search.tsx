@@ -161,7 +161,7 @@ export function GlobalSearch() {
             onClick={() => setSearchOpen(true)}
             className={cn(
               "group flex w-full items-center gap-2 h-9 px-2.5 rounded-md",
-              "border border-border-subtle bg-surface-1 text-fg-secondary text-sm",
+              "border border-border-subtle bg-surface-1/92 text-fg-secondary text-sm shadow-[inset_0_1px_0_rgb(255_255_255/0.04),0_1px_10px_rgb(0_0_0/0.10)]",
               "hover:bg-surface-2 hover:border-border-strong transition-colors",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             )}
@@ -169,7 +169,7 @@ export function GlobalSearch() {
           >
             <Search className="h-4 w-4 text-fg-muted" />
             <span className="flex-1 text-left text-fg-muted truncate">
-              Ada/parsel, mahalle, koordinat ara…
+              Ada/parsel, mahalle, koordinat veya belediye ara…
             </span>
             <Kbd combo={["⌘", "K"]} />
           </button>

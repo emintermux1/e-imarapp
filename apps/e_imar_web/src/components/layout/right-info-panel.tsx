@@ -15,8 +15,11 @@ import {
   ShieldAlert,
   Route,
   MapPinned,
-  ExternalLink,
-  Sparkles
+  FileText,
+  Info,
+  MapPinOff,
+  CheckCircle2,
+  TriangleAlert
 } from "lucide-react";
 import {
   Accordion,
@@ -228,19 +231,19 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
             className={cn(
-              "fixed right-0 top-14 bottom-0 z-30 flex flex-col",
+              "fixed inset-x-0 bottom-0 top-auto z-30 flex max-h-[78dvh] flex-col rounded-t-xl md:inset-x-auto md:right-0 md:top-14 md:bottom-0 md:max-h-none md:rounded-none",
               floating
-                ? "w-[400px] xl:w-[400px] lg:w-[360px] border-l border-border-subtle bg-surface-2"
-                : "w-[400px] border-l border-border-subtle bg-surface-2"
+                ? "w-full md:w-[400px] xl:w-[400px] lg:w-[360px] border border-border-subtle md:border-y-0 md:border-r-0 bg-surface-2/98 shadow-sheet md:shadow-pop-dark"
+                : "w-full md:w-[400px] border border-border-subtle md:border-y-0 md:border-r-0 bg-surface-2/98 shadow-sheet md:shadow-pop-dark"
             )}
             aria-label="En yeni imar bölgeleri paneli"
           >
-            <header className="flex flex-col gap-3 px-4 py-3 border-b border-border-subtle bg-surface-1/40">
+            <header className="flex flex-col gap-3 border-b border-border-subtle bg-[radial-gradient(circle_at_top_left,rgb(var(--accent-blue)/0.14),transparent_34%),rgb(var(--surface-1)/0.72)] px-4 py-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border-subtle bg-surface-2 text-[rgb(var(--accent-blue))]">
-                      <Sparkles className="h-4 w-4" />
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-brand-blue/35 bg-[rgb(var(--accent-blue)/0.11)] text-[rgb(var(--accent-blue))] shadow-[inset_0_1px_0_rgb(255_255_255/0.06)]">
+                      <MapPinned className="h-4 w-4" />
                     </span>
                     <div>
                       <div className="text-[11px] uppercase tracking-wider text-fg-muted">Canlı plan akışı</div>
@@ -248,7 +251,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                     </div>
                   </div>
                   <p className="mt-2 text-[12px] leading-relaxed text-fg-secondary">
-                    {latestRegionsMessage ?? "Belediye plan veritabanından son kayıtlar. Geometrisi olmayan satırlar dürüstçe listede kalır, haritaya dökülmez."}
+                    {latestRegionsMessage ?? "Belediye plan kayıtları listelenir; harita taşmasını önlemek için yalnız seçili ve geometrisi olan kayıt çizilir."}
                   </p>
                 </div>
                 <IconButton label="Kapat" variant="ghost" onClick={deselect}>
@@ -256,15 +259,18 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                 </IconButton>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-md border border-border-subtle bg-surface-2/80 px-2 py-2">
+                <div className="rounded-md border border-border-subtle bg-surface-2/85 px-2 py-2">
                   <div className="text-[9px] uppercase tracking-wider text-fg-muted">Kayıt</div>
                   <div className="mt-1 text-sm font-semibold text-fg-primary tabular-nums">{latestRegionsTotal}</div>
                 </div>
-                <div className="rounded-md border border-border-subtle bg-surface-2/80 px-2 py-2">
+                <div className="rounded-md border border-border-subtle bg-surface-2/85 px-2 py-2">
                   <div className="text-[9px] uppercase tracking-wider text-fg-muted">Geometri</div>
-                  <div className="mt-1 text-sm font-semibold text-fg-primary tabular-nums">{latestRegionsGeometryCount}</div>
+                  <div className="mt-1 flex items-baseline gap-1 text-sm font-semibold text-fg-primary tabular-nums">
+                    {latestRegionsGeometryCount}
+                    <span className="text-[10px] font-normal text-fg-muted">çizilebilir</span>
+                  </div>
                 </div>
-                <div className="rounded-md border border-border-subtle bg-surface-2/80 px-2 py-2">
+                <div className="rounded-md border border-border-subtle bg-surface-2/85 px-2 py-2">
                   <div className="text-[9px] uppercase tracking-wider text-fg-muted">Kaynak</div>
                   <div className="mt-1"><SourceBadge status={latestRegionsStatus === "idle" || latestRegionsStatus === "loading" ? "computed" : latestRegionsStatus} /></div>
                 </div>
@@ -273,10 +279,12 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
 
             <ScrollArea className="flex-1">
               <div className="p-3 space-y-3">
+                <div className="flex items-start gap-2 rounded-lg border border-brand-blue/25 bg-[rgb(var(--accent-blue)/0.07)] px-3 py-2 text-[11px] leading-relaxed text-fg-secondary">
+                  <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[rgb(var(--accent-blue))]" />
+                  <span>Harita performansı için toplu poligon dökülmez. Bir satır seçildiğinde sadece o bölgenin geometrisi varsa vurgulanır; PDF/GML linkleri kaynak dokümanı gösterir.</span>
+                </div>
                 {latestRegionsItems.length === 0 ? (
-                  <div className="rounded-md border border-border-subtle bg-surface-1/50 px-3 py-3 text-sm text-fg-secondary">
-                    {latestRegionsStatus === "loading" ? "Canlı kayıtlar yükleniyor…" : latestRegionsMessage ?? "Henüz gösterilecek imar bölgesi yok."}
-                  </div>
+                  <LatestRegionsEmptyState status={latestRegionsStatus} message={latestRegionsMessage} />
                 ) : (
                   latestRegionsItems.map((item) => {
                     const selected = latestRegion?.id === item.id;
@@ -289,30 +297,45 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                           setOpen(true);
                         }}
                         className={cn(
-                          "w-full rounded-lg border px-3 py-3 text-left transition-colors",
+                          "group relative w-full rounded-xl border px-3 py-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-[rgb(var(--ring))]",
                           selected
-                            ? "border-[rgb(var(--accent-blue))]/50 bg-[rgb(var(--accent-blue)/0.10)]"
-                            : "border-border-subtle bg-surface-2 hover:bg-surface-1"
+                            ? "border-brand-blue/70 bg-[linear-gradient(135deg,rgb(var(--accent-blue)/0.16),rgb(var(--surface-2)/0.96))] shadow-[inset_3px_0_0_rgb(var(--accent-blue)),0_0_0_1px_rgb(var(--accent-blue)/0.08)]"
+                            : "border-border-subtle bg-surface-2/92 hover:border-border-strong hover:bg-surface-1"
                         )}
+                        aria-pressed={selected}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <div className="text-sm font-semibold text-fg-primary line-clamp-2">{item.label}</div>
+                            <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-fg-muted">
+                              <span>{item.municipality_name || "Belediye kaydı"}</span>
+                              {selected && <span className="text-[rgb(var(--accent-blue))]">Seçili</span>}
+                            </div>
+                            <div className="mt-1 text-sm font-semibold leading-snug text-fg-primary line-clamp-2">{item.label}</div>
                             <div className="mt-1 text-[11px] text-fg-secondary">
                               {[item.district, item.province].filter(Boolean).join(" / ") || item.municipality_name || "Konum bilgisi sınırlı"}
                             </div>
                           </div>
-                          <SourceBadge status={item.has_geometry ? "live" : "unavailable"} label={item.has_geometry ? "geometri var" : "geometri yok"} className="shrink-0" />
+                          <div className="flex shrink-0 flex-col items-end gap-1">
+                            <SourceBadge status={item.source} className="h-4 px-1.5 text-[8px]" />
+                            <SourceBadge status={item.has_geometry ? "computed" : "unavailable"} label={item.has_geometry ? "çizilebilir" : "geometri yok"} className="h-4 px-1.5 text-[8px]" />
+                          </div>
                         </div>
-                        <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-fg-muted">
-                          {item.plan_type && <span>{item.plan_type}</span>}
-                          {item.status && <span>• {item.status}</span>}
-                          {item.aski_end && <span>• askı bitiş {formatDate(item.aski_end)}</span>}
+                        <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+                          <LatestRegionFact label="Plan" value={item.plan_type ?? "Tür belirtilmedi"} />
+                          <LatestRegionFact label="Durum" value={item.status ?? "Durum yok"} />
+                          <LatestRegionFact label="Askı başlangıç" value={item.aski_start ? formatDate(item.aski_start) : "—"} />
+                          <LatestRegionFact label="Askı bitiş" value={item.aski_end ? formatDate(item.aski_end) : "—"} />
                         </div>
                         {(item.pdf_url || item.gml_url) && (
-                          <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-fg-secondary">
-                            {item.pdf_url && <span className="inline-flex items-center gap-1"><ExternalLink className="h-3 w-3" /> PDF</span>}
-                            {item.gml_url && <span className="inline-flex items-center gap-1"><MapPinned className="h-3 w-3" /> GML</span>}
+                          <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-fg-secondary">
+                            {item.pdf_url && <span className="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-1 px-2 py-1"><FileText className="h-3 w-3" /> PDF plan</span>}
+                            {item.gml_url && <span className="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-1 px-2 py-1"><MapPinned className="h-3 w-3" /> GML geometri</span>}
+                          </div>
+                        )}
+                        {!item.has_geometry && (
+                          <div className="mt-3 flex items-start gap-1.5 rounded-md border border-status-warning/25 bg-status-warning/10 px-2 py-1.5 text-[11px] leading-snug text-status-warning">
+                            <MapPinOff className="mt-0.5 h-3 w-3 shrink-0" />
+                            <span>Kaynak kaydı var; belediye geometri yayımlamadığı için haritaya çizilmiyor.</span>
                           </div>
                         )}
                       </button>
@@ -638,6 +661,60 @@ function MetricCard({
   );
 }
 
+function LatestRegionFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-md border border-border-subtle bg-surface-1/70 px-2 py-1.5">
+      <div className="text-[9px] uppercase tracking-wider text-fg-muted">{label}</div>
+      <div className="mt-0.5 truncate text-[11px] font-medium text-fg-secondary">{value}</div>
+    </div>
+  );
+}
+
+function LatestRegionsEmptyState({
+  status,
+  message
+}: {
+  status: "idle" | "loading" | DataSourceStatus;
+  message?: string;
+}) {
+  const loading = status === "loading";
+  const unavailable = status === "unavailable";
+  return (
+    <div
+      role={loading ? "status" : undefined}
+      className={cn(
+        "rounded-xl border px-3 py-4",
+        unavailable
+          ? "border-status-warning/35 bg-status-warning/10"
+          : "border-border-subtle bg-surface-1/55"
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <span
+          className={cn(
+            "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border",
+            loading
+              ? "border-brand-blue/35 bg-[rgb(var(--accent-blue)/0.10)] text-[rgb(var(--accent-blue))]"
+              : unavailable
+              ? "border-status-warning/35 bg-status-warning/10 text-status-warning"
+              : "border-border-subtle bg-surface-2 text-fg-muted"
+          )}
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : unavailable ? <TriangleAlert className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+        </span>
+        <div className="min-w-0">
+          <div className="text-sm font-semibold text-fg-primary">
+            {loading ? "Canlı kayıtlar yükleniyor" : unavailable ? "Kaynak şu an yanıt vermiyor" : "Gösterilecek yeni bölge yok"}
+          </div>
+          <p className="mt-1 text-[12px] leading-relaxed text-fg-secondary">
+            {message ?? (loading ? "Belediye/API kayıtları sorgulanıyor; geometri olan ilk kayıt seçilince haritada görünecek." : unavailable ? "Liste alınamadı; parsel arama, katmanlar ve yerel yedek akışlar çalışmaya devam eder." : "Filtreler veya kaynak kayıtları yeni plan bölgesi döndürmedi. Parsel araması ve askı katmanı etkilenmez.")}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ParcelWorkflowStrip({
   parcel,
   hasGeometry,
@@ -688,11 +765,11 @@ function TrustSection({
   const lastChecked = lastCheckedAt ? new Date(lastCheckedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "Bu oturumda yok";
   return (
     <div className="space-y-2">
-      <div className="rounded-md border border-border-subtle bg-surface-2">
-        <TrustRow label="Parsel kaynağı" status={trustStatus(parcel.sourceStatus)} />
-        <TrustRow label="Geometri" status={geometrySource} />
-        <TrustRow label="İmar" status={imarSource} />
-        <TrustRow label="Risk/Çevre" status="demo" labelOverride="Demo/Tahmini" />
+      <div className="rounded-lg border border-border-subtle bg-surface-2 shadow-[inset_0_1px_0_rgb(255_255_255/0.03)]">
+        <TrustRow label="Parsel kaynağı" status={trustStatus(parcel.sourceStatus)} detail={statusDetail(trustStatus(parcel.sourceStatus), "Parsel kimliği")} />
+        <TrustRow label="Geometri" status={geometrySource} detail={statusDetail(geometrySource, "Harita çizimi")} />
+        <TrustRow label="İmar" status={imarSource} detail={statusDetail(imarSource, "Plan koşulları")} />
+        <TrustRow label="Risk/Çevre" status="demo" labelOverride="Demo/Tahmini" detail="Canlı resmi risk servisi değildir; karar desteği için bağlamsal katman." />
         <div className="flex items-center justify-between gap-2 border-t border-border-subtle px-3 py-2 text-xs">
           <span className="inline-flex items-center gap-1.5 text-fg-secondary"><Clock3 className="h-3.5 w-3.5" /> Son kontrol</span>
           <span className="text-fg-muted tabular-nums">{lastChecked}</span>
@@ -711,18 +788,30 @@ function TrustSection({
 function TrustRow({
   label,
   status,
-  labelOverride
+  labelOverride,
+  detail
 }: {
   label: string;
   status: "live" | "fallback" | "demo" | "unavailable";
   labelOverride?: string;
+  detail?: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-2 border-b last:border-b-0 border-border-subtle px-3 py-2 text-xs">
-      <span className="text-fg-secondary">{label}</span>
-      <SourceBadge status={status} label={labelOverride} />
+    <div className="grid grid-cols-[1fr_auto] gap-2 border-b last:border-b-0 border-border-subtle px-3 py-2 text-xs">
+      <span className="min-w-0">
+        <span className="block font-medium text-fg-secondary">{label}</span>
+        {detail && <span className="mt-0.5 block text-[11px] leading-snug text-fg-muted">{detail}</span>}
+      </span>
+      <SourceBadge status={status} label={labelOverride} className="self-start" />
     </div>
   );
+}
+
+function statusDetail(status: "live" | "fallback" | "demo" | "unavailable", subject: string) {
+  if (status === "live") return `${subject} canlı kaynaktan doğrulandı.`;
+  if (status === "fallback") return `${subject} için yerel yedek/önbellek kullanılıyor.`;
+  if (status === "unavailable") return `${subject} şu an kaynak tarafından sağlanmıyor.`;
+  return `${subject} demo veya tahmini veriyle gösteriliyor.`;
 }
 
 function trustStatus(status: DataSourceStatus | undefined) {

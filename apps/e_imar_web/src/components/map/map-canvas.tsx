@@ -1209,7 +1209,23 @@ function ensureLatestRegionsLayer(map: Map) {
         source: LIVE_PLAN_REGIONS_SOURCE,
         paint: {
           "fill-color": "#8B5CF6",
-          "fill-opacity": 0.18
+          "fill-opacity": 0.16
+        }
+      },
+      beforeId
+    );
+  }
+  if (!map.getLayer("live-plan-regions-halo")) {
+    map.addLayer(
+      {
+        id: "live-plan-regions-halo",
+        type: "line",
+        source: LIVE_PLAN_REGIONS_SOURCE,
+        paint: {
+          "line-color": "#38BDF8",
+          "line-width": ["interpolate", ["linear"], ["zoom"], 6, 6, 14, 12] as never,
+          "line-opacity": 0.18,
+          "line-blur": 3
         }
       },
       beforeId
@@ -1223,7 +1239,7 @@ function ensureLatestRegionsLayer(map: Map) {
         source: LIVE_PLAN_REGIONS_SOURCE,
         paint: {
           "line-color": "#A78BFA",
-          "line-width": 2.5,
+          "line-width": ["interpolate", ["linear"], ["zoom"], 6, 2.2, 14, 4] as never,
           "line-opacity": 0.95
         }
       },
