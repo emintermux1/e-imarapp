@@ -7,6 +7,7 @@ import { Layers } from "lucide-react";
 import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
 import type { AskiPolygonFeature } from "@/data/aski-polygons";
+import { getRiskGridCollection } from "@/data/risk-grid";
 import {
   getParcelsCollection,
   getParcelById,
@@ -29,8 +30,12 @@ import {
   buildParcelHoverDotLayer,
   buildLocationCityLabelLayer,
   buildLocationDistrictLabelLayer,
-  buildLocationNeighborhoodLabelLayer
+  buildLocationNeighborhoodLabelLayer,
+  buildPlanConstraintLineLayer,
+  buildRiskGridLayer,
+  RISK_GRID_SOURCE
 } from "@/lib/maplibre/layers";
+import { describeSemanticFocus } from "@/lib/maplibre/semantic-focus";
 
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
@@ -70,7 +75,20 @@ export function MapCanvas({
 
   const layerVisibility = useUIStore((s) => s.layerVisibility);
   const layerOpacity = useUIStore((s) => s.layerOpacity);
+  const activeConstraintFilter = useUIStore((s) => s.activeConstraintFilter);
+  const activePlanNoteFilter = useUIStore((s) => s.activePlanNoteFilter);
+  const activeRiskFocus = useUIStore((s) => s.activeRiskFocus);
+  const clearSemanticFocus = useUIStore((s) => s.clearSemanticFocus);
   const askiGeoJsonQuery = useActiveAskiGeoJSON();
+  const semanticFocus = React.useMemo(
+    () =>
+      describeSemanticFocus({
+        activeConstraintFilter,
+        activePlanNoteFilter,
+        activeRiskFocus
+      }),
+    [activeConstraintFilter, activePlanNoteFilter, activeRiskFocus]
+  );
 
   // Lazy import: ensure CSS is present (already imported in globals).
   // Initialize the map once.
@@ -116,6 +134,7 @@ export function MapCanvas({
           map.rotateTo(0, { duration: 300 });
           break;
         case "reset":
+          clearSemanticFocus();
           map.flyTo({
             center: TURKEY_CENTER,
             zoom: INITIAL_ZOOM,
@@ -138,6 +157,7 @@ export function MapCanvas({
       if (!map.getSource(LOCATION_LABEL_SOURCE)) {
         registerLocationLayers(map);
       }
+      registerSemanticLayers(map);
       registerAskiLayers(map);
       applyLocationLabelTheme(map, basemap);
       applyVisibilityAndOpacity(map);
@@ -158,6 +178,7 @@ export function MapCanvas({
       if (!map.getSource(LOCATION_LABEL_SOURCE)) {
         registerLocationLayers(map);
       }
+      registerSemanticLayers(map);
       registerAskiLayers(map);
       applyLocationLabelTheme(map, basemap);
       // Re-apply selection state on style swap
@@ -168,6 +189,7 @@ export function MapCanvas({
         );
       }
       applyVisibilityAndOpacity(map);
+      applySemanticFocusStyles(map, semanticFocus);
     });
 
     // mousemove — write coords directly to DOM (avoid React re-renders)
@@ -368,6 +390,18 @@ export function MapCanvas({
 
   const applyVisibilityAndOpacity = React.useCallback((map: Map) => {
     Object.entries(layerVisibility).forEach(([id, vis]) => {
+      if (id === "askida-overlay") {
+        for (const layerId of ["aski-overlay-fill", "aski-overlay-line"]) {
+          if (!map.getLayer(layerId)) continue;
+          map.setLayoutProperty(layerId, "visibility", vis ? "visible" : "none");
+        }
+        return;
+      }
+      if (id === "deprem-risk-grid") {
+        if (!map.getLayer(id)) return;
+        map.setLayoutProperty(id, "visibility", vis ? "visible" : "none");
+        return;
+      }
       if (!map.getLayer(id)) return;
       map.setLayoutProperty(id, "visibility", vis ? "visible" : "none");
     });
@@ -389,13 +423,22 @@ export function MapCanvas({
     setOpacityIfExists(map, "parcels-label", "text-opacity", layerOpacity["parcels-label"]);
     setOpacityIfExists(map, "aski-overlay-fill", "fill-opacity", layerOpacity["askida-overlay"] ?? 0.2);
     setOpacityIfExists(map, "aski-overlay-line", "line-opacity", layerOpacity["askida-overlay"] ?? 0.85);
-  }, [layerOpacity, layerVisibility]);
+    applySemanticFocusStyles(map, semanticFocus);
+  }, [layerOpacity, layerVisibility, semanticFocus]);
 
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     applyLocationLabelTheme(map, basemap);
   }, [basemap]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => applySemanticFocusStyles(map, semanticFocus);
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [semanticFocus]);
 
   // Layer visibility / opacity sync
   React.useEffect(() => {
@@ -431,6 +474,23 @@ export function MapCanvas({
             <p className="mt-2 text-[11px] text-fg-muted tabular-nums">
               {initError}
             </p>
+          </div>
+        </div>
+      )}
+      {semanticFocus && (
+        <div className="absolute left-3 top-14 z-10 pointer-events-auto">
+          <div className="inline-flex items-center gap-2 rounded-md border border-border-strong bg-surface-2/95 px-3 py-1.5 shadow-card">
+            <span className="text-[10px] uppercase tracking-wider text-fg-muted">
+              {semanticFocus.label}
+            </span>
+            <span className="text-[11px] text-fg-secondary">{semanticFocus.status}</span>
+            <button
+              type="button"
+              onClick={() => clearSemanticFocus()}
+              className="rounded-sm border border-border-subtle bg-surface-1 px-2 py-0.5 text-[10px] uppercase tracking-wider text-fg-muted hover:text-fg-primary"
+            >
+              Odak Temizle
+            </button>
           </div>
         </div>
       )}
@@ -491,6 +551,25 @@ function registerLocationLayers(map: Map) {
   }
 }
 
+function registerSemanticLayers(map: Map) {
+  if (!map.getSource(RISK_GRID_SOURCE)) {
+    map.addSource(RISK_GRID_SOURCE, {
+      type: "geojson",
+      data: getRiskGridCollection() as unknown as GeoJSON.FeatureCollection,
+      generateId: false
+    });
+  } else {
+    const source = map.getSource(RISK_GRID_SOURCE) as maplibregl.GeoJSONSource | undefined;
+    source?.setData(getRiskGridCollection() as unknown as GeoJSON.FeatureCollection);
+  }
+  if (!map.getLayer("deprem-risk-grid")) {
+    map.addLayer(buildRiskGridLayer("deprem-risk-grid"));
+  }
+  if (!map.getLayer("plan-constraint-line")) {
+    map.addLayer(buildPlanConstraintLineLayer("plan-constraint-line"));
+  }
+}
+
 function applyLocationLabelTheme(map: Map, basemap: BasemapId) {
   const dark = basemap === "dark";
   const labelColor = dark ? "#F8FAFC" : "#0F172A";
@@ -542,6 +621,61 @@ function setOpacityIfExists(
     map.setPaintProperty(layerId, prop as never, value as never);
   } catch {
     /* swallow paint property errors during style transitions */
+  }
+}
+
+function applySemanticFocusStyles(
+  map: Map,
+  focus: { key: string; label: string; status: string } | null
+) {
+  if (!map.getLayer("parcels-fill")) return;
+  try {
+    map.setPaintProperty(
+      "parcels-fill",
+      "fill-opacity",
+      focus
+        ? [
+            "case",
+            ["boolean", ["feature-state", "selected"], false],
+            0.86,
+            ["boolean", ["feature-state", "hover"], false],
+            0.72,
+            0.34
+          ]
+        : [
+            "case",
+            ["boolean", ["feature-state", "selected"], false],
+            0.78,
+            ["boolean", ["feature-state", "hover"], false],
+            0.62,
+            0.45
+          ]
+    );
+  } catch {
+  }
+
+  if (map.getLayer("parcels-selected-accent")) {
+    try {
+      map.setPaintProperty(
+        "parcels-selected-accent",
+        "line-color",
+        focus?.key.startsWith("risk:")
+          ? "#DC2626"
+          : focus?.key.startsWith("constraint:")
+            ? "#0F766E"
+            : focus?.key === "aski"
+              ? "#D97706"
+              : "#C8102E"
+      );
+      map.setPaintProperty(
+        "parcels-selected-accent",
+        "line-width",
+        focus
+          ? ["case", ["boolean", ["feature-state", "selected"], false], 4.2, 0]
+          : ["case", ["boolean", ["feature-state", "selected"], false], 2.6, 0]
+      );
+    } catch {
+    }
   }
 }
 

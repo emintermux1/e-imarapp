@@ -4,6 +4,7 @@ import { ZoningBadge } from "@/components/gis/zoning-badge";
 import { formatArea, formatDate } from "@/lib/format";
 import { PLAN_LAYER_LABELS, PLAN_STATUS_LABELS } from "@/data/zoning";
 import type { ParcelProps } from "@/types/parcel";
+import { resolveSemanticParcelAction, useSemanticParcelAction } from "@/lib/maplibre/semantic-focus";
 
 const YAPILASMA_LABEL: Record<ParcelProps["yapilasmaSekli"], string> = {
   Ayrik: "Ayrık Nizam",
@@ -13,6 +14,7 @@ const YAPILASMA_LABEL: Record<ParcelProps["yapilasmaSekli"], string> = {
 
 export function SectionImar({ parcel }: { parcel: ParcelProps }) {
   const constraints = (parcel.constraints ?? []).slice(0, 6);
+  const handleSemantic = useSemanticParcelAction(parcel);
   return (
     <div className="grid gap-0">
       <DataRow
@@ -77,13 +79,30 @@ export function SectionImar({ parcel }: { parcel: ParcelProps }) {
           </div>
           <div className="mt-2 grid gap-1.5">
             {constraints.map((constraint) => (
-              <div
-                key={constraint}
-                className="flex items-start gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1.5 text-[11px] leading-snug text-fg-secondary"
-              >
-                <span className="mt-1 block h-1.5 w-1.5 rounded-full bg-[rgb(var(--accent-navy))]" />
-                <span>{constraint}</span>
-              </div>
+              resolveSemanticParcelAction(constraint, "constraint") ? (
+                <button
+                  key={constraint}
+                  type="button"
+                  onClick={() => handleSemantic(constraint, "constraint")}
+                  className="group flex items-start justify-between gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1.5 text-left text-[11px] leading-snug text-fg-secondary transition-colors hover:border-border-strong hover:bg-surface-1"
+                >
+                  <span className="flex items-start gap-2 min-w-0">
+                    <span className="mt-1 block h-1.5 w-1.5 rounded-full bg-[rgb(var(--accent-navy))]" />
+                    <span>{constraint}</span>
+                  </span>
+                  <span className="shrink-0 rounded-sm border border-border-subtle bg-surface-1 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-fg-muted group-hover:text-fg-primary">
+                    Katmanı Aç
+                  </span>
+                </button>
+              ) : (
+                <div
+                  key={constraint}
+                  className="flex items-start gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1.5 text-[11px] leading-snug text-fg-secondary"
+                >
+                  <span className="mt-1 block h-1.5 w-1.5 rounded-full bg-[rgb(var(--accent-navy))]" />
+                  <span>{constraint}</span>
+                </div>
+              )
             ))}
           </div>
         </div>
