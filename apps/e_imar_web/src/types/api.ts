@@ -1,4 +1,13 @@
-export type DataSourceStatus = "live" | "fallback" | "unavailable" | "computed" | "demo";
+export type DataSourceStatus =
+  | "live"
+  | "fallback"
+  | "unavailable"
+  | "computed"
+  | "demo"
+  | "official"
+  | "public_metadata"
+  | "derived"
+  | "not_ready";
 
 export interface ParcelResponse {
   id: number;

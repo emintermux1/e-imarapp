@@ -8,6 +8,7 @@ import {
   PLAN_STATUS_LABELS,
   ZONING_PRESETS
 } from "@/data/zoning";
+import { LAYER_DESCRIPTORS, type LayerDescriptor } from "@/lib/maplibre/layers";
 
 export function GISLegend({ collapsed: collapsedProp, onCollapsedChange }: {
   collapsed?: boolean;
@@ -119,6 +120,31 @@ export function GISLegend({ collapsed: collapsedProp, onCollapsedChange }: {
           </div>
 
           <div className="mt-3 border-t border-border-subtle/60 pt-2">
+            <LegendHeading>Veri statüleri</LegendHeading>
+            <div className="grid grid-cols-1 gap-1.5">
+              {LEGEND_STATUS_ROWS.map((row) => (
+                <LegendItem key={row.status} label={row.label}>
+                  <span className={cn("block h-2.5 w-5 rounded-[2px] border", row.className)} />
+                </LegendItem>
+              ))}
+            </div>
+            <p className="mt-2 text-[10px] leading-relaxed text-fg-muted">
+              Not ready katman açılırsa panel neden veri çizilmediğini yazar; uydurma değer üretilmez.
+            </p>
+          </div>
+
+          <div className="mt-3 border-t border-border-subtle/60 pt-2">
+            <LegendHeading>Premium GIS taksonomisi</LegendHeading>
+            <div className="grid grid-cols-2 gap-1">
+              {taxonomyCounts.map((entry) => (
+                <span key={entry.group} className="rounded-sm border border-border-subtle bg-surface-1 px-1.5 py-1 text-[10px] text-fg-secondary">
+                  {entry.group} <span className="text-fg-muted tabular-nums">({entry.count})</span>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-3 border-t border-border-subtle/60 pt-2">
             <LegendHeading>Askı ve risk</LegendHeading>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
               <LegendItem label="Askıda plan">
@@ -150,6 +176,25 @@ export function GISLegend({ collapsed: collapsedProp, onCollapsedChange }: {
     </div>
   );
 }
+
+const LEGEND_STATUS_ROWS: Array<{
+  status: LayerDescriptor["status"];
+  label: string;
+  className: string;
+}> = [
+  { status: "official", label: "official · resmî kaynak", className: "border-status-success/40 bg-status-success/30" },
+  { status: "public_metadata", label: "public metadata · açık kayıt", className: "border-[rgb(var(--accent-blue))]/40 bg-[rgb(var(--accent-blue))]/25" },
+  { status: "demo", label: "demo · örnek veri", className: "border-border-strong bg-surface-3" },
+  { status: "derived", label: "derived · hesap/türetim", className: "border-brand-blue/40 bg-brand-blue/20" },
+  { status: "not_ready", label: "not_ready · veri bağlı değil", className: "border-status-warning/45 bg-status-warning/25" }
+];
+
+const taxonomyCounts = Array.from(
+  LAYER_DESCRIPTORS.reduce((acc, layer) => {
+    acc.set(layer.group, (acc.get(layer.group) ?? 0) + 1);
+    return acc;
+  }, new Map<LayerDescriptor["group"], number>())
+).map(([group, count]) => ({ group, count }));
 
 function LegendHeading({ children }: { children: React.ReactNode }) {
   return (
