@@ -6,5 +6,10 @@
       "@/*": ["apps/e_imar_web/src/*"]
     }
   },
-  "include": ["test/**/*.ts", "apps/e_imar_web/src/**/*.ts", "apps/e_imar_web/src/**/*.tsx"]
+  "include": [
+    "test/**/*.ts",
+    "frontend/lib/**/*.ts",
+    "apps/e_imar_web/src/**/*.ts",
+    "apps/e_imar_web/src/**/*.tsx"
+  ]
 }

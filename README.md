@@ -149,6 +149,14 @@ npm test
 npm run build
 ```
 
+### Full repository verification
+
+Runs root TypeScript + Jest, Python `compileall` on `app/`, the canonical `frontend/` typecheck and lint, and (non-blocking) legacy `apps/e_imar_web` typecheck when present:
+
+```bash
+npm run repo:health
+```
+
 ## Architecture decisions
 
 See `docs/adr/0001-backend-first-geospatial-foundation.md`.
