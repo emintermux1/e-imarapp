@@ -1,17 +1,18 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
 from app.connectors.http import get_client
 from app.connectors.probe import probe_source
-from app.core.responses import envelope
+from app.core.responses import envelope, now_iso
+from app.schemas.source import SourceCoverageHints, SourceQualityRecord, SourceQualityResponse
 from app.services.netcad_keos_service import NetcadKeosService
 from app.services.source_registry import get_source as get_legacy_source
 from app.services.source_registry import list_sources as list_legacy_sources
-from app.sources.registry import get_source, list_sources
+from app.sources.registry import SourceEntry, get_source, list_sources
 
 router = APIRouter()
 
@@ -22,6 +23,113 @@ def _legacy_filters(sources: list[dict], kind: Optional[str], province: Optional
     if province:
         sources = [s for s in sources if (s.get("province") or "").lower() == province.lower()]
     return sources
+
+
+def _ui_status(raw_status: str | None, auth: str | None = None, live_checked: bool = False) -> str:
+    if raw_status == "ok":
+        return "live"
+    if raw_status in {"unavailable", "provider_error"}:
+        return "unavailable"
+    if raw_status in {"requires_credentials", "requires_legal_agreement", "captcha_required"}:
+        return "unavailable"
+    if raw_status == "public_partial" or auth == "public_partial":
+        return "fallback" if not live_checked else "unavailable"
+    if auth == "public":
+        return "fallback"
+    return "fallback"
+
+
+def _coverage(capabilities: list[str]) -> SourceCoverageHints:
+    return SourceCoverageHints(
+        has_geometry=any(cap in capabilities for cap in ["parcel-geometry", "layers", "wms", "arcgis"]),
+        has_imar=any(cap in capabilities for cap in ["parcel-query", "plan-detail", "layers"]),
+        has_aski="aski-list" in capabilities,
+        has_documents=any(cap in capabilities for cap in ["document-links", "documentation"]),
+        capabilities=capabilities,
+    )
+
+
+def _message_for(status: str, raw_status: str | None, coverage: SourceCoverageHints) -> tuple[str, str]:
+    if status == "live":
+        return "Kaynak ana uç noktası yanıt verdi; detay servis kapsamı ayrıca doğrulanmalıdır.", "Servis katmanlarını keşfet ve ilgili parsel/plan sorgusunu çalıştır."
+    if raw_status in {"requires_credentials", "requires_legal_agreement", "captcha_required"}:
+        return "Kaynak erişimi oturum, captcha veya kurumsal protokol gerektiriyor; canlı veri yok sayılmamalı.", "Yetkili entegrasyon/protokol tamamlanmadan otomatik canlı veri bekleme."
+    if raw_status in {"provider_error", "unavailable"}:
+        return "Kaynak son kontrolde yanıt vermedi veya hata döndürdü.", "Daha sonra yeniden probe et veya alternatif belediye/ulusal kaynağa düş."
+    if coverage.has_geometry or coverage.has_imar or coverage.has_aski:
+        return "Registry metadatası bu kaynağın ilgili kabiliyete sahip olabileceğini söylüyor; canlı kontrol geçmişi yok.", "Canlı probe/discovery çalıştırarak endpoint ve katman durumunu doğrula."
+    return "Bu kaynak yalnızca katalog/doküman metadatası sağlıyor olabilir.", "UI'da canlı imar/geometri kaynağı gibi göstermeyin."
+
+
+def _endpoint_dicts(endpoints: list[Any]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for endpoint in endpoints[:10]:
+        if isinstance(endpoint, dict):
+            out.append(endpoint)
+        elif isinstance(endpoint, str):
+            out.append({"url": endpoint})
+    return out
+
+
+def _quality_record(src: SourceEntry, probe: dict[str, Any] | None = None, live_checked: bool = False) -> SourceQualityRecord:
+    probe = probe or {}
+    raw_status = str(probe.get("status") or src.auth.value)
+    status = _ui_status(raw_status, src.auth.value, live_checked)
+    endpoints = _endpoint_dicts(probe.get("discovered_endpoints") or [])
+    endpoint_url = probe.get("checked_url") or src.base_url
+    service_url = endpoints[0].get("url") if endpoints else src.base_url
+    coverage = _coverage(src.capabilities)
+    user_message, next_action = _message_for(status, raw_status, coverage)
+    failure_reason = probe.get("message") if status != "live" else None
+    checked_at = now_iso() if live_checked else None
+    return SourceQualityRecord(
+        source_id=src.id,
+        key=src.id,
+        name=src.name,
+        municipality_name=src.municipality_name,
+        category=src.category.value,
+        type=src.discovery_strategy,
+        provider=src.provider.value,
+        status=status,
+        raw_status=raw_status,
+        last_checked_at=checked_at,
+        last_success_at=checked_at if status == "live" else None,
+        latency_ms=probe.get("latency_ms"),
+        http_status=probe.get("http_status"),
+        endpoint_url=endpoint_url,
+        service_url=service_url,
+        failure_reason=failure_reason,
+        coverage=coverage,
+        geometry_available=coverage.has_geometry,
+        imar_available=coverage.has_imar,
+        aski_available=coverage.has_aski,
+        history_available=False,
+        endpoint_count=len(endpoints),
+        discovered_endpoints=endpoints,
+        next_action=next_action,
+        user_message=user_message,
+    )
+
+
+def _quality_response(records: list[SourceQualityRecord], live_checked: bool) -> SourceQualityResponse:
+    rollup = {"live": 0, "fallback": 0, "unavailable": 0, "computed": 0, "demo": 0}
+    for record in records:
+        rollup[record.status] = rollup.get(record.status, 0) + 1
+    status = "live" if rollup.get("live") else "fallback"
+    if rollup.get("unavailable") and (rollup.get("live") or rollup.get("fallback")):
+        status = "fallback"
+    elif rollup.get("unavailable") and not (rollup.get("live") or rollup.get("fallback")):
+        status = "unavailable"
+    return SourceQualityResponse(
+        status=status,
+        fetched_at=now_iso(),
+        history_available=False,
+        total=len(records),
+        live_checked=live_checked,
+        rollup=rollup,
+        sources=records,
+        message="Kalıcı sağlık geçmişi henüz tutulmuyor; last_success_at yalnızca bu istek sırasında canlı probe başarılıysa doludur.",
+    )
 
 
 @router.get("/sources")
@@ -42,6 +150,47 @@ async def get_sources(
             sources = [src for src in sources if src.provider.value == provider]
         return envelope("ok", sources=[src.to_dict() for src in sources], total=len(sources))
     return _legacy_filters(list_legacy_sources(), kind, province)
+
+
+@router.get("/sources/quality", response_model=SourceQualityResponse)
+async def get_sources_quality(
+    limit: int = Query(80, ge=1, le=120),
+    live_check: bool = Query(False),
+    category: str | None = Query(None),
+    capability: str | None = Query(None),
+):
+    registry_sources = list_sources()
+    if category:
+        registry_sources = [src for src in registry_sources if src.category.value == category]
+    if capability:
+        registry_sources = [src for src in registry_sources if capability in src.capabilities]
+    registry_sources = registry_sources[:limit]
+    probes: list[dict[str, Any] | BaseException | None] = [None] * len(registry_sources)
+    if live_check and registry_sources:
+        async with await get_client() as client:
+            tasks = [asyncio.wait_for(probe_source(client, src), timeout=4.0) for src in registry_sources]
+            probes = await asyncio.gather(*tasks, return_exceptions=True)
+    records = []
+    for src, probe in zip(registry_sources, probes, strict=False):
+        if isinstance(probe, BaseException):
+            probe = {"status": "unavailable", "message": str(probe), "discovered_endpoints": [], "latency_ms": None, "http_status": None}
+        records.append(_quality_record(src, probe if isinstance(probe, dict) else None, live_check))
+    return _quality_response(records, live_check)
+
+
+@router.get("/sources/quality/{source_id}", response_model=SourceQualityResponse)
+async def get_source_quality(source_id: str, live_check: bool = Query(False)):
+    src = get_source(source_id)
+    if not src:
+        legacy = get_legacy_source(source_id)
+        if legacy:
+            return _quality_response([], live_check=False)
+        raise HTTPException(status_code=404, detail="Kaynak bulunamadı")
+    probe: dict[str, Any] | None = None
+    if live_check:
+        async with await get_client() as client:
+            probe = await probe_source(client, src)
+    return _quality_response([_quality_record(src, probe, live_check)], live_check)
 
 
 @router.get("/sources/health")

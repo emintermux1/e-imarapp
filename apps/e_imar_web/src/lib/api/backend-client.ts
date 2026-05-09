@@ -5,10 +5,13 @@ import type {
   MunicipalGISEndpointListResponse,
   MunicipalGISEndpointRecord,
   LatestRegionsResponse,
+  ParcelContextResponse,
   ParcelResponse,
+  ParcelSummaryResponse,
   PlanResponse,
   ReportResponse,
   SourceHealthRecord,
+  SourceQualityResponse,
   SourceRegistryRecord
 } from "@/types/api";
 
@@ -105,6 +108,24 @@ export function getBackendParcelGeometry(parcelId: number) {
   );
 }
 
+export function getBackendParcelContext(
+  parcelId: number,
+  params: { include_geometry?: boolean; limit?: number } = {}
+) {
+  return apiFetch<ParcelContextResponse>(`/parsel/${parcelId}/context${queryString(params)}`);
+}
+
+export function getBackendParcelRelatedPlans(
+  parcelId: number,
+  params: { include_geometry?: boolean; limit?: number } = {}
+) {
+  return apiFetch<ParcelContextResponse>(`/parsel/${parcelId}/related-plans${queryString(params)}`);
+}
+
+export function getBackendParcelSummary(parcelId: number) {
+  return apiFetch<ParcelSummaryResponse>(`/parsel/${parcelId}/summary`);
+}
+
 export function generateBackendReport(body: Record<string, unknown>) {
   return apiFetch<ReportResponse>("/reports/generate", {
     method: "POST",
@@ -160,7 +181,20 @@ export function listSources() {
 }
 
 export function getSourceHealth() {
-  return apiFetch<SourceHealthRecord[]>("/sources/health");
+  return apiFetch<SourceHealthRecord[] | { sources?: SourceHealthRecord[]; [key: string]: unknown }>("/sources/health");
+}
+
+export function getSourceQuality(params: {
+  limit?: number;
+  live_check?: boolean;
+  category?: string;
+  capability?: string;
+} = {}) {
+  return apiFetch<SourceQualityResponse>(`/sources/quality${queryString(params)}`);
+}
+
+export function getSourceQualityDetail(sourceId: string, liveCheck = false) {
+  return apiFetch<SourceQualityResponse>(`/sources/quality/${sourceId}${queryString({ live_check: liveCheck })}`);
 }
 
 export function discoverSource(sourceId: string) {
