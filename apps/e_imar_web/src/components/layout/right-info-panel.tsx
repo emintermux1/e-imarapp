@@ -41,6 +41,7 @@ import { SectionAski } from "@/components/info/section-aski";
 import { SectionCevre } from "@/components/info/section-cevre";
 import { SectionGecmis } from "@/components/info/section-gecmis";
 import { SectionYatirimSkoru } from "@/components/info/section-yatirim-skoru";
+import { SectionParcelSummary } from "@/components/info/section-parcel-summary";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmsalCalculatorPanel } from "@/components/emsal/emsal-calculator-panel";
 import { cn } from "@/lib/utils";
@@ -176,6 +177,8 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
               hint={`Metro ${Math.round(parcel.cevre.metroM)} m · Park ${Math.round(parcel.cevre.parkM)} m`}
             />
           </section>
+
+          <SectionParcelSummary parcel={parcel} />
 
           <ScrollArea className="flex-1">
             <Accordion
