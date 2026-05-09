@@ -1,8 +1,20 @@
-import httpx
+from __future__ import annotations
+
 import asyncio
-from typing import List, Dict, Optional, Any
-from app.config import settings
+import re
+from typing import Any, Dict, List, Optional
+from urllib.parse import urljoin, urlparse
+
+import httpx
+
 from app.core.exceptions import KEOSDiscoveryError
+from app.services.source_registry import (
+    COMMON_KEOS_ENDPOINTS,
+    dedupe_urls,
+    endpoint_type,
+    get_source_by_slug,
+    normalize_url,
+)
 
 MUNICIPAL_DOMAIN_PATTERNS = [
     "https://keos.{slug}.bel.tr",
@@ -17,28 +29,23 @@ MUNICIPAL_DOMAIN_PATTERNS = [
     "https://cbs.{slug}.bld.gov.tr",
 ]
 
-NETCAD_KEOS_ENDPOINTS = [
-    "/NetGIS/Services/MapService.ashx",
-    "/NetGIS/Services/QueryService.ashx",
-    "/NetGIS/Services/GeometryService.ashx",
-    "/imardurumu/Services/ImarDurumu.ashx",
-    "/imardurumu/Services/ImarDurumu.asmx",
-    "/imardurumu/Service/ImarDurumu.ashx",
-    "/imardurumu/Service/ImarDurumu.asmx",
-    "/imardurumu/Services/MapService.ashx",
-    "/imardurumu/Services/QueryService.ashx",
-    "/imardurumu/Services/Proxy.ashx",
-    "/geoserver/ows?service=WMS&request=GetCapabilities",
-    "/geoserver/ows?service=WFS&request=GetCapabilities",
-    "/arcgis/rest/services?f=pjson",
-]
+NETCAD_KEOS_ENDPOINTS = COMMON_KEOS_ENDPOINTS
+SERVICE_URL_RE = re.compile(
+    r"(?P<url>(?:https?:)?//[^\s'\"<>]+|[^\s'\"<>]*(?:\.ashx|\.asmx|NetGIS|MapService|QueryService|GeometryService|ImarDurumu|WMS|WFS|arcgis/rest/services|geoserver/ows)[^\s'\"<>]*)",
+    re.IGNORECASE,
+)
+BLOCKED_TERMS = ("captcha", "recaptcha", "access denied", "forbidden", "bot", "güvenlik kodu")
+AUTH_TERMS = ("login", "signin", "giris", "giriş", "oturum", "yetki", "kimlik")
+
 
 class NetcadKeosService:
-    """
-    Belediye KEOS/Netcad discovery ve imar durumu sorgu servisi.
-    """
-    def __init__(self):
-        self.client = httpx.AsyncClient(timeout=15.0, follow_redirects=True, limits=httpx.Limits(max_connections=50))
+    def __init__(self, timeout: float = 6.0, max_connections: int = 20):
+        self.client = httpx.AsyncClient(
+            timeout=httpx.Timeout(timeout, connect=min(timeout, 4.0)),
+            follow_redirects=True,
+            limits=httpx.Limits(max_connections=max_connections),
+            headers={"User-Agent": "e-imar-source-discovery/0.1"},
+        )
 
     async def __aenter__(self):
         return self
@@ -46,49 +53,52 @@ class NetcadKeosService:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.client.aclose()
 
-    async def discover_municipality(self, slug: str) -> Dict:
-        """
-        Test all domain patterns and endpoints for a municipality slug.
-        Returns discovered URLs and OGC capabilities summary.
-        """
+    async def discover_municipality(self, slug: str, include_patterns: bool = True) -> Dict[str, Any]:
         slug = slug.lower().strip()
-        live_endpoints: List[Dict[str, Any]] = []
-        keos_url: Optional[str] = None
-        wms_url: Optional[str] = None
-        wfs_url: Optional[str] = None
+        registry_source = get_source_by_slug(slug)
+        seeds: List[str] = []
+        if registry_source:
+            seeds.extend([registry_source.homepage_url, registry_source.base_url])
+            seeds.extend(registry_source.candidate_endpoints)
+        if include_patterns:
+            for pattern in MUNICIPAL_DOMAIN_PATTERNS:
+                domain = pattern.replace("{slug}", slug)
+                seeds.append(domain)
+                seeds.extend(urljoin(domain.rstrip("/") + "/", e.lstrip("/")) for e in NETCAD_KEOS_ENDPOINTS)
+        seeds = dedupe_urls(seeds)
 
-        # Phase 1: domain pattern probe
-        domain_tasks = []
-        for pattern in MUNICIPAL_DOMAIN_PATTERNS:
-            url = pattern.replace("{slug}", slug)
-            domain_tasks.append(self._probe_domain(url))
+        homepage_urls = dedupe_urls([u for u in seeds if self._looks_like_homepage(u)][:6])
+        extracted: List[str] = []
+        homepage_results = await asyncio.gather(
+            *(self._fetch_homepage_candidates(url) for url in homepage_urls),
+            return_exceptions=True,
+        )
+        for result in homepage_results:
+            if isinstance(result, list):
+                extracted.extend(result)
+        candidates = dedupe_urls([*seeds, *extracted])
 
-        domain_results = await asyncio.gather(*domain_tasks, return_exceptions=True)
-        live_domains = [r for r in domain_results if isinstance(r, str)]
+        semaphore = asyncio.Semaphore(10)
+        async def bounded(url: str) -> Dict[str, Any]:
+            async with semaphore:
+                return await self._probe_endpoint(url)
 
-        # Phase 2: endpoint probe for each live domain
-        endpoint_tasks = []
-        for domain in live_domains:
-            for endpoint in NETCAD_KEOS_ENDPOINTS:
-                endpoint_tasks.append(self._probe_endpoint(domain + endpoint))
+        results = await asyncio.gather(*(bounded(url) for url in candidates[:160]), return_exceptions=True)
+        endpoints = [r for r in results if isinstance(r, dict)]
+        live_endpoints = [r for r in endpoints if r.get("status") == "live"]
 
-        endpoint_results = await asyncio.gather(*endpoint_tasks, return_exceptions=True)
-        for res in endpoint_results:
-            if isinstance(res, dict):
-                live_endpoints.append(res)
-                url = res["url"]
-                path = url.split("/")[-1] if "/" in url else url
-                if "GetCapabilities" in url and "WMS" in url:
-                    wms_url = url
-                elif "GetCapabilities" in url and "WFS" in url:
-                    wfs_url = url
-                elif any(e in url for e in ["MapService", "QueryService", "ImarDurumu"]):
-                    keos_url = url
+        keos_url = next((e["url"] for e in live_endpoints if e.get("type") == "keos"), None)
+        wms_url = next((e["url"] for e in live_endpoints if e.get("type") == "wms"), None)
+        wfs_url = next((e["url"] for e in live_endpoints if e.get("type") == "wfs"), None)
 
         return {
             "slug": slug,
-            "name": slug,
-            "tested_patterns": len(MUNICIPAL_DOMAIN_PATTERNS) * len(NETCAD_KEOS_ENDPOINTS),
+            "source_id": registry_source.id if registry_source else None,
+            "name": registry_source.name if registry_source else slug,
+            "homepage_url": registry_source.homepage_url if registry_source else None,
+            "base_url": registry_source.base_url if registry_source else None,
+            "tested_patterns": len(candidates),
+            "endpoints": endpoints,
             "live_endpoints": live_endpoints,
             "keos_url": keos_url,
             "wms_url": wms_url,
@@ -96,77 +106,123 @@ class NetcadKeosService:
             "discovered_at": asyncio.get_event_loop().time(),
         }
 
-    async def _probe_domain(self, url: str) -> str:
-        """HEAD probe a domain; return URL if 200/301/302."""
+    async def discover_source_urls(self, source: Any, detailed: bool = False) -> Dict[str, Any]:
+        if getattr(source, "kind", "").startswith("municipal"):
+            return await self.discover_municipality(source.slug, include_patterns=detailed)
+        homepage = await self._probe_endpoint(source.homepage_url)
+        return {
+            "slug": source.slug,
+            "source_id": source.id,
+            "name": source.name,
+            "homepage_url": source.homepage_url,
+            "base_url": source.base_url,
+            "tested_patterns": 1,
+            "endpoints": [homepage],
+            "live_endpoints": [homepage] if homepage.get("status") == "live" else [],
+            "discovered_at": asyncio.get_event_loop().time(),
+        }
+
+    async def _fetch_homepage_candidates(self, url: str) -> List[str]:
         try:
-            resp = await self.client.head(url, timeout=10.0)
-            if resp.status_code in (200, 301, 302, 307, 308):
-                return url
-        except httpx.RequestError:
-            pass
+            resp = await self.client.get(url, timeout=6.0)
+            if resp.status_code >= 400:
+                return []
+            content_type = resp.headers.get("content-type", "")
+            if "text" not in content_type and "javascript" not in content_type and "html" not in content_type:
+                return []
+            base = str(resp.url)
+            matches = [m.group("url") for m in SERVICE_URL_RE.finditer(resp.text[:500_000])]
+            urls = [normalize_url(match, base=base) for match in matches]
+            return [u for u in dedupe_urls(urls) if urlparse(u).scheme in {"http", "https"}]
+        except (httpx.RequestError, httpx.TimeoutException):
+            return []
+
+    async def _probe_domain(self, url: str) -> str:
+        result = await self._probe_endpoint(url)
+        if result["status"] in {"live", "blocked", "requires_auth", "cors_browser_only"}:
+            return url
         raise KEOSDiscoveryError(f"Domain unreachable: {url}")
 
-    async def _probe_endpoint(self, url: str) -> Dict:
-        """Probe a specific endpoint; return metadata if live."""
+    async def _probe_endpoint(self, url: str) -> Dict[str, Any]:
+        status = "not_found"
+        http_status: Optional[int] = None
+        title: Optional[str] = None
         try:
-            resp = await self.client.head(url, timeout=8.0)
-            if resp.status_code in (200, 301, 302):
-                return {"url": url, "status": resp.status_code, "live": True}
-            raise KEOSDiscoveryError(f"Endpoint {url} returned {resp.status_code}")
-        except httpx.RequestError:
-            raise KEOSDiscoveryError(f"Endpoint unreachable: {url}")
+            resp = await self.client.get(url, timeout=6.0)
+            http_status = resp.status_code
+            text_sample = resp.text[:8000] if resp.content else ""
+            lower = text_sample.lower()
+            if resp.status_code in (401, 407):
+                status = "requires_auth"
+            elif resp.status_code in (403, 429):
+                status = "blocked"
+            elif resp.status_code == 404:
+                status = "not_found"
+            elif resp.status_code >= 500:
+                status = "blocked"
+            elif any(term in lower for term in BLOCKED_TERMS):
+                status = "blocked"
+            elif any(term in lower for term in AUTH_TERMS) and "getcapabilities" not in url.lower():
+                status = "requires_auth"
+            elif resp.status_code in (200, 204, 301, 302, 307, 308):
+                status = "live"
+            else:
+                status = "parse_error"
+            title_match = re.search(r"<title[^>]*>(.*?)</title>", text_sample, re.IGNORECASE | re.DOTALL)
+            if title_match:
+                title = re.sub(r"\s+", " ", title_match.group(1)).strip()[:120]
+        except httpx.TimeoutException:
+            status = "timeout"
+        except httpx.ConnectError:
+            status = "not_found"
+        except httpx.RequestError as exc:
+            status = "cors_browser_only" if "certificate" in str(exc).lower() else "not_found"
+        except Exception:
+            status = "parse_error"
+
+        return {
+            "url": url,
+            "status": status,
+            "http_status": http_status,
+            "live": status == "live",
+            "type": endpoint_type(url, "municipal_keos"),
+            "title": title,
+        }
+
+    def _looks_like_homepage(self, url: str) -> bool:
+        parsed = urlparse(url)
+        path = parsed.path.lower()
+        return not parsed.query and not any(token in path for token in (".ashx", ".asmx", "getcapabilities", "arcgis/rest", "geoserver/ows"))
 
     async def get_imar_status(self, municipality_slug: str, ada: str, parsel: str) -> Dict:
-        """
-        Query imar status from discovered KEOS service.
-        Falls back to structured error if service unreachable.
-        """
         discovery = await self.discover_municipality(municipality_slug)
         keos_url = discovery.get("keos_url")
-
         if not keos_url:
             return {
                 "belediye": municipality_slug,
                 "ada": ada,
                 "parsel": parsel,
                 "imar_durumu": None,
-                "error": f"No KEOS service discovered for {municipality_slug}. "
-                         f"Tested {discovery['tested_patterns']} patterns; found {len(discovery['live_endpoints'])} live endpoints.",
+                "error": f"{municipality_slug} için canlı KEOS sorgu servisi doğrulanamadı. Portal bağlantısı veri kaynaklarında gösteriliyor.",
             }
-
-        # Attempt known Netcad KEOS query endpoints
-        query_endpoints = [
-            f"{keos_url}?ada={ada}&parsel={parsel}",
-            f"{keos_url}/QueryService?ada={ada}&parsel={parsel}",
-        ]
-
-        for qurl in query_endpoints:
+        for qurl in [f"{keos_url}?ada={ada}&parsel={parsel}", f"{keos_url}/QueryService?ada={ada}&parsel={parsel}"]:
             try:
-                resp = await self.client.get(qurl, timeout=15.0)
+                resp = await self.client.get(qurl, timeout=10.0)
                 if resp.status_code == 200:
                     try:
-                        data = resp.json()
-                        return self._normalize_imar_data(data, municipality_slug, ada, parsel)
+                        return self._normalize_imar_data(resp.json(), municipality_slug, ada, parsel)
                     except ValueError:
-                        # HTML response — may need scraping
                         return {
                             "belediye": municipality_slug,
                             "ada": ada,
                             "parsel": parsel,
                             "imar_durumu": None,
                             "raw_html_length": len(resp.text),
-                            "note": "KEOS returned HTML; scraping not yet implemented.",
+                            "note": "KEOS HTML döndürdü; giriş/captcha arkasına geçilmedi.",
                         }
             except httpx.RequestError:
                 continue
-
-        return {
-            "belediye": municipality_slug,
-            "ada": ada,
-            "parsel": parsel,
-            "imar_durumu": None,
-            "error": "KEOS query endpoints unreachable or require authentication.",
-        }
+        return {"belediye": municipality_slug, "ada": ada, "parsel": parsel, "imar_durumu": None, "error": "KEOS sorgusu erişilemedi veya yetki gerektiriyor."}
 
     def _normalize_imar_data(self, raw: Dict, belediye: str, ada: str, parsel: str) -> Dict:
         return {

@@ -311,7 +311,9 @@ export function useSearch(opts: SearchOptions): SearchState {
             loading: false,
             backendUnavailable: false,
             usedFallback: fallback.some((r) => r.type === "parcel"),
-            message: fallback.length > 0 ? "Canlı API sonucu yok — yerel demo veri gösteriliyor" : undefined
+            message: fallback.length > 0
+              ? "Canlı API sonucu yok — yerel demo veri gösteriliyor"
+              : "Bu sorguda parsel bulunamadı. Sol panelden belediye kaynağını keşfedin veya Canlı Veri Kaynakları durumunu kontrol edin."
           });
         })
         .catch((error) => {

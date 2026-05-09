@@ -81,9 +81,11 @@ Spatial indexes are created for municipal boundaries, parcels, plans, and zoning
 
 ## Real source registry
 
-The code registry is in `src/sources/source-registry.ts`. It starts with official and municipal seed systems, including TKGM, E-Plan, TUCBS, MAKS, e-Devlet/TUCBS, ÇŞİDB CBS, İçişleri e-Belediye, HGM Atlas, İBB Açık Veri, Netcad/KEOS reference patterns, municipal imar/CBS portals, OpenStreetMap, Esri World Imagery, Copernicus, Landsat, Mapbox, MapTiler, HERE, and Cesium ion.
+The FastAPI registry is in `app/services/source_registry.py` and seeds the supplied real Turkish municipal/national sources: Pendik, Esenler, Çanakkale, Pamukkale, Çerkezköy, Kahramankazan, Alanya, Konak, Merkezefendi, Altınordu, Aksaray, Şehitkamil, İBB, Ankara, İzmir, Çankaya, Sultangazi, Başakşehir, Tuşba, Süleymanpaşa, Mustafa Kemal Paşa, Keçiören, Gelibolu, Çaycuma, TKGM Parsel Sorgu/data-sharing docs, e-Plan, TUCBS Public API/Atlas, ÇŞB CBS, Yerel Veri Platformları, BulutKBS, and MAKS.
 
-Discovery probes live endpoints and returns explicit status instead of assuming that a URL is usable.
+FastAPI exposes `GET /api/v1/sources`, `GET /api/v1/sources/health`, `POST /api/v1/sources/{source_id}/discover`, and `GET /api/v1/map/live-layers`. Discovery fetches public HTML/JS where possible, extracts `.ashx`, `.asmx`, `NetGIS`, WMS/WFS, ArcGIS REST, and GeoServer candidates, then reports explicit statuses (`live`, `blocked`, `timeout`, `not_found`, `requires_auth`, `cors_browser_only`, `parse_error`) instead of assuming that a URL is usable. Restricted sources remain marked as requiring credentials, legal approval, or portal-only access.
+
+The canonical `apps/e_imar_web` UI renders these sources in the `Canlı Veri Kaynakları` panel and on-map source markers. If live endpoints are unavailable, the app keeps local/demo parcels visible and labels them as fallback rather than faking official data.
 
 ## Credentials and approvals that are still required for live ingestion
 

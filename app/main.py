@@ -7,7 +7,7 @@ from app.core.exceptions import custom_exception_handler
 from app.config import settings
 from app.routers import (
     health, parcels, plans, municipalities, map, reports, watchlist, auth,
-    simulation, satellite, analysis, user_data,
+    simulation, satellite, analysis, user_data, sources,
 )
 import structlog
 
@@ -47,6 +47,7 @@ app.include_router(parcels.router, prefix="/api/v1", tags=["parcels"])
 app.include_router(plans.router, prefix="/api/v1", tags=["plans"])
 app.include_router(municipalities.router, prefix="/api/v1", tags=["municipalities"])
 app.include_router(map.router, prefix="/api/v1/map", tags=["map"])
+app.include_router(sources.router, prefix="/api/v1", tags=["sources"])
 app.include_router(reports.router, prefix="/api/v1", tags=["reports"])
 app.include_router(watchlist.router, prefix="/api/v1", tags=["watchlist"])
 app.include_router(simulation.router, prefix="/api/v1", tags=["simulation"])
