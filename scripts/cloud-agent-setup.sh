@@ -29,8 +29,7 @@ else
 fi
 
 echo "==> Running verification"
-npm run typecheck
-npm test
+npm run repo:health
 
 echo "==> Checking optional map provider keys"
 npm run map:check-keys || true

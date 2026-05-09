@@ -12,6 +12,11 @@ export class MapController {
     return this.map.tileServerStatus();
   }
 
+  @Get('tiles/cache-strategy')
+  tileCacheStrategy() {
+    return this.map.tileCacheStrategy();
+  }
+
   @Get('layers')
   layers() {
     return this.map.layers();

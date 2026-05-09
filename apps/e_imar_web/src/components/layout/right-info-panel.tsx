@@ -19,7 +19,8 @@ import {
   Info,
   MapPinOff,
   CheckCircle2,
-  TriangleAlert
+  TriangleAlert,
+  GitCompareArrows
 } from "lucide-react";
 import {
   Accordion,
@@ -68,6 +69,8 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   const open = useUIStore((s) => s.rightPanelOpen);
   const setOpen = useUIStore((s) => s.setRightPanelOpen);
   const selectedId = useMapStore((s) => s.selectedParcelId);
+  const multiSelectedParcelIds = useMapStore((s) => s.multiSelectedParcelIds);
+  const clearMultiSelection = useMapStore((s) => s.clearMultiSelection);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
   const watchlistAdd = useWatchlistStore((s) => s.add);
   const watchlistRemove = useWatchlistStore((s) => s.remove);
@@ -414,6 +417,15 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                 </span>
               </div>
             </div>
+            {multiSelectedParcelIds.length > 0 && (
+              <div className="flex items-center justify-between gap-2 rounded-md border border-[rgb(var(--accent-blue))]/30 bg-[rgb(var(--accent-blue)/0.08)] px-2.5 py-2 text-xs">
+                <span className="inline-flex items-center gap-1.5 text-fg-primary"><GitCompareArrows className="h-3.5 w-3.5" /> {multiSelectedParcelIds.length} parsel seçili</span>
+                <div className="flex items-center gap-2">
+                  <button type="button" className="font-medium text-fg-primary underline underline-offset-2">Karşılaştır</button>
+                  <button type="button" onClick={clearMultiSelection} className="text-fg-muted hover:text-fg-primary">Temizle</button>
+                </div>
+              </div>
+            )}
             <ParcelWorkflowStrip
               parcel={parcelData!}
               hasGeometry={Boolean(backendGeometry) || Boolean(parcelData!.centroid)}

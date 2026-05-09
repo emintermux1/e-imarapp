@@ -19,13 +19,27 @@ export class MapService {
   }
 
   async tileServerStatus(): Promise<unknown> {
+    const readiness = {
+      recommendedLayers: [
+        { id: 'parcels', table: 'parcels', geometryColumn: 'geom', minZoom: 12, maxZoom: 22 },
+        { id: 'plans', table: 'plans', geometryColumn: 'geom', minZoom: 8, maxZoom: 18 },
+        { id: 'zoning_layers', table: 'zoning_layers', geometryColumn: 'geom', minZoom: 10, maxZoom: 20 }
+      ],
+      cacheHeaders: {
+        publicMetadata: 'Cache-Control: public, max-age=300, stale-while-revalidate=86400',
+        officialOrUserScoped: 'Cache-Control: private, no-store'
+      },
+      tilePathTemplate: '/public.parcels/{z}/{x}/{y}.pbf'
+    };
+
     if (!this.pgTileservUrl) {
       return {
         status: 'not_ready',
         issue: {
           code: IntegrationErrorCode.NotConfigured,
           message: 'PG_TILESERV_URL is not configured. Vector tile serving requires pg_tileserv or a compatible service.'
-        }
+        },
+        readiness
       };
     }
 
@@ -34,7 +48,8 @@ export class MapService {
       return {
         status: response.ok ? 'ok' : 'unavailable',
         endpoint: this.pgTileservUrl,
-        httpStatus: response.status
+        httpStatus: response.status,
+        readiness
       };
     } catch (error) {
       return {
@@ -43,9 +58,26 @@ export class MapService {
         issue: {
           code: IntegrationErrorCode.Unavailable,
           message: error instanceof Error ? error.message : 'Vector tile service status check failed.'
-        }
+        },
+        readiness
       };
     }
+  }
+
+  tileCacheStrategy() {
+    return {
+      status: this.pgTileservUrl ? 'ready_for_configuration' : 'not_ready',
+      issue: this.pgTileservUrl ? undefined : {
+        code: IntegrationErrorCode.NotConfigured,
+        message: 'PG_TILESERV_URL is not configured; no real tile cache is active.'
+      },
+      strategy: {
+        key: 'tiles:{layer}:{z}:{x}:{y}:{styleVersion}',
+        ttlSeconds: { z0ToZ10: 86_400, z11ToZ14: 3_600, z15Plus: 300 },
+        invalidation: ['source_id', 'municipality_id', 'plan_updated_at', 'style_version'],
+        headers: 'public immutable for basemap metadata; no-store for user scoped analyses'
+      }
+    };
   }
 
   layers() {

@@ -95,6 +95,25 @@ export async function getReport(id: number) {
   return apiFetch<import("./types").ReportResponse>(`/reports/${id}`);
 }
 
+export async function generateParcelReport(body: {
+  query: {
+    type?: string;
+    ada?: string;
+    parselNo?: string;
+    municipalityId?: string;
+    province?: string;
+    district?: string;
+    mahalle?: string;
+  };
+  parcelWorkflow?: Record<string, unknown> | null;
+  municipalWorkflow?: Record<string, unknown> | null;
+}) {
+  return apiFetch<import("./types").ParcelReportResponse>("/website/bff/parcel-report", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
 // Watchlist
 export async function getWatchlist() {
   return apiFetch<import("./types").WatchlistItemResponse[]>("/watchlist");
@@ -190,6 +209,26 @@ export async function analysisImarChanges(oldPlan: Record<string, unknown>, newP
 
 export async function analysisPlanLegend(pdfUrl: string) {
   return apiFetch<Record<string, unknown>>(`/analysis/parse-plan-legend?pdf_url=${encodeURIComponent(pdfUrl)}`);
+}
+
+export async function explainPlanNote(body: { noteText: string; audience?: import("./types").Audience; maxBullets?: number }) {
+  return apiFetch<import("./types").PlanNoteExplainResponse>("/website/bff/plan-note-explain", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function normalizeSourceCandidate(body: {
+  url: string;
+  name?: string;
+  province?: string;
+  district?: string;
+  probe?: boolean;
+}) {
+  return apiFetch<import("./types").SourceCandidateNormalizationResponse>("/sources/candidates/normalize", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 }
 
 // User Data

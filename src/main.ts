@@ -24,6 +24,24 @@ async function bootstrap(): Promise<void> {
     })
   );
 
+  const configService = app.get<ConfigService<AppEnvironment>>(ConfigService);
+  app.enableCors({
+    origin: configService.get<string>('CORS_ORIGIN') ?? true,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 600
+  });
+
+  const fastify = app.getHttpAdapter().getInstance();
+  fastify.addHook('onSend', async (_request, reply, payload) => {
+    reply.header('X-Content-Type-Options', 'nosniff');
+    reply.header('X-Frame-Options', 'DENY');
+    reply.header('Referrer-Policy', 'no-referrer');
+    reply.header('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+    reply.header('Cross-Origin-Resource-Policy', 'same-origin');
+    return payload;
+  });
+
   const config = new DocumentBuilder()
     .setTitle('Türkiye E-İmar Platform API')
     .setDescription('Backend foundation for source discovery, connector orchestration, parcel queries, and GIS analysis.')
@@ -41,7 +59,6 @@ async function bootstrap(): Promise<void> {
     });
   }
 
-  const configService = app.get<ConfigService<AppEnvironment>>(ConfigService);
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port, '0.0.0.0');
 }
