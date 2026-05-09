@@ -6,6 +6,8 @@ import { Sun, Moon, Eye, ChevronDown, Box } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useUIStore } from "@/stores/ui-store";
+import { useMapStore } from "@/stores/map-store";
+import { useParcel } from "@/hooks/use-parcel";
 import { cn } from "@/lib/utils";
 
 const MONTH_LABELS = [
@@ -33,6 +35,9 @@ export function Section3DAnalizleri() {
   const setEmsalWireframe = useUIStore((s) => s.setEmsalWireframe);
   const viewCorridor = useUIStore((s) => s.viewCorridor);
   const setViewCorridor = useUIStore((s) => s.setViewCorridor);
+  const selectedParcelId = useMapStore((s) => s.selectedParcelId);
+  const parcelFeature = useParcel(selectedParcelId);
+  const parcel = parcelFeature?.properties;
 
   const [collapsed, setCollapsed] = React.useState(false);
 
@@ -155,11 +160,31 @@ export function Section3DAnalizleri() {
                   onCheckedChange={setViewCorridor}
                 />
               </div>
+              {parcel && (
+                <div className="border-t border-border-subtle pt-2 grid grid-cols-2 gap-2 text-[10px]">
+                  <Stat label="Seçili parsel" value={`${parcel.ada}/${parcel.parsel}`} />
+                  <Stat label="Maks. kat" value={`${parcel.katSiniri} kat`} />
+                  <Stat label="Gabari" value={`${parcel.gabariM.toFixed(1)} m`} />
+                  <Stat
+                    label="3D envelope"
+                    value={`${Math.round(parcel.yuzolcumuM2 * parcel.kaks).toLocaleString("tr-TR")} m²`}
+                  />
+                </div>
+              )}
             </div>
           )}
         </motion.aside>
       )}
     </AnimatePresence>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded border border-border-subtle bg-surface-1/60 px-2 py-1.5">
+      <div className="uppercase tracking-wider text-fg-muted">{label}</div>
+      <div className="mt-0.5 text-fg-primary font-medium tabular-nums">{value}</div>
+    </div>
   );
 }
 

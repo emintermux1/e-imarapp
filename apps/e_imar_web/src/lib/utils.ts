@@ -18,21 +18,7 @@ export function safeParseFloat(value: string): number | null {
   return Number.isFinite(v) ? v : null;
 }
 
-export const TURKEY_BOUNDS = {
-  west: 25.5,
-  east: 45.0,
-  south: 35.5,
-  north: 42.5
-};
-
-export function inTurkey(lng: number, lat: number) {
-  return (
-    lng >= TURKEY_BOUNDS.west &&
-    lng <= TURKEY_BOUNDS.east &&
-    lat >= TURKEY_BOUNDS.south &&
-    lat <= TURKEY_BOUNDS.north
-  );
-}
+export { TURKEY_BOUNDS, inTurkey } from "@/lib/geo/turkey";
 
 export function shortId() {
   return Math.random().toString(36).slice(2, 10);

@@ -1,8 +1,10 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text, desc
 from typing import Optional, List
 from app.database import get_db
+from app.core.security import get_current_user_id
 from app.models.query_log import QueryLog
 
 router = APIRouter()
@@ -12,15 +14,16 @@ async def save_favorite(
     item_type: str = Query(..., enum=["parcel", "plan", "municipality"]),
     item_id: int = Query(...),
     label: Optional[str] = None,
+    user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db)
 ):
     """Kullanıcı favori kaydet."""
     # Simplified — full favorites table not yet modeled
     # Store in query_log for now
     log = QueryLog(
-        user_id=1,  # TODO: from auth
+        user_id=user_id,
         query_type=f"favorite_{item_type}",
-        params=f"{{\"item_id\": {item_id}, \"label\": \"{label or ''}\"}}",
+        params=json.dumps({"item_id": item_id, "label": label or ""}),
         results_count=1,
     )
     db.add(log)
@@ -32,11 +35,17 @@ async def save_favorite(
 async def list_favorites(
     item_type: Optional[str] = Query(None),
     limit: int = Query(50, ge=1, le=200),
+    user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db)
 ):
     """Kullanıcı favorileri listele."""
     qtype = f"favorite_{item_type}" if item_type else None
-    stmt = select(QueryLog).where(QueryLog.query_type.like("favorite_%")).order_by(desc(QueryLog.id)).limit(limit)
+    stmt = (
+        select(QueryLog)
+        .where(QueryLog.user_id == user_id, QueryLog.query_type.like("favorite_%"))
+        .order_by(desc(QueryLog.id))
+        .limit(limit)
+    )
     if qtype:
         stmt = stmt.where(QueryLog.query_type == qtype)
     result = await db.execute(stmt)
@@ -50,10 +59,16 @@ async def list_favorites(
 async def get_query_history(
     limit: int = Query(50, ge=1, le=500),
     query_type: Optional[str] = Query(None),
+    user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db)
 ):
     """Geçmiş sorgular."""
-    stmt = select(QueryLog).where(QueryLog.query_type.notlike("favorite_%")).order_by(desc(QueryLog.id)).limit(limit)
+    stmt = (
+        select(QueryLog)
+        .where(QueryLog.user_id == user_id, QueryLog.query_type.notlike("favorite_%"))
+        .order_by(desc(QueryLog.id))
+        .limit(limit)
+    )
     if query_type:
         stmt = stmt.where(QueryLog.query_type == query_type)
     result = await db.execute(stmt)

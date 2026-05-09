@@ -268,7 +268,7 @@ export function buildJulianDateForLocalSun(
   centroidLng: number,
   month: number,
   hour: number,
-  year = 2024
+  year = 2026
 ): CesiumNS.JulianDate {
   // Approx tz offset at longitude (1h per 15°)
   const offsetH = centroidLng / 15;

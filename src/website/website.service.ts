@@ -7,6 +7,7 @@ import { IngestionService } from '../ingestion/ingestion.service';
 import { MapService } from '../map/map.service';
 import { ParcelQueryDto } from '../parcels/dto/parcel-query.dto';
 import { ParcelsService } from '../parcels/parcels.service';
+import { SourcesService } from '../sources/sources.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { UserDataService } from '../user-data/user-data.service';
 
@@ -27,7 +28,8 @@ export class WebsiteService {
     private readonly userData: UserDataService,
     private readonly eplan: EplanService,
     private readonly map: MapService,
-    private readonly ingestion: IngestionService
+    private readonly ingestion: IngestionService,
+    private readonly sources: SourcesService
   ) {}
 
   architecture() {
@@ -48,7 +50,7 @@ export class WebsiteService {
         {
           module: 'bootstrap',
           endpoints: ['/website/bootstrap'],
-          purpose: 'Expose capability/feature flags and data-source readiness for website hydration.'
+          purpose: 'Expose capability/feature flags, map provider readiness, ingestion access requirements, and registry-only source coverage for website hydration.'
         },
         {
           module: 'parcel-workflow',
@@ -72,6 +74,7 @@ export class WebsiteService {
   async bootstrap(userReference?: string): Promise<unknown> {
     const [tileStatus, providers] = await Promise.all([this.map.tileServerStatus(), this.map.providers()]);
     const requirements = this.ingestion.accessRequirements();
+    const sourceCoverage = this.sources.summary().sourceCoverage;
     const workspace = userReference ? await this.workspace(userReference) : null;
     return {
       status: 'ok',
@@ -88,6 +91,7 @@ export class WebsiteService {
       },
       map: { tileStatus, providers },
       ingestionRequirements: requirements,
+      sourceCoverage,
       workspace
     };
   }

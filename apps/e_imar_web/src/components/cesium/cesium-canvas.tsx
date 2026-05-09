@@ -17,6 +17,7 @@ import {
   getParcelById
 } from "@/data/parcels";
 import { getSnapshotForYear } from "@/data/historical-snapshots";
+import { TURKEY_CENTER } from "@/lib/geo/turkey";
 
 interface CesiumCanvasProps {
   className?: string;
@@ -38,10 +39,15 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
   const corridorRef = React.useRef<EntityT | null>(null);
 
   const { status, error, Cesium, viewer } = useCesiumViewer(containerRef, {
-    minimal: true
+    minimal: true,
+    initialCamera: {
+      position: [TURKEY_CENTER[0], TURKEY_CENTER[1] - 0.3, 1_350_000],
+      orientation: [0, -65, 0]
+    }
   });
 
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
+  const flyTarget = useMapStore((s) => s.flyTarget);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
   const setHoveredParcelId = useMapStore((s) => s.setHoveredParcelId);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
@@ -56,9 +62,17 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
   React.useEffect(() => {
     if (!viewer || !Cesium) return;
     const fc = getParcelsCollection();
+    const visibleFeatures = selectedParcelId
+      ? fc.features.filter((feature) => {
+          const [lng, lat] = feature.properties.centroid ?? [0, 0];
+          const selected = getParcelById(selectedParcelId);
+          const [slng, slat] = selected?.properties.centroid ?? [lng, lat];
+          return Math.abs(lng - slng) < 0.018 && Math.abs(lat - slat) < 0.014;
+        })
+      : fc.features.slice(0, 700);
     const handles = handlesRef.current;
     const seen = new Set<string>();
-    for (const feature of fc.features) {
+    for (const feature of visibleFeatures) {
       const props = feature.properties;
       seen.add(props.id);
       const snapshot = timelineYear
@@ -105,6 +119,24 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
     });
   }, [viewer, Cesium, selectedParcelId]);
 
+  // Search/focus flow parity with 2D map: react to generic fly targets in 3D.
+  React.useEffect(() => {
+    if (!viewer || !Cesium || !flyTarget) return;
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(
+        flyTarget.center[0],
+        flyTarget.center[1],
+        flyTarget.zoom && flyTarget.zoom >= 15 ? 1300 : 4800
+      ),
+      duration: 0.95,
+      orientation: {
+        heading: 0,
+        pitch: Cesium.Math.toRadians(-52),
+        roll: 0
+      }
+    });
+  }, [viewer, Cesium, flyTarget]);
+
   // Sun / shadow analysis
   React.useEffect(() => {
     if (!viewer || !Cesium) return;
@@ -120,7 +152,7 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
         lng,
         sunMonth,
         sunHour,
-        2024
+        2026
       );
       viewer.clock.currentTime = julian;
       viewer.clock.shouldAnimate = false;
@@ -173,7 +205,7 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
               id: `${id}::label`,
               position: Cesium.Cartesian3.fromDegrees(c[0], c[1], 80),
               label: {
-                text: `${parcel.properties.ada}/${parcel.properties.parsel}`,
+                text: `${parcel.properties.ada}/${parcel.properties.parsel} · ${parcel.properties.detailedUse?.includes("TİCK") ? "TİCK" : parcel.properties.detailedUse?.includes("MİA") ? "MİA" : parcel.properties.zoningType}`,
                 font: "12px Inter, sans-serif",
                 fillColor: Cesium.Color.WHITE,
                 outlineColor: Cesium.Color.BLACK.withAlpha(0.6),

@@ -14,6 +14,12 @@ export type TapuTipi = "Arsa" | "Tarla" | "Bag" | "Bahce" | "Bina";
 
 export type AskiDurum = "askida" | "onaylandi" | "reddedildi" | "yok";
 
+export type PlanScale = "1/100000" | "1/25000" | "1/5000" | "1/1000";
+
+export type PlanStatus = "yururlukte" | "askida" | "revizyon" | "iptal" | "taslak";
+
+export type PlanLayer = "nazim" | "uygulama" | "aski" | "risk" | "koruma";
+
 export interface Riskler {
   /** AFAD seviyeleri 1-5 */
   deprem: 1 | 2 | 3 | 4 | 5;
@@ -59,6 +65,11 @@ export interface ParcelProps {
   katSiniri: number;
   yolCephesiM: number;
   planAdi: string;
+  planScale?: PlanScale;
+  planStatus?: PlanStatus;
+  detailedUse?: string;
+  constraints?: string[];
+  planLayer?: PlanLayer;
   planOnayTarihi: string; // ISO
   yatirimSkoru: number;
   riskler: Riskler;

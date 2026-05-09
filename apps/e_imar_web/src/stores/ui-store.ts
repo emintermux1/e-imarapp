@@ -19,7 +19,7 @@ interface UIState {
   /** 2D MapLibre vs 3D Cesium. */
   mapMode: MapMode;
 
-  /** Currently selected year for the Time Machine timeline (null = current). */
+  /** Currently selected year for the Zaman Çizelgesi timeline (null = current). */
   timelineYear: number | null;
   /** When in compare mode, the year displayed on the right pane. */
   timelineCompareYear: number | null;
@@ -67,6 +67,30 @@ LAYER_DESCRIPTORS.forEach((l) => {
   initialOpacity[l.id] = l.defaultOpacity;
   initialVisibility[l.id] = l.defaultVisible;
 });
+
+const CORE_VISIBLE_LAYERS = [
+  "parcels-fill",
+  "parcels-line",
+  "parcels-label",
+  "metro-hatti",
+  "belediye-sinirlari"
+] as const;
+
+function reconcileLayerOpacity(value: unknown): Record<string, number> {
+  return { ...initialOpacity, ...(isRecord(value) ? value : {}) };
+}
+
+function reconcileLayerVisibility(value: unknown): Record<string, boolean> {
+  const restored = { ...initialVisibility, ...(isRecord(value) ? value : {}) };
+  for (const id of CORE_VISIBLE_LAYERS) {
+    restored[id] = true;
+  }
+  return restored;
+}
+
+function isRecord(value: unknown): value is Record<string, never> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
 
 export const useUIStore = create<UIState>()(
   persist(
@@ -128,7 +152,25 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: "eimar:ui",
+      version: 2,
       storage: createJSONStorage(() => localStorage),
+      migrate: (persistedState) => {
+        if (!isRecord(persistedState)) return persistedState;
+        return {
+          ...persistedState,
+          layerOpacity: reconcileLayerOpacity(persistedState.layerOpacity),
+          layerVisibility: reconcileLayerVisibility(persistedState.layerVisibility)
+        };
+      },
+      merge: (persistedState, currentState) => {
+        const persisted = isRecord(persistedState) ? persistedState : {};
+        return {
+          ...currentState,
+          ...persisted,
+          layerOpacity: reconcileLayerOpacity(persisted.layerOpacity),
+          layerVisibility: reconcileLayerVisibility(persisted.layerVisibility)
+        };
+      },
       partialize: (s) => ({
         sidebarMode: s.sidebarMode,
         layerOpacity: s.layerOpacity,

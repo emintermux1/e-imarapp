@@ -17,6 +17,7 @@ import { X } from "lucide-react";
 import { TimelineFloating } from "@/components/gis/timeline-floating";
 import { Section3DAnalizleri } from "@/components/gis/section-3d-analizleri";
 import { AskiPopover } from "@/components/map/aski-popover";
+import { DataCoverageBadge } from "@/components/map/data-coverage-badge";
 import type { AskiPolygonFeature } from "@/data/aski-polygons";
 
 export function AppShell() {
@@ -93,6 +94,7 @@ export function AppShell() {
               setAskiPopover({ feature, pos })
             }
           />
+          <DataCoverageBadge />
           <MapHud
             cursorReadoutRef={cursorReadoutRef}
             zoomReadoutRef={zoomReadoutRef}

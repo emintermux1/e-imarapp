@@ -1,10 +1,9 @@
 /**
- * Askı haritası overlay'i için poligonlar — her giriş, gerçek askı plan
- * sınırlarını temsil eden basitleştirilmiş bir kapsama alanıdır. Mock veriyi
- * `aski-list.ts`'teki kayıtlarla aynı `id` üzerinden eşleştiriyoruz, böylece
- * popover detayı ve sidebar listesi tutarlı kalıyor.
+ * Askı haritası overlay'i için poligonlar. Bu sınırlar sentetik demo
+ * kapsamıdır; resmi belediye/TKGM askı planı geometrisi değildir.
  */
 
+import { DEMO_PARCEL_CLUSTERS } from "./parcel-seeds";
 import type { AskiOzet } from "./aski-list";
 import { ASKI_LIST } from "./aski-list";
 
@@ -19,23 +18,16 @@ export interface AskiPolygonFeature {
   belediye: string;
   ilSlug: string;
   ilceSlug: string;
-  /** GeoJSON polygon (closed ring of [lng, lat]) */
   ring: [number, number][];
-  /** Optional matched parsel id so the popover can deep-link */
   matchedParcelId?: string;
-  /** Plan adı / sebep */
   planAdi?: string;
 }
 
-/**
- * Build polygons centered around realistic Turkish coordinates, sized
- * sufficiently to be visible at city zoom levels (~zoom 10-13).
- */
 function ringFromCenter(
   lng: number,
   lat: number,
-  widthDeg = 0.005,
-  heightDeg = 0.0035
+  widthDeg = 0.006,
+  heightDeg = 0.004
 ): [number, number][] {
   const w = widthDeg / 2;
   const h = heightDeg / 2;
@@ -46,6 +38,21 @@ function ringFromCenter(
     [lng - w, lat + h],
     [lng - w, lat - h]
   ];
+}
+
+function slugify(value: string) {
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/[ğ]/g, "g")
+    .replace(/[ş]/g, "s")
+    .replace(/[ç]/g, "c")
+    .replace(/[ö]/g, "o")
+    .replace(/[ü]/g, "u")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 interface PolygonSeed {
@@ -61,6 +68,7 @@ interface PolygonSeed {
   durum: AskiPolygonStatus;
   matchedParcelId?: string;
   planAdi?: string;
+  size?: [number, number];
 }
 
 function fromAskiOzet(
@@ -85,7 +93,7 @@ function fromAskiOzet(
   };
 }
 
-const sourceList: PolygonSeed[] = [
+const manualSeeds: PolygonSeed[] = [
   fromAskiOzet(ASKI_LIST[0], {
     lng: 29.018,
     lat: 41.0876,
@@ -121,7 +129,6 @@ const sourceList: PolygonSeed[] = [
     matchedParcelId: "TR-07-MUR-4502-1",
     planAdi: "Muratpaşa Lara 4502 Ada Tadilat Reddi"
   }),
-  // Bonus: kentsel dönüşüm bölgesi (hatched)
   {
     id: "donusum-istanbul-fatih",
     baslik: "Fatih Tarihi Yarımada Kentsel Dönüşüm",
@@ -133,9 +140,9 @@ const sourceList: PolygonSeed[] = [
     ilceSlug: "fatih",
     lng: 28.967,
     lat: 41.018,
-    planAdi: "Tarihi Yarımada Kentsel Dönüşüm Master Planı"
+    planAdi: "Tarihi Yarımada Kentsel Dönüşüm Master Planı",
+    size: [0.010, 0.006]
   },
-  // Approved: Ankara Çankaya
   {
     id: "onaylandi-ankara-cankaya-park",
     baslik: "Çankaya Park Aktarması",
@@ -151,8 +158,29 @@ const sourceList: PolygonSeed[] = [
   }
 ];
 
-export const ASKI_POLYGONS: AskiPolygonFeature[] = sourceList.map((entry) => {
-  const ring = ringFromCenter(entry.lng, entry.lat, 0.0065, 0.0045);
+const derivedSeeds: PolygonSeed[] = DEMO_PARCEL_CLUSTERS.filter((cluster, index) => index % 2 === 0 || ["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya"].includes(cluster.il))
+  .slice(0, 34)
+  .map((cluster, index) => {
+    const status: AskiPolygonStatus = index % 9 === 0 ? "donusum" : index % 5 === 0 ? "onaylandi" : index % 7 === 0 ? "reddedildi" : "askida";
+    const startMonth = status === "askida" ? 4 + (index % 3) : 1 + (index % 10);
+    return {
+      id: `demo-aski-${cluster.id}`,
+      baslik: `${cluster.ilce} ${cluster.mahalle} demo plan askı alanı`,
+      belediye: `${cluster.ilce} Belediyesi`,
+      baslangic: `2026-${String(startMonth).padStart(2, "0")}-${String(4 + (index % 20)).padStart(2, "0")}`,
+      bitis: `2026-${String(Math.min(12, startMonth + 2)).padStart(2, "0")}-${String(8 + (index % 18)).padStart(2, "0")}`,
+      durum: status,
+      ilSlug: slugify(cluster.il),
+      ilceSlug: slugify(cluster.ilce),
+      lng: cluster.center[0] + ((index % 3) - 1) * 0.0022,
+      lat: cluster.center[1] + ((index % 4) - 1.5) * 0.0016,
+      planAdi: `${cluster.mahalle} 1/1000 Demo UİP Tadilatı`,
+      size: [0.005 + (index % 3) * 0.001, 0.0035 + (index % 2) * 0.001]
+    };
+  });
+
+export const ASKI_POLYGONS: AskiPolygonFeature[] = [...manualSeeds, ...derivedSeeds].map((entry) => {
+  const [w, h] = entry.size ?? [0.0065, 0.0045];
   return {
     id: entry.id,
     label: entry.baslik,
@@ -162,13 +190,12 @@ export const ASKI_POLYGONS: AskiPolygonFeature[] = sourceList.map((entry) => {
     belediye: entry.belediye,
     ilSlug: entry.ilSlug,
     ilceSlug: entry.ilceSlug,
-    ring,
+    ring: ringFromCenter(entry.lng, entry.lat, w, h),
     matchedParcelId: entry.matchedParcelId,
     planAdi: entry.planAdi
   };
 });
 
-/** Status → visual descriptor. Used by both MapLibre + the side popover. */
 export const ASKI_STATUS_STYLE: Record<
   AskiPolygonStatus,
   {
@@ -177,17 +204,14 @@ export const ASKI_STATUS_STYLE: Record<
     fillOpacity: number;
     stroke: string;
     strokeOpacity: number;
-    /** "solid" | "dashed" */
     strokeStyle: "solid" | "dashed";
-    /** When true, render an additional hatched pattern overlay */
     hatched?: boolean;
-    /** RGB triplet for chart references */
     rgb: string;
   }
 > = {
   askida: {
     label: "Askıda",
-    fill: "rgb(16,42,76)", // lacivert
+    fill: "rgb(16,42,76)",
     fillOpacity: 0.25,
     stroke: "rgb(16,42,76)",
     strokeOpacity: 0.95,
@@ -196,7 +220,7 @@ export const ASKI_STATUS_STYLE: Record<
   },
   onaylandi: {
     label: "Onaylandı",
-    fill: "rgb(5,150,105)", // emerald
+    fill: "rgb(5,150,105)",
     fillOpacity: 0.18,
     stroke: "rgb(5,150,105)",
     strokeOpacity: 0.95,
@@ -205,7 +229,7 @@ export const ASKI_STATUS_STYLE: Record<
   },
   reddedildi: {
     label: "Reddedildi",
-    fill: "rgb(185,28,28)", // danger
+    fill: "rgb(185,28,28)",
     fillOpacity: 0.18,
     stroke: "rgb(185,28,28)",
     strokeOpacity: 0.95,
@@ -214,7 +238,7 @@ export const ASKI_STATUS_STYLE: Record<
   },
   donusum: {
     label: "Dönüşüm Bölgesi",
-    fill: "rgb(217,119,6)", // hatched orange
+    fill: "rgb(217,119,6)",
     fillOpacity: 0.22,
     stroke: "rgb(180,83,9)",
     strokeOpacity: 0.85,
@@ -226,9 +250,6 @@ export const ASKI_STATUS_STYLE: Record<
 
 export const ASKI_POLYGON_SOURCE_ID = "aski-overlay";
 
-/**
- * Returns a GeoJSON FeatureCollection ready for `map.addSource()`.
- */
 export function getAskiCollection(): GeoJSON.FeatureCollection<
   GeoJSON.Polygon,
   AskiPolygonFeature & { askiStatus: AskiPolygonStatus }
@@ -247,7 +268,6 @@ export function getAskiCollection(): GeoJSON.FeatureCollection<
   };
 }
 
-/** Kalan gün — hızlı erişim için. */
 export function askiRemainingDays(p: AskiPolygonFeature): number {
   const now = Date.now();
   const target = new Date(p.bitis).getTime();
@@ -257,7 +277,6 @@ export function askiRemainingDays(p: AskiPolygonFeature): number {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
-/** Aktif askı sayısı. */
 export function activeAskiCount(): number {
   return ASKI_POLYGONS.filter((p) => p.durum === "askida").length;
 }
