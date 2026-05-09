@@ -142,6 +142,26 @@ If you want to use local `.env`, copy `.env.example` to `.env` and fill the opti
 
 If PostGIS or Redis is not configured, API endpoints return a `not_ready` or `unavailable` status with a concrete next action. They do not invent parcel or plan results. Municipal parcel workflows return `method_contract_required`, `protected`, `source_not_found`, or `not_ready` when registry, TKGM geometry, or Netcad/KEOS contracts are not verified; demo/derived/public metadata is never labeled as official data.
 
+## Geometry validation, integrity, and platform hardening
+
+- `POST /geo/validate` validates GeoJSON Geometry/Feature/FeatureCollection inputs and returns `{ status, issues[], repairedGeometry?, repairSuggestions[], confidenceScore }`. It detects missing/invalid coordinates, unclosed polygon rings, duplicate consecutive vertices, basic self-intersection, Turkey-ish bbox anomalies, SRID mismatch for EPSG:4326/3857, null metadata, invalid timestamps, and duplicate parcel candidates. Repairs are opt-in with `repair: true`; official data is never silently mutated.
+- `GET /geo/integrity/summary` and `POST /geo/integrity/scan` are safe integrity foundations. Without `DATABASE_URL` they return `not_ready`; with PostGIS they run limited metadata/topology queries and return review candidates, not fabricated official validation results.
+- `POST /jobs/geo/integrity/daily` records a `queued_metadata_only` daily scan request until Redis/BullMQ workers are configured.
+- `GET /geo/audit/contract` exposes the proposed audit log, version history, and rollback API shape while tables/workers are not enabled.
+- `GET /map/tiles/status` reports `PG_TILESERV_URL` health plus recommended layers and cache headers. `GET /map/tiles/cache-strategy` documents cache keys/TTLs and returns `not_ready` when no tile server is configured.
+- `GET /geo/performance/index-recommendations` lists baseline indexes: parcels geom GIST, ada/parsel btree, municipality slug/id, plans geom/status/date, and source_id/connector run indexes. `GET /geo/performance/postgis-optimizations` covers bbox filters, `ST_Subdivide`, `ST_SimplifyPreserveTopology`, `ST_AsMVTGeom`, and capped viewport queries.
+- `GET /geo/performance/client-guidance` documents client debounce/batching caps for map and connector consumers.
+
+Security defaults:
+
+```bash
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX=120
+CORS_ORIGIN=https://your-frontend.example
+```
+
+The Fastify bootstrap enables CORS, common security headers, and strict validation. Public connector probing endpoints apply lightweight in-memory rate limiting, user-agent/IP keyed metadata, and hard limit caps to reduce scraping pressure without blocking legitimate interactive use.
+
 ## Tests
 
 ```bash

@@ -17,6 +17,9 @@ export interface AppEnvironment {
   HERE_API_KEY?: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL?: string;
+  RATE_LIMIT_WINDOW_MS: number;
+  RATE_LIMIT_MAX: number;
+  CORS_ORIGIN?: string;
 }
 
 const HTTP_URL_ENV_NAMES = ['MINIO_ENDPOINT', 'OPENSEARCH_URL', 'PG_TILESERV_URL', 'PUSH_GATEWAY_URL'] as const;
@@ -30,7 +33,9 @@ export function validateEnv(rawEnv: Record<string, unknown>): AppEnvironment {
   const errors: string[] = [];
   const env: AppEnvironment = {
     NODE_ENV: parseNodeEnv(rawEnv.NODE_ENV, errors),
-    PORT: parsePort(rawEnv.PORT, errors)
+    PORT: parsePort(rawEnv.PORT, errors),
+    RATE_LIMIT_WINDOW_MS: parsePositiveInteger(rawEnv.RATE_LIMIT_WINDOW_MS, 'RATE_LIMIT_WINDOW_MS', 60_000, errors),
+    RATE_LIMIT_MAX: parsePositiveInteger(rawEnv.RATE_LIMIT_MAX, 'RATE_LIMIT_MAX', 120, errors)
   };
 
   for (const [envName, protocols] of Object.entries(CONNECTION_URL_RULES) as Array<
@@ -48,6 +53,7 @@ export function validateEnv(rawEnv: Record<string, unknown>): AppEnvironment {
   env.MINIO_ROOT_USER = parseOptionalNonEmptyString(rawEnv.MINIO_ROOT_USER);
   env.MINIO_ROOT_PASSWORD = parseOptionalNonEmptyString(rawEnv.MINIO_ROOT_PASSWORD);
   env.OPENAI_MODEL = parseOptionalNonEmptyString(rawEnv.OPENAI_MODEL);
+  env.CORS_ORIGIN = parseOptionalNonEmptyString(rawEnv.CORS_ORIGIN);
 
   for (const envName of OPTIONAL_SECRET_ENV_NAMES) {
     const diagnostic = inspectOptionalSecret(envName, rawEnv[envName]);
@@ -87,6 +93,17 @@ function parsePort(rawValue: unknown, errors: string[]): number {
   }
 
   return port;
+}
+
+function parsePositiveInteger(rawValue: unknown, envName: string, fallback: number, errors: string[]): number {
+  const value = parseOptionalNonEmptyString(rawValue);
+  if (!value) return fallback;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    errors.push(`${envName} must be a positive integer. Received '${value}'.`);
+    return fallback;
+  }
+  return parsed;
 }
 
 function parseOptionalUrl(

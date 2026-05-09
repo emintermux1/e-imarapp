@@ -7,6 +7,7 @@ export class JobsService {
       status: 'queued_metadata_only',
       name,
       payload,
+      schedule: name === 'geo.integrity.daily' ? { cadence: 'daily', mode: 'metadata_only_until_worker_configured' } : undefined,
       note: 'Queue backend is not configured in this minimal runtime; no external job was dispatched.'
     };
   }
