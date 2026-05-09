@@ -93,6 +93,7 @@ export function MapCanvas({
   const setViewState = useMapStore((s) => s.setViewState);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
   const rightPanelOpen = useUIStore((s) => s.rightPanelOpen);
+  const rightPanelOpenRef = React.useRef(rightPanelOpen);
 
   const layerVisibility = useUIStore((s) => s.layerVisibility);
   const layerOpacity = useUIStore((s) => s.layerOpacity);
@@ -103,6 +104,10 @@ export function MapCanvas({
   React.useEffect(() => {
     onAskiClickRef.current = onAskiClick;
   }, [onAskiClick]);
+
+  React.useEffect(() => {
+    rightPanelOpenRef.current = rightPanelOpen;
+  }, [rightPanelOpen]);
 
   React.useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -389,7 +394,7 @@ export function MapCanvas({
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map || !flyTarget) return;
-    const padding = getViewportPadding(rightPanelOpen);
+    const padding = getViewportPadding(rightPanelOpenRef.current);
     if (flyTarget.bounds) {
       map.fitBounds(
         [
@@ -415,7 +420,7 @@ export function MapCanvas({
       duration: getMotionDuration(700),
       essential: true
     });
-  }, [flyTarget, rightPanelOpen]);
+  }, [flyTarget]);
 
   React.useEffect(() => {
     const map = mapRef.current;

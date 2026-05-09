@@ -50,7 +50,6 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
   const setCompareMode = useUIStore((s) => s.setCompareMode);
   const askiMode = useUIStore((s) => s.askiMode);
   const setAskiMode = useUIStore((s) => s.setAskiMode);
-  const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
   const setSelectedArea = useMapStore((s) => s.setSelectedArea);
   const flyTo = useMapStore((s) => s.flyTo);
 
