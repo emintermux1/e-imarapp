@@ -112,6 +112,12 @@ export class SourcesService {
     const capabilities = vendor === 'netcad' || vendor === 'webgis'
       ? ['zoning_status', 'municipal_gis', 'netcad_keos']
       : ['zoning_status', 'municipal_gis'];
+    const accessStatusGuess = this.guessAccessStatus(normalizedUrl, vendor);
+    const accessStatusReason = accessStatusGuess === 'requires_credentials'
+      ? 'URL içinde açık kimlik doğrulama/protected erişim işareti görüldü; canlı doğrulama yine gereklidir.'
+      : accessStatusGuess === 'public_metadata'
+        ? 'URL daha çok dokümantasyon / metadata benzeri görünüyor; canlı veri erişimi doğrulanmadı.'
+        : 'Canlı probe olmadan erişim durumu güvenle doğrulanamaz.';
     const wouldRegister = {
       id: sourceId,
       name: input.name || `${input.district || municipalitySlug || 'Belediye'} imar kaynağı`,
@@ -130,6 +136,8 @@ export class SourcesService {
       vendor,
       municipalitySlug,
       sourceIdCandidate: sourceId,
+      accessStatusGuess,
+      accessStatusReason,
       connectorKinds,
       capabilities,
       wouldRegister,
@@ -206,6 +214,14 @@ export class SourcesService {
     if (value.includes('webgis')) return 'webgis';
     if (value.includes('kbs')) return 'kbs';
     if (value.includes('bel.tr') || value.includes('belediye')) return 'municipal';
+    return 'unknown';
+  }
+
+  private guessAccessStatus(url: string, vendor: 'netcad' | 'ekent' | 'webgis' | 'kbs' | 'municipal' | 'unknown'): 'public_metadata' | 'requires_credentials' | 'unknown' {
+    const value = url.toLocaleLowerCase('tr-TR');
+    if (/(login|giris|auth|captcha|sso|e-devlet|uygulama|uye)/i.test(value)) return 'requires_credentials';
+    if (/(docs?|wiki|api|help|manual|reference|swagger)/i.test(value)) return 'public_metadata';
+    if (vendor === 'municipal' && /\b(keos|webgis|imar|imardurumu|kbs)\b/.test(value)) return 'unknown';
     return 'unknown';
   }
 
