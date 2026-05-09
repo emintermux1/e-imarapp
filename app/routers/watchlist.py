@@ -1,52 +1,50 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import AsyncSessionLocal
+from sqlalchemy import select, delete
+from app.database import get_db
+from app.core.security import get_current_user_id
+from app.models.watchlist import WatchlistItem
+from app.schemas.watchlist import WatchlistItemRequest, WatchlistItemResponse
 
 router = APIRouter()
 
-async def get_db():
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
-
-@router.post("/watchlist")
-async def add_to_watchlist(
-    user_id: int,
-    parcel_id: int = None,
-    plan_id: int = None,
-    geom: str = None,  # WKT format
-    notification_channels: list = None,
+@router.post("/watchlist", response_model=WatchlistItemResponse)
+async def create_watchlist_item(
+    req: WatchlistItemRequest,
+    user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db)
 ):
-    try:
-        # Implementation for adding item to watchlist
-        # This would typically insert a record into the watchlist table
-        return {"status": "added", "user_id": user_id}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    item = WatchlistItem(
+        user_id=user_id,
+        parcel_id=req.parcel_id,
+        plan_id=req.plan_id,
+        geom_wkt=req.geom_wkt,
+        notification_channels=",".join(req.notification_channels),
+        label=req.label,
+    )
+    db.add(item)
+    await db.commit()
+    await db.refresh(item)
+    return item
 
-@router.get("/watchlist/{user_id}")
-async def get_watchlist(
-    user_id: int,
-    db: AsyncSession = Depends(get_db)
+@router.get("/watchlist", response_model=list[WatchlistItemResponse])
+async def list_watchlist_items(
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
 ):
-    try:
-        # Implementation for retrieving user's watchlist
-        # This would typically query the watchlist table
-        return {"user_id": user_id, "items": []}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    result = await db.execute(
+        select(WatchlistItem).where(WatchlistItem.user_id == user_id)
+    )
+    return result.scalars().all()
 
 @router.delete("/watchlist/{item_id}")
-async def remove_from_watchlist(
+async def delete_watchlist_item(
     item_id: int,
-    db: AsyncSession = Depends(get_db)
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
 ):
-    try:
-        # Implementation for removing item from watchlist
-        # This would typically delete a record from the watchlist table
-        return {"status": "removed", "item_id": item_id}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    await db.execute(
+        delete(WatchlistItem).where(WatchlistItem.id == item_id, WatchlistItem.user_id == user_id)
+    )
+    await db.commit()
+    return {"deleted": True}

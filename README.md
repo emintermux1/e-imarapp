@@ -32,27 +32,21 @@ npm run start:dev
 
 Swagger UI is available at `http://localhost:3000/docs`.
 
-### Web frontend startup
+### Web frontend startup (canonical Next.js app)
 
 ```bash
-cd apps/web
+cd frontend
 npm install
-cp .env.example .env
 npm run dev
 ```
 
-Web app runs at `http://localhost:5173` and connects to backend via `VITE_API_BASE_URL` (default `http://localhost:3000`).
+Web app runs at `http://localhost:3000` and connects to FastAPI via `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000/api/v1`).
 
-### Next.js production frontend startup
+`apps/web` is a deprecated Vite prototype. Its npm scripts are shims that start/build `frontend/` so agents and humans do not accidentally open the stale `localhost:5173` app.
 
-```bash
-cd apps/web-next
-npm install
-cp .env.example .env
-npm run dev
-```
+### Legacy prototype frontends
 
-Next app connects to backend via `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:3000`).
+Older experiments remain under `apps/` for historical reference only. Do not use `apps/web`, `apps/web-next`, `apps/e_imar_next`, or `apps/e_imar_web` as the product frontend unless explicitly working on legacy migration.
 
 Docker Compose now includes the API service as well as PostGIS, Redis, MinIO, OpenSearch, pg_tileserv, Prometheus, and Grafana.
 
@@ -88,7 +82,7 @@ Spatial indexes are created for municipal boundaries, parcels, plans, and zoning
 
 ## Real source registry
 
-The code registry is in `src/sources/source-registry.ts`. It starts with official and municipal seed systems, including TKGM, E-Plan, TUCBS, MAKS, e-Devlet/TUCBS, ÇŞİDB CBS, İçişleri e-Belediye, HGM Atlas, İBB Açık Veri, Netcad/KEOS reference patterns, municipal imar/CBS portals, OpenStreetMap, Esri World Imagery, Copernicus, Landsat, Mapbox, MapTiler, HERE, and Cesium ion.
+The code registry is in `src/sources/source-registry.ts`. It starts with official and municipal seed systems, including TKGM Parsel Sorgu and data-sharing rules, current/legacy E-Plan, TUCBS Public API and main portal, Atlas, ÇŞB CBS, Akıllı Şehirler local data platforms, BulutKBS, MAKS, Netcad references, municipal KEOS/WebGIS/eKent/KBS portals, OpenStreetMap, Esri World Imagery, Copernicus, Landsat, Mapbox, MapTiler, HERE, and Cesium ion. New municipal seeds include Süleymanpaşa, Mustafakemalpaşa, Gelibolu, Çaycuma, and Keçiören.
 
 Discovery probes live endpoints and returns explicit status instead of assuming that a URL is usable.
 
@@ -113,10 +107,16 @@ The API exposes `GET /ingestion/requirements` to list sources that cannot be ing
 
 For public KEOS portals without login/bot protection, data is pulled by discovering the backend service endpoints used by the page, not by inventing responses. Use:
 
+- `GET /sources/municipalities/:id/capability` where `:id` is a source id or `municipalitySlug`.
+- `GET /sources/municipality-coverage?province=&district=&vendor=` for capability-enriched municipal coverage.
+- `POST /sources/candidates/normalize` to preview a contributed source URL without writing to the registry.
+- `POST /website/bff/municipal-parcel-workflow` for honest ada/parsel BFF status aggregation.
 - `GET /connectors/netcad/strategy`
 - `POST /connectors/:id/netcad/discover`
+- `POST /connectors/:id/netcad/resolve-methods` for ASMX `?WSDL` and public HTML/JS payload hint discovery.
+- `POST /connectors/:id/ogc/catalog` for WMS/WFS GetCapabilities layer catalog parsing.
 
-The discovery step fetches HTML/JS, extracts `.ashx`, `.asmx`, `NetGIS`, WMS/WFS, ArcGIS, and GeoServer references, probes common KEOS endpoints, and reports the next connector step. See `docs/connectors/netcad-keos.md`.
+The discovery step fetches public HTML and same-origin JS only, extracts `.ashx`, `.asmx`, `NetGIS`, WMS/WFS, ArcGIS, and GeoServer references, preserves published ports in candidate URLs, probes common KEOS endpoints, and reports the next connector step. Resolver/catalog responses mark public metadata separately from official data, include provenance, and only SHA-256 hash real response bodies. Protected flows return `protected`, `captcha_required`, `requires_credentials`, or `requires_legal_agreement` rather than bypassing access controls or fabricating data. See `docs/connectors/netcad-keos.md`.
 
 Map provider keys and OpenAI credentials should be provided through environment variables or a secret manager, never committed:
 
@@ -140,7 +140,7 @@ If you want to use local `.env`, copy `.env.example` to `.env` and fill the opti
 
 ## API behavior
 
-If PostGIS or Redis is not configured, API endpoints return a `not_ready` or `unavailable` status with a concrete next action. They do not invent parcel or plan results.
+If PostGIS or Redis is not configured, API endpoints return a `not_ready` or `unavailable` status with a concrete next action. They do not invent parcel or plan results. Municipal parcel workflows return `method_contract_required`, `protected`, `source_not_found`, or `not_ready` when registry, TKGM geometry, or Netcad/KEOS contracts are not verified; demo/derived/public metadata is never labeled as official data.
 
 ## Tests
 
@@ -155,12 +155,13 @@ See `docs/adr/0001-backend-first-geospatial-foundation.md`.
 
 ## Website app and integration
 
-The repository includes a website integration layer (`/website/*`) plus the first production web app at `apps/e_imar_web`. The frontend is React + TypeScript + Vite, consumes the existing BFF endpoints, and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data.
+The canonical product frontend is `frontend/` (Next.js 14 App Router). It consumes the FastAPI `/api/v1/*` endpoints and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data.
 
-- App README: `apps/e_imar_web/README.md`
+- App README: `frontend/README.md`
 - Architecture and runbook: `docs/website-architecture.md`
 - Bootstrap/capabilities endpoint: `GET /website/bootstrap`
 - Aggregated website workflow endpoint: `POST /website/bff/parcel-workflow`
+- Municipal ada/parsel readiness workflow: `POST /website/bff/municipal-parcel-workflow`
 - Plan note endpoint: `POST /website/bff/plan-note-explain`
 - Workspace endpoint: `GET /website/workspace/:userReference`
 - Session token endpoints: `POST /website/session/start`, `POST /website/session/verify`
@@ -168,12 +169,12 @@ The repository includes a website integration layer (`/website/*`) plus the firs
 Run the website locally:
 
 ```bash
-npm install --prefix apps/e_imar_web
-VITE_API_BASE_URL=http://localhost:3000 npm run web:dev
+npm install --prefix frontend
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1 npm run web:dev
 npm run web:build
 ```
 
-The root `npm run build` remains the backend build. Website-specific scripts are `web:dev`, `web:build`, `web:preview`, and `web:typecheck`.
+The root `npm run build` remains the backend build. Website-specific scripts are `web:dev`, `web:build`, `web:preview`, and `web:typecheck`, all pointing at `frontend/`.
 
 Required website integration env:
 
@@ -181,7 +182,7 @@ Required website integration env:
 WEBSITE_SESSION_SECRET=...
 OPENAI_API_KEY=...          # for plan-note explain
 PUSH_GATEWAY_URL=...        # for push channel delivery
-VITE_API_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
 ```
 
 Design references for website-first rollout:

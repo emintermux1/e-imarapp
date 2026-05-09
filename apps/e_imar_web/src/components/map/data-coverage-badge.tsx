@@ -1,0 +1,66 @@
+"use client";
+
+import * as React from "react";
+import { Database, Info } from "lucide-react";
+import { getParcelSourceMetadata } from "@/data/parcels";
+import { DEMO_PARCEL_CLUSTERS } from "@/data/parcel-seeds";
+import { getSourceCoverage, type SourceCoverageState } from "@/lib/source-coverage";
+import { useMapStore } from "@/stores/map-store";
+
+const metadata = getParcelSourceMetadata();
+const clusterCenters: [number, number][] = DEMO_PARCEL_CLUSTERS.map(
+  (cluster) => cluster.center
+);
+
+function isNearDemoCoverage(center: [number, number] | null, zoom: number) {
+  if (!center || zoom < 8.5) return true;
+  return clusterCenters.some(([lng, lat]) => Math.abs(center[0] - lng) < 0.18 && Math.abs(center[1] - lat) < 0.14);
+}
+
+function coverageText(coverage: SourceCoverageState) {
+  if (coverage.summary) {
+    return `${coverage.summary.publicCandidateCount.toLocaleString("tr-TR")} kayıtlı canlı kaynak adayı / ${coverage.summary.protectedCount.toLocaleString("tr-TR")} korumalı kaynak`;
+  }
+  return coverage.message ?? "Kaynak registry özeti alınamıyor";
+}
+
+export function DataCoverageBadge() {
+  const cursorLngLat = useMapStore((s) => s.cursorLngLat);
+  const zoom = useMapStore((s) => s.zoom);
+  const sparse = !isNearDemoCoverage(cursorLngLat, zoom);
+  const [coverage, setCoverage] = React.useState<SourceCoverageState>({ status: "unavailable", summary: null });
+
+  React.useEffect(() => {
+    let mounted = true;
+    getSourceCoverage().then((result) => {
+      if (mounted) setCoverage(result);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  return (
+    <div className="pointer-events-none absolute left-3 top-3 z-10 flex max-w-[min(520px,calc(100vw-2rem))] flex-col gap-2">
+      <div className="pointer-events-auto inline-flex w-fit items-center gap-2 rounded-md border border-border-subtle bg-surface-2/95 px-2.5 py-1.5 shadow-card backdrop-blur-sm">
+        <Database className="h-3.5 w-3.5 text-fg-muted" />
+        <span className="text-[11px] text-fg-secondary">
+          <span className="font-medium text-fg-primary">Demo veri:</span>{" "}
+          <span className="tabular-nums">{metadata.featureCount.toLocaleString("tr-TR")}</span> parsel ·{" "}
+          <span className="tabular-nums">{metadata.askidaCount.toLocaleString("tr-TR")}</span> askı bölgesi · {coverageText(coverage)}
+        </span>
+      </div>
+      {metadata.fallbackReason && (
+        <div className="pointer-events-auto inline-flex w-fit items-center gap-2 rounded-md border border-status-warning/30 bg-surface-2/95 px-2.5 py-1.5 shadow-card">
+          <Info className="h-3.5 w-3.5 text-status-warning" />
+          <span className="text-[11px] text-fg-secondary">{metadata.fallbackReason} Demo katman gösteriliyor.</span>
+        </div>
+      )}
+      {sparse && (
+        <div className="pointer-events-auto max-w-[360px] rounded-md border border-border-subtle bg-surface-2/92 px-2.5 py-2 text-[11px] leading-relaxed text-fg-secondary shadow-card">
+          Bu bölgede demo veri seyrek. Canlı belediye/TKGM kaynağı bağlandığında katman dolacak.
+        </div>
+      )}
+    </div>
+  );
+}

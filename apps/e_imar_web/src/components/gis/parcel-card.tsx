@@ -33,13 +33,25 @@ export function ParcelCard({
   className
 }: ParcelCardProps) {
   const isRow = variant === "row";
-  const baseTag = isRow ? "button" : "div";
   const interactive = !!onClick && isRow;
-  const Tag = baseTag as React.ElementType;
+  const renderAsButton = interactive && !onRemove;
+  const Tag = (renderAsButton ? "button" : "div") as React.ElementType;
   return (
     <Tag
-      type={baseTag === "button" ? "button" : undefined}
+      type={renderAsButton ? "button" : undefined}
+      role={!renderAsButton && interactive ? "button" : undefined}
+      tabIndex={!renderAsButton && interactive ? 0 : undefined}
       onClick={interactive ? onClick : undefined}
+      onKeyDown={
+        !renderAsButton && interactive
+          ? (e: React.KeyboardEvent) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick?.();
+              }
+            }
+          : undefined
+      }
       className={cn(
         "group flex w-full text-left items-stretch gap-2",
         isRow

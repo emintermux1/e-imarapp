@@ -6,6 +6,12 @@ import type { BasemapId } from "@/lib/maplibre/styles";
 
 export interface FlyTarget {
   center: [number, number];
+  bounds?: {
+    west: number;
+    south: number;
+    east: number;
+    north: number;
+  };
   zoom?: number;
   bearing?: number;
   pitch?: number;

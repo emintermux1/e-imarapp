@@ -1,14 +1,16 @@
 "use client";
 
 import { useMemo } from "react";
-import { getAllParcels, slugify } from "@/data/parcels";
+import { kindLabel, searchLocationTargets } from "@/data/location-navigation";
+import { getAllParcels, searchParcels, slugify } from "@/data/parcels";
 import { PROVINCES } from "@/data/provinces";
 import { DISTRICTS } from "@/data/districts";
 import { NEIGHBORHOODS } from "@/data/neighborhoods";
 import { BELEDIYE_LIST } from "@/data/belediye";
-import { adaParselText, adaParselSlug } from "@/lib/format";
+import { adaParselText } from "@/lib/format";
 import { TURKEY_BOUNDS, inTurkey, safeParseFloat } from "@/lib/utils";
-import type { SearchResult } from "@/types/geo";
+import type { LocationSearchResult, SearchResult } from "@/types/geo";
+import type { ParcelFeature } from "@/types/parcel";
 
 export type SearchMode = "Hepsi" | "AdaParsel" | "Koordinat" | "Adres" | "Belediye";
 
@@ -20,6 +22,11 @@ interface SearchOptions {
 
 const COORD_REGEX = /^\s*(-?\d+(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d+(?:[.,]\d+)?)\s*$/;
 const ADA_PARSEL_REGEX = /^\s*(\d{1,5})\s*[\/\-\s]\s*(\d{1,5})\s*$/;
+const ADA_PARSEL_TOKEN_REGEX = /(\d{1,5})\s*[\/\-]\s*(\d{1,5})/;
+const PARCEL_SEARCH_INDEX = getAllParcels().map((feature) => ({
+  feature,
+  text: buildParcelSearchText(feature)
+}));
 
 function parseCoord(q: string): { lng: number; lat: number } | null {
   const m = q.match(COORD_REGEX);
@@ -38,31 +45,149 @@ function searchParcelResults(query: string, limit: number): SearchResult[] {
   const q = query.trim().toLocaleLowerCase("tr-TR");
   if (!q) return [];
   const adaParselMatch = q.match(ADA_PARSEL_REGEX);
-  return getAllParcels()
+  const direct = searchParcels(query, limit)
     .filter((f) => {
+      if (!adaParselMatch) return true;
       const p = f.properties;
-      if (adaParselMatch) {
-        return (
-          p.ada === adaParselMatch[1] && p.parsel === adaParselMatch[2]
-        );
-      }
-      const text = `${adaParselText(p.ada, p.parsel)} ${adaParselSlug(p.ada, p.parsel)} ${p.mahalle} ${p.ilce} ${p.il} ${p.zoningType} ${p.id}`.toLocaleLowerCase("tr-TR");
-      return text.includes(q);
+      return p.ada === adaParselMatch[1] && p.parsel === adaParselMatch[2];
     })
-    .slice(0, limit)
-    .map<SearchResult>((f) => {
-      const p = f.properties;
-      return {
-        id: p.id,
-        type: "parcel",
-        primary: `Ada/Parsel ${adaParselText(p.ada, p.parsel)}`,
-        secondary: `${p.mahalle}, ${p.ilce} / ${p.il}`,
-        meta: p.zoningType,
-        parcelId: p.id,
-        zoningType: p.zoningType,
-        centroid: p.centroid
-      };
+    .slice(0, limit);
+  const scored = detailedParcelSearch(query, limit);
+  const merged = new Map<string, ParcelFeature>();
+  [...direct, ...scored].forEach((f) => merged.set(f.properties.id, f));
+  return [...merged.values()].slice(0, limit).map(parcelToResult);
+}
+
+function detailedParcelSearch(query: string, limit: number): ParcelFeature[] {
+  const normalized = normalizeSearchText(query);
+  const tokens = normalized
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 1);
+  if (tokens.length === 0) return [];
+  const adaParsel = normalized.match(ADA_PARSEL_TOKEN_REGEX);
+  const scored = PARCEL_SEARCH_INDEX
+    .map((feature) => ({
+      feature: feature.feature,
+      score: scoreParcel(feature.feature, feature.text, tokens, adaParsel)
+    }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score);
+  return scored.slice(0, limit).map((item) => item.feature);
+}
+
+function scoreParcel(
+  feature: ParcelFeature,
+  haystack: string,
+  tokens: string[],
+  adaParsel: RegExpMatchArray | null
+) {
+  const p = feature.properties;
+  let score = 0;
+  let matched = 0;
+  for (const token of tokens) {
+    if (haystack.includes(token)) {
+      matched += 1;
+      score += token.includes("/") || token.includes("-") ? 6 : 1;
+    }
+  }
+  if (adaParsel && p.ada === adaParsel[1] && p.parsel === adaParsel[2]) {
+    score += 14;
+  }
+  if (matched >= Math.max(1, Math.ceil(tokens.length * 0.55))) {
+    score += matched * 2;
+  } else if (!adaParsel) {
+    score = 0;
+  }
+  return score;
+}
+
+function buildParcelSearchText(feature: ParcelFeature) {
+  const p = feature.properties;
+  return normalizeSearchText(
+    [
+      p.id,
+      p.ada,
+      p.parsel,
+      adaParselText(p.ada, p.parsel),
+      `${p.ada}/${p.parsel}`,
+      `${p.ada}-${p.parsel}`,
+      p.mahalle,
+      p.ilce,
+      p.il,
+      p.zoningType,
+      p.detailedUse ?? "",
+      p.planScale ?? "",
+      p.planStatus ?? "",
+      p.planLayer ?? "",
+      ...(p.constraints ?? []),
+      p.planAdi,
+      p.tapuTipi
+    ].join(" ")
+  );
+}
+
+function parcelToResult(f: ParcelFeature): SearchResult {
+  const p = f.properties;
+  const ring = f.geometry.coordinates[0] ?? [];
+  const bbox = ring.reduce(
+    (acc, [lng, lat]) => ({
+      west: Math.min(acc.west, lng),
+      south: Math.min(acc.south, lat),
+      east: Math.max(acc.east, lng),
+      north: Math.max(acc.north, lat)
+    }),
+    { west: Number.POSITIVE_INFINITY, south: Number.POSITIVE_INFINITY, east: Number.NEGATIVE_INFINITY, north: Number.NEGATIVE_INFINITY }
+  );
+  const hasBbox = Number.isFinite(bbox.west);
+  return {
+    id: p.id,
+    type: "parcel",
+    primary: `Ada/Parsel ${adaParselText(p.ada, p.parsel)}`,
+    secondary: `${p.detailedUse ?? p.mahalle} · ${p.mahalle}, ${p.ilce} / ${p.il} · ${p.yuzolcumuM2.toLocaleString("tr-TR")} m²`,
+    meta: p.planScale ? `${p.planScale} · ${p.planStatus ?? p.zoningType}` : p.zoningType,
+    parcelId: p.id,
+    zoningType: p.zoningType,
+    centroid: p.centroid,
+    bbox: hasBbox ? bbox : undefined
+  };
+}
+
+function normalizeSearchText(value: string) {
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/[ğ]/g, "g")
+    .replace(/[ş]/g, "s")
+    .replace(/[ç]/g, "c")
+    .replace(/[ö]/g, "o")
+    .replace(/[ü]/g, "u")
+    .replace(/[^\w/\-\s]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function searchLocationResults(query: string, limit: number): SearchResult[] {
+  const results: LocationSearchResult[] = [];
+  for (const target of searchLocationTargets(query, limit)) {
+    if (target.kind === "parcel") continue;
+    results.push({
+      id: `loc:${target.kind}:${target.il ?? ""}:${target.ilce ?? ""}:${target.mahalle ?? ""}`,
+      type: "location",
+      primary: target.kind === "mahalle" ? `${target.label} Mahallesi` : target.label,
+      secondary: [target.il, target.ilce].filter((value) => value && value !== target.label).join(" / "),
+      meta: kindLabel(target.kind),
+      centroid: target.center,
+      zoom: target.zoom,
+      kind: target.kind,
+      il: target.il,
+      ilce: target.ilce,
+      mahalle: target.mahalle
     });
+  }
+  return results;
 }
 
 function searchAddressResults(query: string, limit: number): SearchResult[] {
@@ -167,7 +292,9 @@ export function useSearch(opts: SearchOptions) {
   const limit = opts.limit ?? 8;
   return useMemo(() => {
     if (opts.mode === "AdaParsel") return searchParcelResults(opts.query, limit);
-    if (opts.mode === "Adres") return searchAddressResults(opts.query, limit);
+    if (opts.mode === "Adres") {
+      return [...searchLocationResults(opts.query, 4), ...searchAddressResults(opts.query, limit)].slice(0, limit);
+    }
     if (opts.mode === "Belediye") return searchBelediyeResults(opts.query, limit);
     if (opts.mode === "Koordinat") {
       const r = coordToResult(opts.query);
@@ -178,6 +305,7 @@ export function useSearch(opts: SearchOptions) {
     const coord = coordToResult(opts.query);
     if (coord) results.push(coord);
     results.push(...searchParcelResults(opts.query, 5));
+    results.push(...searchLocationResults(opts.query, 4));
     results.push(...searchAddressResults(opts.query, 4));
     results.push(...searchBelediyeResults(opts.query, 3));
     return results.slice(0, 12);

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, ArrowRight, MapPin, Building2, Hash, Crosshair } from "lucide-react";
+import { Search, ArrowRight, MapPin, Building2, Hash, Crosshair, Navigation } from "lucide-react";
 import {
   Popover,
   PopoverAnchor,
@@ -33,9 +33,11 @@ const TAB_LABELS: Record<SearchMode, string> = {
   Belediye: "Belediye"
 };
 const SUGGESTIONS = [
-  { primary: "Beşiktaş Levent 1234/2", mode: "AdaParsel" as SearchMode },
-  { primary: "Çankaya Çukurambar", mode: "Adres" as SearchMode },
-  { primary: "İstanbul Büyükşehir Belediyesi", mode: "Belediye" as SearchMode }
+  { primary: "İstanbul Şişli Mecidiyeköy 1983/3", mode: "Hepsi" as SearchMode },
+  { primary: "Şişli Mecidiyeköy ticaret", mode: "Hepsi" as SearchMode },
+  { primary: "İstanbul TİCK MİA", mode: "Hepsi" as SearchMode },
+  { primary: "kıyı kenar çizgisi kontrolü", mode: "Hepsi" as SearchMode },
+  { primary: "1/1000 revizyon", mode: "Hepsi" as SearchMode }
 ];
 
 const PLACEHOLDERS: Record<SearchMode, string> = {
@@ -107,11 +109,24 @@ export function GlobalSearch() {
       setSelectedParcelId(r.parcelId);
       setRightPanelOpen(true);
       if (r.centroid) {
-        flyTo({ center: r.centroid, zoom: 16, parcelId: r.parcelId });
+        flyTo({
+          center: r.centroid,
+          bounds: r.bbox,
+          zoom: 16,
+          parcelId: r.parcelId
+        });
       }
     } else if (r.type === "coordinate") {
+      setSelectedParcelId(null);
+      setRightPanelOpen(false);
       flyTo({ center: [r.lng, r.lat], zoom: 14 });
+    } else if (r.type === "location" && r.centroid) {
+      setSelectedParcelId(null);
+      setRightPanelOpen(false);
+      flyTo({ center: r.centroid, zoom: r.zoom });
     } else if (r.centroid) {
+      setSelectedParcelId(null);
+      setRightPanelOpen(false);
       flyTo({ center: r.centroid, zoom: r.type === "address" ? 12 : 11 });
     }
   }
@@ -167,7 +182,7 @@ export function GlobalSearch() {
           >
             <Search className="h-4 w-4 text-fg-muted" />
             <span className="flex-1 text-left text-fg-muted truncate">
-              Ada/parsel, mahalle, koordinat ara…
+              Ada/parsel, mahalle, TİCK, MİA veya detaylı sorgu ara…
             </span>
             <Kbd combo={["⌘", "K"]} />
           </button>
@@ -255,7 +270,7 @@ export function GlobalSearch() {
               </>
             ) : results.length === 0 ? (
               <CommandEmpty>
-                Sonuç bulunamadı. Farklı sekme veya ada/parsel formatı deneyin.
+                Sonuç bulunamadı. “İstanbul Şişli Mecidiyeköy 1983/3”, TİCK, MİA, kıyı kenar çizgisi veya koordinat deneyin.
               </CommandEmpty>
             ) : (
               <ResultGroups
@@ -273,7 +288,7 @@ export function GlobalSearch() {
               <Kbd combo={["Enter"]} /> seç
             </span>
             <span className="inline-flex items-center gap-1.5">
-              WGS84 / EPSG:4326
+              Türkiye çalışma alanı · WGS84 / EPSG:4326
             </span>
           </div>
         </CommandRoot>
@@ -307,10 +322,11 @@ function ResultGroups({
       </CommandGroup>
     );
   }
-  const groupOrder: Array<SearchResult["type"]> = ["coordinate", "parcel", "address", "belediye"];
+  const groupOrder: Array<SearchResult["type"]> = ["coordinate", "parcel", "location", "address", "belediye"];
   const headings: Record<SearchResult["type"], string> = {
     coordinate: "Koordinat",
     parcel: "Parsel",
+    location: "Konum",
     address: "Adres",
     belediye: "Belediye"
   };
@@ -352,6 +368,7 @@ function ResultRow({
   const icon = (() => {
     if (result.type === "parcel") return <Hash className="h-3.5 w-3.5" />;
     if (result.type === "address") return <MapPin className="h-3.5 w-3.5" />;
+    if (result.type === "location") return <Navigation className="h-3.5 w-3.5" />;
     if (result.type === "coordinate") return <Crosshair className="h-3.5 w-3.5" />;
     return <Building2 className="h-3.5 w-3.5" />;
   })();
@@ -371,11 +388,24 @@ function ResultRow({
           </div>
         )}
       </div>
+      {result.type === "location" && (
+        <span className="inline-flex items-center gap-1 rounded-sm border border-border-subtle bg-surface-1 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-fg-secondary shrink-0">
+          {result.meta ?? "Konum"}
+          <ArrowRight className="h-3 w-3" />
+        </span>
+      )}
       {result.type === "parcel" && (
-        <ZoningBadge type={result.zoningType} size="xs" />
+        <div className="hidden sm:flex items-center gap-2 shrink-0">
+          {result.meta && (
+            <span className="max-w-[120px] truncate text-[11px] text-fg-muted">
+              {result.meta}
+            </span>
+          )}
+          <ZoningBadge type={result.zoningType} size="xs" />
+        </div>
       )}
       {result.type !== "parcel" && result.meta && (
-        <span className="text-[11px] uppercase tracking-wider text-fg-muted">
+        <span className="hidden sm:inline text-[10px] uppercase tracking-wider text-fg-muted max-w-[120px] truncate">
           {result.meta}
         </span>
       )}

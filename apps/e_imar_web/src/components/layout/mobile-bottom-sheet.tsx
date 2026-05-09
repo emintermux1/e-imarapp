@@ -201,7 +201,7 @@ export function MobileBottomSheet() {
           <AccordionItem value="gecmis">
             <AccordionTrigger>Geçmiş & Plan Değişiklikleri</AccordionTrigger>
             <AccordionContent>
-              <SectionGecmis />
+              <SectionGecmis parcel={parcel} />
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="yatirim">
