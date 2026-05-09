@@ -146,3 +146,36 @@ export interface NearbyResult {
   municipality?: string;
   distance_m: number;
 }
+
+export type SourceAccessStatusGuess = "public" | "public_metadata" | "unknown" | "requires_credentials";
+
+export interface SourceCandidateNormalizationResponse {
+  status: "ok" | "invalid_input";
+  message?: string;
+  normalizedUrl?: string;
+  vendor?: "netcad" | "ekent" | "webgis" | "kbs" | "municipal" | "unknown";
+  municipalitySlug?: string;
+  sourceIdCandidate?: string;
+  connectorKinds?: string[];
+  capabilities?: string[];
+  accessStatusGuess?: SourceAccessStatusGuess;
+  accessStatusReason?: string;
+  wouldRegister?: {
+    id: string;
+    name: string;
+    jurisdiction: "municipal";
+    category: "municipal_gis";
+    homepageUrl: string;
+    connectorKinds: string[];
+    access: { status: SourceAccessStatusGuess; notes: string };
+    capabilities: string[];
+    metadata: {
+      province?: string;
+      district?: string;
+      municipalitySlug?: string;
+      vendor?: string;
+    };
+  };
+  probeCandidates?: string[];
+  note?: string;
+}

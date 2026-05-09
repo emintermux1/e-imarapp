@@ -65,6 +65,8 @@ describe('source coverage summary', () => {
     expect(preview.vendor).toBe('netcad');
     expect(preview.municipalitySlug).toBe('ornek');
     expect(preview.wouldRegister.id).toBe('ornek-netcad-candidate');
+    expect(preview.accessStatusGuess).toBe('public');
+    expect(preview.accessStatusReason.toLowerCase()).toContain('portal');
     expect(preview.probeCandidates.length).toBeGreaterThan(0);
     expect(() => service.get('ornek-netcad-candidate')).toThrow();
   });
