@@ -1,6 +1,9 @@
 import type {
   AskiActiveResponse,
   AskiGeoJsonResponse,
+  MunicipalityCoverageResponse,
+  MunicipalParcelWorkflowResponse,
+  OgcLayerCatalogResponse,
   Result,
   SourceDetailResponse,
   SourceHealthResponse,
@@ -48,4 +51,45 @@ export function fetchActiveAski() {
 
 export function fetchActiveAskiGeoJSON() {
   return request<AskiGeoJsonResponse>("/api/v1/aski/active/geojson");
+}
+
+export function fetchMunicipalityCoverage(params?: { province?: string; district?: string; vendor?: string; accessStatus?: string }) {
+  const search = new URLSearchParams();
+  if (params?.province) search.set("province", params.province);
+  if (params?.district) search.set("district", params.district);
+  if (params?.vendor) search.set("vendor", params.vendor);
+  if (params?.accessStatus) search.set("accessStatus", params.accessStatus);
+  const query = search.toString();
+  return request<MunicipalityCoverageResponse>(`/api/v1/sources/municipality-coverage${query ? `?${query}` : ""}`);
+}
+
+export function fetchMunicipalParcelWorkflow(payload: {
+  province?: string;
+  district?: string;
+  municipalityId?: string;
+  municipalitySlug?: string;
+  mahalle?: string;
+  ada?: string;
+  parsel?: string;
+}) {
+  return fetch(`/website/bff/municipal-parcel-workflow`, {
+    method: "POST",
+    cache: "no-store",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+    .then(async (response) => {
+      const json = (await response.json()) as MunicipalParcelWorkflowResponse;
+      if (!response.ok) return { ok: false as const, error: `HTTP ${response.status}` };
+      return { ok: true as const, data: json };
+    })
+    .catch((error) => ({ ok: false as const, error: error instanceof Error ? error.message : "Unknown error" }));
+}
+
+export function fetchOgcCatalog(sourceId: string, params?: { endpoint?: string; service?: "WMS" | "WFS" }) {
+  const search = new URLSearchParams();
+  if (params?.endpoint) search.set("endpoint", params.endpoint);
+  if (params?.service) search.set("service", params.service);
+  const query = search.toString();
+  return request<OgcLayerCatalogResponse>(`/connectors/${encodeURIComponent(sourceId)}/ogc/catalog${query ? `?${query}` : ""}`);
 }

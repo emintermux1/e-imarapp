@@ -14,6 +14,8 @@ import { SidebarSections } from "@/components/sidebar/sidebar-sections";
 import { useUIStore } from "@/stores/ui-store";
 import { BrandMark } from "./brand-mark";
 import { X } from "lucide-react";
+import { DataCoverageBadge } from "@/components/map/data-coverage-badge";
+import { MunicipalityWorkbench } from "@/components/map/municipality-workbench";
 
 export function AppShell({ children }: { children?: React.ReactNode }) {
   const cursorReadoutRef = React.useRef<HTMLSpanElement>(null);
@@ -79,6 +81,10 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
               cursorReadoutRef={cursorReadoutRef}
               zoomReadoutRef={zoomReadoutRef}
             />
+            <DataCoverageBadge />
+            <div className="pointer-events-none absolute left-3 top-24 z-10 hidden w-[min(860px,calc(100vw-1.5rem))] md:block">
+              <MunicipalityWorkbench />
+            </div>
             <div className="pointer-events-auto absolute right-3 bottom-16 z-10 hidden md:block max-w-[280px]">
               <GISLegend
                 collapsed={legendCollapsed}
