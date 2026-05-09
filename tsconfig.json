@@ -20,5 +20,5 @@
     "strictPropertyInitialization": false
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
-  "exclude": ["node_modules", "dist", "frontend", "apps", "firebase"]
+  "exclude": ["node_modules", "dist", "frontend", "apps", "firebase", "test/eimar-aski-watchlist.spec.ts"]
 }

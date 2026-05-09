@@ -1,6 +1,6 @@
 "use client";
 
-import { ReportGenerator } from "@/components/ReportGenerator";
+import { ReportsWorkbench } from "@/components/ReportsWorkbench";
 import { FileText } from "lucide-react";
 
 export default function ReportsPage() {
@@ -10,7 +10,7 @@ export default function ReportsPage() {
         <FileText size={20} className="text-[var(--accent-cyan)]" />
         <h1 className="text-2xl font-bold">Raporlar</h1>
       </div>
-      <ReportGenerator />
+      <ReportsWorkbench />
     </div>
   );
 }

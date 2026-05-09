@@ -12,6 +12,7 @@ import { ParcelsService } from '../parcels/parcels.service';
 import { SourcesService } from '../sources/sources.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { UserDataService } from '../user-data/user-data.service';
+import { buildParcelReport } from './parcel-report';
 
 interface WebsiteSessionPayload {
   userReference: string;
@@ -66,7 +67,7 @@ export class WebsiteService {
         },
         {
           module: 'parcel-workflow',
-          endpoints: ['/website/bff/parcel-workflow', '/website/bff/municipal-parcel-workflow', '/website/bff/plan-note-explain'],
+          endpoints: ['/website/bff/parcel-workflow', '/website/bff/municipal-parcel-workflow', '/website/bff/parcel-report', '/website/bff/plan-note-explain'],
           purpose: 'Aggregate multiple domain services into single website-friendly responses.'
         },
         {
@@ -98,6 +99,7 @@ export class WebsiteService {
       websiteCapabilities: {
         parcelWorkflow: true,
         municipalParcelWorkflow: true,
+        parcelReport: true,
         planNoteExplain: true,
         watchlistNotifications: true,
         emsalShareCalculator: true
@@ -220,6 +222,54 @@ export class WebsiteService {
     const status = protectedSource ? 'protected' : 'method_contract_required';
     const noDataReason = protectedSource ? 'Kaynak captcha/login gerektiriyor' : 'Kaynak bulundu ama method contract çözülmedi';
     return { status, query: normalized, municipalityCapability: capability, parcelGeometryAttempt, zoningAttempt, noDataReason, provenance };
+  }
+
+  async parcelReport(input: {
+    query: {
+      type?: string;
+      ada?: string;
+      parselNo?: string;
+      municipalityId?: string;
+      province?: string;
+      district?: string;
+      mahalle?: string;
+    };
+    parcelWorkflow?: Record<string, unknown> | null;
+    municipalWorkflow?: Record<string, unknown> | null;
+  }): Promise<unknown> {
+    const parcelWorkflow = input.parcelWorkflow ?? await this.parcelWorkflow({
+      query: {
+        type: (input.query.type as ParcelQueryDto['type'] | undefined) ?? 'ada_parsel',
+        ada: input.query.ada,
+        parselNo: input.query.parselNo,
+        municipalityId: input.query.municipalityId
+      }
+    });
+    const municipalWorkflow = input.municipalWorkflow ?? await this.municipalParcelWorkflow({
+      province: input.query.province,
+      district: input.query.district,
+      municipalityId: input.query.municipalityId,
+      mahalle: input.query.mahalle,
+      ada: input.query.ada,
+      parsel: input.query.parselNo
+    });
+    const report = buildParcelReport({
+      query: input.query,
+      parcelWorkflow: parcelWorkflow as Record<string, unknown> | null,
+      municipalWorkflow: municipalWorkflow as Record<string, unknown> | null
+    });
+    return {
+      status: report.status,
+      reportId: report.reportId,
+      generatedAt: report.generatedAt,
+      title: report.title,
+      disclaimer: report.disclaimer,
+      query: report.query,
+      sections: report.sections,
+      provenance: report.provenance,
+      printableHtml: report.printableHtml,
+      downloadFilename: report.downloadFilename
+    };
   }
 
   async planNoteExplain(input: {
