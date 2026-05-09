@@ -205,6 +205,29 @@ class GatewayApi {
               })
               .toList(growable: false)
         : const <PlanFeature>[];
+    final primaryAttributes = plans.isNotEmpty ? plans.first.attributes : const <String, Object?>{};
+    final area = readFirstDouble(primaryAttributes, const [
+      'area',
+      'parcelArea',
+      'surfaceArea',
+      'grossArea',
+      'netArea',
+    ]);
+    final gabari = readFirstDouble(primaryAttributes, const [
+      'gabari',
+      'gabariMeters',
+      'heightLimit',
+      'maxHeight',
+    ]);
+    final floorLimit = readFirstInt(primaryAttributes, const [
+      'kat',
+      'katSayisi',
+      'floorLimit',
+      'maxFloors',
+    ]) ??
+        0;
+    final taks = readFirstDouble(primaryAttributes, const ['taks', 'TAKS']) ?? 0;
+    final kaks = readFirstDouble(primaryAttributes, const ['kaks', 'KAKS', 'emsal']) ?? 0;
     final primaryProvider = providers.cast<ProviderDescriptor?>().firstWhere(
       (provider) => provider?.kind == 'public_municipal_gis',
       orElse: () => providers.isNotEmpty ? providers.first : null,
@@ -229,10 +252,10 @@ class GatewayApi {
       zoningStatus: plans.isEmpty
           ? 'Plan katmanı bulunamadı'
           : 'Kamu plan katmanı bulundu',
-      taks: 0,
-      kaks: 0,
-      emsal: 0,
-      floorLimit: 0,
+      taks: taks,
+      kaks: kaks,
+      emsal: readFirstDouble(primaryAttributes, const ['emsal', 'emsalOrani']) ?? kaks,
+      floorLimit: floorLimit,
       coverageRatio: 'Bilinmiyor',
       roadFrontage: 0,
       latitude: latitude,
@@ -247,12 +270,14 @@ class GatewayApi {
           (envelope.attribution.isNotEmpty
               ? envelope.attribution.first.url
               : null),
-      official: true,
+      official: false,
       restricted: restrictedMessage != null,
       fetchedAt: DateTime.now(),
       planFeatures: plans,
       unavailableReason: restrictedMessage,
       geometry: _smallViewportPolygon(latitude, longitude),
+      siteAreaSquareMeters: area,
+      gabariMeters: gabari,
     );
   }
 
@@ -280,53 +305,6 @@ class GatewayApi {
           : const [],
     );
   }
-}
-
-class ParcelLookupResult {
-  const ParcelLookupResult._({
-    this.parcel,
-    this.unavailable,
-    this.providers = const [],
-  });
-
-  factory ParcelLookupResult.found(
-    ParcelDetail parcel, {
-    List<ProviderDescriptor> providers = const [],
-  }) => ParcelLookupResult._(parcel: parcel, providers: providers);
-
-  factory ParcelLookupResult.unavailable({
-    required String title,
-    required String message,
-    String? providerId,
-    String? code,
-    List<ProviderDescriptor> providers = const [],
-  }) => ParcelLookupResult._(
-    unavailable: ProviderUnavailableState(
-      title: title,
-      message: message,
-      providerId: providerId,
-      code: code,
-    ),
-    providers: providers,
-  );
-
-  final ParcelDetail? parcel;
-  final ProviderUnavailableState? unavailable;
-  final List<ProviderDescriptor> providers;
-  bool get hasParcel => parcel != null;
-}
-
-class ProviderUnavailableState {
-  const ProviderUnavailableState({
-    required this.title,
-    required this.message,
-    this.providerId,
-    this.code,
-  });
-  final String title;
-  final String message;
-  final String? providerId;
-  final String? code;
 }
 
 class GatewayHealth {
@@ -389,72 +367,6 @@ class GatewayException implements Exception {
 
   @override
   String toString() => message;
-}
-
-class ProviderDescriptor {
-  const ProviderDescriptor({
-    required this.id,
-    required this.kind,
-    required this.displayName,
-    required this.status,
-    required this.enabled,
-    required this.regions,
-    required this.capabilities,
-    required this.attribution,
-  });
-
-  factory ProviderDescriptor.fromJson(Map<String, Object?> json) =>
-      ProviderDescriptor(
-        id: '${json['id'] ?? ''}',
-        kind: '${json['kind'] ?? ''}',
-        displayName: '${json['displayName'] ?? json['id'] ?? 'Sağlayıcı'}',
-        status: '${json['status'] ?? 'not_configured'}',
-        enabled: json['enabled'] == true,
-        regions: json['regions'] is List
-            ? (json['regions'] as List).map((e) => '$e').toList(growable: false)
-            : const [],
-        capabilities: json['capabilities'] is List
-            ? (json['capabilities'] as List)
-                  .map((e) => '$e')
-                  .toList(growable: false)
-            : const [],
-        attribution: json['attribution'] is Map
-            ? SourceAttribution.fromJson(
-                (json['attribution'] as Map).cast<String, Object?>(),
-              )
-            : const SourceAttribution(name: 'Bilinmeyen kaynak', url: ''),
-      );
-
-  final String id;
-  final String kind;
-  final String displayName;
-  final String status;
-  final bool enabled;
-  final List<String> regions;
-  final List<String> capabilities;
-  final SourceAttribution attribution;
-}
-
-class SourceAttribution {
-  const SourceAttribution({
-    required this.name,
-    required this.url,
-    this.license,
-    this.termsUrl,
-  });
-
-  factory SourceAttribution.fromJson(Map<String, Object?> json) =>
-      SourceAttribution(
-        name: '${json['name'] ?? 'Kaynak'}',
-        url: '${json['url'] ?? ''}',
-        license: json['license'] as String?,
-        termsUrl: json['termsUrl'] as String?,
-      );
-
-  final String name;
-  final String url;
-  final String? license;
-  final String? termsUrl;
 }
 
 String _summarizeAttributes(Map<String, Object?> attributes) {

@@ -78,9 +78,9 @@ export function SidebarSections({ collapsed = false }: { collapsed?: boolean }) 
       title: "Kaynaklar Ekranı",
       icon: <Database className="h-4 w-4" />,
       body: (
-        <div className="rounded-md border border-border-subtle bg-surface-2 p-3 text-sm text-fg-secondary">
-          <p>Canlı probe edilen kaynak registry ekranı.</p>
-          <Link href="/kaynaklar" className="mt-2 inline-flex text-xs font-medium text-blue-600 hover:underline">Kaynaklar ekranını aç</Link>
+        <div className="rounded-lg border border-border-subtle bg-surface-2 p-3 text-sm text-fg-secondary shadow-[inset_0_1px_0_rgb(255_255_255/0.03)]">
+          <p>Canlı, yedek ve erişilemeyen kaynakları açıkça ayıran registry ekranı.</p>
+          <Link href="/kaynaklar" className="mt-2 inline-flex text-xs font-semibold text-[rgb(var(--accent-blue))] hover:underline">Kaynaklar ekranını aç</Link>
         </div>
       ),
       defaultOpen: false
