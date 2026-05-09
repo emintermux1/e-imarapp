@@ -744,7 +744,9 @@ export interface LayerDescriptor {
   description: string;
   defaultVisible: boolean;
   defaultOpacity: number;
-  group: "Parsel" | "Plan" | "Risk" | "Çevre" | "İdari";
+  group: "İmar" | "Risk" | "Uydu / Hibrit" | "Tarihsel" | "Belediye" | "Çevre" | "Altyapı" | "İdari";
+  status: "official" | "public_metadata" | "demo" | "derived" | "not_ready";
+  emptyReason?: string;
 }
 
 /** UI-side layer descriptors. The map canvas reacts to visibility/opacity
@@ -756,7 +758,9 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Plan kullanım rengiyle parsel dolgu yüzeyi",
     defaultVisible: true,
     defaultOpacity: 0.55,
-    group: "Parsel"
+    group: "İmar",
+    status: "demo",
+    emptyReason: "Canlı belediye/TKGM parsel akışı bağlı değil; yerel demo parsel geometrisi gösteriliyor."
   },
   {
     id: "parcels-line",
@@ -764,7 +768,8 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Parsel kenar çizgileri",
     defaultVisible: true,
     defaultOpacity: 1,
-    group: "Parsel"
+    group: "İmar",
+    status: "demo"
   },
   {
     id: "parcels-selected-accent",
@@ -772,7 +777,8 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Tekil ve çoklu parsel seçimi için kurumsal sınır vurgusu",
     defaultVisible: true,
     defaultOpacity: 1,
-    group: "Parsel"
+    group: "İmar",
+    status: "derived"
   },
   {
     id: "parcels-label",
@@ -780,7 +786,8 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Yüksek zoom seviyelerinde ada/parsel numaraları",
     defaultVisible: true,
     defaultOpacity: 1,
-    group: "Parsel"
+    group: "İmar",
+    status: "derived"
   },
   {
     id: "drawings-line",
@@ -788,7 +795,8 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Mesafe, alan, yarıçap ve koordinat işaretleme çizimleri",
     defaultVisible: true,
     defaultOpacity: 1,
-    group: "Parsel"
+    group: "İmar",
+    status: "derived"
   },
   {
     id: "yururlukte-plan-points",
@@ -796,7 +804,8 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Türkiye genelindeki yürürlükteki NİP/UİP kayıt noktaları",
     defaultVisible: true,
     defaultOpacity: 0.95,
-    group: "Plan"
+    group: "Belediye",
+    status: "public_metadata"
   },
   {
     id: "askida-overlay",
@@ -804,7 +813,9 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Askıdaki, onaylanmış ve reddedilmiş plan kapsamları",
     defaultVisible: false,
     defaultOpacity: 0.85,
-    group: "Plan"
+    group: "Belediye",
+    status: "demo",
+    emptyReason: "Canlı askı servisi yoksa yalnızca demo/derived askı kapsamları görünür."
   },
   {
     id: "plan-constraint-line",
@@ -812,7 +823,8 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Koruma, sit, dönüşüm ve rezerv sınır çizgileri",
     defaultVisible: true,
     defaultOpacity: 0.9,
-    group: "Plan"
+    group: "İmar",
+    status: "derived"
   },
   {
     id: "plan-donati-label",
@@ -820,15 +832,17 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Eğitim, sağlık, belediye gibi donatı etiketleri",
     defaultVisible: true,
     defaultOpacity: 0.85,
-    group: "Plan"
+    group: "İmar",
+    status: "derived"
   },
   {
     id: "deprem-risk-grid",
-    label: "Risk Haritası",
-    description: "AFAD bazlı bölgesel risk dağılımı (mock grid)",
+    label: "Deprem Risk Haritası",
+    description: "AFAD referanslı, demo grid üzerinden türetilmiş deprem risk dağılımı",
     defaultVisible: false,
     defaultOpacity: 0.55,
-    group: "Risk"
+    group: "Risk",
+    status: "derived"
   },
   {
     id: "metro-hatti",
@@ -836,7 +850,8 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Örnek metro ve raylı sistem koridorları",
     defaultVisible: true,
     defaultOpacity: 0.9,
-    group: "Çevre"
+    group: "Altyapı",
+    status: "demo"
   },
   {
     id: "belediye-sinirlari",
@@ -844,7 +859,8 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Örnek ilçe ve belediye sınır çizgileri",
     defaultVisible: true,
     defaultOpacity: 0.75,
-    group: "İdari"
+    group: "İdari",
+    status: "public_metadata"
   },
   {
     id: "live-source-markers",
@@ -852,7 +868,8 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Seed edilen gerçek belediye/TKGM/e-Plan/TUCBS portal işaretleri",
     defaultVisible: true,
     defaultOpacity: 0.9,
-    group: "İdari"
+    group: "İdari",
+    status: "public_metadata"
   },
   {
     id: "turkey-frame",
@@ -860,6 +877,116 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Ulusal odak sınırı ve çalışma alanı kılavuzu",
     defaultVisible: true,
     defaultOpacity: 0.7,
-    group: "İdari"
+    group: "İdari",
+    status: "derived"
+  },
+  {
+    id: "flood-risk",
+    label: "Sel / Taşkın Riski",
+    description: "DSİ taşkın veri servisi bağlanmadı; parsel detayında demo risk alanı ayrı etiketlenir.",
+    defaultVisible: false,
+    defaultOpacity: 0.5,
+    group: "Risk",
+    status: "not_ready",
+    emptyReason: "DSİ taşkın WMS/WFS kaynağı bu ortamda bağlı değil. Veri hazır olmadan katman çizilmez."
+  },
+  {
+    id: "slope-analysis",
+    label: "Eğim Analizi",
+    description: "Sayısal yükseklik modeli bağlanınca eğim yüzdesi raster/vektör olarak açılır.",
+    defaultVisible: false,
+    defaultOpacity: 0.6,
+    group: "Risk",
+    status: "not_ready",
+    emptyReason: "DEM/eğim servisi yok; uydurma eğim rasterı üretilmedi."
+  },
+  {
+    id: "satellite-hybrid",
+    label: "Uydu / Hibrit Altlık",
+    description: "Uydu karşılaştırma sürgüsü üzerinden kontrollü açılır; lisanslı tile akışı bekleniyor.",
+    defaultVisible: false,
+    defaultOpacity: 0.85,
+    group: "Uydu / Hibrit",
+    status: "not_ready",
+    emptyReason: "Lisanslı uydu tile endpoint'i bağlı değil. Mevcut karşılaştırma yüzeyi placeholder olarak çalışır."
+  },
+  {
+    id: "historical-plan-snapshots",
+    label: "Tarihsel Plan Snapshot",
+    description: "Timeline yılına göre demo snapshot renkleri; resmi arşiv katmanı değildir.",
+    defaultVisible: false,
+    defaultOpacity: 0.75,
+    group: "Tarihsel",
+    status: "demo",
+    emptyReason: "Timeline açıldığında demo snapshot renklendirmesi parsel dolgusuna uygulanır."
+  },
+  {
+    id: "municipal-projects",
+    label: "Belediye Projeleri",
+    description: "Yakın yatırım/proje kayıtları için belediye proje akışı bekleniyor.",
+    defaultVisible: false,
+    defaultOpacity: 0.7,
+    group: "Belediye",
+    status: "not_ready",
+    emptyReason: "Belediye proje registry kaynağı bağlı değil; yakın proje uydurulmaz."
+  },
+  {
+    id: "urban-transformation",
+    label: "Kentsel Dönüşüm / Rezerv",
+    description: "Plan kısıt çizgilerinden türetilen dönüşüm/rezerv sinyalleri.",
+    defaultVisible: true,
+    defaultOpacity: 0.9,
+    group: "Belediye",
+    status: "derived"
+  },
+  {
+    id: "infrastructure-corridors",
+    label: "Altyapı Koridorları",
+    description: "İSKİ/AYEDAŞ/BOTAŞ vb. resmi altyapı koridorları için entegrasyon bekleniyor.",
+    defaultVisible: false,
+    defaultOpacity: 0.7,
+    group: "Altyapı",
+    status: "not_ready",
+    emptyReason: "Resmi altyapı servisleri bağlı değil; güvenlik açısından demo çizgi üretilmedi."
+  },
+  {
+    id: "road-width",
+    label: "Yol Genişliği / Cephe",
+    description: "Parseldeki yol cephesi mevcut kayıt alanından gösterilir; yol genişliği kaynağı bekleniyor.",
+    defaultVisible: false,
+    defaultOpacity: 0.7,
+    group: "Altyapı",
+    status: "derived",
+    emptyReason: "Yol genişliği vektörü yok; yalnızca parsel detayındaki yol cephesi alanı gösterilir."
+  },
+  {
+    id: "noise-traffic",
+    label: "Gürültü / Trafik",
+    description: "Çevresel gürültü ve trafik yoğunluğu katmanı resmi kaynak bağlanınca açılır.",
+    defaultVisible: false,
+    defaultOpacity: 0.55,
+    group: "Çevre",
+    status: "not_ready",
+    emptyReason: "Gürültü/trafik servisi yok; parselde demo skor varsa ayrıca demo etiketiyle gösterilir."
+  },
+  {
+    id: "solar-shadow",
+    label: "Güneş / Gölge",
+    description: "3D Cesium güneş saatiyle hesaplanan analiz; 2D katman olarak hazır değil.",
+    defaultVisible: false,
+    defaultOpacity: 0.6,
+    group: "Çevre",
+    status: "derived",
+    emptyReason: "2D gölge rasterı yok; 3D modda güneş/gölge kontrolleri kullanılabilir."
+  },
+  {
+    id: "green-space",
+    label: "Yeşil Alan",
+    description: "Plan kullanım sınıfı ve çevre mesafelerinden demo/derived yeşil alan görünümü.",
+    defaultVisible: false,
+    defaultOpacity: 0.65,
+    group: "Çevre",
+    status: "derived",
+    emptyReason: "Resmi park/yeşil alan katmanı bağlı değil; yalnızca parsel sınıfı ve demo mesafe alanları mevcut."
   }
 ];

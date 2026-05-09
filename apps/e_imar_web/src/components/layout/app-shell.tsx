@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarSections } from "@/components/sidebar/sidebar-sections";
 import { useUIStore } from "@/stores/ui-store";
 import { BrandMark } from "./brand-mark";
-import { X } from "lucide-react";
+import { Maximize2, Minimize2, X } from "lucide-react";
 import { DataCoverageBadge } from "@/components/map/data-coverage-badge";
 import { MunicipalityWorkbench } from "@/components/map/municipality-workbench";
 
@@ -23,6 +23,8 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
   const sidebarMode = useUIStore((s) => s.sidebarMode);
   const legendCollapsed = useUIStore((s) => s.legendCollapsed);
   const setLegendCollapsed = useUIStore((s) => s.setLegendCollapsed);
+  const fullscreenMap = useUIStore((s) => s.fullscreenMap);
+  const setFullscreenMap = useUIStore((s) => s.setFullscreenMap);
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
 
   const sidebarWidth =
@@ -34,9 +36,9 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
 
   return (
     <div className="min-h-dvh bg-bg text-fg-primary">
-      <TopBar onOpenMobileMenu={() => setMobileNavOpen(true)} />
+      {!fullscreenMap && <TopBar onOpenMobileMenu={() => setMobileNavOpen(true)} />}
 
-      <LeftSidebar />
+      {!fullscreenMap && <LeftSidebar />}
 
       <Sheet
         open={mobileNavOpen}
@@ -66,7 +68,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
       </Sheet>
 
       <main
-        className={`pt-14 ${sidebarWidth} h-dvh overflow-hidden transition-[padding] duration-200`}
+        className={`${fullscreenMap ? "pt-0 lg:pl-0" : `pt-14 ${sidebarWidth}`} h-dvh overflow-hidden transition-[padding] duration-200`}
       >
         {children ? (
           <div className="h-full w-full">{children}</div>
@@ -91,16 +93,24 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
                 onCollapsedChange={setLegendCollapsed}
               />
             </div>
+            <button
+              type="button"
+              onClick={() => setFullscreenMap(!fullscreenMap)}
+              aria-label={fullscreenMap ? "Tam ekran haritadan çık" : "Tam ekran harita"}
+              className="pointer-events-auto absolute right-3 top-3 z-20 inline-flex h-11 w-11 items-center justify-center rounded-md border border-border-strong bg-surface-2/95 text-fg-secondary shadow-card backdrop-blur-sm transition-colors hover:bg-surface-3 hover:text-fg-primary md:hidden"
+            >
+              {fullscreenMap ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </button>
           </div>
         )}
       </main>
 
       {!children && (
         <>
-          <div className="hidden lg:block">
+          <div className={fullscreenMap ? "hidden" : "hidden lg:block"}>
             <RightInfoPanel />
           </div>
-          <MobileBottomSheet />
+          {!fullscreenMap && <MobileBottomSheet />}
         </>
       )}
     </div>
