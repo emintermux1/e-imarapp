@@ -6,6 +6,7 @@
 import { DEMO_PARCEL_CLUSTERS } from "./parcel-seeds";
 import type { AskiOzet } from "./aski-list";
 import { ASKI_LIST } from "./aski-list";
+import type { ProvenanceKind } from "../lib/aski-tracking";
 
 export type AskiPolygonStatus = "askida" | "onaylandi" | "reddedildi" | "donusum";
 
@@ -13,6 +14,7 @@ export interface AskiPolygonFeature {
   id: string;
   label: string;
   durum: AskiPolygonStatus;
+  provenance: ProvenanceKind;
   baslangic: string;
   bitis: string;
   belediye: string;
@@ -66,6 +68,7 @@ interface PolygonSeed {
   lng: number;
   lat: number;
   durum: AskiPolygonStatus;
+  provenance: ProvenanceKind;
   matchedParcelId?: string;
   planAdi?: string;
   size?: [number, number];
@@ -77,6 +80,7 @@ function fromAskiOzet(
     lng: number;
     lat: number;
     durum: AskiPolygonStatus;
+    provenance: ProvenanceKind;
     matchedParcelId?: string;
     planAdi?: string;
   }
@@ -99,35 +103,40 @@ const manualSeeds: PolygonSeed[] = [
     lat: 41.0876,
     durum: "askida",
     matchedParcelId: "TR-34-BES-1234-2",
-    planAdi: "Beşiktaş Levent 1/1000 UİP Revizyonu"
+    planAdi: "Beşiktaş Levent 1/1000 UİP Revizyonu",
+    provenance: "demo"
   }),
   fromAskiOzet(ASKI_LIST[1], {
     lng: 32.811,
     lat: 39.9075,
     durum: "askida",
     matchedParcelId: "TR-06-CAN-2104-3",
-    planAdi: "Çankaya Çukurambar 1/1000 UİP Tadilatı"
+    planAdi: "Çankaya Çukurambar 1/1000 UİP Tadilatı",
+    provenance: "demo"
   }),
   fromAskiOzet(ASKI_LIST[2], {
     lng: 27.144,
     lat: 38.4295,
     durum: "askida",
     matchedParcelId: "TR-35-KON-7102-1",
-    planAdi: "Konak Alsancak 7102 Ada UİP Tadilatı"
+    planAdi: "Konak Alsancak 7102 Ada UİP Tadilatı",
+    provenance: "demo"
   }),
   fromAskiOzet(ASKI_LIST[3], {
     lng: 28.853,
     lat: 40.222,
     durum: "onaylandi",
     matchedParcelId: "TR-16-NIL-1308-1",
-    planAdi: "Nilüfer Görükle 1308 Ada UİP Onayı"
+    planAdi: "Nilüfer Görükle 1308 Ada UİP Onayı",
+    provenance: "demo"
   }),
   fromAskiOzet(ASKI_LIST[4], {
     lng: 30.766,
     lat: 36.8595,
     durum: "reddedildi",
     matchedParcelId: "TR-07-MUR-4502-1",
-    planAdi: "Muratpaşa Lara 4502 Ada Tadilat Reddi"
+    planAdi: "Muratpaşa Lara 4502 Ada Tadilat Reddi",
+    provenance: "demo"
   }),
   {
     id: "donusum-istanbul-fatih",
@@ -141,7 +150,8 @@ const manualSeeds: PolygonSeed[] = [
     lng: 28.967,
     lat: 41.018,
     planAdi: "Tarihi Yarımada Kentsel Dönüşüm Master Planı",
-    size: [0.010, 0.006]
+    size: [0.010, 0.006],
+    provenance: "derived"
   },
   {
     id: "onaylandi-ankara-cankaya-park",
@@ -154,7 +164,8 @@ const manualSeeds: PolygonSeed[] = [
     ilceSlug: "cankaya",
     lng: 32.857,
     lat: 39.92,
-    planAdi: "Çankaya Park Aktarma Tadilatı"
+    planAdi: "Çankaya Park Aktarma Tadilatı",
+    provenance: "derived"
   }
 ];
 
@@ -170,6 +181,7 @@ const derivedSeeds: PolygonSeed[] = DEMO_PARCEL_CLUSTERS.filter((cluster, index)
       baslangic: `2026-${String(startMonth).padStart(2, "0")}-${String(4 + (index % 20)).padStart(2, "0")}`,
       bitis: `2026-${String(Math.min(12, startMonth + 2)).padStart(2, "0")}-${String(8 + (index % 18)).padStart(2, "0")}`,
       durum: status,
+      provenance: "derived",
       ilSlug: slugify(cluster.il),
       ilceSlug: slugify(cluster.ilce),
       lng: cluster.center[0] + ((index % 3) - 1) * 0.0022,
@@ -185,6 +197,7 @@ export const ASKI_POLYGONS: AskiPolygonFeature[] = [...manualSeeds, ...derivedSe
     id: entry.id,
     label: entry.baslik,
     durum: entry.durum,
+    provenance: entry.provenance,
     baslangic: entry.baslangic,
     bitis: entry.bitis,
     belediye: entry.belediye,
@@ -250,10 +263,7 @@ export const ASKI_STATUS_STYLE: Record<
 
 export const ASKI_POLYGON_SOURCE_ID = "aski-overlay";
 
-export function getAskiCollection(): GeoJSON.FeatureCollection<
-  GeoJSON.Polygon,
-  AskiPolygonFeature & { askiStatus: AskiPolygonStatus }
-> {
+export function getAskiCollection() {
   return {
     type: "FeatureCollection",
     features: ASKI_POLYGONS.map((p, i) => ({
