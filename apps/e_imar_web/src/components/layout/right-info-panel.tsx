@@ -15,13 +15,17 @@ import {
   ShieldAlert,
   Route,
   MapPinned,
-  ExternalLink,
+  FileText,
+  Info,
+  MapPinOff,
+  CheckCircle2,
+  TriangleAlert,
+  GitCompareArrows,
   Sparkles,
   Crosshair,
   WandSparkles,
   AlertTriangle,
-  Navigation,
-  CheckCircle2
+  Navigation
 } from "lucide-react";
 import {
   Accordion,
@@ -48,6 +52,7 @@ import {
 import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useParcel } from "@/hooks/use-parcel";
+import { getParcelById } from "@/data/parcels";
 import { useWatchlistStore } from "@/stores/watchlist-store";
 import { useBackendParcelStore } from "@/stores/backend-parcel-store";
 import { useAskiStore } from "@/stores/aski-store";
@@ -70,12 +75,17 @@ import {
   type SelectedPlaceAnalysis
 } from "@/lib/analysis/selected-place-analysis";
 import { cn } from "@/lib/utils";
+import { getParcelMarket } from "@/lib/market-client";
+import type { ParcelMarketResponse } from "@/types/api";
+import { MarketPanel } from "@/components/market/market-panel";
 
 export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   const open = useUIStore((s) => s.rightPanelOpen);
   const setOpen = useUIStore((s) => s.setRightPanelOpen);
   const selectedId = useMapStore((s) => s.selectedParcelId);
   const selectedPoint = useMapStore((s) => s.selectedPoint);
+  const multiSelectedParcelIds = useMapStore((s) => s.multiSelectedParcelIds);
+  const clearMultiSelection = useMapStore((s) => s.clearMultiSelection);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
   const setSelectedPoint = useMapStore((s) => s.setSelectedPoint);
   const flyTo = useMapStore((s) => s.flyTo);
@@ -86,6 +96,10 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
 
   const parcelFeature = useParcel(selectedId);
   const parcel = parcelFeature?.properties ?? null;
+  const comparisonParcels = multiSelectedParcelIds
+    .map((id) => getParcelById(id)?.properties)
+    .filter((item): item is NonNullable<typeof parcel> => Boolean(item))
+    .slice(0, 4);
   const isWatchlisted = parcel ? watchlistHas(parcel.id) : false;
   const backendGeometry = useBackendParcelStore((s) => s.getGeometry(selectedId));
   const backendResponse = useBackendParcelStore((s) => s.getResponse(selectedId));
@@ -109,15 +123,52 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
     url?: string;
     id?: number;
   }>({ state: "idle" });
+  const [marketResponse, setMarketResponse] = React.useState<ParcelMarketResponse | null>(null);
+  const [marketLoading, setMarketLoading] = React.useState(false);
   const [watchlistStatus, setWatchlistStatus] = React.useState<{
     state: "idle" | "loading" | "success" | "error";
     message?: string;
   }>({ state: "idle" });
+  const [panelLoading, setPanelLoading] = React.useState(false);
 
   React.useEffect(() => {
     setReportStatus({ state: "idle" });
     setWatchlistStatus({ state: "idle" });
+    setPanelLoading(Boolean(selectedId));
+    const timer = window.setTimeout(() => setPanelLoading(false), 320);
+    return () => window.clearTimeout(timer);
   }, [selectedId]);
+
+  React.useEffect(() => {
+    let alive = true;
+    async function loadMarket() {
+      if (!parcel) {
+        setMarketResponse(null);
+        return;
+      }
+      setMarketLoading(true);
+      try {
+        const response = await getParcelMarket({
+          parcelId: parcel.id,
+          il: parcel.il,
+          ilce: parcel.ilce,
+          mahalle: parcel.mahalle,
+          ada: parcel.ada,
+          parsel: parcel.parsel,
+          areaM2: parcel.yuzolcumuM2,
+          zoningType: parcel.zoningType,
+          centroid: parcel.centroid ?? null
+        });
+        if (alive) setMarketResponse(response);
+      } finally {
+        if (alive) setMarketLoading(false);
+      }
+    }
+    void loadMarket();
+    return () => {
+      alive = false;
+    };
+  }, [parcel]);
 
   React.useEffect(() => {
     void hydrateWatchlist();
@@ -235,6 +286,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
     }
   }
 
+
   function selectNearestParcelFromPoint() {
     const nearest = pointAnalysis?.nearestParcel;
     if (!nearest) return;
@@ -269,19 +321,19 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
             className={cn(
-              "fixed right-0 top-14 bottom-0 z-30 flex flex-col",
+              "fixed inset-x-0 bottom-0 top-auto z-30 flex max-h-[78dvh] flex-col rounded-t-xl md:inset-x-auto md:right-0 md:top-14 md:bottom-0 md:max-h-none md:rounded-none",
               floating
-                ? "w-[400px] xl:w-[400px] lg:w-[360px] border-l border-border-subtle bg-surface-2"
-                : "w-[400px] border-l border-border-subtle bg-surface-2"
+                ? "w-full md:w-[400px] xl:w-[400px] lg:w-[360px] border border-border-subtle md:border-y-0 md:border-r-0 bg-surface-2/98 shadow-sheet md:shadow-pop-dark"
+                : "w-full md:w-[400px] border border-border-subtle md:border-y-0 md:border-r-0 bg-surface-2/98 shadow-sheet md:shadow-pop-dark"
             )}
             aria-label="En yeni imar bölgeleri paneli"
           >
-            <header className="flex flex-col gap-3 px-4 py-3 border-b border-border-subtle bg-surface-1/40">
+            <header className="flex flex-col gap-3 border-b border-border-subtle bg-[radial-gradient(circle_at_top_left,rgb(var(--accent-blue)/0.14),transparent_34%),rgb(var(--surface-1)/0.72)] px-4 py-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border-subtle bg-surface-2 text-[rgb(var(--accent-blue))]">
-                      <Sparkles className="h-4 w-4" />
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-brand-blue/35 bg-[rgb(var(--accent-blue)/0.11)] text-[rgb(var(--accent-blue))] shadow-[inset_0_1px_0_rgb(255_255_255/0.06)]">
+                      <MapPinned className="h-4 w-4" />
                     </span>
                     <div>
                       <div className="text-[11px] uppercase tracking-wider text-fg-muted">Canlı plan akışı</div>
@@ -289,7 +341,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                     </div>
                   </div>
                   <p className="mt-2 text-[12px] leading-relaxed text-fg-secondary">
-                    {latestRegionsMessage ?? "Belediye plan veritabanından son kayıtlar. Geometrisi olmayan satırlar dürüstçe listede kalır, haritaya dökülmez."}
+                    {latestRegionsMessage ?? "Belediye plan kayıtları listelenir; harita taşmasını önlemek için yalnız seçili ve geometrisi olan kayıt çizilir."}
                   </p>
                 </div>
                 <IconButton label="Kapat" variant="ghost" onClick={deselect}>
@@ -297,15 +349,18 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                 </IconButton>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-md border border-border-subtle bg-surface-2/80 px-2 py-2">
+                <div className="rounded-md border border-border-subtle bg-surface-2/85 px-2 py-2">
                   <div className="text-[9px] uppercase tracking-wider text-fg-muted">Kayıt</div>
                   <div className="mt-1 text-sm font-semibold text-fg-primary tabular-nums">{latestRegionsTotal}</div>
                 </div>
-                <div className="rounded-md border border-border-subtle bg-surface-2/80 px-2 py-2">
+                <div className="rounded-md border border-border-subtle bg-surface-2/85 px-2 py-2">
                   <div className="text-[9px] uppercase tracking-wider text-fg-muted">Geometri</div>
-                  <div className="mt-1 text-sm font-semibold text-fg-primary tabular-nums">{latestRegionsGeometryCount}</div>
+                  <div className="mt-1 flex items-baseline gap-1 text-sm font-semibold text-fg-primary tabular-nums">
+                    {latestRegionsGeometryCount}
+                    <span className="text-[10px] font-normal text-fg-muted">çizilebilir</span>
+                  </div>
                 </div>
-                <div className="rounded-md border border-border-subtle bg-surface-2/80 px-2 py-2">
+                <div className="rounded-md border border-border-subtle bg-surface-2/85 px-2 py-2">
                   <div className="text-[9px] uppercase tracking-wider text-fg-muted">Kaynak</div>
                   <div className="mt-1"><SourceBadge status={latestRegionsStatus === "idle" || latestRegionsStatus === "loading" ? "computed" : latestRegionsStatus} /></div>
                 </div>
@@ -314,10 +369,12 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
 
             <ScrollArea className="flex-1">
               <div className="p-3 space-y-3">
+                <div className="flex items-start gap-2 rounded-lg border border-brand-blue/25 bg-[rgb(var(--accent-blue)/0.07)] px-3 py-2 text-[11px] leading-relaxed text-fg-secondary">
+                  <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[rgb(var(--accent-blue))]" />
+                  <span>Harita performansı için toplu poligon dökülmez. Bir satır seçildiğinde sadece o bölgenin geometrisi varsa vurgulanır; PDF/GML linkleri kaynak dokümanı gösterir.</span>
+                </div>
                 {latestRegionsItems.length === 0 ? (
-                  <div className="rounded-md border border-border-subtle bg-surface-1/50 px-3 py-3 text-sm text-fg-secondary">
-                    {latestRegionsStatus === "loading" ? "Canlı kayıtlar yükleniyor…" : latestRegionsMessage ?? "Henüz gösterilecek imar bölgesi yok."}
-                  </div>
+                  <LatestRegionsEmptyState status={latestRegionsStatus} message={latestRegionsMessage} />
                 ) : (
                   latestRegionsItems.map((item) => {
                     const selected = latestRegion?.id === item.id;
@@ -330,30 +387,45 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                           setOpen(true);
                         }}
                         className={cn(
-                          "w-full rounded-lg border px-3 py-3 text-left transition-colors",
+                          "group relative w-full rounded-xl border px-3 py-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-[rgb(var(--ring))]",
                           selected
-                            ? "border-[rgb(var(--accent-blue))]/50 bg-[rgb(var(--accent-blue)/0.10)]"
-                            : "border-border-subtle bg-surface-2 hover:bg-surface-1"
+                            ? "border-brand-blue/70 bg-[linear-gradient(135deg,rgb(var(--accent-blue)/0.16),rgb(var(--surface-2)/0.96))] shadow-[inset_3px_0_0_rgb(var(--accent-blue)),0_0_0_1px_rgb(var(--accent-blue)/0.08)]"
+                            : "border-border-subtle bg-surface-2/92 hover:border-border-strong hover:bg-surface-1"
                         )}
+                        aria-pressed={selected}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <div className="text-sm font-semibold text-fg-primary line-clamp-2">{item.label}</div>
+                            <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-fg-muted">
+                              <span>{item.municipality_name || "Belediye kaydı"}</span>
+                              {selected && <span className="text-[rgb(var(--accent-blue))]">Seçili</span>}
+                            </div>
+                            <div className="mt-1 text-sm font-semibold leading-snug text-fg-primary line-clamp-2">{item.label}</div>
                             <div className="mt-1 text-[11px] text-fg-secondary">
                               {[item.district, item.province].filter(Boolean).join(" / ") || item.municipality_name || "Konum bilgisi sınırlı"}
                             </div>
                           </div>
-                          <SourceBadge status={item.has_geometry ? "live" : "unavailable"} label={item.has_geometry ? "geometri var" : "geometri yok"} className="shrink-0" />
+                          <div className="flex shrink-0 flex-col items-end gap-1">
+                            <SourceBadge status={item.source} className="h-4 px-1.5 text-[8px]" />
+                            <SourceBadge status={item.has_geometry ? "computed" : "unavailable"} label={item.has_geometry ? "çizilebilir" : "geometri yok"} className="h-4 px-1.5 text-[8px]" />
+                          </div>
                         </div>
-                        <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-fg-muted">
-                          {item.plan_type && <span>{item.plan_type}</span>}
-                          {item.status && <span>• {item.status}</span>}
-                          {item.aski_end && <span>• askı bitiş {formatDate(item.aski_end)}</span>}
+                        <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+                          <LatestRegionFact label="Plan" value={item.plan_type ?? "Tür belirtilmedi"} />
+                          <LatestRegionFact label="Durum" value={item.status ?? "Durum yok"} />
+                          <LatestRegionFact label="Askı başlangıç" value={item.aski_start ? formatDate(item.aski_start) : "—"} />
+                          <LatestRegionFact label="Askı bitiş" value={item.aski_end ? formatDate(item.aski_end) : "—"} />
                         </div>
                         {(item.pdf_url || item.gml_url) && (
-                          <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-fg-secondary">
-                            {item.pdf_url && <span className="inline-flex items-center gap-1"><ExternalLink className="h-3 w-3" /> PDF</span>}
-                            {item.gml_url && <span className="inline-flex items-center gap-1"><MapPinned className="h-3 w-3" /> GML</span>}
+                          <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-fg-secondary">
+                            {item.pdf_url && <span className="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-1 px-2 py-1"><FileText className="h-3 w-3" /> PDF plan</span>}
+                            {item.gml_url && <span className="inline-flex items-center gap-1 rounded-full border border-border-subtle bg-surface-1 px-2 py-1"><MapPinned className="h-3 w-3" /> GML geometri</span>}
+                          </div>
+                        )}
+                        {!item.has_geometry && (
+                          <div className="mt-3 flex items-start gap-1.5 rounded-md border border-status-warning/25 bg-status-warning/10 px-2 py-1.5 text-[11px] leading-snug text-status-warning">
+                            <MapPinOff className="mt-0.5 h-3 w-3 shrink-0" />
+                            <span>Kaynak kaydı var; belediye geometri yayımlamadığı için haritaya çizilmiyor.</span>
                           </div>
                         )}
                       </button>
@@ -432,6 +504,15 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                 </span>
               </div>
             </div>
+            {multiSelectedParcelIds.length > 0 && (
+              <div className="flex items-center justify-between gap-2 rounded-md border border-[rgb(var(--accent-blue))]/30 bg-[rgb(var(--accent-blue)/0.08)] px-2.5 py-2 text-xs">
+                <span className="inline-flex items-center gap-1.5 text-fg-primary"><GitCompareArrows className="h-3.5 w-3.5" /> {multiSelectedParcelIds.length} parsel seçili</span>
+                <div className="flex items-center gap-2">
+                  <button type="button" className="font-medium text-fg-primary underline underline-offset-2">Kart açık</button>
+                  <button type="button" onClick={clearMultiSelection} className="text-fg-muted hover:text-fg-primary">Temizle</button>
+                </div>
+              </div>
+            )}
             <ParcelWorkflowStrip
               parcel={parcelData!}
               hasGeometry={Boolean(backendGeometry) || Boolean(parcelData!.centroid)}
@@ -440,6 +521,10 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             />
           </header>
 
+          {panelLoading ? (
+            <ParcelPanelSkeleton />
+          ) : (
+            <>
           <section className="grid grid-cols-3 gap-2 px-3 py-2 border-b border-border-subtle bg-surface-1/20">
             <MetricCard
               icon={<Building2 className="h-3.5 w-3.5" />}
@@ -462,6 +547,9 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
           </section>
 
           <SectionParcelSummary parcel={parcelData!} />
+          {comparisonParcels.length >= 2 && (
+            <ParcelComparisonCard parcels={comparisonParcels} onClear={clearMultiSelection} />
+          )}
 
           <ScrollArea className="flex-1">
             {!backendGeometry && parcelData!.backendId && (
@@ -549,6 +637,19 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                 <AccordionTrigger>Yatırım Skoru</AccordionTrigger>
                 <AccordionContent>
                   <SectionYatirimSkoru parcel={parcelData!} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="piyasa">
+                <AccordionTrigger>Market Cockpit</AccordionTrigger>
+                <AccordionContent>
+                  {marketLoading && !marketResponse ? (
+                    <div className="rounded-md border border-border-subtle bg-surface-1/50 px-3 py-4 text-sm text-fg-secondary">
+                      Market payload yükleniyor…
+                    </div>
+                  ) : (
+                    <MarketPanel response={marketResponse} />
+                  )}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -647,6 +748,8 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
               </div>
             )}
           </footer>
+            </>
+          )}
 
           <EmsalCalculatorPanel
             open={emsalOpen}
@@ -875,6 +978,145 @@ function MetricCard({
   );
 }
 
+function LatestRegionFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-md border border-border-subtle bg-surface-1/70 px-2 py-1.5">
+      <div className="text-[9px] uppercase tracking-wider text-fg-muted">{label}</div>
+      <div className="mt-0.5 truncate text-[11px] font-medium text-fg-secondary">{value}</div>
+    </div>
+  );
+}
+
+function LatestRegionsEmptyState({
+  status,
+  message
+}: {
+  status: "idle" | "loading" | DataSourceStatus;
+  message?: string;
+}) {
+  const loading = status === "loading";
+  const unavailable = status === "unavailable";
+  return (
+    <div
+      role={loading ? "status" : undefined}
+      className={cn(
+        "rounded-xl border px-3 py-4",
+        unavailable
+          ? "border-status-warning/35 bg-status-warning/10"
+          : "border-border-subtle bg-surface-1/55"
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <span
+          className={cn(
+            "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border",
+            loading
+              ? "border-brand-blue/35 bg-[rgb(var(--accent-blue)/0.10)] text-[rgb(var(--accent-blue))]"
+              : unavailable
+              ? "border-status-warning/35 bg-status-warning/10 text-status-warning"
+              : "border-border-subtle bg-surface-2 text-fg-muted"
+          )}
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : unavailable ? <TriangleAlert className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+        </span>
+        <div className="min-w-0">
+          <div className="text-sm font-semibold text-fg-primary">
+            {loading ? "Canlı kayıtlar yükleniyor" : unavailable ? "Kaynak şu an yanıt vermiyor" : "Gösterilecek yeni bölge yok"}
+          </div>
+          <p className="mt-1 text-[12px] leading-relaxed text-fg-secondary">
+            {message ?? (loading ? "Belediye/API kayıtları sorgulanıyor; geometri olan ilk kayıt seçilince haritada görünecek." : unavailable ? "Liste alınamadı; parsel arama, katmanlar ve yerel yedek akışlar çalışmaya devam eder." : "Filtreler veya kaynak kayıtları yeni plan bölgesi döndürmedi. Parsel araması ve askı katmanı etkilenmez.")}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ParcelPanelSkeleton() {
+  return (
+    <div className="flex-1 space-y-3 px-3 py-3">
+      <div className="grid grid-cols-3 gap-2">
+        {[0, 1, 2].map((item) => (
+          <SkeletonBlock key={item} className="h-[72px]" />
+        ))}
+      </div>
+      <SkeletonBlock className="h-28" />
+      <div className="grid grid-cols-2 gap-2">
+        {[0, 1, 2, 3, 4, 5].map((item) => (
+          <SkeletonBlock key={item} className="h-16" />
+        ))}
+      </div>
+      <div className="rounded-md border border-border-subtle bg-surface-1/60 px-3 py-2 text-[11px] text-fg-muted">
+        <span className="inline-flex items-center gap-1.5">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Parsel detay kartları hazırlanıyor…
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonBlock({ className }: { className?: string }) {
+  return (
+    <div className={cn("overflow-hidden rounded-md border border-border-subtle bg-surface-2", className)}>
+      <div className="h-full w-1/2 animate-[skeleton-pan_1.2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+      <style>{`@keyframes skeleton-pan {
+        0% { transform: translateX(-120%); }
+        100% { transform: translateX(260%); }
+      }`}</style>
+    </div>
+  );
+}
+
+function ParcelComparisonCard({
+  parcels,
+  onClear
+}: {
+  parcels: Array<NonNullable<ReturnType<typeof getParcelById>>["properties"]>;
+  onClear: () => void;
+}) {
+  return (
+    <section className="border-b border-border-subtle bg-surface-2 px-3 py-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div>
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-fg-primary">
+            <GitCompareArrows className="h-3.5 w-3.5 text-fg-muted" />
+            Parsel karşılaştırma
+          </div>
+          <p className="mt-0.5 text-[11px] text-fg-muted">2-4 seçili parsel; demo/derived değerler açık etiketlenir.</p>
+        </div>
+        <button type="button" onClick={onClear} className="text-[11px] font-medium text-fg-muted underline underline-offset-2 hover:text-fg-primary">
+          Temizle
+        </button>
+      </div>
+      <div className="grid gap-2">
+        {parcels.map((item) => (
+          <article key={item.id} className="rounded-md border border-border-subtle bg-surface-1 px-2.5 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-semibold tabular-nums text-fg-primary">{adaParselText(item.ada, item.parsel)}</span>
+              <SourceBadge status={item.sourceStatus ?? "demo"} className="h-4 px-1.5 text-[8px]" />
+            </div>
+            <div className="mt-2 grid grid-cols-4 gap-1.5 text-[10px]">
+              <CompareMetric label="Alan" value={formatArea(item.yuzolcumuM2)} />
+              <CompareMetric label="TAKS" value={item.taks > 0 ? item.taks.toFixed(2) : "unavailable"} />
+              <CompareMetric label="KAKS" value={item.kaks > 0 ? item.kaks.toFixed(2) : "unavailable"} />
+              <CompareMetric label="Risk" value={`D${item.riskler.deprem}/S${item.riskler.sel}`} />
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CompareMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-sm border border-border-subtle bg-surface-2 px-1.5 py-1">
+      <div className="uppercase tracking-wider text-fg-muted">{label}</div>
+      <div className="mt-0.5 truncate font-semibold tabular-nums text-fg-primary">{value}</div>
+    </div>
+  );
+}
 function ParcelWorkflowStrip({
   parcel,
   hasGeometry,
@@ -925,11 +1167,11 @@ function TrustSection({
   const lastChecked = lastCheckedAt ? new Date(lastCheckedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "Bu oturumda yok";
   return (
     <div className="space-y-2">
-      <div className="rounded-md border border-border-subtle bg-surface-2">
-        <TrustRow label="Parsel kaynağı" status={trustStatus(parcel.sourceStatus)} />
-        <TrustRow label="Geometri" status={geometrySource} />
-        <TrustRow label="İmar" status={imarSource} />
-        <TrustRow label="Risk/Çevre" status="demo" labelOverride="Demo/Tahmini" />
+      <div className="rounded-lg border border-border-subtle bg-surface-2 shadow-[inset_0_1px_0_rgb(255_255_255/0.03)]">
+        <TrustRow label="Parsel kaynağı" status={trustStatus(parcel.sourceStatus)} detail={statusDetail(trustStatus(parcel.sourceStatus), "Parsel kimliği")} />
+        <TrustRow label="Geometri" status={geometrySource} detail={statusDetail(geometrySource, "Harita çizimi")} />
+        <TrustRow label="İmar" status={imarSource} detail={statusDetail(imarSource, "Plan koşulları")} />
+        <TrustRow label="Risk/Çevre" status="demo" labelOverride="Demo/Tahmini" detail="Canlı resmi risk servisi değildir; karar desteği için bağlamsal katman." />
         <div className="flex items-center justify-between gap-2 border-t border-border-subtle px-3 py-2 text-xs">
           <span className="inline-flex items-center gap-1.5 text-fg-secondary"><Clock3 className="h-3.5 w-3.5" /> Son kontrol</span>
           <span className="text-fg-muted tabular-nums">{lastChecked}</span>
@@ -948,18 +1190,30 @@ function TrustSection({
 function TrustRow({
   label,
   status,
-  labelOverride
+  labelOverride,
+  detail
 }: {
   label: string;
   status: "live" | "fallback" | "demo" | "unavailable";
   labelOverride?: string;
+  detail?: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-2 border-b last:border-b-0 border-border-subtle px-3 py-2 text-xs">
-      <span className="text-fg-secondary">{label}</span>
-      <SourceBadge status={status} label={labelOverride} />
+    <div className="grid grid-cols-[1fr_auto] gap-2 border-b last:border-b-0 border-border-subtle px-3 py-2 text-xs">
+      <span className="min-w-0">
+        <span className="block font-medium text-fg-secondary">{label}</span>
+        {detail && <span className="mt-0.5 block text-[11px] leading-snug text-fg-muted">{detail}</span>}
+      </span>
+      <SourceBadge status={status} label={labelOverride} className="self-start" />
     </div>
   );
+}
+
+function statusDetail(status: "live" | "fallback" | "demo" | "unavailable", subject: string) {
+  if (status === "live") return `${subject} canlı kaynaktan doğrulandı.`;
+  if (status === "fallback") return `${subject} için yerel yedek/önbellek kullanılıyor.`;
+  if (status === "unavailable") return `${subject} şu an kaynak tarafından sağlanmıyor.`;
+  return `${subject} demo veya tahmini veriyle gösteriliyor.`;
 }
 
 function trustStatus(status: DataSourceStatus | undefined) {

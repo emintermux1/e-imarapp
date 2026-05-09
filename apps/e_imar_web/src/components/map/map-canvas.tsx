@@ -32,11 +32,18 @@ import {
   buildParcelFillLayer,
   buildParcelLineLayer,
   buildParcelLabelLayer,
-  buildParcelSelectedGlowLayer,
   buildParcelSelectedAccentLayer,
+  buildParcelSelectedPulseLayer,
+  buildParcelHoverHaloLayer,
+  buildParcelHoverDotLayer,
   buildSelectedPointHaloLayer,
   buildSelectedPointCoreLayer,
-  buildParcelHoverDotLayer,
+  buildDrawingLineLayer,
+  buildDrawingPolygonLayer,
+  buildDrawingPolygonOutlineLayer,
+  buildDrawingPointLayer,
+  buildDrawingLabelLayer,
+  DRAWING_SOURCE,
   buildAskiFillLayer,
   buildAskiLineLayer,
   buildAskiHatchedLayer,
@@ -59,8 +66,10 @@ import { useBackendParcelStore } from "@/stores/backend-parcel-store";
 import { useSourceStore } from "@/stores/source-store";
 import { useLatestRegionsStore } from "@/stores/latest-regions-store";
 import { parseBackendParcelId } from "@/lib/api/parcel-normalizer";
-import { findNearestParcel } from "@/lib/analysis/selected-place-analysis";
 import { geoJsonBounds, geoJsonCentroid, toFeatureCollection } from "@/lib/geojson";
+import { findNearestParcel } from "@/lib/analysis/selected-place-analysis";
+import { drawingFeatureCollection, useDrawingStore } from "@/stores/drawing-store";
+import { getParcelSourceMetadata } from "@/data/parcels";
 
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
@@ -92,18 +101,33 @@ export function MapCanvas({
   const mapRef = React.useRef<Map | null>(null);
   const lastHoveredRef = React.useRef<string | number | null>(null);
   const lastSelectedMapIdRef = React.useRef<string | number | null>(null);
+  const lastMultiSelectedMapIdsRef = React.useRef<Array<string | number>>([]);
   const [initError, setInitError] = React.useState<string | null>(null);
+  const [hoverCard, setHoverCard] = React.useState<{
+    x: number;
+    y: number;
+    adaParsel: string;
+    location: string;
+    zoning: string;
+    area: string;
+    provenance: string;
+  } | null>(null);
+  const [dragSelectBox, setDragSelectBox] = React.useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  const activeDrawingToolRef = React.useRef("idle");
 
   const basemap = useMapStore((s) => s.basemap);
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
+  const multiSelectedParcelIds = useMapStore((s) => s.multiSelectedParcelIds);
+  const selectedPoint = useMapStore((s) => s.selectedPoint);
   const selectedBackendFeature = useBackendParcelStore((s) => s.getFeature(selectedParcelId));
   const liveLayers = useSourceStore((s) => s.liveLayers);
   const loadLiveLayers = useSourceStore((s) => s.loadLiveLayers);
   const selectedLatestRegion = useLatestRegionsStore((s) => s.selectedRegion);
   const flyTarget = useMapStore((s) => s.flyTarget);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
-  const selectedPoint = useMapStore((s) => s.selectedPoint);
   const setSelectedPoint = useMapStore((s) => s.setSelectedPoint);
+  const toggleMultiSelectedParcelId = useMapStore((s) => s.toggleMultiSelectedParcelId);
+  const addMultiSelectedParcelIds = useMapStore((s) => s.addMultiSelectedParcelIds);
   const setHoveredParcelId = useMapStore((s) => s.setHoveredParcelId);
   const setCursorLngLat = useMapStore((s) => s.setCursorLngLat);
   const setViewState = useMapStore((s) => s.setViewState);
@@ -117,6 +141,20 @@ export function MapCanvas({
   const activePlanNoteFilter = useUIStore((s) => s.activePlanNoteFilter);
   const activeRiskFocus = useUIStore((s) => s.activeRiskFocus);
   const clearSemanticFocus = useUIStore((s) => s.clearSemanticFocus);
+  const activeDrawingTool = useDrawingStore((s) => s.activeTool);
+  const drawingDraft = useDrawingStore((s) => s.draft);
+  const drawingFeatures = useDrawingStore((s) => s.features);
+  const addDrawingPoint = useDrawingStore((s) => s.addPoint);
+  const setDraftCursor = useDrawingStore((s) => s.setDraftCursor);
+  const finishDrawing = useDrawingStore((s) => s.finishDraft);
+
+  React.useEffect(() => {
+    activeDrawingToolRef.current = activeDrawingTool;
+    const map = mapRef.current;
+    if (map && activeDrawingTool === "idle") {
+      map.getCanvas().style.cursor = "";
+    }
+  }, [activeDrawingTool]);
 
   const semanticFocus = React.useMemo(
     () =>
@@ -167,8 +205,8 @@ export function MapCanvas({
         maxZoom: 19,
         minZoom: 3,
         hash: false,
-        fadeDuration: 120,
-        preserveDrawingBuffer: false,
+        fadeDuration: 200,
+        preserveDrawingBuffer: true,
         antialias: true,
         refreshExpiredTiles: false
       });
@@ -211,39 +249,58 @@ export function MapCanvas({
     window.addEventListener("eimar:map:control", onControl);
 
     const ensureLayers = () => {
-      if (!map.isStyleLoaded()) return;
-      try {
-        if (!map.getSource(PARCEL_SOURCE)) {
-          registerParcelLayers(map);
-        }
-        ensureAskiLayers(map);
-        registerSemanticLayers(map);
-        if (!map.getSource(LOCATION_LABEL_SOURCE)) {
-          registerLocationLayers(map);
-        }
-        if (!map.getSource(MUNICIPALITY_SOURCE)) {
-          registerMunicipalityCoverageLayers(map);
-        }
-        ensureLiveSourceLayers(map);
-        ensureBackendSelectedLayer(map);
-        ensureSelectedPointLayer(map);
-        ensureLatestRegionsLayer(map);
-        applyLocationLabelTheme(map, basemap);
-        applyVisibilityAndOpacity(map);
-      } catch (error) {
-        console.warn("E-İmar map overlay registration delayed", error);
+      if (!map.getSource(PARCEL_SOURCE)) {
+        registerParcelLayers(map);
       }
+      ensureAskiLayers(map);
+      registerSemanticLayers(map);
+      if (!map.getSource(LOCATION_LABEL_SOURCE)) {
+        registerLocationLayers(map);
+      }
+      if (!map.getSource(MUNICIPALITY_SOURCE)) {
+        registerMunicipalityCoverageLayers(map);
+      }
+      ensureLiveSourceLayers(map);
+      ensureBackendSelectedLayer(map);
+      ensureSelectedPointLayer(map);
+      ensureLatestRegionsLayer(map);
+      ensureDrawingLayers(map);
+      applyLocationLabelTheme(map, basemap);
+      applyVisibilityAndOpacity(map);
     };
-    map.on("load", ensureLayers);
-    map.on("idle", ensureLayers);
+    if (map.isStyleLoaded()) {
+      ensureLayers();
+    } else {
+      map.once("load", ensureLayers);
+    }
 
     map.on("styledata", () => {
       if (!map.isStyleLoaded()) return;
-      ensureLayers();
+      if (!map.getSource(PARCEL_SOURCE)) registerParcelLayers(map);
+      ensureAskiLayers(map);
+      registerSemanticLayers(map);
+      if (!map.getSource(LOCATION_LABEL_SOURCE)) {
+        registerLocationLayers(map);
+      }
+      if (!map.getSource(MUNICIPALITY_SOURCE)) {
+        registerMunicipalityCoverageLayers(map);
+      }
+      ensureLiveSourceLayers(map);
+      ensureBackendSelectedLayer(map);
+      ensureSelectedPointLayer(map);
+      ensureLatestRegionsLayer(map);
+      ensureDrawingLayers(map);
+      applyLocationLabelTheme(map, basemap);
       if (lastSelectedMapIdRef.current != null) {
         map.setFeatureState(
           { source: PARCEL_SOURCE, id: lastSelectedMapIdRef.current },
           { selected: true }
+        );
+      }
+      for (const multiId of lastMultiSelectedMapIdsRef.current) {
+        map.setFeatureState(
+          { source: PARCEL_SOURCE, id: multiId },
+          { multiSelected: true }
         );
       }
       applyVisibilityAndOpacity(map);
@@ -271,9 +328,31 @@ export function MapCanvas({
     map.on("mousemove", onMouseMove);
     map.on("mouseout", onMouseLeave);
 
+    let hoverRafId: number | null = null;
+    let pendingHoverCard: typeof hoverCard = null;
+    const commitHoverCard = () => {
+      hoverRafId = null;
+      setHoverCard(pendingHoverCard);
+    };
     const onParcelMouseMove = (e: maplibregl.MapLayerMouseEvent) => {
+      if (activeDrawingToolRef.current !== "idle") return;
       if (!e.features?.length) return;
       const id = e.features[0].id as string | number | undefined;
+      const parcel = id == null ? null : getParcelByMapId(id);
+      if (parcel && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+        const p = parcel.properties;
+        const sourceMeta = getParcelSourceMetadata();
+        pendingHoverCard = {
+          x: e.point.x,
+          y: e.point.y,
+          adaParsel: `${p.ada}/${p.parsel}`,
+          location: `${p.mahalle} · ${p.ilce}`,
+          zoning: p.detailedUse ?? p.zoningType,
+          area: `${Math.round(p.yuzolcumuM2).toLocaleString("tr-TR")} m²`,
+          provenance: p.sourceStatus ?? (sourceMeta.official ? "official" : sourceMeta.mode === "demo" ? "demo" : "derived")
+        };
+        if (hoverRafId == null) hoverRafId = requestAnimationFrame(commitHoverCard);
+      }
       if (id == null || id === lastHoveredRef.current) return;
       if (lastHoveredRef.current != null) {
         map.setFeatureState(
@@ -284,7 +363,6 @@ export function MapCanvas({
       lastHoveredRef.current = id;
       map.setFeatureState({ source: PARCEL_SOURCE, id }, { hover: true });
       map.getCanvas().style.cursor = "pointer";
-      const parcel = getParcelByMapId(id);
       if (parcel) setHoveredParcelId(parcel.properties.id);
     };
     const onParcelMouseLeave = () => {
@@ -297,13 +375,21 @@ export function MapCanvas({
       lastHoveredRef.current = null;
       map.getCanvas().style.cursor = "";
       setHoveredParcelId(null);
+      setHoverCard(null);
     };
     const onParcelClick = (e: maplibregl.MapLayerMouseEvent) => {
+      if (activeDrawingToolRef.current !== "idle") return;
       const f = e.features?.[0];
       if (!f) return;
       const mapId = f.id as string | number;
       const parcel = getParcelByMapId(mapId);
       if (!parcel) return;
+      if (e.originalEvent.shiftKey) {
+        toggleMultiSelectedParcelId(parcel.properties.id);
+        setSelectedParcelId(parcel.properties.id);
+        setRightPanelOpen(true);
+        return;
+      }
       setSelectedParcelId(parcel.properties.id);
       setSelectedPoint(null);
       setRightPanelOpen(true);
@@ -362,22 +448,63 @@ export function MapCanvas({
     map.on("mousemove", "parcels-fill", onParcelMouseMove);
     map.on("mouseleave", "parcels-fill", onParcelMouseLeave);
     map.on("click", "parcels-fill", onParcelClick);
+
+    let dragStart: { x: number; y: number } | null = null;
+    const onMapMouseDown = (e: MapMouseEvent) => {
+      if (!e.originalEvent.shiftKey || activeDrawingToolRef.current !== "idle") return;
+      dragStart = e.point;
+      map.dragPan.disable();
+      setDragSelectBox({ left: e.point.x, top: e.point.y, width: 0, height: 0 });
+      e.preventDefault();
+    };
+    const onMapDragMove = (e: MapMouseEvent) => {
+      if (!dragStart) return;
+      const left = Math.min(dragStart.x, e.point.x);
+      const top = Math.min(dragStart.y, e.point.y);
+      setDragSelectBox({ left, top, width: Math.abs(e.point.x - dragStart.x), height: Math.abs(e.point.y - dragStart.y) });
+    };
+    const onMapMouseUp = (e: MapMouseEvent) => {
+      if (!dragStart) return;
+      const start = dragStart;
+      dragStart = null;
+      map.dragPan.enable();
+      setDragSelectBox(null);
+      const minX = Math.min(start.x, e.point.x);
+      const minY = Math.min(start.y, e.point.y);
+      const maxX = Math.max(start.x, e.point.x);
+      const maxY = Math.max(start.y, e.point.y);
+      if (Math.abs(maxX - minX) < 8 || Math.abs(maxY - minY) < 8) return;
+      const features = map.queryRenderedFeatures([[minX, minY], [maxX, maxY]], { layers: ["parcels-fill"] });
+      const ids = Array.from(new Set(features.map((feature) => {
+        const parcel = feature.id == null ? null : getParcelByMapId(feature.id);
+        return parcel?.properties.id;
+      }).filter(Boolean) as string[]));
+      addMultiSelectedParcelIds(ids, 250);
+    };
+
     const onMapClick = (e: MapMouseEvent) => {
+      if (e.originalEvent.shiftKey || activeDrawingToolRef.current !== "idle") return;
       const interactiveFeatures = map.queryRenderedFeatures(e.point, {
         layers: [
           "parcels-fill",
           "askida-overlay-fill",
+          "askida-overlay-line",
+          "askida-overlay-hatched",
           "live-source-markers",
           "location-label-city",
           "location-label-district",
           "location-label-neighborhood",
-          "municipality-coverage-circles"
+          "municipality-coverage-circles",
+          "municipality-coverage-labels",
+          "belediye-sinirlari",
+          "drawings-line",
+          "drawings-polygon",
+          "drawings-polygon-outline",
+          "drawings-point",
+          "drawings-label"
         ].filter((layerId) => Boolean(map.getLayer(layerId)))
       });
-      if (interactiveFeatures.length > 0) {
-        const layerId = interactiveFeatures[0].layer.id;
-        if (layerId !== "municipality-coverage-circles") return;
-      }
+      if (interactiveFeatures.length > 0) return;
       const nearby = findNearestParcel(e.lngLat.lng, e.lngLat.lat, 2500);
       setSelectedPoint({
         lng: e.lngLat.lng,
@@ -388,6 +515,31 @@ export function MapCanvas({
       setRightPanelOpen(true);
     };
     map.on("click", onMapClick);
+    const onDrawingClick = (e: MapMouseEvent) => {
+      if (activeDrawingToolRef.current === "idle") return;
+      addDrawingPoint([e.lngLat.lng, e.lngLat.lat]);
+    };
+    const onDrawingMove = (e: MapMouseEvent) => {
+      if (activeDrawingToolRef.current === "idle") return;
+      setDraftCursor([e.lngLat.lng, e.lngLat.lat]);
+      map.getCanvas().style.cursor = "crosshair";
+    };
+    const onDrawingDblClick = (e: MapMouseEvent) => {
+      if (activeDrawingToolRef.current === "idle") return;
+      e.preventDefault();
+      finishDrawing();
+    };
+    const onDrawingKeydown = (event: KeyboardEvent) => {
+      if (event.key === "Enter") finishDrawing();
+      if (event.key === "Escape") setDraftCursor(null);
+    };
+    map.on("mousedown", onMapMouseDown);
+    map.on("mousemove", onMapDragMove);
+    map.on("mouseup", onMapMouseUp);
+    map.on("click", onDrawingClick);
+    map.on("mousemove", onDrawingMove);
+    map.on("dblclick", onDrawingDblClick);
+    window.addEventListener("keydown", onDrawingKeydown);
     for (const layerId of ["location-label-city", "location-label-district", "location-label-neighborhood"]) {
       map.on("mousemove", layerId, onLocationMouseMove);
       map.on("mouseleave", layerId, onLocationMouseLeave);
@@ -476,9 +628,18 @@ export function MapCanvas({
 
     return () => {
       window.removeEventListener("eimar:map:control", onControl);
-      map.off("load", ensureLayers);
-      map.off("idle", ensureLayers);
+      window.removeEventListener("keydown", onDrawingKeydown);
+      if (hoverRafId != null) cancelAnimationFrame(hoverRafId);
+      map.off("mousemove", "parcels-fill", onParcelMouseMove);
+      map.off("mouseleave", "parcels-fill", onParcelMouseLeave);
+      map.off("click", "parcels-fill", onParcelClick);
       map.off("click", onMapClick);
+      map.off("mousedown", onMapMouseDown);
+      map.off("mousemove", onMapDragMove);
+      map.off("mouseup", onMapMouseUp);
+      map.off("click", onDrawingClick);
+      map.off("mousemove", onDrawingMove);
+      map.off("dblclick", onDrawingDblClick);
       map.off("click", "live-source-markers", onSourceClick);
       map.off("mouseenter", "live-source-markers", onSourceEnter);
       map.off("mouseleave", "live-source-markers", onSourceLeave);
@@ -525,6 +686,7 @@ export function MapCanvas({
     if (map.isStyleLoaded()) apply();
     else map.once("load", apply);
   }, [selectedParcelId]);
+
 
   React.useEffect(() => {
     const map = mapRef.current;
@@ -590,6 +752,69 @@ export function MapCanvas({
 
   React.useEffect(() => {
     const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      if (!map.getSource(PARCEL_SOURCE)) return;
+      for (const id of lastMultiSelectedMapIdsRef.current) {
+        map.setFeatureState({ source: PARCEL_SOURCE, id }, { multiSelected: false });
+      }
+      const nextMapIds = multiSelectedParcelIds
+        .map((parcelId) => getParcelById(parcelId)?.properties.mapId)
+        .filter((id): id is number => id != null);
+      for (const id of nextMapIds) {
+        map.setFeatureState({ source: PARCEL_SOURCE, id }, { multiSelected: true });
+      }
+      lastMultiSelectedMapIdsRef.current = nextMapIds;
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("load", apply);
+  }, [multiSelectedParcelIds]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      ensureDrawingLayers(map);
+      const source = map.getSource(DRAWING_SOURCE) as maplibregl.GeoJSONSource | undefined;
+      source?.setData(drawingFeatureCollection(drawingFeatures, drawingDraft) as GeoJSON.FeatureCollection);
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [drawingFeatures, drawingDraft]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
+    let frame = 0;
+    let raf = 0;
+    const animate = () => {
+      frame = (frame + 0.018) % 1;
+      if (map.getLayer("parcels-selected-pulse")) {
+        const width = 4 + Math.sin(frame * Math.PI * 2) * 1.6;
+        const opacity = 0.18 + (Math.cos(frame * Math.PI * 2) + 1) * 0.08;
+        map.setPaintProperty("parcels-selected-pulse", "line-width", [
+          "case",
+          ["any", ["boolean", ["feature-state", "selected"], false], ["boolean", ["feature-state", "multiSelected"], false]],
+          width,
+          0
+        ] as never);
+        map.setPaintProperty("parcels-selected-pulse", "line-opacity", [
+          "case",
+          ["any", ["boolean", ["feature-state", "selected"], false], ["boolean", ["feature-state", "multiSelected"], false]],
+          opacity,
+          0
+        ] as never);
+      }
+      raf = requestAnimationFrame(animate);
+    };
+    raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
     if (!map || !flyTarget) return;
     const padding = window.innerWidth >= 1280 ? { top: 40, bottom: 40, left: 320, right: 440 } : { top: 40, bottom: 40, left: 24, right: 24 };
     map.flyTo({
@@ -598,7 +823,7 @@ export function MapCanvas({
       bearing: flyTarget.bearing,
       pitch: flyTarget.pitch,
       padding,
-      duration: 700,
+      duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700,
       essential: true
     });
   }, [flyTarget]);
@@ -717,6 +942,12 @@ export function MapCanvas({
         });
         return;
       }
+      if (id === "drawings-line") {
+        ["drawings-line", "drawings-polygon", "drawings-polygon-outline", "drawings-point", "drawings-label"].forEach((layerId) => {
+          if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", vis ? "visible" : "none");
+        });
+        return;
+      }
       if (!map.getLayer(id)) return;
       map.setLayoutProperty(id, "visibility", vis ? "visible" : "none");
     });
@@ -728,9 +959,11 @@ export function MapCanvas({
           "case",
           ["boolean", ["feature-state", "selected"], false],
           Math.min(1, fillOpacity + 0.3),
+          ["boolean", ["feature-state", "multiSelected"], false],
+          Math.min(1, fillOpacity + 0.2),
           ["boolean", ["feature-state", "hover"], false],
           Math.min(1, fillOpacity + 0.18),
-          fillOpacity
+          ["interpolate", ["linear"], ["zoom"], 11.4, Math.min(0.18, fillOpacity), 13.5, Math.min(0.38, fillOpacity), 16, fillOpacity]
         ] as never);
       } catch {
         /* swallow */
@@ -747,6 +980,11 @@ export function MapCanvas({
         : undefined
     );
     setOpacityIfExists(map, "live-source-markers", "circle-opacity", layerOpacity["live-source-markers"]);
+    setOpacityIfExists(map, "drawings-line", "line-opacity", layerOpacity["drawings-line"]);
+    setOpacityIfExists(map, "drawings-polygon", "fill-opacity", layerOpacity["drawings-line"] != null ? layerOpacity["drawings-line"] * 0.12 : undefined);
+    setOpacityIfExists(map, "drawings-polygon-outline", "line-opacity", layerOpacity["drawings-line"]);
+    setOpacityIfExists(map, "drawings-point", "circle-opacity", layerOpacity["drawings-line"]);
+    setOpacityIfExists(map, "drawings-label", "text-opacity", layerOpacity["drawings-line"]);
     applySemanticFocusStyles(map, semanticFocus);
   }
 
@@ -777,6 +1015,29 @@ export function MapCanvas({
             </p>
           </div>
         </div>
+      )}
+      {hoverCard && (
+        <div
+          className="pointer-events-none absolute z-20 w-64 rounded-md border border-border-strong bg-surface-2/95 px-3 py-2 text-xs shadow-sheet backdrop-blur-[3px]"
+          style={{ transform: `translate3d(${Math.min(hoverCard.x + 14, window.innerWidth - 290)}px, ${Math.max(hoverCard.y - 12, 12)}px, 0)` }}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] uppercase tracking-wider text-fg-muted">Hover parsel</span>
+            <span className="rounded-sm border border-border-subtle px-1.5 py-0.5 text-[9px] uppercase text-fg-secondary">{hoverCard.provenance}</span>
+          </div>
+          <div className="mt-1 font-semibold tabular-nums text-fg-primary">Ada/Parsel {hoverCard.adaParsel}</div>
+          <div className="mt-0.5 text-fg-secondary">{hoverCard.location}</div>
+          <div className="mt-2 grid grid-cols-2 gap-2 border-t border-border-subtle pt-2">
+            <span className="truncate text-fg-secondary">{hoverCard.zoning}</span>
+            <span className="text-right tabular-nums text-fg-primary">{hoverCard.area}</span>
+          </div>
+        </div>
+      )}
+      {dragSelectBox && (
+        <div
+          className="pointer-events-none absolute z-20 rounded-sm border border-[rgb(var(--accent-blue))] bg-[rgb(var(--accent-blue)/0.10)] shadow-[0_0_0_1px_rgba(255,255,255,0.55)_inset]"
+          style={{ left: dragSelectBox.left, top: dragSelectBox.top, width: dragSelectBox.width, height: dragSelectBox.height }}
+        />
       )}
       {semanticFocus && (
         <div className="absolute left-3 top-14 z-10 pointer-events-auto">
@@ -817,8 +1078,11 @@ function registerParcelLayers(map: Map) {
   if (!map.getLayer("parcels-line")) {
     map.addLayer(buildParcelLineLayer("parcels-line"));
   }
-  if (!map.getLayer("parcels-selected-glow")) {
-    map.addLayer(buildParcelSelectedGlowLayer("parcels-selected-glow"));
+  if (!map.getLayer("parcels-hover-halo")) {
+    map.addLayer(buildParcelHoverHaloLayer("parcels-hover-halo"));
+  }
+  if (!map.getLayer("parcels-selected-pulse")) {
+    map.addLayer(buildParcelSelectedPulseLayer("parcels-selected-pulse"));
   }
   if (!map.getLayer("parcels-selected-accent")) {
     map.addLayer(buildParcelSelectedAccentLayer("parcels-selected-accent"));
@@ -830,6 +1094,7 @@ function registerParcelLayers(map: Map) {
     map.addLayer(buildParcelLabelLayer("parcels-label"));
   }
 }
+
 
 function ensureSelectedPointLayer(map: Map) {
   if (!map.getSource(SELECTED_POINT_SOURCE)) {
@@ -867,6 +1132,21 @@ function buildSelectedPointFeatureCollection(
       }
     ]
   };
+}
+
+function ensureDrawingLayers(map: Map) {
+  if (!map.getSource(DRAWING_SOURCE)) {
+    map.addSource(DRAWING_SOURCE, {
+      type: "geojson",
+      data: { type: "FeatureCollection", features: [] }
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("drawings-polygon")) map.addLayer(buildDrawingPolygonLayer(), beforeId);
+  if (!map.getLayer("drawings-polygon-outline")) map.addLayer(buildDrawingPolygonOutlineLayer(), beforeId);
+  if (!map.getLayer("drawings-line")) map.addLayer(buildDrawingLineLayer(), beforeId);
+  if (!map.getLayer("drawings-point")) map.addLayer(buildDrawingPointLayer(), beforeId);
+  if (!map.getLayer("drawings-label")) map.addLayer(buildDrawingLabelLayer());
 }
 
 function ensureAskiLayers(map: Map) {
@@ -1008,12 +1288,12 @@ function applySemanticFocusStyles(
         "parcels-selected-accent",
         "line-color",
         focus?.key.startsWith("risk:")
-          ? "#FCA5A5"
+          ? "#DC2626"
           : focus?.key.startsWith("constraint:")
-            ? "#5EEAD4"
+            ? "#0F766E"
             : focus?.key === "aski"
-              ? "#FCD34D"
-              : "#F8FAFC"
+              ? "#D97706"
+              : "#C8102E"
       );
       map.setPaintProperty(
         "parcels-selected-accent",
@@ -1296,7 +1576,23 @@ function ensureLatestRegionsLayer(map: Map) {
         source: LIVE_PLAN_REGIONS_SOURCE,
         paint: {
           "fill-color": "#8B5CF6",
-          "fill-opacity": 0.18
+          "fill-opacity": 0.16
+        }
+      },
+      beforeId
+    );
+  }
+  if (!map.getLayer("live-plan-regions-halo")) {
+    map.addLayer(
+      {
+        id: "live-plan-regions-halo",
+        type: "line",
+        source: LIVE_PLAN_REGIONS_SOURCE,
+        paint: {
+          "line-color": "#38BDF8",
+          "line-width": ["interpolate", ["linear"], ["zoom"], 6, 6, 14, 12] as never,
+          "line-opacity": 0.18,
+          "line-blur": 3
         }
       },
       beforeId
@@ -1310,7 +1606,7 @@ function ensureLatestRegionsLayer(map: Map) {
         source: LIVE_PLAN_REGIONS_SOURCE,
         paint: {
           "line-color": "#A78BFA",
-          "line-width": 2.5,
+          "line-width": ["interpolate", ["linear"], ["zoom"], 6, 2.2, 14, 4] as never,
           "line-opacity": 0.95
         }
       },

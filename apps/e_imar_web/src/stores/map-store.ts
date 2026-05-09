@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { BasemapId } from "@/lib/maplibre/styles";
+import { mergeMultiSelection, toggleMultiSelection } from "@/lib/map/multi-select";
 
 export interface FlyTarget {
   center: [number, number];
@@ -32,6 +33,8 @@ interface MapState {
   hoveredParcelId: string | null;
   selectedParcelId: string | null;
   selectedPoint: SelectedPointState | null;
+  multiSelectedParcelIds: string[];
+  selectionNotice: string | null;
   flyTarget: FlyTarget | null;
   cursorLngLat: [number, number] | null;
   zoom: number;
@@ -41,6 +44,10 @@ interface MapState {
   setHoveredParcelId: (id: string | null) => void;
   setSelectedParcelId: (id: string | null) => void;
   setSelectedPoint: (point: SelectedPointState | null) => void;
+  toggleMultiSelectedParcelId: (id: string) => void;
+  addMultiSelectedParcelIds: (ids: string[], limit?: number) => void;
+  clearMultiSelection: () => void;
+  setSelectionNotice: (notice: string | null) => void;
   clearSelection: () => void;
   flyTo: (target: Omit<FlyTarget, "seq">) => void;
   setCursorLngLat: (v: [number, number] | null) => void;
@@ -56,6 +63,8 @@ export const useMapStore = create<MapState>()(
       hoveredParcelId: null,
       selectedParcelId: null,
       selectedPoint: null,
+      multiSelectedParcelIds: [],
+      selectionNotice: null,
       flyTarget: null,
       cursorLngLat: null,
       zoom: 5.5,
@@ -67,7 +76,22 @@ export const useMapStore = create<MapState>()(
         set(id ? { selectedParcelId: id, selectedPoint: null } : { selectedParcelId: null }),
       setSelectedPoint: (point) =>
         set(point ? { selectedPoint: point, selectedParcelId: null } : { selectedPoint: null }),
-      clearSelection: () => set({ selectedParcelId: null, selectedPoint: null, hoveredParcelId: null }),
+      toggleMultiSelectedParcelId: (id) =>
+        set((s) => ({
+          multiSelectedParcelIds: toggleMultiSelection(s.multiSelectedParcelIds, id),
+          selectionNotice: null
+        })),
+      addMultiSelectedParcelIds: (ids, limit = 250) =>
+        set((s) => {
+          const result = mergeMultiSelection(s.multiSelectedParcelIds, ids, limit);
+          return {
+            multiSelectedParcelIds: result.ids,
+            selectionNotice: result.truncated ? `Yoğun seçim: ilk ${limit} parsel seçildi.` : `${ids.length} parsel seçime eklendi.`
+          };
+        }),
+      clearMultiSelection: () => set({ multiSelectedParcelIds: [], selectionNotice: null }),
+      setSelectionNotice: (notice) => set({ selectionNotice: notice }),
+      clearSelection: () => set({ selectedParcelId: null, selectedPoint: null, hoveredParcelId: null, multiSelectedParcelIds: [], selectionNotice: null }),
       flyTo: (target) =>
         set({ flyTarget: { ...target, seq: ++seqCounter } }),
       setCursorLngLat: (v) => set({ cursorLngLat: v }),
