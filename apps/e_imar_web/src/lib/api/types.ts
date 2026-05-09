@@ -26,6 +26,108 @@ export interface SourceProbe {
   message?: string | null;
 }
 
+export interface MunicipalityCapabilitySource {
+  id: string;
+  name: string;
+  homepageUrl: string;
+  province?: string;
+  district?: string;
+  municipalitySlug?: string;
+  vendor?: string;
+  accessStatus: string;
+  accessNotes: string;
+  connectorKinds: string[];
+  capabilities: string[];
+}
+
+export interface MunicipalityCapability {
+  source: MunicipalityCapabilitySource | null;
+  registered: boolean;
+  publicCandidate: boolean;
+  protected: boolean;
+  lastHealth: null;
+  imarQuerySupport: string;
+  parcelGeometrySupport: string;
+  reasonNoData: string;
+  nextAction: string;
+}
+
+export interface MunicipalityCoverageEntry {
+  id: string;
+  name: string;
+  homepageUrl: string;
+  province?: string;
+  district?: string;
+  municipalitySlug?: string;
+  vendor?: string;
+  accessStatus: string;
+  capabilities: string[];
+  connectorKinds: string[];
+  capability?: MunicipalityCapability;
+}
+
+export interface MunicipalityCoverageResponse extends StatusEnvelope {
+  count: number;
+  municipalities: MunicipalityCoverageEntry[];
+}
+
+export interface MunicipalParcelWorkflowAttempt {
+  status: string;
+  source: string | null;
+  endpoint?: string;
+  method?: string;
+  message: string;
+}
+
+export interface MunicipalParcelWorkflowResponse extends StatusEnvelope {
+  query: {
+    province?: string;
+    district?: string;
+    municipalityId?: string;
+    municipalitySlug?: string;
+    mahalle?: string;
+    ada?: string;
+    parsel?: string;
+  };
+  municipalityCapability: MunicipalityCapability;
+  parcelGeometryAttempt: MunicipalParcelWorkflowAttempt;
+  zoningAttempt: MunicipalParcelWorkflowAttempt;
+  noDataReason: string;
+  provenance: ProvenanceRecord[];
+}
+
+export interface OgcLayerCatalogEntry {
+  name?: string;
+  title?: string;
+  crs?: string[];
+  srs?: string[];
+  bbox?: unknown;
+  queryable?: boolean;
+  abstract?: string;
+}
+
+export interface OgcLayerCatalogResponse extends StatusEnvelope {
+  sourceId: string;
+  endpoint?: string;
+  service: "WMS" | "WFS";
+  generatedAt: string;
+  layers: OgcLayerCatalogEntry[];
+  status: "ok" | "protected" | "unavailable" | "unsupported_format";
+  provenance: ProvenanceRecord[];
+}
+
+export interface ProvenanceRecord {
+  sourceId: string;
+  sourceName: string;
+  endpoint?: string;
+  fetchedAt: string;
+  responseHash?: string;
+  dataType: "official" | "public_metadata" | "demo" | "derived";
+  confidence: number;
+  connectorKind?: string;
+  status: string;
+}
+
 export interface SourcesResponse extends StatusEnvelope {
   sources: SourceEntry[];
   total: number;

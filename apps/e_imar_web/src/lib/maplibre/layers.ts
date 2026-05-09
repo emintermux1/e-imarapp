@@ -12,6 +12,10 @@ export const ASKI_SOURCE = "aski-overlay";
 export const ACTIVE_PLAN_SOURCE = "active-plan-overlay";
 export const RISK_GRID_SOURCE = "risk-grid";
 export const LIVE_SOURCE_REGISTRY_SOURCE = "live-source-registry";
+export const TRANSPORT_SOURCE = "transport-lines";
+export const MUNICIPALITY_SOURCE = "municipality-boundaries";
+export const MUNICIPALITY_COVERAGE_SOURCE = "municipality-coverage";
+export const TURKEY_FOCUS_SOURCE = "turkey-focus";
 
 const zoningCases: (string | string[])[] = ["match", ["get", "zoningType"]];
 Object.values(ZONING_PRESETS).forEach((preset) => {
@@ -32,6 +36,7 @@ export const buildParcelFillLayer = (id = "parcels-fill"): FillLayerSpecificatio
   id,
   type: "fill",
   source: PARCEL_SOURCE,
+  minzoom: 12,
   paint: {
     "fill-color": zoningFillExpression,
     "fill-opacity": [
@@ -94,23 +99,36 @@ export const buildParcelLabelLayer = (
   id,
   type: "symbol",
   source: PARCEL_SOURCE,
-  minzoom: 14.5,
+  minzoom: 15.5,
   layout: {
     "text-field": [
       "concat",
       ["get", "ada"],
       "/",
-      ["get", "parsel"]
+      ["get", "parsel"],
+      " · ",
+      [
+        "case",
+        ["in", "TİCK", ["coalesce", ["get", "detailedUse"], ""]],
+        "TİCK",
+        ["in", "MİA", ["coalesce", ["get", "detailedUse"], ""]],
+        "MİA",
+        ["==", ["get", "zoningType"], "Kamu"],
+        "Donatı",
+        ["==", ["get", "zoningType"], "Yesil"],
+        "Park",
+        ["get", "zoningType"]
+      ]
     ],
     "text-font": ["Noto Sans Regular"],
     "text-size": [
       "interpolate",
       ["linear"],
       ["zoom"],
-      14.5,
-      9,
+      15.5,
+      8,
       18,
-      13
+      12
     ],
     "text-allow-overlap": false,
     "text-padding": 4
@@ -120,6 +138,87 @@ export const buildParcelLabelLayer = (
     "text-halo-color": "rgba(255,255,255,0.85)",
     "text-halo-width": 1.4,
     "text-halo-blur": 0.4
+  }
+});
+
+export const buildPlanConstraintLineLayer = (
+  id = "plan-constraint-line"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: PARCEL_SOURCE,
+  filter: [
+    "any",
+    ["in", "Koruma", ["coalesce", ["get", "detailedUse"], ""]],
+    ["in", "Sit", ["coalesce", ["get", "detailedUse"], ""]],
+    ["in", "Dönüşüm", ["coalesce", ["get", "detailedUse"], ""]],
+    ["in", "Rezerv", ["coalesce", ["get", "detailedUse"], ""]]
+  ],
+  paint: {
+    "line-color": [
+      "case",
+      ["in", "Dönüşüm", ["coalesce", ["get", "detailedUse"], ""]],
+      "#D97706",
+      ["in", "Rezerv", ["coalesce", ["get", "detailedUse"], ""]],
+      "#D97706",
+      "#0F766E"
+    ] as never,
+    "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.2, 16, 2.4] as never,
+    "line-opacity": 0.9,
+    "line-dasharray": [
+      "case",
+      ["any", ["in", "Dönüşüm", ["coalesce", ["get", "detailedUse"], ""]], ["in", "Rezerv", ["coalesce", ["get", "detailedUse"], ""]]],
+      ["literal", [2, 1.4]] as unknown as never,
+      ["literal", [1, 0]] as unknown as never
+    ] as never
+  }
+});
+
+export const buildPlanDonatiLabelLayer = (
+  id = "plan-donati-label"
+): SymbolLayerSpecification => ({
+  id,
+  type: "symbol",
+  source: PARCEL_SOURCE,
+  minzoom: 16.2,
+  filter: ["==", ["get", "zoningType"], "Kamu"],
+  layout: {
+    "text-field": [
+      "case",
+      ["in", "Eğitim", ["coalesce", ["get", "detailedUse"], ""]],
+      "EĞT",
+      ["in", "Sağlık", ["coalesce", ["get", "detailedUse"], ""]],
+      "SAĞ",
+      ["in", "Belediye", ["coalesce", ["get", "detailedUse"], ""]],
+      "BLD",
+      ["in", "Dini", ["coalesce", ["get", "detailedUse"], ""]],
+      "DİN",
+      "DON"
+    ],
+    "text-font": ["Noto Sans Bold"],
+    "text-size": 10,
+    "text-allow-overlap": false,
+    "text-padding": 6
+  },
+  paint: {
+    "text-color": "#102A4C",
+    "text-halo-color": "rgba(255,255,255,0.9)",
+    "text-halo-width": 1.2
+  }
+});
+
+export const buildTurkeyFrameLayer = (
+  id = "turkey-frame"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: TURKEY_FOCUS_SOURCE,
+  minzoom: 4,
+  paint: {
+    "line-color": "rgb(16,42,76)",
+    "line-width": ["interpolate", ["linear"], ["zoom"], 5, 1, 7, 1.8] as never,
+    "line-opacity": ["interpolate", ["linear"], ["zoom"], 5, 0.7, 8, 0.18] as never,
+    "line-dasharray": [2, 2] as never
   }
 });
 
@@ -290,6 +389,115 @@ export const buildRiskGridLayer = (
   }
 });
 
+export const buildTransportLineLayer = (
+  id = "metro-hatti"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: TRANSPORT_SOURCE,
+  layout: {
+    "line-cap": "round",
+    "line-join": "round"
+  },
+  paint: {
+    "line-color": "#2563EB",
+    "line-width": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      6, 1.4,
+      11, 2.4,
+      15, 4.2
+    ] as never,
+    "line-opacity": 0.82,
+    "line-blur": 0.15
+  }
+});
+
+export const buildMunicipalityBoundaryLayer = (
+  id = "belediye-sinirlari"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: MUNICIPALITY_SOURCE,
+  paint: {
+    "line-color": "#0F766E",
+    "line-width": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      6, 1,
+      12, 1.6,
+      16, 2.2
+    ] as never,
+    "line-opacity": 0.75,
+    "line-dasharray": [3, 2] as never
+  }
+});
+
+export const buildMunicipalityCoverageCircleLayer = (
+  id = "municipality-coverage-circles",
+  source = MUNICIPALITY_COVERAGE_SOURCE
+): CircleLayerSpecification => ({
+  id,
+  type: "circle",
+  source,
+  minzoom: 5,
+  maxzoom: 11.2,
+  paint: {
+    "circle-color": [
+      "match",
+      ["get", "coverageStatus"],
+      "public_candidate", "#0EA5E9",
+      "protected", "#F59E0B",
+      "method_contract_required", "#8B5CF6",
+      "registered", "#0F766E",
+      "#64748B"
+    ] as never,
+    "circle-radius": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      5, 4,
+      8, 6,
+      11, 9
+    ] as never,
+    "circle-opacity": 0.85,
+    "circle-stroke-color": "#FFFFFF",
+    "circle-stroke-width": 1.25
+  }
+});
+
+export const buildMunicipalityCoverageLabelLayer = (
+  id = "municipality-coverage-labels",
+  source = MUNICIPALITY_COVERAGE_SOURCE
+): SymbolLayerSpecification => ({
+  id,
+  type: "symbol",
+  source,
+  minzoom: 6,
+  maxzoom: 11.5,
+  layout: {
+    "text-field": ["coalesce", ["get", "label"], ["get", "name"]],
+    "text-font": ["Noto Sans Regular"],
+    "text-size": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      6, 9,
+      11, 12
+    ] as never,
+    "text-offset": [0, 1.0] as never,
+    "text-anchor": "top",
+    "text-allow-overlap": false
+  },
+  paint: {
+    "text-color": "#0F172A",
+    "text-halo-color": "rgba(255,255,255,0.92)",
+    "text-halo-width": 1.6
+  }
+});
+
 export interface LayerDescriptor {
   id: string;
   label: string;
@@ -343,6 +551,22 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     group: "Plan"
   },
   {
+    id: "plan-constraint-line",
+    label: "Plan Kısıtları",
+    description: "Koruma, sit, dönüşüm ve rezerv sınır çizgileri",
+    defaultVisible: true,
+    defaultOpacity: 0.9,
+    group: "Plan"
+  },
+  {
+    id: "plan-donati-label",
+    label: "Donatı Kısaltmaları",
+    description: "Eğitim, sağlık, belediye gibi donatı etiketleri",
+    defaultVisible: true,
+    defaultOpacity: 0.85,
+    group: "Plan"
+  },
+  {
     id: "deprem-risk-grid",
     label: "Risk Haritası",
     description: "AFAD bazlı bölgesel risk dağılımı (mock grid)",
@@ -353,16 +577,16 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
   {
     id: "metro-hatti",
     label: "Metro / Raylı Sistem",
-    description: "Yakınlık çizgileri (mock)",
-    defaultVisible: false,
+    description: "Örnek metro ve raylı sistem koridorları",
+    defaultVisible: true,
     defaultOpacity: 0.9,
     group: "Çevre"
   },
   {
     id: "belediye-sinirlari",
     label: "İlçe / Belediye Sınırları",
-    description: "İdari sınırlar (mock)",
-    defaultVisible: false,
+    description: "Örnek ilçe ve belediye sınır çizgileri",
+    defaultVisible: true,
     defaultOpacity: 0.75,
     group: "İdari"
   },
@@ -372,6 +596,14 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Seed edilen gerçek belediye/TKGM/e-Plan/TUCBS portal işaretleri",
     defaultVisible: true,
     defaultOpacity: 0.9,
+    group: "İdari"
+  },
+  {
+    id: "turkey-frame",
+    label: "Türkiye Çalışma Çerçevesi",
+    description: "Ulusal odak sınırı ve çalışma alanı kılavuzu",
+    defaultVisible: true,
+    defaultOpacity: 0.7,
     group: "İdari"
   }
 ];
