@@ -6,20 +6,30 @@ import type { Map, MapMouseEvent } from "maplibre-gl";
 import { Layers } from "lucide-react";
 import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
+import type { AskiPolygonFeature } from "@/data/aski-polygons";
 import {
   getParcelsCollection,
   getParcelById,
   getParcelByMapId
 } from "@/data/parcels";
+import {
+  buildFlyTargetFromLocationTarget,
+  findBestLocationTarget,
+  getMapLabelTargets
+} from "@/data/location-navigation";
 import { useActiveAskiGeoJSON } from "@/lib/api/hooks";
 import { getStyleForBasemap, type BasemapId } from "@/lib/maplibre/styles";
 import {
   PARCEL_SOURCE,
+  LOCATION_LABEL_SOURCE,
   buildParcelFillLayer,
   buildParcelLineLayer,
   buildParcelLabelLayer,
   buildParcelSelectedAccentLayer,
-  buildParcelHoverDotLayer
+  buildParcelHoverDotLayer,
+  buildLocationCityLabelLayer,
+  buildLocationDistrictLabelLayer,
+  buildLocationNeighborhoodLabelLayer
 } from "@/lib/maplibre/layers";
 
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
@@ -29,6 +39,13 @@ interface MapCanvasProps {
   className?: string;
   cursorReadoutRef?: React.RefObject<HTMLSpanElement>;
   zoomReadoutRef?: React.RefObject<HTMLSpanElement>;
+  onAskiClick?: (
+    feature: AskiPolygonFeature,
+    pos: {
+      x: number;
+      y: number;
+    }
+  ) => void;
 }
 
 export function MapCanvas({
@@ -118,7 +135,11 @@ export function MapCanvas({
       if (!map.getSource(PARCEL_SOURCE)) {
         registerParcelLayers(map);
       }
+      if (!map.getSource(LOCATION_LABEL_SOURCE)) {
+        registerLocationLayers(map);
+      }
       registerAskiLayers(map);
+      applyLocationLabelTheme(map, basemap);
       applyVisibilityAndOpacity(map);
     };
     if (map.isStyleLoaded()) {
@@ -134,7 +155,11 @@ export function MapCanvas({
       if (!map.getSource(PARCEL_SOURCE)) {
         registerParcelLayers(map);
       }
+      if (!map.getSource(LOCATION_LABEL_SOURCE)) {
+        registerLocationLayers(map);
+      }
       registerAskiLayers(map);
+      applyLocationLabelTheme(map, basemap);
       // Re-apply selection state on style swap
       if (lastSelectedMapIdRef.current != null) {
         map.setFeatureState(
@@ -214,10 +239,42 @@ export function MapCanvas({
         });
       }
     };
+    const onLocationMouseMove = () => {
+      map.getCanvas().style.cursor = "pointer";
+    };
+    const onLocationMouseLeave = () => {
+      map.getCanvas().style.cursor = "";
+    };
+    const onLocationClick = (e: maplibregl.MapLayerMouseEvent) => {
+      const feature = e.features?.[0];
+      const props = feature?.properties as
+        | { il?: string; ilce?: string; mahalle?: string; centerLng?: number; centerLat?: number; zoom?: number; kind?: string }
+        | undefined;
+      if (!props) return;
+      const target = findBestLocationTarget({ il: props.il, ilce: props.ilce, mahalle: props.mahalle });
+      if (!target) return;
+      setSelectedParcelId(null);
+      setRightPanelOpen(false);
+      const { center, zoom, bearing, pitch } = buildFlyTargetFromLocationTarget(target, { zoom: props.zoom });
+      map.flyTo({
+        center,
+        zoom,
+        bearing,
+        pitch,
+        duration: 650,
+        essential: true,
+        padding: window.innerWidth >= 1280 ? { top: 40, bottom: 40, left: 320, right: 440 } : { top: 40, bottom: 40, left: 24, right: 24 }
+      });
+    };
 
     map.on("mousemove", "parcels-fill", onParcelMouseMove);
     map.on("mouseleave", "parcels-fill", onParcelMouseLeave);
     map.on("click", "parcels-fill", onParcelClick);
+    for (const layerId of ["location-label-city", "location-label-district", "location-label-neighborhood"]) {
+      map.on("mousemove", layerId, onLocationMouseMove);
+      map.on("mouseleave", layerId, onLocationMouseLeave);
+      map.on("click", layerId, onLocationClick);
+    }
     map.on("zoomend", () => {
       const z = map.getZoom();
       if (zoomReadoutRef?.current) {
@@ -251,6 +308,7 @@ export function MapCanvas({
     const map = mapRef.current;
     if (!map) return;
     map.setStyle(getStyleForBasemap(basemap));
+    applyLocationLabelTheme(map, basemap);
   }, [basemap]);
 
   // Selection state syncing
@@ -333,6 +391,12 @@ export function MapCanvas({
     setOpacityIfExists(map, "aski-overlay-line", "line-opacity", layerOpacity["askida-overlay"] ?? 0.85);
   }, [layerOpacity, layerVisibility]);
 
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    applyLocationLabelTheme(map, basemap);
+  }, [basemap]);
+
   // Layer visibility / opacity sync
   React.useEffect(() => {
     const map = mapRef.current;
@@ -403,6 +467,67 @@ function registerParcelLayers(map: Map) {
   if (!map.getLayer("parcels-label")) {
     map.addLayer(buildParcelLabelLayer("parcels-label"));
   }
+}
+
+function registerLocationLayers(map: Map) {
+  if (!map.getSource(LOCATION_LABEL_SOURCE)) {
+    map.addSource(LOCATION_LABEL_SOURCE, {
+      type: "geojson",
+      data: buildLocationLabelCollection() as unknown as GeoJSON.FeatureCollection,
+      generateId: false
+    });
+  } else {
+    const source = map.getSource(LOCATION_LABEL_SOURCE) as maplibregl.GeoJSONSource | undefined;
+    source?.setData(buildLocationLabelCollection() as unknown as GeoJSON.FeatureCollection);
+  }
+  if (!map.getLayer("location-label-city")) {
+    map.addLayer(buildLocationCityLabelLayer("location-label-city"));
+  }
+  if (!map.getLayer("location-label-district")) {
+    map.addLayer(buildLocationDistrictLabelLayer("location-label-district"));
+  }
+  if (!map.getLayer("location-label-neighborhood")) {
+    map.addLayer(buildLocationNeighborhoodLabelLayer("location-label-neighborhood"));
+  }
+}
+
+function applyLocationLabelTheme(map: Map, basemap: BasemapId) {
+  const dark = basemap === "dark";
+  const labelColor = dark ? "#F8FAFC" : "#0F172A";
+  const labelSecondary = dark ? "#E2E8F0" : "#102A4C";
+  const haloColor = dark ? "rgba(15,23,42,0.95)" : "rgba(255,255,255,0.95)";
+
+  for (const layerId of ["location-label-city", "location-label-district", "location-label-neighborhood"]) {
+    if (!map.getLayer(layerId)) continue;
+    try {
+      map.setPaintProperty(layerId, "text-color", layerId === "location-label-city" ? labelColor : labelSecondary);
+      map.setPaintProperty(layerId, "text-halo-color", haloColor);
+    } catch {
+    }
+  }
+}
+
+function buildLocationLabelCollection(): GeoJSON.FeatureCollection {
+  const features = getMapLabelTargets().map((target) => ({
+    type: "Feature" as const,
+    id: target.sourceId,
+    properties: {
+      label: target.label,
+      kind: target.kind,
+      count: target.count,
+      il: target.il,
+      ilce: target.ilce,
+      mahalle: target.mahalle,
+      centerLng: target.center[0],
+      centerLat: target.center[1],
+      zoom: target.zoom
+    },
+    geometry: {
+      type: "Point" as const,
+      coordinates: target.center
+    }
+  }));
+  return { type: "FeatureCollection", features };
 }
 
 function setOpacityIfExists(
