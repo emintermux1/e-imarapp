@@ -21,10 +21,18 @@ export interface FlyTarget {
   seq: number;
 }
 
+export interface SelectedPointState {
+  lng: number;
+  lat: number;
+  source: "map" | "parcel" | "search" | "system";
+  nearestParcelId?: string;
+}
+
 interface MapState {
   basemap: BasemapId;
   hoveredParcelId: string | null;
   selectedParcelId: string | null;
+  selectedPoint: SelectedPointState | null;
   multiSelectedParcelIds: string[];
   selectionNotice: string | null;
   flyTarget: FlyTarget | null;
@@ -35,10 +43,12 @@ interface MapState {
   setBasemap: (b: BasemapId) => void;
   setHoveredParcelId: (id: string | null) => void;
   setSelectedParcelId: (id: string | null) => void;
+  setSelectedPoint: (point: SelectedPointState | null) => void;
   toggleMultiSelectedParcelId: (id: string) => void;
   addMultiSelectedParcelIds: (ids: string[], limit?: number) => void;
   clearMultiSelection: () => void;
   setSelectionNotice: (notice: string | null) => void;
+  clearSelection: () => void;
   flyTo: (target: Omit<FlyTarget, "seq">) => void;
   setCursorLngLat: (v: [number, number] | null) => void;
   setViewState: (v: { zoom?: number; bearing?: number; pitch?: number }) => void;
@@ -52,6 +62,7 @@ export const useMapStore = create<MapState>()(
       basemap: "voyager",
       hoveredParcelId: null,
       selectedParcelId: null,
+      selectedPoint: null,
       multiSelectedParcelIds: [],
       selectionNotice: null,
       flyTarget: null,
@@ -61,7 +72,10 @@ export const useMapStore = create<MapState>()(
       pitch: 0,
       setBasemap: (b) => set({ basemap: b }),
       setHoveredParcelId: (id) => set({ hoveredParcelId: id }),
-      setSelectedParcelId: (id) => set({ selectedParcelId: id }),
+      setSelectedParcelId: (id) =>
+        set(id ? { selectedParcelId: id, selectedPoint: null } : { selectedParcelId: null }),
+      setSelectedPoint: (point) =>
+        set(point ? { selectedPoint: point, selectedParcelId: null } : { selectedPoint: null }),
       toggleMultiSelectedParcelId: (id) =>
         set((s) => ({
           multiSelectedParcelIds: toggleMultiSelection(s.multiSelectedParcelIds, id),
@@ -77,6 +91,7 @@ export const useMapStore = create<MapState>()(
         }),
       clearMultiSelection: () => set({ multiSelectedParcelIds: [], selectionNotice: null }),
       setSelectionNotice: (notice) => set({ selectionNotice: notice }),
+      clearSelection: () => set({ selectedParcelId: null, selectedPoint: null, hoveredParcelId: null, multiSelectedParcelIds: [], selectionNotice: null }),
       flyTo: (target) =>
         set({ flyTarget: { ...target, seq: ++seqCounter } }),
       setCursorLngLat: (v) => set({ cursorLngLat: v }),

@@ -7,6 +7,7 @@ import type {
 import { ZONING_PRESETS } from "@/data/zoning";
 
 export const PARCEL_SOURCE = "parcels";
+export const SELECTED_POINT_SOURCE = "selected-point";
 export const TURKEY_GRID_SOURCE = "turkey-grid";
 export const ASKI_SOURCE = "aski-overlay";
 export const ACTIVE_PLAN_SOURCE = "active-plan-overlay";
@@ -155,6 +156,40 @@ export const buildParcelSelectedPulseLayer = (
       0.2,
       0
     ] as never
+  }
+});
+
+
+export const buildSelectedPointHaloLayer = (
+  id = "selected-point-halo"
+): CircleLayerSpecification => ({
+  id,
+  type: "circle",
+  source: SELECTED_POINT_SOURCE,
+  paint: {
+    "circle-color": "#38BDF8",
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 18, 12, 26, 17, 34] as never,
+    "circle-blur": 0.62,
+    "circle-opacity": 0.32,
+    "circle-stroke-color": "#E0F2FE",
+    "circle-stroke-width": 1,
+    "circle-stroke-opacity": 0.24
+  }
+});
+
+export const buildSelectedPointCoreLayer = (
+  id = "selected-point-core"
+): CircleLayerSpecification => ({
+  id,
+  type: "circle",
+  source: SELECTED_POINT_SOURCE,
+  paint: {
+    "circle-color": "#0EA5E9",
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 5, 12, 7, 17, 9] as never,
+    "circle-stroke-color": "#F8FAFC",
+    "circle-stroke-width": 2,
+    "circle-opacity": 0.98,
+    "circle-stroke-opacity": 0.95
   }
 });
 
