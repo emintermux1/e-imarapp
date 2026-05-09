@@ -11,6 +11,7 @@ import {
   getParcelById,
   getParcelByMapId
 } from "@/data/parcels";
+import { useActiveAskiGeoJSON } from "@/lib/api/hooks";
 import { getStyleForBasemap, type BasemapId } from "@/lib/maplibre/styles";
 import {
   PARCEL_SOURCE,
@@ -52,6 +53,7 @@ export function MapCanvas({
 
   const layerVisibility = useUIStore((s) => s.layerVisibility);
   const layerOpacity = useUIStore((s) => s.layerOpacity);
+  const askiGeoJsonQuery = useActiveAskiGeoJSON();
 
   // Lazy import: ensure CSS is present (already imported in globals).
   // Initialize the map once.
@@ -116,6 +118,7 @@ export function MapCanvas({
       if (!map.getSource(PARCEL_SOURCE)) {
         registerParcelLayers(map);
       }
+      registerAskiLayers(map);
       applyVisibilityAndOpacity(map);
     };
     if (map.isStyleLoaded()) {
@@ -131,6 +134,7 @@ export function MapCanvas({
       if (!map.getSource(PARCEL_SOURCE)) {
         registerParcelLayers(map);
       }
+      registerAskiLayers(map);
       // Re-apply selection state on style swap
       if (lastSelectedMapIdRef.current != null) {
         map.setFeatureState(
@@ -298,22 +302,17 @@ export function MapCanvas({
     });
   }, [flyTarget]);
 
-  // Layer visibility / opacity sync
   React.useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
-    const apply = () => applyVisibilityAndOpacity(map);
-    if (map.isStyleLoaded()) apply();
-    else map.once("idle", apply);
-  }, [layerVisibility, layerOpacity]);
+    if (!map || !map.isStyleLoaded()) return;
+    updateAskiSource(map, askiGeoJsonQuery.data?.ok ? askiGeoJsonQuery.data.data : null);
+  }, [askiGeoJsonQuery.data]);
 
-  function applyVisibilityAndOpacity(map: Map) {
+  const applyVisibilityAndOpacity = React.useCallback((map: Map) => {
     Object.entries(layerVisibility).forEach(([id, vis]) => {
       if (!map.getLayer(id)) return;
       map.setLayoutProperty(id, "visibility", vis ? "visible" : "none");
     });
-    // Build conditional opacity expressions so we keep hover/select highlight
-    // while still respecting the user's slider value as the base.
     const fillOpacity = layerOpacity["parcels-fill"];
     if (fillOpacity != null && map.getLayer("parcels-fill")) {
       try {
@@ -326,12 +325,22 @@ export function MapCanvas({
           fillOpacity
         ] as never);
       } catch {
-        /* swallow paint property errors during style transitions */
       }
     }
     setOpacityIfExists(map, "parcels-line", "line-opacity", layerOpacity["parcels-line"]);
     setOpacityIfExists(map, "parcels-label", "text-opacity", layerOpacity["parcels-label"]);
-  }
+    setOpacityIfExists(map, "aski-overlay-fill", "fill-opacity", layerOpacity["askida-overlay"] ?? 0.2);
+    setOpacityIfExists(map, "aski-overlay-line", "line-opacity", layerOpacity["askida-overlay"] ?? 0.85);
+  }, [layerOpacity, layerVisibility]);
+
+  // Layer visibility / opacity sync
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => applyVisibilityAndOpacity(map);
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [applyVisibilityAndOpacity]);
 
   return (
     <div
@@ -409,6 +418,44 @@ function setOpacityIfExists(
   } catch {
     /* swallow paint property errors during style transitions */
   }
+}
+
+function registerAskiLayers(map: Map) {
+  if (!map.getSource("aski-overlay-source")) {
+    map.addSource("aski-overlay-source", {
+      type: "geojson",
+      data: { type: "FeatureCollection", features: [] }
+    });
+  }
+  if (!map.getLayer("aski-overlay-fill")) {
+    map.addLayer({
+      id: "aski-overlay-fill",
+      type: "fill",
+      source: "aski-overlay-source",
+      paint: {
+        "fill-color": "#C8102E",
+        "fill-opacity": 0.2
+      }
+    } as never);
+  }
+  if (!map.getLayer("aski-overlay-line")) {
+    map.addLayer({
+      id: "aski-overlay-line",
+      type: "line",
+      source: "aski-overlay-source",
+      paint: {
+        "line-color": "#C8102E",
+        "line-width": 1.5,
+        "line-opacity": 0.9
+      }
+    } as never);
+  }
+}
+
+function updateAskiSource(map: Map, payload: { type: "FeatureCollection"; features: GeoJSON.Feature[] } | null) {
+  const source = map.getSource("aski-overlay-source") as maplibregl.GeoJSONSource | undefined;
+  if (!source) return;
+  source.setData(payload && Array.isArray(payload.features) ? payload : { type: "FeatureCollection", features: [] });
 }
 
 export function setMapBasemap(_id: BasemapId) {

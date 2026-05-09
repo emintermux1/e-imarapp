@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Menu, HelpCircle, UserCircle2, Box } from "lucide-react";
+import Link from "next/link";
+import { Menu, HelpCircle, UserCircle2, Box, Database, Activity } from "lucide-react";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { GlobalSearch } from "@/components/search/global-search";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -14,9 +15,18 @@ import {
   TooltipContent,
   TooltipTrigger
 } from "@/components/ui/tooltip";
+import { useActiveAski, useSourceHealth } from "@/lib/api/hooks";
+import { ASKI_LIST } from "@/data/aski-list";
 
 export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) {
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const askiQuery = useActiveAski();
+  const healthQuery = useSourceHealth();
+  const activeAskiCount = askiQuery.data?.ok ? askiQuery.data.data.count : ASKI_LIST.length;
+  const backendAskiOffline = !askiQuery.data?.ok || askiQuery.data.data.status !== "ok";
+  const healthRollup = healthQuery.data?.ok ? healthQuery.data.data.rollup : null;
+  const okSources = healthRollup?.ok ?? 0;
+  const totalSources = healthQuery.data?.ok ? healthQuery.data.data.total : 0;
 
   return (
     <header
@@ -44,6 +54,32 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
       </div>
 
       <div className="flex items-center gap-1 px-2 border-l border-border-subtle">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="/kaynaklar"
+              className="hidden md:inline-flex h-8 items-center gap-1.5 rounded-md border border-border-subtle bg-surface-1 px-2 text-[11px] text-fg-secondary hover:bg-surface-2"
+            >
+              <Activity className="h-3.5 w-3.5" />
+              <span className="font-medium text-fg-primary">{okSources}/{totalSources || Object.keys(ASKI_LIST).length} kaynak aktif</span>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Canlı kaynak sağlık özeti</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="/kaynaklar"
+              className="hidden sm:inline-flex h-8 items-center gap-1.5 rounded-md border border-border-subtle bg-surface-1 px-2 text-[11px] text-fg-secondary hover:bg-surface-2"
+            >
+              <Database className="h-3.5 w-3.5" />
+              <span className="font-medium text-fg-primary">{activeAskiCount} aktif askı</span>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            {backendAskiOffline ? "Backend offline; sayaç statik fallback gösteriyor" : "Backend agregasyonundan canlı askı sayısı"}
+          </TooltipContent>
+        </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="hidden sm:inline-flex">
