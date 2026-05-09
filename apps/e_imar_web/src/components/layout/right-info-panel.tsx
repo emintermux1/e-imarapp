@@ -45,6 +45,7 @@ import { SectionParcelSummary } from "@/components/info/section-parcel-summary";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmsalCalculatorPanel } from "@/components/emsal/emsal-calculator-panel";
 import { cn } from "@/lib/utils";
+import { getParcelSourceMetadata } from "@/data/parcels";
 
 export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   const open = useUIStore((s) => s.rightPanelOpen);
@@ -58,6 +59,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   const parcelFeature = useParcel(selectedId);
   const parcel = parcelFeature?.properties ?? null;
   const isWatchlisted = parcel ? watchlistHas(parcel.id) : false;
+  const parcelSource = getParcelSourceMetadata();
 
   const [emsalOpen, setEmsalOpen] = React.useState(false);
 
@@ -87,7 +89,8 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
         mahalle: parcel.mahalle,
         zoningType: parcel.zoningType,
         yuzolcumuM2: parcel.yuzolcumuM2,
-        centroid: parcel.centroid ?? [0, 0]
+        centroid: parcel.centroid ?? [0, 0],
+        provenance: parcelSource.official ? "official" : parcelSource.mode === "demo" ? "demo" : "derived"
       });
     }
   }

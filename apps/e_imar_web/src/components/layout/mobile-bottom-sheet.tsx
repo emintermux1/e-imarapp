@@ -26,6 +26,7 @@ import { SectionGecmis } from "@/components/info/section-gecmis";
 import { SectionYatirimSkoru } from "@/components/info/section-yatirim-skoru";
 import { EmsalCalculatorPanel } from "@/components/emsal/emsal-calculator-panel";
 import { cn } from "@/lib/utils";
+import { getParcelSourceMetadata } from "@/data/parcels";
 
 const SNAP_HEIGHTS = {
   peek: 96,
@@ -46,6 +47,7 @@ export function MobileBottomSheet() {
   const parcelFeature = useParcel(selectedId);
   const parcel = parcelFeature?.properties ?? null;
   const dragControls = useDragControls();
+  const parcelSource = getParcelSourceMetadata();
 
   const [emsalOpen, setEmsalOpen] = React.useState(false);
   const [vh, setVh] = React.useState<number>(800);
@@ -100,7 +102,8 @@ export function MobileBottomSheet() {
         mahalle: parcel.mahalle,
         zoningType: parcel.zoningType,
         yuzolcumuM2: parcel.yuzolcumuM2,
-        centroid: parcel.centroid ?? [0, 0]
+        centroid: parcel.centroid ?? [0, 0],
+        provenance: parcelSource.official ? "official" : parcelSource.mode === "demo" ? "demo" : "derived"
       });
     }
   }

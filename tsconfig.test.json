@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["apps/e_imar_web/src/*"]
+    }
+  },
+  "include": ["test/**/*.ts", "apps/e_imar_web/src/**/*.ts", "apps/e_imar_web/src/**/*.tsx"]
+}
