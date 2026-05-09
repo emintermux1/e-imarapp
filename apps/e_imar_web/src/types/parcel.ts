@@ -78,7 +78,7 @@ export interface ParcelFeature {
   properties: ParcelProps;
   geometry: {
     type: "Polygon";
-    coordinates: number[][][]; // [ring][[lng,lat]]
+    coordinates: number[][][];
   };
 }
 

@@ -11,7 +11,8 @@ import {
   AlertTriangle,
   Map as MapIcon,
   RefreshCw,
-  Loader2
+  Loader2,
+  Sparkles
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { BrandMark } from "@/components/layout/brand-mark";
@@ -29,6 +30,7 @@ import {
 } from "@/components/ui/tooltip";
 import { activeAskiCount, ASKI_POLYGONS } from "@/data/aski-polygons";
 import { useAskiStore } from "@/stores/aski-store";
+import { useLatestRegionsStore } from "@/stores/latest-regions-store";
 import { cn } from "@/lib/utils";
 
 export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) {
@@ -41,10 +43,16 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
   const setAskiMode = useUIStore((s) => s.setAskiMode);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
   const flyTo = useMapStore((s) => s.flyTo);
+  const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
   const askiRefresh = useAskiStore((s) => s.refresh);
   const askiApiStatus = useAskiStore((s) => s.status);
   const askiApiMessage = useAskiStore((s) => s.message);
   const liveAskiCount = useAskiStore((s) => s.plans.length);
+  const latestRegionsRefresh = useLatestRegionsStore((s) => s.refresh);
+  const latestRegionsStatus = useLatestRegionsStore((s) => s.status);
+  const latestRegionsCount = useLatestRegionsStore((s) => s.total);
+  const latestRegionsMessage = useLatestRegionsStore((s) => s.message);
+  const setLatestRegionsPanelOpen = useLatestRegionsStore((s) => s.setPanelOpen);
 
   const aktifAski = activeAskiCount();
 
@@ -123,6 +131,43 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
 	              </button>
 	            </div>
 	          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedParcelId(null);
+                setRightPanelOpen(true);
+                setLatestRegionsPanelOpen(true);
+                void latestRegionsRefresh({ limit: 20 });
+              }}
+              className={cn(
+                "hidden md:inline-flex items-center gap-1 h-7 px-2 rounded-sm border text-[11px] font-medium transition-colors",
+                latestRegionsStatus === "loading"
+                  ? "border-brand-blue/50 bg-[rgb(var(--accent-blue)/0.10)] text-fg-primary"
+                  : "border-border-subtle text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
+              )}
+            >
+              {latestRegionsStatus === "loading" ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="h-3.5 w-3.5 text-[rgb(var(--accent-blue))]" />
+              )}
+              En Yeni İmar Bölgeleri
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <div className="max-w-xs space-y-1">
+              <p>
+                {latestRegionsMessage ?? "Son plan/imar bölgesi kayıtlarını getir ve geometri varsa haritada çiz."}
+              </p>
+              <p className="text-[11px] text-fg-muted">
+                {latestRegionsCount > 0 ? `${latestRegionsCount} kayıt hazır` : "Henüz liste yüklenmedi"}
+              </p>
+            </div>
+          </TooltipContent>
         </Tooltip>
 
         {/* Compare button */}

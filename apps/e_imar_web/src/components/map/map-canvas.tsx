@@ -32,11 +32,14 @@ import { getRiskGridCollection } from "@/data/risk-grid";
 import { ZONING_PRESETS } from "@/data/zoning";
 import { getSnapshotForYear } from "@/data/historical-snapshots";
 import { useBackendParcelStore } from "@/stores/backend-parcel-store";
+import { useLatestRegionsStore } from "@/stores/latest-regions-store";
 import { parseBackendParcelId } from "@/lib/api/parcel-normalizer";
+import { geoJsonBounds, geoJsonCentroid, toFeatureCollection } from "@/lib/geojson";
 
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
 const BACKEND_SELECTED_SOURCE = "backend-selected-parcel";
+const LIVE_PLAN_REGIONS_SOURCE = "live-plan-regions";
 
 interface MapCanvasProps {
   className?: string;
@@ -67,6 +70,7 @@ export function MapCanvas({
   const basemap = useMapStore((s) => s.basemap);
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
   const selectedBackendFeature = useBackendParcelStore((s) => s.getFeature(selectedParcelId));
+  const selectedLatestRegion = useLatestRegionsStore((s) => s.selectedRegion);
   const flyTarget = useMapStore((s) => s.flyTarget);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
   const setHoveredParcelId = useMapStore((s) => s.setHoveredParcelId);
@@ -144,6 +148,7 @@ export function MapCanvas({
       ensureAskiLayers(map);
       ensureRiskGridLayer(map);
       ensureBackendSelectedLayer(map);
+      ensureLatestRegionsLayer(map);
       applyVisibilityAndOpacity(map);
     };
     if (map.isStyleLoaded()) {
@@ -158,6 +163,7 @@ export function MapCanvas({
       ensureAskiLayers(map);
       ensureRiskGridLayer(map);
       ensureBackendSelectedLayer(map);
+      ensureLatestRegionsLayer(map);
       if (lastSelectedMapIdRef.current != null) {
         map.setFeatureState(
           { source: PARCEL_SOURCE, id: lastSelectedMapIdRef.current },
@@ -357,11 +363,8 @@ export function MapCanvas({
         selectedParcelId && parseBackendParcelId(selectedParcelId) != null
           ? selectedBackendFeature
           : null;
-      source?.setData({
-        type: "FeatureCollection",
-        features: feature?.geometry.coordinates.length ? [feature as unknown as GeoJSON.Feature] : []
-      });
-      if (feature?.geometry.coordinates.length) {
+      source?.setData(toFeatureCollection(feature as unknown as GeoJSON.Feature | null));
+      if (feature) {
         const bounds = geometryBounds(feature.geometry);
         const padding = window.innerWidth >= 1280 ? { top: 72, bottom: 72, left: 320, right: 440 } : { top: 56, bottom: 56, left: 24, right: 24 };
         if (bounds) {
@@ -374,6 +377,30 @@ export function MapCanvas({
     if (map.isStyleLoaded()) apply();
     else map.once("idle", apply);
   }, [selectedBackendFeature, selectedParcelId]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      ensureLatestRegionsLayer(map);
+      const source = map.getSource(LIVE_PLAN_REGIONS_SOURCE) as maplibregl.GeoJSONSource | undefined;
+      source?.setData(toFeatureCollection(selectedLatestRegion?.has_geometry ? selectedLatestRegion.geom_geojson ?? null : null));
+      if (selectedLatestRegion?.has_geometry) {
+        const padding = window.innerWidth >= 1280 ? { top: 72, bottom: 72, left: 320, right: 440 } : { top: 56, bottom: 56, left: 24, right: 24 };
+        const bounds = geometryBounds(selectedLatestRegion.geom_geojson ?? null);
+        if (bounds) {
+          map.fitBounds(bounds, { padding, duration: 700, maxZoom: 15 });
+          return;
+        }
+        const centroid = geoJsonCentroid(selectedLatestRegion.geom_geojson ?? null);
+        if (centroid) {
+          map.flyTo({ center: centroid, zoom: Math.max(map.getZoom(), 14), padding, duration: 700 });
+        }
+      }
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [selectedLatestRegion]);
 
   React.useEffect(() => {
     const map = mapRef.current;
@@ -632,29 +659,47 @@ function ensureBackendSelectedLayer(map: Map) {
   }
 }
 
-function geometryBounds(geometry: GeoJSON.Geometry): maplibregl.LngLatBoundsLike | null {
-  const coords: Array<[number, number]> = [];
-  function collect(input: unknown): void {
-    if (!Array.isArray(input)) return;
-    if (input.length >= 2 && typeof input[0] === "number" && typeof input[1] === "number") {
-      coords.push([input[0], input[1]]);
-      return;
-    }
-    input.forEach(collect);
+function ensureLatestRegionsLayer(map: Map) {
+  if (!map.getSource(LIVE_PLAN_REGIONS_SOURCE)) {
+    map.addSource(LIVE_PLAN_REGIONS_SOURCE, {
+      type: "geojson",
+      data: { type: "FeatureCollection", features: [] }
+    });
   }
-  collect((geometry as { coordinates?: unknown }).coordinates);
-  if (coords.length === 0) return null;
-  let minLng = coords[0][0];
-  let maxLng = coords[0][0];
-  let minLat = coords[0][1];
-  let maxLat = coords[0][1];
-  coords.forEach(([lng, lat]) => {
-    minLng = Math.min(minLng, lng);
-    maxLng = Math.max(maxLng, lng);
-    minLat = Math.min(minLat, lat);
-    maxLat = Math.max(maxLat, lat);
-  });
-  return [[minLng, minLat], [maxLng, maxLat]];
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("live-plan-regions-fill")) {
+    map.addLayer(
+      {
+        id: "live-plan-regions-fill",
+        type: "fill",
+        source: LIVE_PLAN_REGIONS_SOURCE,
+        paint: {
+          "fill-color": "#8B5CF6",
+          "fill-opacity": 0.18
+        }
+      },
+      beforeId
+    );
+  }
+  if (!map.getLayer("live-plan-regions-outline")) {
+    map.addLayer(
+      {
+        id: "live-plan-regions-outline",
+        type: "line",
+        source: LIVE_PLAN_REGIONS_SOURCE,
+        paint: {
+          "line-color": "#A78BFA",
+          "line-width": 2.5,
+          "line-opacity": 0.95
+        }
+      },
+      beforeId
+    );
+  }
+}
+
+function geometryBounds(geometry: GeoJSON.Geometry | GeoJSON.Feature | GeoJSON.FeatureCollection | Record<string, unknown> | null): maplibregl.LngLatBoundsLike | null {
+  return geoJsonBounds(geometry);
 }
 
 function setOpacityIfExists(
