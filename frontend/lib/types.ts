@@ -72,6 +72,75 @@ export interface ReportResponse {
   pdf_url?: string;
 }
 
+export type Audience = "citizen" | "architect" | "investor";
+
+export interface ParcelReportResponse {
+  status?: string;
+  reportId?: string;
+  generatedAt?: string;
+  title?: string;
+  disclaimer?: string;
+  query?: Record<string, unknown>;
+  sections?: Array<{
+    title?: string;
+    fields?: Array<{ label?: string; value?: string; status?: string }>;
+  }>;
+  provenance?: Array<Record<string, unknown>>;
+  printableHtml?: string;
+  downloadFilename?: string;
+  message?: string;
+}
+
+export interface PlanNoteExplainResponse {
+  status?: string;
+  provider?: string;
+  model?: string;
+  issue?: { code?: string; message?: string } | string;
+  message?: string;
+  explanation?:
+    | {
+        sadeOzeti?: string;
+        plainSummary?: string;
+        bullets?: string[];
+        yapilasmaKosullari?: string[];
+        risks?: string[];
+        riskler?: string[];
+        requiredOpinions?: string[];
+        gerekliKurumGorusleri?: string[];
+        uncertainties?: string[];
+        bilinmeyenler?: string[];
+        [key: string]: unknown;
+      }
+    | string
+    | Record<string, unknown>;
+}
+
+export interface SourceCandidateNormalizationResponse {
+  status?: string;
+  message?: string;
+  normalizedUrl?: string;
+  vendor?: string;
+  municipalitySlug?: string;
+  sourceIdCandidate?: string;
+  accessStatusGuess?: string;
+  accessStatusReason?: string;
+  connectorKinds?: string[];
+  capabilities?: string[];
+  wouldRegister?: {
+    id?: string;
+    name?: string;
+    jurisdiction?: string;
+    category?: string;
+    homepageUrl?: string;
+    connectorKinds?: string[];
+    access?: { status?: string; notes?: string };
+    capabilities?: string[];
+    metadata?: Record<string, unknown>;
+  };
+  probeCandidates?: string[];
+  note?: string;
+}
+
 export interface WatchlistItemResponse {
   id: number;
   user_id: number;

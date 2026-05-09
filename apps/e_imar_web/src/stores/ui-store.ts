@@ -15,6 +15,7 @@ interface UIState {
   layerOpacity: Record<string, number>;
   layerVisibility: Record<string, boolean>;
   legendCollapsed: boolean;
+  fullscreenMap: boolean;
 
   /** 2D MapLibre vs 3D Cesium. */
   mapMode: MapMode;
@@ -29,6 +30,10 @@ interface UIState {
 
   /** Askı modu: when true, askı layer is forcibly visible and styled. */
   askiMode: boolean;
+
+  activeConstraintFilter: string | null;
+  activePlanNoteFilter: string | null;
+  activeRiskFocus: "deprem" | "heyelan" | "sel" | "yangin" | null;
 
   /** 3D analysis controls (only meaningful when mapMode === "3d"). */
   shadowEnabled: boolean;
@@ -45,12 +50,17 @@ interface UIState {
   setLayerOpacity: (id: string, opacity: number) => void;
   setLayerVisibility: (id: string, visible: boolean) => void;
   setLegendCollapsed: (v: boolean) => void;
+  setFullscreenMap: (v: boolean) => void;
 
   setMapMode: (m: MapMode) => void;
   setTimelineYear: (y: number | null) => void;
   setTimelineCompareYear: (y: number | null) => void;
   setCompareMode: (m: CompareMode) => void;
   setAskiMode: (v: boolean) => void;
+  setActiveConstraintFilter: (value: string | null) => void;
+  setActivePlanNoteFilter: (value: string | null) => void;
+  setActiveRiskFocus: (value: "deprem" | "heyelan" | "sel" | "yangin" | null) => void;
+  clearSemanticFocus: () => void;
 
   setShadowEnabled: (v: boolean) => void;
   setSunHour: (h: number) => void;
@@ -102,12 +112,16 @@ export const useUIStore = create<UIState>()(
       layerOpacity: initialOpacity,
       layerVisibility: initialVisibility,
       legendCollapsed: false,
+      fullscreenMap: false,
 
       mapMode: "2d",
       timelineYear: null,
       timelineCompareYear: null,
       compareMode: "off",
       askiMode: false,
+      activeConstraintFilter: null,
+      activePlanNoteFilter: null,
+      activeRiskFocus: null,
       shadowEnabled: false,
       sunHour: 12,
       sunMonth: 6,
@@ -129,6 +143,7 @@ export const useUIStore = create<UIState>()(
           layerVisibility: { ...s.layerVisibility, [id]: visible }
         })),
       setLegendCollapsed: (v) => set({ legendCollapsed: v }),
+      setFullscreenMap: (v) => set({ fullscreenMap: v }),
 
       setMapMode: (m) => set({ mapMode: m }),
       setTimelineYear: (y) => set({ timelineYear: y }),
@@ -141,6 +156,16 @@ export const useUIStore = create<UIState>()(
           layerVisibility: v
             ? { ...s.layerVisibility, "askida-overlay": true }
             : s.layerVisibility
+        })),
+      setActiveConstraintFilter: (value) => set({ activeConstraintFilter: value }),
+      setActivePlanNoteFilter: (value) => set({ activePlanNoteFilter: value }),
+      setActiveRiskFocus: (value) => set({ activeRiskFocus: value }),
+      clearSemanticFocus: () =>
+        set((s) => ({
+          activeConstraintFilter: null,
+          activePlanNoteFilter: null,
+          activeRiskFocus: null,
+          askiMode: false
         })),
       setShadowEnabled: (v) => set({ shadowEnabled: v }),
       setSunHour: (h) =>

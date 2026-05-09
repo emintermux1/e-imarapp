@@ -6,6 +6,10 @@ restrained* — TKGM Parsel Sorgu, sahibinden, ArcGIS Online and Bloomberg
 Terminal are the references; we deliberately avoid the marketing-landing,
 neon, glassmorphism, toy-rounded vocabulary.
 
+This is the canonical polished GIS product frontend for the repository at
+`apps/e_imar_web`. The older `frontend/` and `apps/web/` apps are
+deprecated/simple prototypes.
+
 > This package replaces the previous Vite shell. The Flutter mobile app at
 > `apps/e_imar_mobile/` is **not** modified by this work.
 
@@ -16,12 +20,12 @@ neon, glassmorphism, toy-rounded vocabulary.
 ```bash
 # from repo root
 npm install --prefix apps/e_imar_web
-npm --prefix apps/e_imar_web run dev   # http://localhost:3000
+npm run web:dev   # http://localhost:3000
 
 # typecheck / build / start
-npm --prefix apps/e_imar_web run typecheck
-npm --prefix apps/e_imar_web run build
-npm --prefix apps/e_imar_web run start
+npm run web:typecheck
+npm run web:build
+npm run web:preview
 ```
 
 The repo-root scripts also wrap these:
@@ -44,10 +48,7 @@ npm --prefix apps/e_imar_web run copy:cesium
 
 ### Environment
 
-Out of the box, the app uses fully token-free providers and constrains both 2D
-and 3D navigation to a Turkey working extent (`25.0,34.5` → `45.5,43.5`,
-initial fit around the country). This is intentional: the product should feel
-like a Türkiye e-imar workspace, not a global map demo.
+Out of the box, the app uses fully token-free providers:
 
 - **Carto Voyager** raster tiles (light)
 - **Carto Dark Matter** raster tiles (dark)
@@ -64,25 +65,15 @@ NEXT_PUBLIC_MAPBOX_TOKEN=pk.xxxx
 If the variable is set, a future enhancement can swap in Mapbox styles. This
 work does not install the Mapbox SDK.
 
-Parcel data mode is intentionally explicit:
+The FastAPI adapter uses:
 
 ```
-NEXT_PUBLIC_EIMAR_DATA_MODE=demo              # default
-NEXT_PUBLIC_EIMAR_DATA_MODE=api
-NEXT_PUBLIC_EIMAR_API_BASE_URL=https://...
-NEXT_PUBLIC_EIMAR_DATA_MODE=vector-tile
-NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL=https://.../{z}/{x}/{y}.pbf
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
 ```
 
-If `api` or `vector-tile` is selected without its endpoint, the app falls back
-to the sentetik demo collection and shows the fallback reason in the map status
-badge. Current demo data is **not official cadastral/TKGM data**. Demo parcel
-properties include richer synthetic imar fields (`planScale`, `planStatus`,
-`detailedUse`, `constraints`, `planLayer`) so UI, search, legend, and 3D labels
-can demonstrate nazım/uygulama plan concepts without implying official records.
-Official Turkey boundary geometry, municipality plan sheets, TKGM parcels, and
-e-Plan/WMS/vector-tile layers should replace the generated polygons and rough
-focus frame when licensed legal data sources are connected.
+When the variable is omitted, `http://localhost:8000/api/v1` is the default.
+Live API, local fallback, computed, and demo data are visibly labelled in the
+search results, map selection, right panel workflow strip, and trust section.
 
 ---
 
@@ -161,10 +152,7 @@ apps/e_imar_web/
       cesium/use-cesium-viewer.ts        # Viewer hook
       cesium/build-extrusion.ts          # parcel → entity helpers
     data/
-      parcel-seeds.ts                    # metro-area demo cluster definitions
-      parcel-generator.ts                # deterministic ~3k synthetic parcel generator
-      parcel-source.ts                   # demo/api/vector-tile source abstraction
-      parcels.geo.json (~30 featured seed polygon)
+      parcels.geo.json (~30 polygon)
       historical-snapshots.ts            # year-by-year parcel snapshots + plan changes
       aski-polygons.ts                   # askı overlay GeoJSON
       risk-grid.ts                       # synthesized AFAD-style risk grid
@@ -470,15 +458,22 @@ swap.
 
 ### Search
 
-Parcel search uses the same synchronous accessors but now reads from a
-module-level search index built once from the generated collection. Results stay
-limited per keystroke, while district examples such as Şişli, Çukurambar,
-Alsancak, Caddebostan, Nilüfer and Lara return dense parcel matches.
+Search now tries FastAPI first for parcel queries:
+
+- `1234/2` style queries call `/parsel?ada=1234&parsel=2`
+- free text parcel search calls `/parsel/search?query=...`
+- coordinate parsing remains immediate and local
+
+When FastAPI is unavailable or has no usable parcel result, the UI falls back
+to the bundled demo parcel set and shows `Yerel yedek` / `Demo veri` badges
+instead of presenting fallback values as official.
 
 ### Emsal
 
-(unchanged; powers both the in-panel `<EmsalCalculatorPanel>` Dialog and
-the standalone `/emsal` page, with the same `lib/math/emsal.ts` core).
+The calculator still uses the local `lib/math/emsal.ts` core for real-time
+feedback. For live API parcels with geometry, the dialog can also call
+`/simulation/compliance` via the `API ile doğrula` action and renders returned
+violations/compliance status inline.
 
 ---
 
@@ -518,56 +513,34 @@ the standalone `/emsal` page, with the same `lib/math/emsal.ts` core).
 
 | Surface | What's needed | Notes |
 |---|---|---|
-| **TKGM Parsel Sorgu / PostGIS API** | Replace `parcel-source.ts` demo adapter with REST/GraphQL fetcher backed by PostGIS | Accessors (`getParcelById`, `searchParcels`, `useParcel`, `useSearch`) are pure synchronous selectors today; production should page/query by viewport and index text server-side. |
-| **Vector tiles** | Serve parcel/zoning layers as MVT (`/{z}/{x}/{y}.pbf`) and switch `NEXT_PUBLIC_EIMAR_DATA_MODE=vector-tile` | Keep GeoJSON demo for local fallback; MapLibre source should become vector source for 50k+ parcels. |
-| **Municipality WMS/WFS / e-Plan / legal TKGM feeds** | Replace `data/aski-list.ts` and `data/aski-polygons.ts` with legally accessible official services | Current polygons are synthetic rectangles around realistic city centroids. |
+| **TKGM Parsel Sorgu API** | Expand current FastAPI adapter coverage beyond search/detail cache | `useSearch` now prefers `/parsel` and `/parsel/search`, then falls back to local demo data with visible badges. |
+| **e-Plan / askı feed** | Replace `data/aski-list.ts` and `data/aski-polygons.ts` with the official belediye askı service | Current polygons are synthetic 0.005°-by-0.0035° rectangles around realistic city centroids. |
 | **AFAD risk** | Replace `data/risk-grid.ts` with AFAD's WMS / GeoJSON risk service | Current grid is a 14×8 Gaussian over 13 high-risk centers. |
 | **Plan değişikliği tarihçesi** | Replace `data/historical-snapshots.ts` with TKGM plan tadilat geçmişi | 5 parcels have explicit history arcs; rest synthesise. |
 | **Cesium World Terrain** | Acquire ion access token; swap `EllipsoidTerrainProvider` → `Terrain.fromWorldTerrain()` | Required for accurate elevation in 3D. |
 | **Photorealistic 3D Tiles** | ion or Google Maps Photorealistic 3D Tiles | Replaces the custom polygon extrusion with the real building dataset. |
 | **Archival satellite imagery** | Replace the sepia-filtered placeholder in `<SatelliteCompareOverlay>` with Maxar/Planet historic WMTS | Current "Eski" pane reuses Esri World Imagery with a CSS sepia filter. |
-| **PDF Rapor server endpoint** | Wire the print-styled layout to a server-side PDF render (e.g. Playwright) | Today the user prints from the browser; an API route can produce the same A4 layout server-side. |
+| **PDF Rapor server endpoint** | Harden/report polling once backend report jobs become asynchronous | Right panel calls `/reports/generate` for live API parcels and opens `pdf_url` when returned. |
 | **Mapbox provider switching** | Activate when `NEXT_PUBLIC_MAPBOX_TOKEN` is present | Stub already present in `lib/maplibre/styles.ts`. |
 | **Backend swap** | TanStack Query is wired; replace mock fetcher with real backend | `app/providers.tsx` already has the QueryClient. |
 
 ---
 
-## Demo data
+## Mock data
 
-The map now ships with a deterministic generated collection of **3,087
-sentetik demo parcels**. The original ~30 hand-authored polygons remain as
-featured samples, then `src/data/parcel-generator.ts` expands city/ilçe/mahalle
-cluster definitions from `src/data/parcel-seeds.ts` into stable WGS84 parcel
-rectangles with slight cadastral jitter.
+(parcels list unchanged from Task 1 — 30 İstanbul/Ankara/İzmir/Bursa/Antalya
++ secondary city polygons.)
 
-Coverage clusters include İstanbul (Beşiktaş/Levent, Şişli/Mecidiyeköy,
-Kadıköy/Caddebostan, Üsküdar, Beyoğlu, Ataşehir, Bakırköy, Başakşehir), Ankara,
-İzmir, Bursa, Antalya and secondary samples in Adana, Mersin, Konya, Kayseri,
-Samsun, Trabzon, Gaziantep, Eskişehir and Kocaeli.
+New for this task:
 
-Important disclaimer: this is **synthetic/demo data only**. It is not an
-official cadastral record, TKGM parcel record, municipality zoning record or
-legal planning source. The UI labels it as `Sentetik demo veri` and shows that
-live sources are not connected.
-
-Data-source path:
-
-- `src/data/parcel-source.ts` exposes `ParcelDataMode = "demo" | "api" |
-  "vector-tile"` and `ParcelSourceMetadata`.
-- `NEXT_PUBLIC_EIMAR_DATA_MODE=demo` is the default.
-- `api` requires `NEXT_PUBLIC_EIMAR_API_BASE_URL`; `vector-tile` requires
-  `NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL`. Missing endpoints fall back to demo.
-- Backend TODO: PostGIS-backed search/viewport API, MapLibre vector tiles,
-  municipality WMS/WFS, e-Plan feeds and legally accessible TKGM integrations.
-
-Supporting overlays:
-
-- `src/data/historical-snapshots.ts` — 5 parcels with rich plan-change arcs;
-  generated parcels fall through safely to synthesized history.
-- `src/data/aski-polygons.ts` — 40+ synthetic askı/dönüşüm/onay/red polygons
-  around major demo clusters.
-- `src/data/risk-grid.ts` — Türkiye-wide AFAD-style synthetic risk grid over
-  all generated city clusters.
+- `src/data/historical-snapshots.ts` — 5 parcels with rich plan-change
+  arcs (Beşiktaş Levent, Konak Alsancak, Çankaya Çukurambar, Nilüfer
+  Görükle, Muratpaşa Lara). Other parcels fall through to a generic
+  "older plan" synthesizer for pre-2014 years.
+- `src/data/aski-polygons.ts` — 7 polygons covering the 5 askı listesi
+  entries plus Fatih dönüşüm and Çankaya park aktarması.
+- `src/data/risk-grid.ts` — 13 risk centers, ~120 grid points after
+  threshold filtering.
 
 ---
 

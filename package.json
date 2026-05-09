@@ -14,11 +14,12 @@
     "start": "node dist/main.js",
     "start:dev": "ts-node src/main.ts",
     "test": "jest --runInBand",
+    "repo:health": "bash scripts/repo-health.sh",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "web:dev": "npm --prefix frontend run dev",
-    "web:build": "npm --prefix frontend run build",
-    "web:preview": "npm --prefix frontend run start",
-    "web:typecheck": "npm --prefix frontend run typecheck",
+    "web:dev": "npm --prefix apps/e_imar_web run dev",
+    "web:build": "npm --prefix apps/e_imar_web run build",
+    "web:preview": "npm --prefix apps/e_imar_web run start",
+    "web:typecheck": "npm --prefix apps/e_imar_web run typecheck",
     "legacy:web-vite:dev": "npm --prefix apps/web run dev",
     "legacy:web-vite:build": "npm --prefix apps/web run build"
   },
@@ -41,6 +42,7 @@
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
+    "@types/geojson": "^7946.0.16",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.6.2",
     "@types/pg": "^8.15.5",

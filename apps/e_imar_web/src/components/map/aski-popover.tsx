@@ -18,6 +18,7 @@ import {
   ASKI_STATUS_STYLE,
   askiRemainingDays
 } from "@/data/aski-polygons";
+import { formatProvenanceBadge } from "@/lib/aski-tracking";
 import {
   buildFlyTargetFromLocationTarget,
   getRingBounds,
@@ -136,6 +137,9 @@ export function AskiPopover({ feature, position, onClose }: AskiPopoverProps) {
             >
               {STATUS_ICON[feature.durum]}
               {meta.label}
+              <span className="rounded-full border border-border-subtle px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-fg-muted">
+                {formatProvenanceBadge(feature.provenance)}
+              </span>
               {feature.id && (
                 <span className="text-fg-muted">· {feature.id}</span>
               )}
@@ -163,6 +167,11 @@ export function AskiPopover({ feature, position, onClose }: AskiPopoverProps) {
             icon={<Building2 className="h-3.5 w-3.5" />}
             label="Belediye"
             value={feature.belediye}
+          />
+          <Row
+            icon={<ScrollText className="h-3.5 w-3.5" />}
+            label="Provenance"
+            value={formatProvenanceBadge(feature.provenance)}
           />
           <Row
             icon={<CalendarClock className="h-3.5 w-3.5" />}

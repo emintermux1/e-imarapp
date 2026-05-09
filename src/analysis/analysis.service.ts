@@ -253,7 +253,7 @@ export class AnalysisService {
         status: 'ok',
         provider: 'openai',
         model,
-        explanation: parsed
+        explanation: this.normalizePlanNoteExplanation(parsed)
       };
     } catch (error) {
       return {
@@ -317,5 +317,50 @@ export class AnalysisService {
 
   private readString(value: unknown): string | null {
     return typeof value === 'string' && value.trim().length > 0 ? value : null;
+  }
+
+  private normalizePlanNoteExplanation(value: unknown): {
+    plainSummary: string;
+    sadeOzeti: string;
+    bullets: string[];
+    yapilasmaKosullari: string[];
+    risks: string[];
+    riskler: string[];
+    requiredOpinions: string[];
+    gerekliKurumGorusleri: string[];
+    uncertainties: string[];
+    bilinmeyenler: string[];
+  } {
+    const record = value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+    const toList = (input: unknown): string[] =>
+      Array.isArray(input)
+        ? input.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map((item) => item.trim())
+        : [];
+    const firstText = (...keys: string[]): string => {
+      for (const key of keys) {
+        const candidate = record[key];
+        if (typeof candidate === 'string' && candidate.trim().length > 0) return candidate.trim();
+      }
+      return '';
+    };
+
+    const plainSummary = firstText('plainSummary', 'sadeOzeti', 'summary', 'explanation');
+    const bullets = toList(record.bullets ?? record.yapilasmaKosullari ?? record.conditions);
+    const risks = toList(record.risks ?? record.riskler);
+    const requiredOpinions = toList(record.requiredOpinions ?? record.gerekliKurumGorusleri);
+    const uncertainties = toList(record.uncertainties ?? record.bilinmeyenler);
+
+    return {
+      plainSummary,
+      sadeOzeti: plainSummary,
+      bullets,
+      yapilasmaKosullari: bullets,
+      risks,
+      riskler: risks,
+      requiredOpinions,
+      gerekliKurumGorusleri: requiredOpinions,
+      uncertainties,
+      bilinmeyenler: uncertainties
+    };
   }
 }

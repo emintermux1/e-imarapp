@@ -1,4 +1,13 @@
 import { Module } from '@nestjs/common';
+import { DatabaseModule } from '../database/database.module';
+import { GeoController } from './geo.controller';
+import { GeoService } from './geo.service';
+import { GeometryValidationService } from './geometry-validation.service';
 
-@Module({})
+@Module({
+  imports: [DatabaseModule],
+  controllers: [GeoController],
+  providers: [GeoService, GeometryValidationService],
+  exports: [GeoService, GeometryValidationService]
+})
 export class GeoModule {}

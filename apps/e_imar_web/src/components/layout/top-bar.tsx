@@ -1,21 +1,20 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Menu,
   HelpCircle,
   UserCircle2,
   Box,
-  Layers,
+  Database,
+  Activity,
   GitCompareArrows,
   AlertTriangle,
   Map as MapIcon,
-  Keyboard,
-  BookOpen,
-  Database,
-  ShieldCheck,
-  Settings,
-  LogIn
+  RefreshCw,
+  Loader2,
+  MapPinned
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { BrandMark } from "@/components/layout/brand-mark";
@@ -31,15 +30,11 @@ import {
   TooltipContent,
   TooltipTrigger
 } from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { activeAskiCount, ASKI_POLYGONS } from "@/data/aski-polygons";
+import { activeAskiCount as fallbackAskiCount, ASKI_POLYGONS } from "@/data/aski-polygons";
+import { ASKI_LIST } from "@/data/aski-list";
+import { useAskiStore } from "@/stores/aski-store";
+import { useActiveAski, useSourceHealth } from "@/lib/api/hooks";
+import { useLatestRegionsStore } from "@/stores/latest-regions-store";
 import { cn } from "@/lib/utils";
 
 export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) {
@@ -50,25 +45,44 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
   const setCompareMode = useUIStore((s) => s.setCompareMode);
   const askiMode = useUIStore((s) => s.askiMode);
   const setAskiMode = useUIStore((s) => s.setAskiMode);
-  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
   const flyTo = useMapStore((s) => s.flyTo);
+  const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
+  const askiRefresh = useAskiStore((s) => s.refresh);
+  const askiApiStatus = useAskiStore((s) => s.status);
+  const askiApiMessage = useAskiStore((s) => s.message);
+  const liveAskiCount = useAskiStore((s) => s.plans.length);
+  const askiQuery = useActiveAski();
+  const healthQuery = useSourceHealth();
+  const backendAskiCount = askiQuery.data?.ok ? askiQuery.data.data.count : null;
+  const backendAskiOffline = !askiQuery.data?.ok || askiQuery.data.data.status !== "ok";
+  const healthRollup = healthQuery.data?.ok ? healthQuery.data.data.rollup : null;
+  const okSources = healthRollup?.ok ?? 0;
+  const totalSources = healthQuery.data?.ok ? healthQuery.data.data.total : 0;
+  const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
+  const latestRegionsRefresh = useLatestRegionsStore((s) => s.refresh);
+  const latestRegionsStatus = useLatestRegionsStore((s) => s.status);
+  const latestRegionsCount = useLatestRegionsStore((s) => s.total);
+  const latestRegionsMessage = useLatestRegionsStore((s) => s.message);
+  const setLatestRegionsPanelOpen = useLatestRegionsStore((s) => s.setPanelOpen);
 
-  const aktifAski = activeAskiCount();
+  const aktifAski = askiApiStatus === "live"
+    ? liveAskiCount
+    : backendAskiCount ?? fallbackAskiCount();
 
   function focusNearestAski() {
     const next = ASKI_POLYGONS.find((p) => p.durum === "askida");
     if (!next) return;
-    const center = midRing(next.ring);
     setSelectedArea(null);
-    flyTo({ center, zoom: 14 });
+    flyTo({ center: midRing(next.ring), zoom: 14 });
   }
 
   return (
     <header
-      className="fixed top-0 inset-x-0 z-40 h-14 flex items-stretch bg-surface-2 border-b border-border-subtle"
+      className="fixed top-0 inset-x-0 z-40 h-14 flex items-stretch border-b border-border-subtle bg-surface-2/95 shadow-[0_1px_0_rgb(255_255_255/0.03),0_8px_24px_rgb(0_0_0/0.18)] backdrop-blur-md"
       role="banner"
     >
-      <div className="flex items-center gap-2 px-3 min-w-[280px] border-r border-border-subtle">
+      <div className="flex items-center gap-2 px-3 min-w-[220px] lg:min-w-[280px] border-r border-border-subtle">
         <button
           type="button"
           aria-label="Menüyü aç"
@@ -84,12 +98,24 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
         <HeaderBreadcrumb />
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-4">
+      <div className="flex-1 flex items-center justify-center px-2 sm:px-4 min-w-[180px]">
         <GlobalSearch />
       </div>
 
-      <div className="flex items-center gap-1 px-2 border-l border-border-subtle">
-        {/* Live aski pill */}
+      <div className="flex items-center gap-1 px-2 border-l border-border-subtle overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="/kaynaklar"
+              className="hidden md:inline-flex h-8 items-center gap-1.5 rounded-md border border-border-subtle bg-surface-1 px-2 text-[11px] text-fg-secondary hover:bg-surface-2"
+            >
+              <Activity className="h-3.5 w-3.5" />
+              <span className="font-medium text-fg-primary">{okSources}/{totalSources || Object.keys(ASKI_LIST).length} kaynak aktif</span>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Canlı kaynak sağlık özeti</TooltipContent>
+        </Tooltip>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <button
@@ -100,23 +126,91 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               }}
               aria-pressed={askiMode}
               className={cn(
-                "hidden md:inline-flex items-center gap-1 h-7 px-2 rounded-sm border text-[11px] font-medium transition-colors tabular-nums",
+                "hidden md:inline-flex items-center gap-1 h-8 px-2 rounded-md border text-[11px] font-medium transition-colors tabular-nums",
                 askiMode
                   ? "border-status-warning text-fg-primary bg-[rgb(var(--status-warning)/0.10)]"
-                  : "border-border-subtle text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
+                  : "border-border-subtle bg-surface-1 text-fg-secondary hover:bg-surface-2 hover:text-fg-primary"
               )}
             >
-              <AlertTriangle
-                className={cn(
-                  "h-3.5 w-3.5",
-                  askiMode ? "text-status-warning" : "text-fg-muted"
-                )}
-              />
+              <AlertTriangle className={cn("h-3.5 w-3.5", askiMode ? "text-status-warning" : "text-fg-muted")} />
               {aktifAski} aktif askı
             </button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            {askiMode ? "Askı modunu kapat" : "Askı haritasını aç ve en yakın askıya yakınlaş"}
+            <div className="max-w-xs space-y-2">
+              <p>{askiApiMessage ?? (backendAskiOffline ? "Backend offline; sayaç fallback gösteriyor" : askiMode ? "Askı modunu kapat" : "Askı haritasını aç ve en yakın askıya yakınlaş")}</p>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void askiRefresh();
+                }}
+                className="inline-flex items-center gap-1 rounded-sm border border-border-subtle px-2 py-1 text-[11px]"
+              >
+                {askiApiStatus === "loading" ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                Askı planlarını yenile
+              </button>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="/kaynaklar"
+              className="hidden sm:inline-flex h-8 items-center gap-1.5 rounded-md border border-border-subtle bg-surface-1 px-2 text-[11px] text-fg-secondary hover:bg-surface-2"
+            >
+              <Database className="h-3.5 w-3.5" />
+              <span className="font-medium text-fg-primary">Kaynaklar</span>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Kaynak registry ekranını aç</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedArea(null);
+                setSelectedParcelId(null);
+                setRightPanelOpen(true);
+                setLatestRegionsPanelOpen(true);
+                void latestRegionsRefresh({ limit: 20 });
+              }}
+              aria-label="En yeni imar bölgelerini aç"
+              className={cn(
+                "hidden lg:inline-flex min-w-max items-center gap-2 h-9 px-2.5 rounded-md border text-[11px] font-semibold transition-colors tabular-nums",
+                latestRegionsStatus === "loading"
+                  ? "border-brand-blue/60 bg-[rgb(var(--accent-blue)/0.12)] text-fg-primary"
+                  : "border-brand-blue/35 bg-[rgb(var(--accent-blue)/0.07)] text-fg-secondary hover:border-brand-blue/60 hover:bg-[rgb(var(--accent-blue)/0.12)] hover:text-fg-primary"
+              )}
+            >
+              <span className="relative inline-flex h-5 w-5 items-center justify-center rounded-sm border border-brand-blue/30 bg-[rgb(var(--accent-blue)/0.12)] text-[rgb(var(--accent-blue))]">
+                {latestRegionsStatus === "loading" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <MapPinned className="h-3.5 w-3.5" />
+                )}
+              </span>
+              <span className="hidden xl:inline">En Yeni İmar Bölgeleri</span>
+              <span className="xl:hidden">Yeni Bölgeler</span>
+              {latestRegionsCount > 0 && (
+                <span className="rounded-full border border-border-subtle bg-surface-2 px-1.5 py-0.5 text-[10px] text-fg-primary">
+                  {latestRegionsCount}
+                </span>
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <div className="max-w-xs space-y-1">
+              <p>
+                {latestRegionsMessage ?? "Son plan/imar bölgesi kayıtlarını getir ve geometri varsa haritada çiz."}
+              </p>
+              <p className="text-[11px] text-fg-muted">
+                {latestRegionsCount > 0 ? `${latestRegionsCount} kayıt hazır` : "Henüz liste yüklenmedi"}
+              </p>
+            </div>
           </TooltipContent>
         </Tooltip>
 
@@ -127,9 +221,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               type="button"
               onClick={() => {
                 if (mapMode === "3d") return;
-                setCompareMode(
-                  compareMode === "satellite" ? "off" : "satellite"
-                );
+                setCompareMode(compareMode === "satellite" ? "off" : "satellite");
               }}
               disabled={mapMode === "3d"}
               aria-pressed={compareMode === "satellite"}
@@ -146,110 +238,61 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
             </button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            {mapMode === "3d"
-              ? "Karşılaştırma için 2D moduna geçin"
-              : "Eski/Güncel uydu karşılaştırma sürgüsü"}
+            {mapMode === "3d" ? "Karşılaştırma için 2D moduna geçin" : "Eski/Güncel uydu karşılaştırma sürgüsü"}
           </TooltipContent>
         </Tooltip>
 
-        {/* 2D/3D segmented toggle */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedArea(null);
+                setSelectedParcelId(null);
+                setRightPanelOpen(true);
+                setLatestRegionsPanelOpen(true);
+                void latestRegionsRefresh({ limit: 20 });
+              }}
+              aria-label="En yeni imar bölgelerini aç"
+              className={cn(
+                "lg:hidden h-9 w-9 inline-flex items-center justify-center rounded-md border transition-colors",
+                latestRegionsStatus === "loading"
+                  ? "border-brand-blue/60 bg-[rgb(var(--accent-blue)/0.12)] text-[rgb(var(--accent-blue))]"
+                  : "border-border-subtle bg-surface-1 text-fg-secondary hover:bg-surface-2 hover:text-fg-primary"
+              )}
+            >
+              {latestRegionsStatus === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPinned className="h-4 w-4" />}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">En yeni imar bölgeleri</TooltipContent>
+        </Tooltip>
         <ModeToggle mapMode={mapMode} setMapMode={setMapMode} />
-
-        <span className="hidden sm:inline-flex">
-          <BasemapSwitcher />
-        </span>
+        <span className="hidden sm:inline-flex"><BasemapSwitcher /></span>
         <ThemeToggle />
-        <HelpMenu />
-        <ProfileMenu />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <IconButton label="Yardım" variant="ghost"><HelpCircle className="h-4 w-4" /></IconButton>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Yardım & Klavye Kısayolları</TooltipContent>
+        </Tooltip>
+        <IconButton label="Profil" variant="ghost"><UserCircle2 className="h-4 w-4" /></IconButton>
       </div>
     </header>
   );
+}
 
-  function midRing(ring: [number, number][]): [number, number] {
-    let sx = 0;
-    let sy = 0;
-    let n = 0;
-    for (const [a, b] of ring) {
-      sx += a;
-      sy += b;
-      n += 1;
-    }
-    return [sx / Math.max(1, n), sy / Math.max(1, n)];
+function midRing(ring: [number, number][]): [number, number] {
+  let sx = 0;
+  let sy = 0;
+  let n = 0;
+  for (const [a, b] of ring) {
+    sx += a;
+    sy += b;
+    n += 1;
   }
-}
-
-function HelpMenu() {
-  const setSearchOpen = useUIStore((s) => s.setSearchOpen);
-  const setTimelineYear = useUIStore((s) => s.setTimelineYear);
-  const setCompareMode = useUIStore((s) => s.setCompareMode);
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <IconButton label="Yardım" variant="ghost">
-          <HelpCircle className="h-4 w-4" />
-        </IconButton>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuLabel>Yardım & Kısayollar</DropdownMenuLabel>
-        <DropdownMenuItem onSelect={() => setSearchOpen(true)}>
-          <Keyboard className="h-4 w-4 text-fg-muted" />
-          <span className="flex-1">Arama komut paleti</span>
-          <span className="rounded-sm border border-border-subtle px-1.5 py-0.5 text-[10px] text-fg-muted">Ctrl K</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => setTimelineYear(2026)}>
-          <BookOpen className="h-4 w-4 text-fg-muted" />
-          Zaman Çizelgesi'ni aç
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => setCompareMode("satellite")}>
-          <GitCompareArrows className="h-4 w-4 text-fg-muted" />
-          Uydu karşılaştırmayı aç
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <div className="px-2.5 py-2 text-[11px] leading-relaxed text-fg-secondary">
-          Harita Türkiye çalışma alanına kilitlidir. Demo katmanlar sentetik veri üretir; resmi TKGM/belediye kaydı değildir.
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function ProfileMenu() {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <IconButton label="Profil" variant="ghost">
-          <UserCircle2 className="h-4 w-4" />
-        </IconButton>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuLabel>Hesap</DropdownMenuLabel>
-        <div className="px-2.5 py-2">
-          <div className="text-sm font-semibold text-fg-primary">Misafir kullanıcı</div>
-          <div className="mt-1 text-[11px] leading-relaxed text-fg-secondary">
-            Kimlik doğrulama bağlanınca kayıtlı sorgular, raporlar ve watchlist hesabınıza senkronlanacak.
-          </div>
-        </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem disabled>
-          <LogIn className="h-4 w-4 text-fg-muted" />
-          Giriş yap yakında
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled>
-          <Database className="h-4 w-4 text-fg-muted" />
-          Veri kaynakları yakında
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled>
-          <ShieldCheck className="h-4 w-4 text-fg-muted" />
-          Yetki / abonelik yakında
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled>
-          <Settings className="h-4 w-4 text-fg-muted" />
-          Hesap ayarları yakında
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+  return [sx / Math.max(1, n), sy / Math.max(1, n)];
 }
 
 function ModeToggle({
@@ -261,18 +304,8 @@ function ModeToggle({
 }) {
   return (
     <div className="hidden sm:inline-flex relative items-center h-8 rounded-md border border-border-subtle bg-surface-1 p-0.5">
-      <ToggleSegment
-        active={mapMode === "2d"}
-        onClick={() => setMapMode("2d")}
-        label="2D"
-        icon={<MapIcon className="h-3.5 w-3.5" />}
-      />
-      <ToggleSegment
-        active={mapMode === "3d"}
-        onClick={() => setMapMode("3d")}
-        label="3D"
-        icon={<Box className="h-3.5 w-3.5" />}
-      />
+      <ToggleSegment active={mapMode === "2d"} onClick={() => setMapMode("2d")} label="2D" icon={<MapIcon className="h-3.5 w-3.5" />} />
+      <ToggleSegment active={mapMode === "3d"} onClick={() => setMapMode("3d")} label="3D" icon={<Box className="h-3.5 w-3.5" />} />
     </div>
   );
 }
@@ -307,10 +340,7 @@ function ToggleSegment({
           transition={{ type: "spring", stiffness: 380, damping: 32 }}
         />
       )}
-      <span className="relative inline-flex items-center gap-1">
-        {icon}
-        {label}
-      </span>
+      <span className="relative inline-flex items-center gap-1">{icon}{label}</span>
     </button>
   );
 }

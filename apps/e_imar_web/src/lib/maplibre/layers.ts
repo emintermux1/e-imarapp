@@ -11,10 +11,14 @@ export const TURKEY_GRID_SOURCE = "turkey-grid";
 export const ASKI_SOURCE = "aski-overlay";
 export const ACTIVE_PLAN_SOURCE = "active-plan-overlay";
 export const RISK_GRID_SOURCE = "risk-grid";
+export const LIVE_SOURCE_REGISTRY_SOURCE = "live-source-registry";
 export const TRANSPORT_SOURCE = "transport-lines";
 export const MUNICIPALITY_SOURCE = "municipality-boundaries";
-export const SELECTED_AREA_SOURCE = "selected-area";
+export const MUNICIPALITY_COVERAGE_SOURCE = "municipality-coverage";
 export const TURKEY_FOCUS_SOURCE = "turkey-focus";
+export const LOCATION_LABEL_SOURCE = "location-labels";
+export const DRAWING_SOURCE = "drawings-source";
+export const SELECTED_AREA_SOURCE = "selected-area";
 
 const zoningCases: (string | string[])[] = ["match", ["get", "zoningType"]];
 Object.values(ZONING_PRESETS).forEach((preset) => {
@@ -31,19 +35,47 @@ strokeCases.push("#C39A2B");
 export const zoningFillExpression = zoningCases as never;
 export const zoningStrokeExpression = strokeCases as never;
 
+export const buildSelectedAreaFillLayer = (
+  id = "selected-area-fill"
+): FillLayerSpecification => ({
+  id,
+  type: "fill",
+  source: SELECTED_AREA_SOURCE,
+  paint: {
+    "fill-color": "#EF4444",
+    "fill-opacity": ["interpolate", ["linear"], ["zoom"], 6, 0.1, 12, 0.16, 16, 0.12] as never
+  }
+});
+
+export const buildSelectedAreaLineLayer = (
+  id = "selected-area-line"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: SELECTED_AREA_SOURCE,
+  paint: {
+    "line-color": "#EF0000",
+    "line-width": ["interpolate", ["linear"], ["zoom"], 6, 1.6, 12, 2.8, 16, 4.2] as never,
+    "line-opacity": 0.92
+  }
+});
+
 export const buildParcelFillLayer = (id = "parcels-fill"): FillLayerSpecification => ({
   id,
   type: "fill",
   source: PARCEL_SOURCE,
+  minzoom: 11.4,
   paint: {
     "fill-color": zoningFillExpression,
     "fill-opacity": [
       "case",
       ["boolean", ["feature-state", "selected"], false],
       0.78,
+      ["boolean", ["feature-state", "multiSelected"], false],
+      0.64,
       ["boolean", ["feature-state", "hover"], false],
       0.62,
-      0.45
+      ["interpolate", ["linear"], ["zoom"], 11.4, 0.12, 13.5, 0.34, 16, 0.45] as unknown as never
     ]
   }
 });
@@ -52,18 +84,45 @@ export const buildParcelLineLayer = (id = "parcels-line"): LineLayerSpecificatio
   id,
   type: "line",
   source: PARCEL_SOURCE,
+  minzoom: 11.2,
   paint: {
     "line-color": zoningStrokeExpression,
     "line-width": [
       "interpolate",
       ["linear"],
       ["zoom"],
-      10, 0.6,
-      14, 1.2,
-      17, 1.8,
-      19, 2.4
+      11.2, 0.25,
+      13, 0.7,
+      15.5, 1.35,
+      17.5, 2.2,
+      19, 3.1
     ] as never,
-    "line-opacity": 0.95
+    "line-opacity": ["interpolate", ["linear"], ["zoom"], 11.2, 0.18, 13, 0.58, 15, 0.86, 17, 0.98] as never
+  }
+});
+
+export const buildParcelHoverHaloLayer = (
+  id = "parcels-hover-halo"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: PARCEL_SOURCE,
+  minzoom: 12,
+  paint: {
+    "line-color": "#C8102E",
+    "line-width": [
+      "case",
+      ["boolean", ["feature-state", "hover"], false],
+      ["interpolate", ["linear"], ["zoom"], 12, 2.4, 16, 5.2, 19, 7.4],
+      0
+    ] as never,
+    "line-blur": 1.4,
+    "line-opacity": [
+      "case",
+      ["boolean", ["feature-state", "hover"], false],
+      0.34,
+      0
+    ] as never
   }
 });
 
@@ -79,6 +138,8 @@ export const buildParcelSelectedAccentLayer = (
       "case",
       ["boolean", ["feature-state", "selected"], false],
       2.6,
+      ["boolean", ["feature-state", "multiSelected"], false],
+      2.1,
       0
     ],
     "line-blur": 0.3,
@@ -86,8 +147,40 @@ export const buildParcelSelectedAccentLayer = (
       "case",
       ["boolean", ["feature-state", "selected"], false],
       1,
+      ["boolean", ["feature-state", "multiSelected"], false],
+      0.86,
       0
     ]
+  }
+});
+
+export const buildParcelSelectedPulseLayer = (
+  id = "parcels-selected-pulse"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: PARCEL_SOURCE,
+  minzoom: 12,
+  paint: {
+    "line-color": [
+      "case",
+      ["boolean", ["feature-state", "multiSelected"], false],
+      "#102A4C",
+      "#C8102E"
+    ] as never,
+    "line-width": [
+      "case",
+      ["any", ["boolean", ["feature-state", "selected"], false], ["boolean", ["feature-state", "multiSelected"], false]],
+      4,
+      0
+    ] as never,
+    "line-blur": 1.2,
+    "line-opacity": [
+      "case",
+      ["any", ["boolean", ["feature-state", "selected"], false], ["boolean", ["feature-state", "multiSelected"], false]],
+      0.2,
+      0
+    ] as never
   }
 });
 
@@ -97,45 +190,136 @@ export const buildParcelLabelLayer = (
   id,
   type: "symbol",
   source: PARCEL_SOURCE,
-  minzoom: 15.5,
+  minzoom: 14.6,
   layout: {
     "text-field": [
-      "concat",
-      ["get", "ada"],
-      "/",
-      ["get", "parsel"],
-      " · ",
+      "case",
+      [">=", ["zoom"], 16.7],
       [
-        "case",
-        ["in", "TİCK", ["coalesce", ["get", "detailedUse"], ""]],
-        "TİCK",
-        ["in", "MİA", ["coalesce", ["get", "detailedUse"], ""]],
-        "MİA",
-        ["==", ["get", "zoningType"], "Kamu"],
-        "Donatı",
-        ["==", ["get", "zoningType"], "Yesil"],
-        "Park",
-        ["get", "zoningType"]
-      ]
+        "concat",
+        ["get", "ada"],
+        "/",
+        ["get", "parsel"],
+        " · ",
+        [
+          "case",
+          ["in", "TİCK", ["coalesce", ["get", "detailedUse"], ""]],
+          "TİCK",
+          ["in", "MİA", ["coalesce", ["get", "detailedUse"], ""]],
+          "MİA",
+          ["==", ["get", "zoningType"], "Kamu"],
+          "Donatı",
+          ["==", ["get", "zoningType"], "Yesil"],
+          "Park",
+          ["get", "zoningType"]
+        ]
+      ],
+      ["concat", ["get", "ada"], "/", ["get", "parsel"]]
     ],
     "text-font": ["Noto Sans Regular"],
     "text-size": [
       "interpolate",
       ["linear"],
       ["zoom"],
-      15.5,
-      8,
+      14.6,
+      7.5,
+      16.5,
+      9.5,
       18,
-      12
+      12.5
     ],
     "text-allow-overlap": false,
-    "text-padding": 4
+    "text-ignore-placement": false,
+    "text-padding": ["interpolate", ["linear"], ["zoom"], 14.6, 2, 17, 5] as never,
+    "symbol-sort-key": ["get", "yuzolcumuM2"] as never
   },
   paint: {
     "text-color": "#0F172A",
     "text-halo-color": "rgba(255,255,255,0.85)",
     "text-halo-width": 1.4,
     "text-halo-blur": 0.4
+  }
+});
+
+export const buildLocationCityLabelLayer = (
+  id = "location-label-city"
+): SymbolLayerSpecification => ({
+  id,
+  type: "symbol",
+  source: LOCATION_LABEL_SOURCE,
+  minzoom: 4.2,
+  maxzoom: 8.6,
+  filter: ["==", ["get", "kind"], "il"],
+  layout: {
+    "text-field": ["get", "label"],
+    "text-font": ["Noto Sans SemiBold"],
+    "text-size": ["interpolate", ["linear"], ["zoom"], 4.2, 11, 8.5, 14],
+    "text-allow-overlap": false,
+    "text-padding": 4,
+    "text-optional": false
+  },
+  paint: {
+    "text-color": "#0F172A",
+    "text-halo-color": "rgba(255,255,255,0.95)",
+    "text-halo-width": 1.6,
+    "text-halo-blur": 0.35
+  }
+});
+
+export const buildLocationDistrictLabelLayer = (
+  id = "location-label-district"
+): SymbolLayerSpecification => ({
+  id,
+  type: "symbol",
+  source: LOCATION_LABEL_SOURCE,
+  minzoom: 7.2,
+  maxzoom: 12.7,
+  filter: ["==", ["get", "kind"], "ilce"],
+  layout: {
+    "text-field": [
+      "concat",
+      ["get", "label"],
+      " · ",
+      ["to-string", ["get", "count"]]
+    ],
+    "text-font": ["Noto Sans Medium"],
+    "text-size": ["interpolate", ["linear"], ["zoom"], 7.2, 10.5, 12.6, 13.2],
+    "text-allow-overlap": false,
+    "text-padding": 4
+  },
+  paint: {
+    "text-color": "#102A4C",
+    "text-halo-color": "rgba(255,255,255,0.95)",
+    "text-halo-width": 1.5,
+    "text-halo-blur": 0.4
+  }
+});
+
+export const buildLocationNeighborhoodLabelLayer = (
+  id = "location-label-neighborhood"
+): SymbolLayerSpecification => ({
+  id,
+  type: "symbol",
+  source: LOCATION_LABEL_SOURCE,
+  minzoom: 11,
+  filter: ["==", ["get", "kind"], "mahalle"],
+  layout: {
+    "text-field": [
+      "concat",
+      ["get", "label"],
+      " · ",
+      ["to-string", ["get", "count"]]
+    ],
+    "text-font": ["Noto Sans Regular"],
+    "text-size": ["interpolate", ["linear"], ["zoom"], 11, 9.5, 15.8, 12.6],
+    "text-allow-overlap": false,
+    "text-padding": 3
+  },
+  paint: {
+    "text-color": "#334155",
+    "text-halo-color": "rgba(255,255,255,0.96)",
+    "text-halo-width": 1.4,
+    "text-halo-blur": 0.35
   }
 });
 
@@ -235,6 +419,90 @@ export const buildParcelHoverDotLayer = (
       0
     ],
     "circle-opacity": 0.0
+  }
+});
+
+export const buildDrawingLineLayer = (
+  id = "drawings-line"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: DRAWING_SOURCE,
+  filter: ["==", ["geometry-type"], "LineString"],
+  layout: {
+    "line-cap": "round",
+    "line-join": "round"
+  },
+  paint: {
+    "line-color": "#102A4C",
+    "line-width": 3,
+    "line-opacity": 0.95,
+    "line-dasharray": [1, 0.8] as never
+  }
+});
+
+export const buildDrawingPolygonLayer = (
+  id = "drawings-polygon"
+): FillLayerSpecification => ({
+  id,
+  type: "fill",
+  source: DRAWING_SOURCE,
+  filter: ["==", ["geometry-type"], "Polygon"],
+  paint: {
+    "fill-color": ["case", ["==", ["get", "kind"], "radius"], "#102A4C", "#C8102E"] as never,
+    "fill-opacity": 0.12
+  }
+});
+
+export const buildDrawingPolygonOutlineLayer = (
+  id = "drawings-polygon-outline"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: DRAWING_SOURCE,
+  filter: ["==", ["geometry-type"], "Polygon"],
+  paint: {
+    "line-color": ["case", ["==", ["get", "kind"], "radius"], "#102A4C", "#C8102E"] as never,
+    "line-width": 2.5,
+    "line-opacity": 0.95
+  }
+});
+
+export const buildDrawingPointLayer = (
+  id = "drawings-point"
+): CircleLayerSpecification => ({
+  id,
+  type: "circle",
+  source: DRAWING_SOURCE,
+  filter: ["==", ["geometry-type"], "Point"],
+  paint: {
+    "circle-color": "#C8102E",
+    "circle-radius": 5,
+    "circle-stroke-color": "#FFFFFF",
+    "circle-stroke-width": 2,
+    "circle-opacity": 0.95
+  }
+});
+
+export const buildDrawingLabelLayer = (
+  id = "drawings-label"
+): SymbolLayerSpecification => ({
+  id,
+  type: "symbol",
+  source: DRAWING_SOURCE,
+  layout: {
+    "text-field": ["concat", ["get", "label"], " · ", ["get", "detail"]],
+    "text-font": ["Noto Sans Medium"],
+    "text-size": 11,
+    "text-offset": [0, 1.25],
+    "text-anchor": "top",
+    "text-allow-overlap": false,
+    "text-padding": 4
+  },
+  paint: {
+    "text-color": "#102A4C",
+    "text-halo-color": "rgba(255,255,255,0.96)",
+    "text-halo-width": 1.5
   }
 });
 
@@ -433,32 +701,66 @@ export const buildMunicipalityBoundaryLayer = (
   }
 });
 
-export const buildSelectedAreaFillLayer = (
-  id = "selected-area-fill"
-): FillLayerSpecification => ({
+export const buildMunicipalityCoverageCircleLayer = (
+  id = "municipality-coverage-circles",
+  source = MUNICIPALITY_COVERAGE_SOURCE
+): CircleLayerSpecification => ({
   id,
-  type: "fill",
-  source: SELECTED_AREA_SOURCE,
+  type: "circle",
+  source,
+  minzoom: 5,
+  maxzoom: 11.2,
   paint: {
-    "fill-color": "#EF4444",
-    "fill-opacity": ["interpolate", ["linear"], ["zoom"], 9, 0.2, 15, 0.14] as never
+    "circle-color": [
+      "match",
+      ["get", "coverageStatus"],
+      "public_candidate", "#0EA5E9",
+      "protected", "#F59E0B",
+      "method_contract_required", "#8B5CF6",
+      "registered", "#0F766E",
+      "#64748B"
+    ] as never,
+    "circle-radius": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      5, 4,
+      8, 6,
+      11, 9
+    ] as never,
+    "circle-opacity": 0.85,
+    "circle-stroke-color": "#FFFFFF",
+    "circle-stroke-width": 1.25
   }
 });
 
-export const buildSelectedAreaLineLayer = (
-  id = "selected-area-line"
-): LineLayerSpecification => ({
+export const buildMunicipalityCoverageLabelLayer = (
+  id = "municipality-coverage-labels",
+  source = MUNICIPALITY_COVERAGE_SOURCE
+): SymbolLayerSpecification => ({
   id,
-  type: "line",
-  source: SELECTED_AREA_SOURCE,
+  type: "symbol",
+  source,
+  minzoom: 6,
+  maxzoom: 11.5,
   layout: {
-    "line-join": "round",
-    "line-cap": "round"
+    "text-field": ["coalesce", ["get", "label"], ["get", "name"]],
+    "text-font": ["Noto Sans Regular"],
+    "text-size": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      6, 9,
+      11, 12
+    ] as never,
+    "text-offset": [0, 1.0] as never,
+    "text-anchor": "top",
+    "text-allow-overlap": false
   },
   paint: {
-    "line-color": "#EF0000",
-    "line-width": ["interpolate", ["linear"], ["zoom"], 8, 2.2, 14, 3.2, 18, 4.4] as never,
-    "line-opacity": 0.95
+    "text-color": "#0F172A",
+    "text-halo-color": "rgba(255,255,255,0.92)",
+    "text-halo-width": 1.6
   }
 });
 
@@ -468,7 +770,9 @@ export interface LayerDescriptor {
   description: string;
   defaultVisible: boolean;
   defaultOpacity: number;
-  group: "Parsel" | "Plan" | "Risk" | "Çevre" | "İdari";
+  group: "İmar" | "Risk" | "Uydu / Hibrit" | "Tarihsel" | "Belediye" | "Çevre" | "Altyapı" | "İdari";
+  status: "official" | "public_metadata" | "demo" | "derived" | "not_ready";
+  emptyReason?: string;
 }
 
 /** UI-side layer descriptors. The map canvas reacts to visibility/opacity
@@ -480,7 +784,9 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Plan kullanım rengiyle parsel dolgu yüzeyi",
     defaultVisible: true,
     defaultOpacity: 0.55,
-    group: "Parsel"
+    group: "İmar",
+    status: "demo",
+    emptyReason: "Canlı belediye/TKGM parsel akışı bağlı değil; yerel demo parsel geometrisi gösteriliyor."
   },
   {
     id: "parcels-line",
@@ -488,7 +794,17 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Parsel kenar çizgileri",
     defaultVisible: true,
     defaultOpacity: 1,
-    group: "Parsel"
+    group: "İmar",
+    status: "demo"
+  },
+  {
+    id: "parcels-selected-accent",
+    label: "Seçim Vurgusu",
+    description: "Tekil ve çoklu parsel seçimi için kurumsal sınır vurgusu",
+    defaultVisible: true,
+    defaultOpacity: 1,
+    group: "İmar",
+    status: "derived"
   },
   {
     id: "parcels-label",
@@ -496,7 +812,17 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Yüksek zoom seviyelerinde ada/parsel numaraları",
     defaultVisible: true,
     defaultOpacity: 1,
-    group: "Parsel"
+    group: "İmar",
+    status: "derived"
+  },
+  {
+    id: "drawings-line",
+    label: "Ölçüm Çizimleri",
+    description: "Mesafe, alan, yarıçap ve koordinat işaretleme çizimleri",
+    defaultVisible: true,
+    defaultOpacity: 1,
+    group: "İmar",
+    status: "derived"
   },
   {
     id: "yururlukte-plan-points",
@@ -504,7 +830,8 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Türkiye genelindeki yürürlükteki NİP/UİP kayıt noktaları",
     defaultVisible: true,
     defaultOpacity: 0.95,
-    group: "Plan"
+    group: "Belediye",
+    status: "public_metadata"
   },
   {
     id: "askida-overlay",
@@ -512,7 +839,9 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Askıdaki, onaylanmış ve reddedilmiş plan kapsamları",
     defaultVisible: false,
     defaultOpacity: 0.85,
-    group: "Plan"
+    group: "Belediye",
+    status: "demo",
+    emptyReason: "Canlı askı servisi yoksa yalnızca demo/derived askı kapsamları görünür."
   },
   {
     id: "plan-constraint-line",
@@ -520,7 +849,8 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Koruma, sit, dönüşüm ve rezerv sınır çizgileri",
     defaultVisible: true,
     defaultOpacity: 0.9,
-    group: "Plan"
+    group: "İmar",
+    status: "derived"
   },
   {
     id: "plan-donati-label",
@@ -528,15 +858,17 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Eğitim, sağlık, belediye gibi donatı etiketleri",
     defaultVisible: true,
     defaultOpacity: 0.85,
-    group: "Plan"
+    group: "İmar",
+    status: "derived"
   },
   {
     id: "deprem-risk-grid",
-    label: "Risk Haritası",
-    description: "AFAD bazlı bölgesel risk dağılımı (mock grid)",
+    label: "Deprem Risk Haritası",
+    description: "AFAD referanslı, demo grid üzerinden türetilmiş deprem risk dağılımı",
     defaultVisible: false,
     defaultOpacity: 0.55,
-    group: "Risk"
+    group: "Risk",
+    status: "derived"
   },
   {
     id: "metro-hatti",
@@ -544,7 +876,8 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Örnek metro ve raylı sistem koridorları",
     defaultVisible: true,
     defaultOpacity: 0.9,
-    group: "Çevre"
+    group: "Altyapı",
+    status: "demo"
   },
   {
     id: "belediye-sinirlari",
@@ -552,7 +885,17 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Örnek ilçe ve belediye sınır çizgileri",
     defaultVisible: true,
     defaultOpacity: 0.75,
-    group: "İdari"
+    group: "İdari",
+    status: "public_metadata"
+  },
+  {
+    id: "live-source-markers",
+    label: "Canlı Kaynak Noktaları",
+    description: "Seed edilen gerçek belediye/TKGM/e-Plan/TUCBS portal işaretleri",
+    defaultVisible: true,
+    defaultOpacity: 0.9,
+    group: "İdari",
+    status: "public_metadata"
   },
   {
     id: "turkey-frame",
@@ -560,6 +903,116 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     description: "Ulusal odak sınırı ve çalışma alanı kılavuzu",
     defaultVisible: true,
     defaultOpacity: 0.7,
-    group: "İdari"
+    group: "İdari",
+    status: "derived"
+  },
+  {
+    id: "flood-risk",
+    label: "Sel / Taşkın Riski",
+    description: "DSİ taşkın veri servisi bağlanmadı; parsel detayında demo risk alanı ayrı etiketlenir.",
+    defaultVisible: false,
+    defaultOpacity: 0.5,
+    group: "Risk",
+    status: "not_ready",
+    emptyReason: "DSİ taşkın WMS/WFS kaynağı bu ortamda bağlı değil. Veri hazır olmadan katman çizilmez."
+  },
+  {
+    id: "slope-analysis",
+    label: "Eğim Analizi",
+    description: "Sayısal yükseklik modeli bağlanınca eğim yüzdesi raster/vektör olarak açılır.",
+    defaultVisible: false,
+    defaultOpacity: 0.6,
+    group: "Risk",
+    status: "not_ready",
+    emptyReason: "DEM/eğim servisi yok; uydurma eğim rasterı üretilmedi."
+  },
+  {
+    id: "satellite-hybrid",
+    label: "Uydu / Hibrit Altlık",
+    description: "Uydu karşılaştırma sürgüsü üzerinden kontrollü açılır; lisanslı tile akışı bekleniyor.",
+    defaultVisible: false,
+    defaultOpacity: 0.85,
+    group: "Uydu / Hibrit",
+    status: "not_ready",
+    emptyReason: "Lisanslı uydu tile endpoint'i bağlı değil. Mevcut karşılaştırma yüzeyi placeholder olarak çalışır."
+  },
+  {
+    id: "historical-plan-snapshots",
+    label: "Tarihsel Plan Snapshot",
+    description: "Timeline yılına göre demo snapshot renkleri; resmi arşiv katmanı değildir.",
+    defaultVisible: false,
+    defaultOpacity: 0.75,
+    group: "Tarihsel",
+    status: "demo",
+    emptyReason: "Timeline açıldığında demo snapshot renklendirmesi parsel dolgusuna uygulanır."
+  },
+  {
+    id: "municipal-projects",
+    label: "Belediye Projeleri",
+    description: "Yakın yatırım/proje kayıtları için belediye proje akışı bekleniyor.",
+    defaultVisible: false,
+    defaultOpacity: 0.7,
+    group: "Belediye",
+    status: "not_ready",
+    emptyReason: "Belediye proje registry kaynağı bağlı değil; yakın proje uydurulmaz."
+  },
+  {
+    id: "urban-transformation",
+    label: "Kentsel Dönüşüm / Rezerv",
+    description: "Plan kısıt çizgilerinden türetilen dönüşüm/rezerv sinyalleri.",
+    defaultVisible: true,
+    defaultOpacity: 0.9,
+    group: "Belediye",
+    status: "derived"
+  },
+  {
+    id: "infrastructure-corridors",
+    label: "Altyapı Koridorları",
+    description: "İSKİ/AYEDAŞ/BOTAŞ vb. resmi altyapı koridorları için entegrasyon bekleniyor.",
+    defaultVisible: false,
+    defaultOpacity: 0.7,
+    group: "Altyapı",
+    status: "not_ready",
+    emptyReason: "Resmi altyapı servisleri bağlı değil; güvenlik açısından demo çizgi üretilmedi."
+  },
+  {
+    id: "road-width",
+    label: "Yol Genişliği / Cephe",
+    description: "Parseldeki yol cephesi mevcut kayıt alanından gösterilir; yol genişliği kaynağı bekleniyor.",
+    defaultVisible: false,
+    defaultOpacity: 0.7,
+    group: "Altyapı",
+    status: "derived",
+    emptyReason: "Yol genişliği vektörü yok; yalnızca parsel detayındaki yol cephesi alanı gösterilir."
+  },
+  {
+    id: "noise-traffic",
+    label: "Gürültü / Trafik",
+    description: "Çevresel gürültü ve trafik yoğunluğu katmanı resmi kaynak bağlanınca açılır.",
+    defaultVisible: false,
+    defaultOpacity: 0.55,
+    group: "Çevre",
+    status: "not_ready",
+    emptyReason: "Gürültü/trafik servisi yok; parselde demo skor varsa ayrıca demo etiketiyle gösterilir."
+  },
+  {
+    id: "solar-shadow",
+    label: "Güneş / Gölge",
+    description: "3D Cesium güneş saatiyle hesaplanan analiz; 2D katman olarak hazır değil.",
+    defaultVisible: false,
+    defaultOpacity: 0.6,
+    group: "Çevre",
+    status: "derived",
+    emptyReason: "2D gölge rasterı yok; 3D modda güneş/gölge kontrolleri kullanılabilir."
+  },
+  {
+    id: "green-space",
+    label: "Yeşil Alan",
+    description: "Plan kullanım sınıfı ve çevre mesafelerinden demo/derived yeşil alan görünümü.",
+    defaultVisible: false,
+    defaultOpacity: 0.65,
+    group: "Çevre",
+    status: "derived",
+    emptyReason: "Resmi park/yeşil alan katmanı bağlı değil; yalnızca parsel sınıfı ve demo mesafe alanları mevcut."
   }
 ];

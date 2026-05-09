@@ -5,10 +5,25 @@ from fastapi.middleware.cors import CORSMiddleware
 import structlog
 
 from app.celery_app import celery_app
+from app.config import settings
 from app.core.logging import setup_logging
 from app.database import safe_init_db
-from app.routers import auth, health, map, municipalities, parcels, plans, reports, watchlist
-from app.routers import aski, sources
+from app.routers import (
+    analysis,
+    aski,
+    auth,
+    health,
+    map,
+    municipalities,
+    parcels,
+    plans,
+    reports,
+    satellite,
+    simulation,
+    sources,
+    user_data,
+    watchlist,
+)
 
 setup_logging()
 logger = structlog.get_logger()
@@ -29,19 +44,24 @@ async def lifespan(app: FastAPI):
         result_backend="redis://redis:6379/0",
     )
     yield
+    logger.info("Shutting down application")
 
 
 def create_app():
     app = FastAPI(
         title="eImarTR API — Türkiye Ulusal e-İmar Platformu",
-        description="API for accessing parcel, plan, and municipality data from various sources including TKGM, e-Plan, and TUCBS.",
+        description="Backend API for Turkey's national e-Imar platform. Integrates TKGM, e-Plan, TUCBS, municipal KEOS, 3D simulation, satellite analysis, and watchlist change detection.",
         version="0.1.0",
         lifespan=lifespan,
     )
 
+    cors_origins = getattr(settings, "CORS_ORIGINS", "*")
+    if isinstance(cors_origins, str):
+        cors_origins = [origin.strip() for origin in cors_origins.split(",") if origin.strip()]
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -55,8 +75,12 @@ def create_app():
     app.include_router(map.router, prefix="/api/v1/map", tags=["map"])
     app.include_router(reports.router, prefix="/api/v1", tags=["reports"])
     app.include_router(watchlist.router, prefix="/api/v1", tags=["watchlist"])
-    app.include_router(sources.router, prefix="/api/v1/sources", tags=["sources"])
+    app.include_router(sources.router, prefix="/api/v1", tags=["sources"])
     app.include_router(aski.router, prefix="/api/v1/aski", tags=["aski"])
+    app.include_router(simulation.router, prefix="/api/v1", tags=["simulation"])
+    app.include_router(satellite.router, prefix="/api/v1", tags=["satellite"])
+    app.include_router(analysis.router, prefix="/api/v1", tags=["analysis"])
+    app.include_router(user_data.router, prefix="/api/v1", tags=["user-data"])
 
     return app
 

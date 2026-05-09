@@ -7,9 +7,15 @@ interface CesiumViewerProps {
   center?: [number, number, number];
 }
 
+/**
+ * Lazy-loads Cesium in the browser. World terrain + Ion defaults require
+ * `NEXT_PUBLIC_CESIUM_ION_TOKEN`; without it, uses ellipsoid terrain only.
+ */
 export function CesiumViewer({ tilesetJson, center }: CesiumViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const viewerRef = useRef<unknown>(null);
+  const viewerRef = useRef<import("cesium").Viewer | null>(null);
+  const centerRef = useRef(center);
+  centerRef.current = center;
 
   useEffect(() => {
     let destroyed = false;
@@ -19,55 +25,77 @@ export function CesiumViewer({ tilesetJson, center }: CesiumViewerProps) {
       const Cesium = await import("cesium");
       if (destroyed) return;
 
-      Cesium.Ion.defaultAccessToken =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYWE1OWVlNy05M2I2LTRkZDQtYjM2Yi0wYjA2M2Y4OTkyM2YiLCJpZCI6NTYwODUsImlhdCI6MTY5NDA1MjA2OH0.MmK0RXva9E8Z7aW3F9zTJu5XZqqQJdPQP1c9uVLBIXQ";
+      const ionToken =
+        typeof process !== "undefined" ? process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN : undefined;
+      if (ionToken) {
+        Cesium.Ion.defaultAccessToken = ionToken;
+      }
+
+      const terrainProvider = ionToken
+        ? await Cesium.createWorldTerrainAsync()
+        : new Cesium.EllipsoidTerrainProvider();
 
       const viewer = new Cesium.Viewer(containerRef.current!, {
-        terrainProvider: await Cesium.createWorldTerrainAsync(),
+        terrainProvider,
         baseLayerPicker: false,
         geocoder: false,
         homeButton: false,
         sceneModePicker: false,
         navigationHelpButton: false,
         animation: false,
-        timeline: false,
+        timeline: false
       });
-      (viewer as unknown as Record<string, unknown>).imageryProvider = new Cesium.OpenStreetMapImageryProvider({ url: "https://a.tile.openstreetmap.org/" });
+      (viewer as unknown as Record<string, unknown>).imageryProvider = new Cesium.OpenStreetMapImageryProvider({
+        url: "https://a.tile.openstreetmap.org/"
+      });
 
-      if (center) {
+      const c = centerRef.current;
+      if (c) {
         viewer.camera.flyTo({
-          destination: Cesium.Cartesian3.fromDegrees(center[0], center[1], center[2] || 500),
-          orientation: { heading: 0, pitch: -45, roll: 0 },
+          destination: Cesium.Cartesian3.fromDegrees(c[0], c[1], c[2] || 500),
+          orientation: { heading: 0, pitch: -0.785, roll: 0 }
         });
       }
 
       if (tilesetJson) {
         try {
           const tileset = await Cesium.Cesium3DTileset.fromUrl(
-            URL.createObjectURL(
-              new Blob([JSON.stringify(tilesetJson)], { type: "application/json" })
-            )
+            URL.createObjectURL(new Blob([JSON.stringify(tilesetJson)], { type: "application/json" }))
           );
           viewer.scene.primitives.add(tileset);
         } catch {
-          // ignore tileset errors in demo mode
+          /* demo tileset load optional */
         }
       }
 
       viewerRef.current = viewer;
     }
 
-    init();
+    void init();
 
     return () => {
       destroyed = true;
       if (viewerRef.current) {
         try {
-          (viewerRef.current as { destroy: () => void }).destroy();
-        } catch { /* ignore */ }
+          viewerRef.current.destroy();
+        } catch {
+          /* ignore */
+        }
+        viewerRef.current = null;
       }
     };
-  }, []);
+  }, [tilesetJson]);
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || !center) return;
+    void import("cesium").then((Cesium) => {
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(center[0], center[1], center[2] ?? 500),
+        orientation: { heading: 0, pitch: -0.785, roll: 0 }
+      });
+    });
+  }, [center]);
 
   return (
     <div className="relative w-full h-full rounded-xl overflow-hidden border border-[var(--border-subtle)]">

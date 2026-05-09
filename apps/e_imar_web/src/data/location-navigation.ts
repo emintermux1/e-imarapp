@@ -20,6 +20,16 @@ export interface LocationTarget {
   parcelId?: string;
 }
 
+export interface LocationExplorerTarget extends LocationTarget {
+  count: number;
+}
+
+export interface MapLabelTarget extends LocationExplorerTarget {
+  sourceId: string;
+  minzoom: number;
+  maxzoom: number;
+}
+
 export interface LocationTargetQuery {
   il?: string;
   ilce?: string;
@@ -38,6 +48,7 @@ interface ClusterGroup {
   ilce?: string;
   mahalle?: string;
   clusters: ParcelClusterSeed[];
+  count: number;
 }
 
 const cityGroups = new Map<string, ClusterGroup>();
@@ -63,6 +74,10 @@ for (const cluster of DEMO_PARCEL_CLUSTERS) {
   );
 }
 
+const coveredCities = buildCoveredCities();
+const districtTargetsByCity = buildDistrictTargetsByCity();
+const neighborhoodTargetsByDistrict = buildNeighborhoodTargetsByDistrict();
+const mapLabelTargets = buildMapLabelTargets();
 const searchableTargets = buildSearchableTargets();
 
 export function getLocationTargetForParcel(
@@ -101,7 +116,7 @@ export function buildFlyTargetFromLocationTarget(
   return {
     center: target.center,
     zoom: options.zoom ?? target.zoom,
-    bounds: options.bounds,
+    bounds: options.bounds ?? target.bounds,
     parcelId: options.parcelId ?? target.parcelId
   };
 }
@@ -138,19 +153,37 @@ export function searchLocationTargets(query: string, limit = 6): LocationTarget[
     .map((item) => item.target);
 }
 
+export function getCoveredCities(): LocationExplorerTarget[] {
+  return coveredCities;
+}
+
+export function getDistrictTargets(il: string): LocationExplorerTarget[] {
+  return districtTargetsByCity.get(cityKey(il)) ?? [];
+}
+
+export function getNeighborhoodTargets(il: string, ilce: string): LocationExplorerTarget[] {
+  return neighborhoodTargetsByDistrict.get(districtKey(il, ilce)) ?? [];
+}
+
+export function getMapLabelTargets(zoom?: number): MapLabelTarget[] {
+  if (zoom == null) return mapLabelTargets;
+  return mapLabelTargets.filter((target) => zoom >= target.minzoom && zoom <= target.maxzoom);
+}
+
 function addCluster(
   map: Map<string, ClusterGroup>,
   key: string,
   label: string,
-  location: Omit<ClusterGroup, "label" | "clusters">,
+  location: Omit<ClusterGroup, "label" | "clusters" | "count">,
   cluster: ParcelClusterSeed
 ) {
   const existing = map.get(key);
   if (existing) {
     existing.clusters.push(cluster);
+    existing.count += cluster.count;
     return;
   }
-  map.set(key, { label, ...location, clusters: [cluster] });
+  map.set(key, { label, ...location, clusters: [cluster], count: cluster.count });
 }
 
 function targetFromGroup(
@@ -170,6 +203,16 @@ function targetFromGroup(
     ilce: group.ilce,
     mahalle: group.mahalle
   };
+}
+
+function explorerTargetFromGroup(
+  group: ClusterGroup | undefined,
+  kind: Exclude<LocationTargetKind, "parcel">,
+  zoom: number
+): LocationExplorerTarget | undefined {
+  const target = targetFromGroup(group, kind, zoom);
+  if (!target || !group) return undefined;
+  return { ...target, count: group.count };
 }
 
 function findParcelFallbackTarget({ il, ilce, mahalle }: LocationTargetQuery): LocationTarget | undefined {
@@ -239,6 +282,82 @@ function collapseFallback<T extends { label: string; center: [number, number]; i
     });
   }
   return out;
+}
+
+function buildCoveredCities() {
+  return [...cityGroups.values()]
+    .map((group) => explorerTargetFromGroup(group, "il", cityZoom(group.il ?? group.label)))
+    .filter((target): target is LocationExplorerTarget => Boolean(target))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "tr"));
+}
+
+function buildDistrictTargetsByCity() {
+  const out = new Map<string, LocationExplorerTarget[]>();
+  for (const group of districtGroups.values()) {
+    if (!group.il) continue;
+    const target = explorerTargetFromGroup(group, "ilce", 12.5);
+    if (!target) continue;
+    const key = cityKey(group.il);
+    const list = out.get(key) ?? [];
+    list.push(target);
+    out.set(key, list);
+  }
+  for (const [key, list] of out.entries()) {
+    list.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "tr"));
+    out.set(key, list);
+  }
+  return out;
+}
+
+function buildNeighborhoodTargetsByDistrict() {
+  const out = new Map<string, LocationExplorerTarget[]>();
+  for (const group of neighborhoodGroups.values()) {
+    if (!group.il || !group.ilce) continue;
+    const target = explorerTargetFromGroup(group, "mahalle", 14.5);
+    if (!target) continue;
+    const key = districtKey(group.il, group.ilce);
+    const list = out.get(key) ?? [];
+    list.push(target);
+    out.set(key, list);
+  }
+  for (const [key, list] of out.entries()) {
+    list.sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "tr"));
+    out.set(key, list);
+  }
+  return out;
+}
+
+function buildMapLabelTargets(): MapLabelTarget[] {
+  const targets: MapLabelTarget[] = [];
+  for (const city of coveredCities) {
+    targets.push({
+      ...city,
+      sourceId: `city:${city.il ?? city.label}`,
+      minzoom: 4.2,
+      maxzoom: 8.5
+    });
+  }
+  for (const list of districtTargetsByCity.values()) {
+    for (const district of list) {
+      targets.push({
+        ...district,
+        sourceId: `district:${district.il}:${district.ilce}`,
+        minzoom: 7.2,
+        maxzoom: 12.6
+      });
+    }
+  }
+  for (const list of neighborhoodTargetsByDistrict.values()) {
+    for (const neighborhood of list) {
+      targets.push({
+        ...neighborhood,
+        sourceId: `neighborhood:${neighborhood.il}:${neighborhood.ilce}:${neighborhood.mahalle}`,
+        minzoom: 11.0,
+        maxzoom: 15.8
+      });
+    }
+  }
+  return targets;
 }
 
 function buildSearchableTargets() {

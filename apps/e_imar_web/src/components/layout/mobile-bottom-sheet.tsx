@@ -24,8 +24,13 @@ import { SectionAski } from "@/components/info/section-aski";
 import { SectionCevre } from "@/components/info/section-cevre";
 import { SectionGecmis } from "@/components/info/section-gecmis";
 import { SectionYatirimSkoru } from "@/components/info/section-yatirim-skoru";
+import { SectionParcelSummary } from "@/components/info/section-parcel-summary";
 import { EmsalCalculatorPanel } from "@/components/emsal/emsal-calculator-panel";
 import { cn } from "@/lib/utils";
+import { getParcelSourceMetadata } from "@/data/parcels";
+import { getParcelMarket } from "@/lib/market-client";
+import { MarketPanel } from "@/components/market/market-panel";
+import type { ParcelMarketResponse } from "@/types/api";
 
 const SNAP_HEIGHTS = {
   peek: 96,
@@ -46,6 +51,8 @@ export function MobileBottomSheet() {
   const parcelFeature = useParcel(selectedId);
   const parcel = parcelFeature?.properties ?? null;
   const dragControls = useDragControls();
+  const parcelSource = getParcelSourceMetadata();
+  const [marketResponse, setMarketResponse] = React.useState<ParcelMarketResponse | null>(null);
 
   const [emsalOpen, setEmsalOpen] = React.useState(false);
   const [vh, setVh] = React.useState<number>(800);
@@ -56,6 +63,27 @@ export function MobileBottomSheet() {
     window.addEventListener("resize", apply);
     return () => window.removeEventListener("resize", apply);
   }, []);
+
+  React.useEffect(() => {
+    let alive = true;
+    if (!parcel) return;
+    void getParcelMarket({
+      parcelId: parcel.id,
+      il: parcel.il,
+      ilce: parcel.ilce,
+      mahalle: parcel.mahalle,
+      ada: parcel.ada,
+      parsel: parcel.parsel,
+      areaM2: parcel.yuzolcumuM2,
+      zoningType: parcel.zoningType,
+      centroid: parcel.centroid ?? null
+    }).then((response) => {
+      if (alive) setMarketResponse(response);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [parcel]);
 
   if (!open || !parcel) return null;
 
@@ -100,7 +128,8 @@ export function MobileBottomSheet() {
         mahalle: parcel.mahalle,
         zoningType: parcel.zoningType,
         yuzolcumuM2: parcel.yuzolcumuM2,
-        centroid: parcel.centroid ?? [0, 0]
+        centroid: parcel.centroid ?? [0, 0],
+        provenance: parcelSource.official ? "official" : parcelSource.mode === "demo" ? "demo" : "derived"
       });
     }
   }
@@ -120,17 +149,17 @@ export function MobileBottomSheet() {
       animate={{ height: snapHeight }}
       transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
       className={cn(
-        "lg:hidden fixed left-0 right-0 bottom-0 z-30 bg-surface-2 border-t border-border-strong",
-        "rounded-t-md shadow-sheet flex flex-col"
+        "lg:hidden fixed left-0 right-0 bottom-0 z-30 bg-surface-2/98 border-t border-border-strong backdrop-blur-sm",
+        "rounded-t-[18px] shadow-sheet flex flex-col touch-pan-y"
       )}
     >
       <button
         type="button"
         aria-label="Sürükle"
-        className="self-stretch py-2 cursor-grab active:cursor-grabbing"
+        className="self-stretch py-3 cursor-grab active:cursor-grabbing"
         onPointerDown={(e) => dragControls.start(e)}
       >
-        <span className="block mx-auto h-1 w-10 rounded-full bg-border-strong" />
+        <span className="block mx-auto h-1.5 w-12 rounded-full bg-border-strong" />
       </button>
       <header className="flex items-start justify-between gap-2 px-4 pb-2 border-b border-border-subtle">
         <div className="min-w-0">
@@ -162,7 +191,10 @@ export function MobileBottomSheet() {
           defaultValue={["konum", "imar"]}
           className="divide-y divide-border-subtle"
         >
-          <AccordionItem value="konum">
+              <div className="px-0">
+                <SectionParcelSummary parcel={parcel} />
+              </div>
+              <AccordionItem value="konum">
             <AccordionTrigger>Konum & Tapu</AccordionTrigger>
             <AccordionContent>
               <SectionKonum parcel={parcel} />
@@ -210,17 +242,28 @@ export function MobileBottomSheet() {
               <SectionYatirimSkoru parcel={parcel} />
             </AccordionContent>
           </AccordionItem>
+          <AccordionItem value="piyasa">
+            <AccordionTrigger>Market</AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-2">
+                <div className="rounded-md border border-border-subtle bg-surface-1/50 px-3 py-2 text-[11px] text-fg-secondary">
+                  Sağlayıcı hazır değilse boş/uygunsuz durumlar açık gösterilir.
+                </div>
+                <MarketPanel response={marketResponse} compact />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
       </div>
-      <footer className="grid grid-cols-3 gap-2 px-3 py-2 border-t border-border-subtle bg-surface-1/40">
-        <Button variant="primary" size="sm" onClick={() => setEmsalOpen(true)}>
+      <footer className="grid grid-cols-3 gap-2 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2 border-t border-border-subtle bg-surface-1/60">
+        <Button variant="primary" size="sm" onClick={() => setEmsalOpen(true)} className="min-h-11">
           <Calculator className="h-3.5 w-3.5" /> Emsal
         </Button>
-        <Button variant="secondary" size="sm" onClick={toggleWatchlist}>
+        <Button variant="secondary" size="sm" onClick={toggleWatchlist} className="min-h-11">
           <Star className={cn("h-3.5 w-3.5", isWatchlisted && "fill-[rgb(var(--accent-red))] text-[rgb(var(--accent-red))]")} />
           {isWatchlisted ? "Listede" : "Takip Et"}
         </Button>
-        <Button variant="ghost" size="sm">
+        <Button variant="ghost" size="sm" className="min-h-11">
           <Share2 className="h-3.5 w-3.5" /> Paylaş
         </Button>
       </footer>

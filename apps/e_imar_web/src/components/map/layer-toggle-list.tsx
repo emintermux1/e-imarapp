@@ -3,9 +3,26 @@
 import * as React from "react";
 import { LayerToggle } from "@/components/gis/layer-toggle";
 import { useUIStore } from "@/stores/ui-store";
-import { LAYER_DESCRIPTORS } from "@/lib/maplibre/layers";
+import { LAYER_DESCRIPTORS, type LayerDescriptor } from "@/lib/maplibre/layers";
 
-const GROUPS = ["Parsel", "Plan", "Risk", "Çevre", "İdari"] as const;
+const GROUPS: LayerDescriptor["group"][] = [
+  "İmar",
+  "Risk",
+  "Uydu / Hibrit",
+  "Tarihsel",
+  "Belediye",
+  "Altyapı",
+  "Çevre",
+  "İdari"
+];
+
+const STATUS_LABELS: Record<LayerDescriptor["status"], string> = {
+  official: "official",
+  public_metadata: "public metadata",
+  demo: "demo",
+  derived: "derived",
+  not_ready: "not ready"
+};
 
 export function LayerToggleList() {
   const visibility = useUIStore((s) => s.layerVisibility);
@@ -35,6 +52,9 @@ export function LayerToggleList() {
                   id={l.id}
                   label={l.label}
                   description={l.description}
+                  statusLabel={STATUS_LABELS[l.status]}
+                  status={l.status}
+                  emptyReason={l.emptyReason}
                   visible={visibility[l.id] ?? l.defaultVisible}
                   opacity={opacity[l.id] ?? l.defaultOpacity}
                   onToggle={(v) => setLayerVisibility(l.id, v)}

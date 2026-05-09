@@ -3,6 +3,10 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { BasemapId } from "@/lib/maplibre/styles";
+import type { LocationBoundary } from "@/data/location-boundaries";
+import { mergeMultiSelection, toggleMultiSelection } from "@/lib/map/multi-select";
+
+export interface SelectedArea extends Pick<LocationBoundary, "id" | "kind" | "label" | "il" | "ilce" | "mahalle" | "feature"> {}
 
 export interface FlyTarget {
   center: [number, number];
@@ -20,21 +24,13 @@ export interface FlyTarget {
   seq: number;
 }
 
-export interface SelectedArea {
-  id: string;
-  kind: "il" | "ilce" | "mahalle";
-  label: string;
-  il?: string;
-  ilce?: string;
-  mahalle?: string;
-  feature: GeoJSON.Feature<GeoJSON.Polygon>;
-}
-
 interface MapState {
   basemap: BasemapId;
   hoveredParcelId: string | null;
   selectedParcelId: string | null;
   selectedArea: SelectedArea | null;
+  multiSelectedParcelIds: string[];
+  selectionNotice: string | null;
   flyTarget: FlyTarget | null;
   cursorLngLat: [number, number] | null;
   zoom: number;
@@ -44,6 +40,10 @@ interface MapState {
   setHoveredParcelId: (id: string | null) => void;
   setSelectedParcelId: (id: string | null) => void;
   setSelectedArea: (area: SelectedArea | null) => void;
+  toggleMultiSelectedParcelId: (id: string) => void;
+  addMultiSelectedParcelIds: (ids: string[], limit?: number) => void;
+  clearMultiSelection: () => void;
+  setSelectionNotice: (notice: string | null) => void;
   flyTo: (target: Omit<FlyTarget, "seq">) => void;
   setCursorLngLat: (v: [number, number] | null) => void;
   setViewState: (v: { zoom?: number; bearing?: number; pitch?: number }) => void;
@@ -58,6 +58,8 @@ export const useMapStore = create<MapState>()(
       hoveredParcelId: null,
       selectedParcelId: null,
       selectedArea: null,
+      multiSelectedParcelIds: [],
+      selectionNotice: null,
       flyTarget: null,
       cursorLngLat: null,
       zoom: 5.5,
@@ -67,6 +69,21 @@ export const useMapStore = create<MapState>()(
       setHoveredParcelId: (id) => set({ hoveredParcelId: id }),
       setSelectedParcelId: (id) => set({ selectedParcelId: id }),
       setSelectedArea: (area) => set({ selectedArea: area }),
+      toggleMultiSelectedParcelId: (id) =>
+        set((s) => ({
+          multiSelectedParcelIds: toggleMultiSelection(s.multiSelectedParcelIds, id),
+          selectionNotice: null
+        })),
+      addMultiSelectedParcelIds: (ids, limit = 250) =>
+        set((s) => {
+          const result = mergeMultiSelection(s.multiSelectedParcelIds, ids, limit);
+          return {
+            multiSelectedParcelIds: result.ids,
+            selectionNotice: result.truncated ? `Yoğun seçim: ilk ${limit} parsel seçildi.` : `${ids.length} parsel seçime eklendi.`
+          };
+        }),
+      clearMultiSelection: () => set({ multiSelectedParcelIds: [], selectionNotice: null }),
+      setSelectionNotice: (notice) => set({ selectionNotice: notice }),
       flyTo: (target) =>
         set({ flyTarget: { ...target, seq: ++seqCounter } }),
       setCursorLngLat: (v) => set({ cursorLngLat: v }),

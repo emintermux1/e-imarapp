@@ -12,6 +12,9 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
+    "paths": {
+      "@/*": ["apps/e_imar_web/src/*"]
+    },
     "incremental": true,
     "strict": true,
     "skipLibCheck": true,
@@ -20,5 +23,5 @@
     "strictPropertyInitialization": false
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
-  "exclude": ["node_modules", "dist", "frontend", "apps", "firebase"]
+  "exclude": ["node_modules", "dist", "frontend", "apps", "firebase", "test/eimar-aski-watchlist.spec.ts"]
 }

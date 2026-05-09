@@ -9,6 +9,9 @@ interface LayerToggleProps {
   id: string;
   label: string;
   description?: string;
+  statusLabel?: string;
+  status?: "official" | "public_metadata" | "demo" | "derived" | "not_ready";
+  emptyReason?: string;
   icon?: React.ReactNode;
   visible: boolean;
   opacity: number; // 0..1
@@ -19,6 +22,9 @@ interface LayerToggleProps {
 export function LayerToggle({
   label,
   description,
+  statusLabel,
+  status,
+  emptyReason,
   icon,
   visible,
   opacity,
@@ -39,7 +45,7 @@ export function LayerToggle({
           aria-label={visible ? `${label} katmanını gizle` : `${label} katmanını göster`}
           onClick={() => onToggle(!visible)}
           className={cn(
-            "inline-flex h-6 w-6 items-center justify-center rounded-sm transition-colors",
+            "inline-flex h-8 w-8 items-center justify-center rounded-sm transition-colors md:h-6 md:w-6",
             visible
               ? "text-fg-primary hover:bg-surface-3"
               : "text-fg-muted hover:bg-surface-3"
@@ -55,12 +61,19 @@ export function LayerToggle({
           type="button"
           onClick={() => setOpen((o) => !o)}
           className={cn(
-            "flex flex-1 min-w-0 items-center justify-between gap-2 text-left",
+            "flex min-h-8 flex-1 min-w-0 items-center justify-between gap-2 text-left md:min-h-0",
             "text-sm",
             visible ? "text-fg-primary" : "text-fg-secondary"
           )}
         >
-          <span className="truncate">{label}</span>
+          <span className="min-w-0">
+            <span className="block truncate">{label}</span>
+            {statusLabel && (
+              <span className={cn("mt-1 inline-flex rounded-sm border px-1.5 py-0.5 text-[9px] uppercase tracking-[0.12em]", statusClassName(status))}>
+                {statusLabel}
+              </span>
+            )}
+          </span>
           <ChevronDown
             className={cn(
               "h-3.5 w-3.5 text-fg-muted transition-transform",
@@ -73,6 +86,16 @@ export function LayerToggle({
         <div className="px-3 pb-3 pt-0 flex flex-col gap-2">
           {description && (
             <p className="text-[11px] text-fg-muted">{description}</p>
+          )}
+          {visible && (status === "not_ready" || emptyReason) && (
+            <div className={cn(
+              "rounded-sm border px-2 py-1.5 text-[11px] leading-relaxed",
+              status === "not_ready"
+                ? "border-status-warning/35 bg-status-warning/10 text-status-warning"
+                : "border-border-subtle bg-surface-1 text-fg-muted"
+            )}>
+              {emptyReason ?? "Bu katman için çizilebilir veri kaynağı henüz hazır değil."}
+            </div>
           )}
           <div className="flex items-center gap-3">
             <span className="text-[10px] uppercase tracking-wider text-fg-muted w-12 shrink-0">
@@ -94,4 +117,21 @@ export function LayerToggle({
       )}
     </div>
   );
+}
+
+function statusClassName(status: LayerToggleProps["status"]) {
+  switch (status) {
+    case "official":
+      return "border-status-success/35 bg-status-success/10 text-status-success";
+    case "public_metadata":
+      return "border-[rgb(var(--accent-blue))]/35 bg-[rgb(var(--accent-blue))]/10 text-[rgb(var(--accent-blue))]";
+    case "demo":
+      return "border-border-strong bg-surface-2 text-fg-muted";
+    case "derived":
+      return "border-brand-blue/35 bg-brand-blue/10 text-brand-blue";
+    case "not_ready":
+      return "border-status-warning/35 bg-status-warning/10 text-status-warning";
+    default:
+      return "border-border-subtle bg-surface-1 text-fg-muted";
+  }
 }

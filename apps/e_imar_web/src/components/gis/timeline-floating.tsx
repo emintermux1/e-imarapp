@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { History, GitCompareArrows, X, Pause, Play } from "lucide-react";
+import { History, GitCompareArrows, X, Pause, Play, StepBack, StepForward } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -113,13 +113,29 @@ export function TimelineFloating() {
             <div className="flex items-center gap-1">
               <button
                 type="button"
+                onClick={() => setTimelineYear(Math.max(MIN, timelineYear - 1))}
+                className="h-9 w-9 inline-flex items-center justify-center rounded text-fg-muted hover:bg-surface-1 hover:text-fg-primary md:h-7 md:w-7"
+                aria-label="Önceki yıl"
+              >
+                <StepBack className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
                 onClick={() => setPlaying((v) => !v)}
                 className={cn(
-                  "h-7 w-7 inline-flex items-center justify-center rounded text-fg-muted hover:bg-surface-1 hover:text-fg-primary"
+                  "h-9 w-9 inline-flex items-center justify-center rounded text-fg-muted hover:bg-surface-1 hover:text-fg-primary md:h-7 md:w-7"
                 )}
                 aria-label={playing ? "Durdur" : "Otomatik oynat"}
               >
                 {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTimelineYear(Math.min(MAX, timelineYear + 1))}
+                className="h-9 w-9 inline-flex items-center justify-center rounded text-fg-muted hover:bg-surface-1 hover:text-fg-primary md:h-7 md:w-7"
+                aria-label="Sonraki yıl"
+              >
+                <StepForward className="h-3.5 w-3.5" />
               </button>
               <button
                 type="button"
@@ -130,7 +146,7 @@ export function TimelineFloating() {
                   setSelectedArea(null);
                   setSelectedParcelId(selected);
                 }}
-                className="h-7 w-7 inline-flex items-center justify-center rounded text-fg-muted hover:bg-surface-1 hover:text-fg-primary"
+                className="h-9 w-9 inline-flex items-center justify-center rounded text-fg-muted hover:bg-surface-1 hover:text-fg-primary md:h-7 md:w-7"
                 aria-label="Kapat"
               >
                 <X className="h-3.5 w-3.5" />
