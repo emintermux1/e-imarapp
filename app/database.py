@@ -27,3 +27,11 @@ async def init_db():
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
         await conn.run_sync(Base.metadata.create_all)
+
+
+async def safe_init_db() -> str | None:
+    try:
+        await init_db()
+        return None
+    except Exception as exc:  # noqa: BLE001
+        return str(exc)

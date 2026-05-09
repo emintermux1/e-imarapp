@@ -6,6 +6,12 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin, urlparse
 
 import httpx
+from bs4 import BeautifulSoup
+
+from app.connectors.http import get_client
+from app.connectors.probe import probe_source
+from app.core.responses import envelope
+from app.sources.registry import REGISTRY, SourceEntry
 
 from app.core.exceptions import KEOSDiscoveryError
 from app.services.source_registry import (
@@ -52,6 +58,31 @@ class NetcadKeosService:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.client.aclose()
+
+
+    async def discover_source(self, source: SourceEntry):
+        async with await get_client() as client:
+            probe = await probe_source(client, source)
+            endpoints = list(probe.get("discovered_endpoints", []))
+            if probe.get("http_status") and probe.get("status") in {"ok", "public_partial", "requires_credentials", "captcha_required"}:
+                try:
+                    response = await client.get(source.base_url)
+                    html = response.text
+                    soup = BeautifulSoup(html, "lxml")
+                    for script in soup.find_all("script", src=True):
+                        endpoints.append(urljoin(source.base_url, script.get("src", "")))
+                    endpoints.extend(urljoin(source.base_url, m.group("url")) for m in SERVICE_URL_RE.finditer(html[:500_000]))
+                except Exception:
+                    pass
+        uniq = sorted(set(endpoints))[:50]
+        return envelope("ok", source=source.to_dict(), probe={**probe, "discovered_endpoints": uniq})
+
+    async def discover_municipality_by_index(self, municipality_id: int):
+        municipal_ids = [key for key in REGISTRY if key.startswith("bel.")]
+        if municipality_id < 0 or municipality_id >= len(municipal_ids):
+            return envelope("invalid_input", message="Municipality index geçersiz.")
+        src = REGISTRY[municipal_ids[municipality_id]]
+        return await self.discover_source(src)
 
     async def discover_municipality(self, slug: str, include_patterns: bool = True) -> Dict[str, Any]:
         slug = slug.lower().strip()

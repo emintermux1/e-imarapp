@@ -1,12 +1,14 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Menu,
   HelpCircle,
   UserCircle2,
   Box,
-  Layers,
+  Database,
+  Activity,
   GitCompareArrows,
   AlertTriangle,
   Map as MapIcon,
@@ -27,8 +29,10 @@ import {
   TooltipContent,
   TooltipTrigger
 } from "@/components/ui/tooltip";
-import { activeAskiCount, ASKI_POLYGONS } from "@/data/aski-polygons";
+import { activeAskiCount as fallbackAskiCount, ASKI_POLYGONS } from "@/data/aski-polygons";
+import { ASKI_LIST } from "@/data/aski-list";
 import { useAskiStore } from "@/stores/aski-store";
+import { useActiveAski, useSourceHealth } from "@/lib/api/hooks";
 import { cn } from "@/lib/utils";
 
 export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) {
@@ -39,20 +43,27 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
   const setCompareMode = useUIStore((s) => s.setCompareMode);
   const askiMode = useUIStore((s) => s.askiMode);
   const setAskiMode = useUIStore((s) => s.setAskiMode);
-  const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
   const flyTo = useMapStore((s) => s.flyTo);
   const askiRefresh = useAskiStore((s) => s.refresh);
   const askiApiStatus = useAskiStore((s) => s.status);
   const askiApiMessage = useAskiStore((s) => s.message);
   const liveAskiCount = useAskiStore((s) => s.plans.length);
+  const askiQuery = useActiveAski();
+  const healthQuery = useSourceHealth();
+  const backendAskiCount = askiQuery.data?.ok ? askiQuery.data.data.count : null;
+  const backendAskiOffline = !askiQuery.data?.ok || askiQuery.data.data.status !== "ok";
+  const healthRollup = healthQuery.data?.ok ? healthQuery.data.data.rollup : null;
+  const okSources = healthRollup?.ok ?? 0;
+  const totalSources = healthQuery.data?.ok ? healthQuery.data.data.total : 0;
 
-  const aktifAski = activeAskiCount();
+  const aktifAski = askiApiStatus === "live"
+    ? liveAskiCount
+    : backendAskiCount ?? fallbackAskiCount();
 
   function focusNearestAski() {
     const next = ASKI_POLYGONS.find((p) => p.durum === "askida");
     if (!next) return;
-    const center = midRing(next.ring);
-    flyTo({ center, zoom: 14 });
+    flyTo({ center: midRing(next.ring), zoom: 14 });
   }
 
   return (
@@ -81,7 +92,19 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
       </div>
 
       <div className="flex items-center gap-1 px-2 border-l border-border-subtle">
-        {/* Live aski pill */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="/kaynaklar"
+              className="hidden md:inline-flex h-8 items-center gap-1.5 rounded-md border border-border-subtle bg-surface-1 px-2 text-[11px] text-fg-secondary hover:bg-surface-2"
+            >
+              <Activity className="h-3.5 w-3.5" />
+              <span className="font-medium text-fg-primary">{okSources}/{totalSources || Object.keys(ASKI_LIST).length} kaynak aktif</span>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Canlı kaynak sağlık özeti</TooltipContent>
+        </Tooltip>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <button
@@ -92,49 +115,54 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               }}
               aria-pressed={askiMode}
               className={cn(
-                "hidden md:inline-flex items-center gap-1 h-7 px-2 rounded-sm border text-[11px] font-medium transition-colors tabular-nums",
+                "hidden md:inline-flex items-center gap-1 h-8 px-2 rounded-md border text-[11px] font-medium transition-colors tabular-nums",
                 askiMode
                   ? "border-status-warning text-fg-primary bg-[rgb(var(--status-warning)/0.10)]"
-                  : "border-border-subtle text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
+                  : "border-border-subtle bg-surface-1 text-fg-secondary hover:bg-surface-2 hover:text-fg-primary"
               )}
             >
-              <AlertTriangle
-                className={cn(
-                  "h-3.5 w-3.5",
-                  askiMode ? "text-status-warning" : "text-fg-muted"
-                )}
-              />
-	              {askiApiStatus === "live" ? liveAskiCount : aktifAski} aktif askı
+              <AlertTriangle className={cn("h-3.5 w-3.5", askiMode ? "text-status-warning" : "text-fg-muted")} />
+              {aktifAski} aktif askı
             </button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-	            <div className="max-w-xs space-y-2">
-	              <p>{askiApiMessage ?? (askiMode ? "Askı modunu kapat" : "Askı haritasını aç ve en yakın askıya yakınlaş")}</p>
-	              <button
-	                type="button"
-	                onClick={(event) => {
-	                  event.stopPropagation();
-	                  void askiRefresh();
-	                }}
-	                className="inline-flex items-center gap-1 rounded-sm border border-border-subtle px-2 py-1 text-[11px]"
-	              >
-	                {askiApiStatus === "loading" ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-	                Askı planlarını yenile
-	              </button>
-	            </div>
-	          </TooltipContent>
+            <div className="max-w-xs space-y-2">
+              <p>{askiApiMessage ?? (backendAskiOffline ? "Backend offline; sayaç fallback gösteriyor" : askiMode ? "Askı modunu kapat" : "Askı haritasını aç ve en yakın askıya yakınlaş")}</p>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void askiRefresh();
+                }}
+                className="inline-flex items-center gap-1 rounded-sm border border-border-subtle px-2 py-1 text-[11px]"
+              >
+                {askiApiStatus === "loading" ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                Askı planlarını yenile
+              </button>
+            </div>
+          </TooltipContent>
         </Tooltip>
 
-        {/* Compare button */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="/kaynaklar"
+              className="hidden sm:inline-flex h-8 items-center gap-1.5 rounded-md border border-border-subtle bg-surface-1 px-2 text-[11px] text-fg-secondary hover:bg-surface-2"
+            >
+              <Database className="h-3.5 w-3.5" />
+              <span className="font-medium text-fg-primary">Kaynaklar</span>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Kaynak registry ekranını aç</TooltipContent>
+        </Tooltip>
+
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               type="button"
               onClick={() => {
                 if (mapMode === "3d") return;
-                setCompareMode(
-                  compareMode === "satellite" ? "off" : "satellite"
-                );
+                setCompareMode(compareMode === "satellite" ? "off" : "satellite");
               }}
               disabled={mapMode === "3d"}
               aria-pressed={compareMode === "satellite"}
@@ -151,47 +179,37 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
             </button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            {mapMode === "3d"
-              ? "Karşılaştırma için 2D moduna geçin"
-              : "Eski/Güncel uydu karşılaştırma sürgüsü"}
+            {mapMode === "3d" ? "Karşılaştırma için 2D moduna geçin" : "Eski/Güncel uydu karşılaştırma sürgüsü"}
           </TooltipContent>
         </Tooltip>
 
-        {/* 2D/3D segmented toggle */}
         <ModeToggle mapMode={mapMode} setMapMode={setMapMode} />
-
-        <span className="hidden sm:inline-flex">
-          <BasemapSwitcher />
-        </span>
+        <span className="hidden sm:inline-flex"><BasemapSwitcher /></span>
         <ThemeToggle />
         <Tooltip>
           <TooltipTrigger asChild>
             <span>
-              <IconButton label="Yardım" variant="ghost">
-                <HelpCircle className="h-4 w-4" />
-              </IconButton>
+              <IconButton label="Yardım" variant="ghost"><HelpCircle className="h-4 w-4" /></IconButton>
             </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">Yardım & Klavye Kısayolları</TooltipContent>
         </Tooltip>
-        <IconButton label="Profil" variant="ghost">
-          <UserCircle2 className="h-4 w-4" />
-        </IconButton>
+        <IconButton label="Profil" variant="ghost"><UserCircle2 className="h-4 w-4" /></IconButton>
       </div>
     </header>
   );
+}
 
-  function midRing(ring: [number, number][]): [number, number] {
-    let sx = 0;
-    let sy = 0;
-    let n = 0;
-    for (const [a, b] of ring) {
-      sx += a;
-      sy += b;
-      n += 1;
-    }
-    return [sx / Math.max(1, n), sy / Math.max(1, n)];
+function midRing(ring: [number, number][]): [number, number] {
+  let sx = 0;
+  let sy = 0;
+  let n = 0;
+  for (const [a, b] of ring) {
+    sx += a;
+    sy += b;
+    n += 1;
   }
+  return [sx / Math.max(1, n), sy / Math.max(1, n)];
 }
 
 function ModeToggle({
@@ -203,18 +221,8 @@ function ModeToggle({
 }) {
   return (
     <div className="hidden sm:inline-flex relative items-center h-8 rounded-md border border-border-subtle bg-surface-1 p-0.5">
-      <ToggleSegment
-        active={mapMode === "2d"}
-        onClick={() => setMapMode("2d")}
-        label="2D"
-        icon={<MapIcon className="h-3.5 w-3.5" />}
-      />
-      <ToggleSegment
-        active={mapMode === "3d"}
-        onClick={() => setMapMode("3d")}
-        label="3D"
-        icon={<Box className="h-3.5 w-3.5" />}
-      />
+      <ToggleSegment active={mapMode === "2d"} onClick={() => setMapMode("2d")} label="2D" icon={<MapIcon className="h-3.5 w-3.5" />} />
+      <ToggleSegment active={mapMode === "3d"} onClick={() => setMapMode("3d")} label="3D" icon={<Box className="h-3.5 w-3.5" />} />
     </div>
   );
 }
@@ -249,10 +257,7 @@ function ToggleSegment({
           transition={{ type: "spring", stiffness: 380, damping: 32 }}
         />
       )}
-      <span className="relative inline-flex items-center gap-1">
-        {icon}
-        {label}
-      </span>
+      <span className="relative inline-flex items-center gap-1">{icon}{label}</span>
     </button>
   );
 }

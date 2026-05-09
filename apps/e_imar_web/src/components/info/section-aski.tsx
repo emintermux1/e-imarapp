@@ -91,6 +91,9 @@ export function SectionAski({ parcel }: { parcel: ParcelProps }) {
 
   return (
     <div className="flex flex-col gap-2">
+      <div className="inline-flex items-center self-start rounded-full border border-border-subtle bg-surface-1 px-2 py-1 text-[11px] text-fg-muted">
+        data source: parcels.geo.json (offline demo)
+      </div>
       <div
         className={cn(
           "flex items-center justify-between gap-2 rounded-md border px-3 py-2"

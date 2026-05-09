@@ -8,8 +8,10 @@ import {
   History,
   SlidersHorizontal,
   ChevronDown,
-  DatabaseZap
+  DatabaseZap,
+  Database
 } from "lucide-react";
+import Link from "next/link";
 import { LayerToggleList } from "@/components/map/layer-toggle-list";
 import { WatchlistSection } from "./watchlist-section";
 import { SavedQueriesSection } from "./saved-queries-section";
@@ -38,7 +40,7 @@ export function SidebarSections({ collapsed = false }: { collapsed?: boolean }) 
     },
     {
       id: "sources",
-      title: "Veri Kaynakları",
+      title: "Canlı Veri Kaynakları",
       icon: <DatabaseZap className="h-4 w-4" />,
       body: <SourceStatusPanel />,
       defaultOpen: true
@@ -69,6 +71,18 @@ export function SidebarSections({ collapsed = false }: { collapsed?: boolean }) 
       title: "Filtreler",
       icon: <SlidersHorizontal className="h-4 w-4" />,
       body: <FiltersSection />,
+      defaultOpen: false
+    },
+    {
+      id: "kaynaklar",
+      title: "Kaynaklar Ekranı",
+      icon: <Database className="h-4 w-4" />,
+      body: (
+        <div className="rounded-md border border-border-subtle bg-surface-2 p-3 text-sm text-fg-secondary">
+          <p>Canlı probe edilen kaynak registry ekranı.</p>
+          <Link href="/kaynaklar" className="mt-2 inline-flex text-xs font-medium text-blue-600 hover:underline">Kaynaklar ekranını aç</Link>
+        </div>
+      ),
       defaultOpen: false
     }
   ];
