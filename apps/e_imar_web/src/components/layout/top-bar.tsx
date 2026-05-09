@@ -80,7 +80,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
       className="fixed top-0 inset-x-0 z-40 h-14 flex items-stretch border-b border-border-subtle bg-surface-2/95 shadow-[0_1px_0_rgb(255_255_255/0.03),0_8px_24px_rgb(0_0_0/0.18)] backdrop-blur-md"
       role="banner"
     >
-      <div className="flex items-center gap-2 px-3 min-w-[220px] lg:min-w-[280px] border-r border-border-subtle">
+      <div className="flex items-center gap-2 px-2 sm:px-3 min-w-[132px] sm:min-w-[190px] lg:min-w-[280px] border-r border-border-subtle">
         <button
           type="button"
           aria-label="Menüyü aç"
@@ -96,16 +96,16 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
         <HeaderBreadcrumb />
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-2 sm:px-4 min-w-[180px]">
+      <div className="flex-1 flex items-center justify-center px-1 sm:px-4 min-w-[120px]">
         <GlobalSearch />
       </div>
 
-      <div className="flex items-center gap-1 px-2 border-l border-border-subtle overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex max-w-[46vw] sm:max-w-none items-center gap-1 px-1 sm:px-2 border-l border-border-subtle overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
               href="/kaynaklar"
-              className="hidden md:inline-flex h-8 items-center gap-1.5 rounded-md border border-border-subtle bg-surface-1 px-2 text-[11px] text-fg-secondary hover:bg-surface-2"
+              className="hidden sm:inline-flex h-8 items-center gap-1.5 rounded-md border border-border-subtle bg-surface-1 px-2 text-[11px] text-fg-secondary hover:bg-surface-2"
             >
               <Activity className="h-3.5 w-3.5" />
               <span className="font-medium text-fg-primary">{okSources}/{totalSources || Object.keys(ASKI_LIST).length} kaynak aktif</span>
@@ -124,7 +124,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               }}
               aria-pressed={askiMode}
               className={cn(
-                "hidden md:inline-flex items-center gap-1 h-8 px-2 rounded-md border text-[11px] font-medium transition-colors tabular-nums",
+                "hidden lg:inline-flex items-center gap-1 h-8 px-2 rounded-md border text-[11px] font-medium transition-colors tabular-nums",
                 askiMode
                   ? "border-status-warning text-fg-primary bg-[rgb(var(--status-warning)/0.10)]"
                   : "border-border-subtle bg-surface-1 text-fg-secondary hover:bg-surface-2 hover:text-fg-primary"
@@ -177,7 +177,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               }}
               aria-label="En yeni imar bölgelerini aç"
               className={cn(
-                "hidden lg:inline-flex min-w-max items-center gap-2 h-9 px-2.5 rounded-md border text-[11px] font-semibold transition-colors tabular-nums",
+                "hidden xl:inline-flex min-w-max items-center gap-2 h-9 px-2.5 rounded-md border text-[11px] font-semibold transition-colors tabular-nums",
                 latestRegionsStatus === "loading"
                   ? "border-brand-blue/60 bg-[rgb(var(--accent-blue)/0.12)] text-fg-primary"
                   : "border-brand-blue/35 bg-[rgb(var(--accent-blue)/0.07)] text-fg-secondary hover:border-brand-blue/60 hover:bg-[rgb(var(--accent-blue)/0.12)] hover:text-fg-primary"
@@ -251,7 +251,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               }}
               aria-label="En yeni imar bölgelerini aç"
               className={cn(
-                "lg:hidden h-9 w-9 inline-flex items-center justify-center rounded-md border transition-colors",
+                "lg:hidden h-9 w-9 shrink-0 inline-flex items-center justify-center rounded-md border transition-colors",
                 latestRegionsStatus === "loading"
                   ? "border-brand-blue/60 bg-[rgb(var(--accent-blue)/0.12)] text-[rgb(var(--accent-blue))]"
                   : "border-border-subtle bg-surface-1 text-fg-secondary hover:bg-surface-2 hover:text-fg-primary"

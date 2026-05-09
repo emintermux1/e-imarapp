@@ -1,16 +1,17 @@
+import { sourceStatusLabel, sourceStatusTitle } from "@/lib/api/quality-labels";
 import { cn } from "@/lib/utils";
 import type { DataSourceStatus } from "@/types/api";
 
 const LABELS: Record<DataSourceStatus, string> = {
-  live: "Canlı API",
-  fallback: "Yerel yedek",
-  unavailable: "API yok",
-  computed: "Hesaplandı",
-  demo: "Demo veri",
-  official: "Official",
-  public_metadata: "Public metadata",
-  derived: "Derived",
-  not_ready: "Not ready"
+  live: sourceStatusLabel("live"),
+  fallback: sourceStatusLabel("fallback"),
+  unavailable: sourceStatusLabel("unavailable"),
+  computed: sourceStatusLabel("computed"),
+  demo: sourceStatusLabel("demo"),
+  official: sourceStatusLabel("official"),
+  public_metadata: sourceStatusLabel("public_metadata"),
+  derived: sourceStatusLabel("derived"),
+  not_ready: sourceStatusLabel("not_ready")
 };
 
 const CLASSES: Record<DataSourceStatus, string> = {
@@ -26,15 +27,15 @@ const CLASSES: Record<DataSourceStatus, string> = {
 };
 
 const TITLES: Record<DataSourceStatus, string> = {
-  live: "Canlı belediye/API kaynağından geldi",
-  fallback: "Canlı kaynak yerine yerel yedek veya önbellek kullanılıyor",
-  unavailable: "Kaynak erişilemiyor veya bu veri yayınlanmıyor",
-  computed: "Uygulama tarafından hesaplandı veya kullanıcı seçimiyle üretildi",
-  demo: "Demo/tahmini veri; resmi kaynak gibi sunulmaz",
-  official: "Resmî kaynak veya doğrulanmış kayıt",
-  public_metadata: "Açık kayıt/metadata üzerinden bağlandı",
-  derived: "Birincil veriden türetildi veya hesaplandı",
-  not_ready: "Veri bağı hazır değil veya kaynak henüz bağlı değil"
+  live: sourceStatusTitle("live"),
+  fallback: sourceStatusTitle("fallback"),
+  unavailable: sourceStatusTitle("unavailable"),
+  computed: sourceStatusTitle("computed"),
+  demo: sourceStatusTitle("demo"),
+  official: sourceStatusTitle("official"),
+  public_metadata: sourceStatusTitle("public_metadata"),
+  derived: sourceStatusTitle("derived"),
+  not_ready: sourceStatusTitle("not_ready")
 };
 
 export function SourceBadge({
@@ -49,7 +50,7 @@ export function SourceBadge({
   return (
     <span
       className={cn(
-        "inline-flex h-5 items-center gap-1.5 rounded-full border px-2 text-[10px] font-semibold uppercase tracking-[0.08em] shadow-[inset_0_1px_0_rgb(255_255_255/0.04)]",
+        "inline-flex h-5 items-center gap-1.5 rounded-md border px-2 text-[10px] font-semibold tracking-[0.04em] shadow-[inset_0_1px_0_rgb(255_255_255/0.04)]",
         CLASSES[status],
         className
       )}

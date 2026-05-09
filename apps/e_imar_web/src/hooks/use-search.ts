@@ -8,6 +8,7 @@ import { NEIGHBORHOODS } from "@/data/neighborhoods";
 import { BELEDIYE_LIST } from "@/data/belediye";
 import { adaParselText, adaParselSlug } from "@/lib/format";
 import { TURKEY_BOUNDS, inTurkey, safeParseFloat } from "@/lib/utils";
+import { parcelQualityMessage } from "@/lib/api/quality-labels";
 import {
   getBackendParcelGeometry,
   humanizeApiError,
@@ -88,7 +89,7 @@ function searchParcelResults(query: string, limit: number): SearchResult[] {
     });
 }
 
-function backendParcelToResult(parcel: ParcelResponse): SearchResult | null {
+function backendParcelToResult(parcel: ParcelResponse, ambiguityCount = 1): SearchResult | null {
   if (!parcel.id || !parcel.ada || !parcel.parsel) return null;
   const local = getAllParcels().find(
     (feature) =>
@@ -97,17 +98,39 @@ function backendParcelToResult(parcel: ParcelResponse): SearchResult | null {
       (!parcel.ilce || feature.properties.ilce.toLocaleLowerCase("tr-TR") === parcel.ilce.toLocaleLowerCase("tr-TR"))
   );
   const centroid = geometryCentroid(parcel.geometri) ?? local?.properties.centroid;
+  const quality = parcel.quality;
+  const geometryAvailable = parcel.geometry_available ?? quality?.geometry_available ?? Boolean(centroid || geometryCentroid(parcel.geometri));
+  const sourceStatus = parcel.source_status ?? parcel.source?.source_status ?? quality?.source_status ?? "live";
+  const sourceName = parcel.source_name ?? parcel.source?.source_name ?? quality?.source_name ?? undefined;
+  const sourceProvider = parcel.source_provider ?? parcel.source?.provider ?? quality?.source_provider ?? undefined;
   const location = [parcel.mahalle, parcel.ilce, parcel.il].filter(Boolean).join(", ");
+  const metaBits = [
+    sourceName || sourceProvider || "Canlı API",
+    geometryAvailable ? "geometri var" : "geometri yok",
+    ambiguityCount > 1 ? `${ambiguityCount} ilçe eşleşmesi` : null
+  ].filter(Boolean);
   return {
     id: `backend-parcel:${parcel.id}`,
     type: "parcel",
     primary: `Ada/Parsel ${adaParselText(parcel.ada, parcel.parsel)}`,
     secondary: location || "Canlı API parsel sonucu",
-    meta: "Canlı API",
+    meta: metaBits.join(" · "),
     parcelId: local?.properties.id ?? backendParcelId(parcel.id),
     zoningType: local?.properties.zoningType ?? "Konut",
     centroid,
-    sourceStatus: "live"
+    sourceStatus,
+    sourceName,
+    sourceProvider,
+    geometryAvailable,
+    qualityHints: [parcel.status_message, quality ? parcelQualityMessage(quality) : null, ...(parcel.quality_hints ?? quality?.quality_hints ?? [])]
+      .filter((hint): hint is string => Boolean(hint))
+      .slice(0, 3),
+    planMatchStatus: parcel.plan_match_status ?? quality?.plan_match_status,
+    askiMatchStatus: parcel.aski_match_status ?? quality?.aski_match_status,
+    imarParamsStatus: parcel.imar_params_status ?? quality?.imar_params_status,
+    confidenceLabel: parcel.confidence_label ?? quality?.confidence_label,
+    ambiguityKey: `${parcel.ada}/${parcel.parsel}`,
+    ambiguityCount
   };
 }
 
@@ -287,8 +310,13 @@ export function useSearch(opts: SearchOptions): SearchState {
       searchBackend(query, limit)
         .then((parcels) => {
           if (cancelled) return;
+          const ambiguity = parcels.reduce<Record<string, number>>((acc, parcel) => {
+            const key = `${parcel.ada}/${parcel.parsel}`;
+            acc[key] = (acc[key] ?? 0) + 1;
+            return acc;
+          }, {});
           const backendResults = parcels
-            .map(backendParcelToResult)
+            .map((parcel) => backendParcelToResult(parcel, ambiguity[`${parcel.ada}/${parcel.parsel}`] ?? 1))
             .filter((r): r is SearchResult => Boolean(r));
           if (backendResults.length > 0) {
             upsertParcels(parcels);
