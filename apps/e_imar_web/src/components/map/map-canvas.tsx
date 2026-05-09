@@ -394,7 +394,8 @@ export function MapCanvas({
           ),
           ring: [],
           matchedParcelId: props.matchedParcelId as string | undefined,
-          planAdi: props.planAdi as string | undefined
+          planAdi: props.planAdi as string | undefined,
+          provenance: ((props as { provenance?: AskiPolygonFeature["provenance"] }).provenance ?? "demo")
         },
         { x: e.point.x, y: e.point.y }
       );
