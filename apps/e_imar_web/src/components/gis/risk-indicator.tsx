@@ -14,6 +14,8 @@ interface RiskIndicatorProps {
   value: number;
   scale: 5 | 3;
   className?: string;
+  onClick?: () => void;
+  actionLabel?: string;
   /** Optional contextual sentence; defaults are localized per scale/value. */
   description?: string;
   /** Short subtitle inside the tooltip header. */
@@ -56,6 +58,8 @@ export function RiskIndicator({
   value,
   scale,
   className,
+  onClick,
+  actionLabel,
   description,
   source
 }: RiskIndicatorProps) {
@@ -72,12 +76,16 @@ export function RiskIndicator({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div
+        <button
+          type="button"
+          onClick={onClick}
           tabIndex={0}
           aria-label={tooltipText}
           className={cn(
-            "flex flex-col gap-1 rounded-md border border-border-subtle bg-surface-2 px-2.5 py-2 cursor-help",
+            "flex flex-col gap-1 rounded-md border border-border-subtle bg-surface-2 px-2.5 py-2 text-left",
+            onClick ? "cursor-pointer hover:border-border-strong hover:bg-surface-1" : "cursor-help",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ring))]",
+            onClick && "transition-colors",
             className
           )}
         >
@@ -112,7 +120,12 @@ export function RiskIndicator({
           <span className="text-[11px] text-fg-secondary">
             {labels[value] ?? "-"}
           </span>
-        </div>
+          {actionLabel && (
+            <span className="text-[10px] uppercase tracking-wider text-[rgb(var(--accent-navy))]">
+              {actionLabel}
+            </span>
+          )}
+        </button>
       </TooltipTrigger>
       <TooltipContent
         side="top"
@@ -139,6 +152,11 @@ export function RiskIndicator({
           {source && (
             <span className="text-[10px] uppercase tracking-wider text-fg-muted">
               Kaynak · {source}
+            </span>
+          )}
+          {onClick && (
+            <span className="text-[10px] uppercase tracking-wider text-[rgb(var(--accent-navy))]">
+              Haritada odaklanır
             </span>
           )}
         </div>
