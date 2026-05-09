@@ -1,13 +1,13 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Integer
+from sqlalchemy.orm import Mapped, mapped_column
 from geoalchemy2 import Geometry
 from app.models.base import Base
 
 class QueryLog(Base):
     __tablename__ = "query_logs"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    query_type = Column(String)
-    params = Column(String)  # Store as JSON string
-    results_count = Column(Integer)
-    geom = Column(Geometry('POINT', srid=4326))  # Store the query location if applicable
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int | None] = mapped_column()
+    query_type: Mapped[str | None] = mapped_column()
+    params: Mapped[str | None] = mapped_column()  # JSON string
+    results_count: Mapped[int | None] = mapped_column()
+    geom = mapped_column(Geometry('POINT', srid=4326))

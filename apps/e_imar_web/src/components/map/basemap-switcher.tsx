@@ -38,7 +38,7 @@ export function BasemapSwitcher() {
           <ChevronDown className="h-3 w-3 text-fg-muted" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="min-w-[200px]">
+      <DropdownMenuContent className="min-w-[240px]">
         <DropdownMenuLabel>Zemin Haritası</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {(Object.keys(BASEMAPS) as BasemapId[]).map((id) => (
@@ -53,7 +53,7 @@ export function BasemapSwitcher() {
             <span className="text-fg-muted">{ICONS[id]}</span>
             <div className="flex flex-col">
               <span className="text-sm">{BASEMAPS[id].label}</span>
-              <span className="text-[11px] text-fg-muted">{BASEMAPS[id].description}</span>
+              <span className="text-[11px] leading-4 text-fg-muted">{BASEMAPS[id].description}</span>
             </div>
           </DropdownMenuItem>
         ))}

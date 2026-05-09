@@ -2,6 +2,7 @@ import * as React from "react";
 import { DataRow } from "@/components/gis/data-card";
 import { ZoningBadge } from "@/components/gis/zoning-badge";
 import { formatArea, formatDate } from "@/lib/format";
+import { PLAN_LAYER_LABELS, PLAN_STATUS_LABELS } from "@/data/zoning";
 import type { ParcelProps } from "@/types/parcel";
 
 const YAPILASMA_LABEL: Record<ParcelProps["yapilasmaSekli"], string> = {
@@ -11,16 +12,38 @@ const YAPILASMA_LABEL: Record<ParcelProps["yapilasmaSekli"], string> = {
 };
 
 export function SectionImar({ parcel }: { parcel: ParcelProps }) {
+  const constraints = (parcel.constraints ?? []).slice(0, 6);
   return (
     <div className="grid gap-0">
       <DataRow
         label="Plan Kullanımı"
         value={
-          <span className="inline-flex items-center gap-2">
+          <span className="inline-flex items-center gap-2 flex-wrap">
             <ZoningBadge type={parcel.zoningType} size="xs" />
+            {parcel.detailedUse && (
+              <span className="text-[12px] font-semibold text-fg-primary">
+                {parcel.detailedUse}
+              </span>
+            )}
           </span>
         }
       />
+      {(parcel.planScale || parcel.planStatus || parcel.planLayer) && (
+        <DataRow
+          label="Plan Katmanı"
+          value={
+            <span className="inline-flex items-center gap-1.5 flex-wrap">
+              {parcel.planScale && <PlanBadge>{parcel.planScale}</PlanBadge>}
+              {parcel.planStatus && (
+                <PlanBadge>{PLAN_STATUS_LABELS[parcel.planStatus]}</PlanBadge>
+              )}
+              {parcel.planLayer && (
+                <PlanBadge>{PLAN_LAYER_LABELS[parcel.planLayer]}</PlanBadge>
+              )}
+            </span>
+          }
+        />
+      )}
       <DataRow
         label="Yapılaşma"
         value={YAPILASMA_LABEL[parcel.yapilasmaSekli]}
@@ -47,11 +70,37 @@ export function SectionImar({ parcel }: { parcel: ParcelProps }) {
         label="Yol Cephesi"
         value={`${parcel.yolCephesiM.toFixed(1)} m`}
       />
+      {constraints.length > 0 && (
+        <div className="px-3 py-3 border-b border-border-subtle bg-surface-1/35">
+          <div className="text-[10px] uppercase tracking-[0.14em] text-fg-muted">
+            Plan Kısıtları
+          </div>
+          <div className="mt-2 grid gap-1.5">
+            {constraints.map((constraint) => (
+              <div
+                key={constraint}
+                className="flex items-start gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1.5 text-[11px] leading-snug text-fg-secondary"
+              >
+                <span className="mt-1 block h-1.5 w-1.5 rounded-full bg-[rgb(var(--accent-navy))]" />
+                <span>{constraint}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <DataRow label="Plan Adı" value={parcel.planAdi} />
       <DataRow
         label="Onay Tarihi"
         value={formatDate(parcel.planOnayTarihi)}
       />
     </div>
+  );
+}
+
+function PlanBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex h-5 items-center rounded-sm border border-border-subtle bg-surface-1 px-1.5 text-[10px] font-medium text-fg-secondary">
+      {children}
+    </span>
   );
 }

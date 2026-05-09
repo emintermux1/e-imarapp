@@ -1,15 +1,11 @@
 #!/bin/bash
-
 # Run Alembic migrations
 
-# Check if alembic is available
-if ! command -v alembic &> /dev/null
-then
-    echo "alembic could not be found"
-    exit 1
-fi
+set -e
 
-# Run migrations
+echo "Running database migrations..."
+
+# Run Alembic migrations
 alembic upgrade head
 
-echo "Migrations completed"
+echo "Migrations completed successfully!"
