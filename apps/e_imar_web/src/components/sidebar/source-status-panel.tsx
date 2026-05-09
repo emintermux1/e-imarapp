@@ -15,7 +15,9 @@ export function SourceStatusPanel() {
   const loadSources = useSourceStore((s) => s.loadSources);
   const refreshHealth = useSourceStore((s) => s.refreshHealth);
   const discover = useSourceStore((s) => s.discover);
+  const discoverMunicipalityGis = useSourceStore((s) => s.discoverMunicipalityGis);
   const loadLiveLayers = useSourceStore((s) => s.loadLiveLayers);
+  const discoveries = useSourceStore((s) => s.discoveries);
 
   React.useEffect(() => {
     void loadSources().then(() => {
@@ -69,7 +71,10 @@ export function SourceStatusPanel() {
               </div>
               <button
                 type="button"
-                onClick={() => void discover(source.id)}
+                onClick={() => {
+                  void discover(source.id);
+                  if (source.kind.startsWith("municipal")) void discoverMunicipalityGis(source.slug, true);
+                }}
                 className="rounded border border-border-subtle px-1.5 py-1 text-[10px] text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
               >
                 Keşfet
@@ -83,12 +88,67 @@ export function SourceStatusPanel() {
               >
                 <ExternalLink className="h-3 w-3" />
               </a>
+              <DiscoveryDetails sourceId={source.id} slug={source.slug} discovery={discoveries[source.slug] ?? discoveries[source.id]} />
             </div>
           );
         })}
       </div>
 
       {error && <div className="mt-2 rounded-md border border-amber-300/50 bg-amber-100/40 px-2 py-1.5 text-[10.5px] leading-snug text-amber-900">{error}</div>}
+    </div>
+  );
+}
+
+function DiscoveryDetails({
+  sourceId,
+  slug,
+  discovery
+}: {
+  sourceId: string;
+  slug: string;
+  discovery?: unknown;
+}) {
+  if (!discovery) return null;
+  const payload: any = discovery;
+  const ogc: any = payload?.ogc ?? payload ?? {};
+  const status = String(ogc.status ?? payload.status ?? "unknown");
+  const wmsUrl = String(ogc.wms_url ?? payload.wms_url ?? "-");
+  const wfsUrl = String(ogc.wfs_url ?? payload.wfs_url ?? "-");
+  const discoveredAt = String(ogc.discovered_at ?? payload.discovered_at ?? "-");
+  const refreshAfter = String(ogc.refresh_after ?? payload.refresh_after ?? "-");
+  const layers = Array.isArray(ogc.available_layers) ? (ogc.available_layers as Array<Record<string, unknown>>) : [];
+  const supportedSrs = Array.isArray(ogc.supported_srs) ? (ogc.supported_srs as string[]) : [];
+  const supportedFormats = Array.isArray(ogc.supported_formats) ? (ogc.supported_formats as string[]) : [];
+  const keyLayers = layers
+    .map((layer) => String(layer.name ?? layer.title ?? ""))
+    .filter((name) => /IMAR_DURUMU|PARS|PLAN_PAFTA|SIT_ALANI|imar|parsel|plan|pafta|sit/i.test(name))
+    .slice(0, 4);
+
+  return (
+    <div className="mt-1 rounded-md border border-border-subtle bg-bg/60 px-2 py-1.5 text-[10px] text-fg-secondary">
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-medium text-fg-primary">OGC keşfi</span>
+        <span className="tabular-nums">{status}</span>
+      </div>
+      <div className="mt-1 grid grid-cols-2 gap-x-2 gap-y-1">
+        <Row label="WMS" value={wmsUrl} />
+        <Row label="WFS" value={wfsUrl} />
+        <Row label="Katman" value={`${layers.length}`} />
+        <Row label="SRS" value={supportedSrs.slice(0, 3).join(", ") || "-"} />
+        <Row label="Format" value={supportedFormats.slice(0, 2).join(", ") || "-"} />
+        <Row label="Cache" value={`${discoveredAt} / ${refreshAfter}`} />
+      </div>
+      {keyLayers.length > 0 && <div className="mt-1 truncate text-[10px] text-fg-muted">Önemli katmanlar: {keyLayers.join(", ")}</div>}
+      <div className="mt-1 truncate text-[10px] text-fg-muted">Kaynak: {slug} · {sourceId}</div>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <span className="mr-1 text-fg-muted">{label}:</span>
+      <span className="truncate">{value}</span>
     </div>
   );
 }

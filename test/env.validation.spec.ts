@@ -15,6 +15,8 @@ describe('validateEnv', () => {
 
     expect(env.NODE_ENV).toBe('production');
     expect(env.PORT).toBe(3010);
+    expect(env.RATE_LIMIT_WINDOW_MS).toBe(60_000);
+    expect(env.RATE_LIMIT_MAX).toBe(120);
     expect(env.DATABASE_URL).toBe('postgres://user:pass@localhost:5432/eimar');
   });
 

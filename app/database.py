@@ -24,6 +24,7 @@ async def get_db():
 
 async def init_db():
     from app.models.base import Base
+    import app.models  # noqa: F401
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
         await conn.run_sync(Base.metadata.create_all)
