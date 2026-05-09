@@ -30,6 +30,10 @@ interface UIState {
   /** Askı modu: when true, askı layer is forcibly visible and styled. */
   askiMode: boolean;
 
+  activeConstraintFilter: string | null;
+  activePlanNoteFilter: string | null;
+  activeRiskFocus: "deprem" | "heyelan" | "sel" | "yangin" | null;
+
   /** 3D analysis controls (only meaningful when mapMode === "3d"). */
   shadowEnabled: boolean;
   sunHour: number; // 0..23
@@ -51,6 +55,10 @@ interface UIState {
   setTimelineCompareYear: (y: number | null) => void;
   setCompareMode: (m: CompareMode) => void;
   setAskiMode: (v: boolean) => void;
+  setActiveConstraintFilter: (value: string | null) => void;
+  setActivePlanNoteFilter: (value: string | null) => void;
+  setActiveRiskFocus: (value: "deprem" | "heyelan" | "sel" | "yangin" | null) => void;
+  clearSemanticFocus: () => void;
 
   setShadowEnabled: (v: boolean) => void;
   setSunHour: (h: number) => void;
@@ -108,6 +116,9 @@ export const useUIStore = create<UIState>()(
       timelineCompareYear: null,
       compareMode: "off",
       askiMode: false,
+      activeConstraintFilter: null,
+      activePlanNoteFilter: null,
+      activeRiskFocus: null,
       shadowEnabled: false,
       sunHour: 12,
       sunMonth: 6,
@@ -141,6 +152,16 @@ export const useUIStore = create<UIState>()(
           layerVisibility: v
             ? { ...s.layerVisibility, "askida-overlay": true }
             : s.layerVisibility
+        })),
+      setActiveConstraintFilter: (value) => set({ activeConstraintFilter: value }),
+      setActivePlanNoteFilter: (value) => set({ activePlanNoteFilter: value }),
+      setActiveRiskFocus: (value) => set({ activeRiskFocus: value }),
+      clearSemanticFocus: () =>
+        set((s) => ({
+          activeConstraintFilter: null,
+          activePlanNoteFilter: null,
+          activeRiskFocus: null,
+          askiMode: false
         })),
       setShadowEnabled: (v) => set({ shadowEnabled: v }),
       setSunHour: (h) =>
