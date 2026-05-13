@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
@@ -10,6 +11,8 @@ from app.services.source_registry import live_layer_candidates
 from app.sources.registry import sources_by_capability
 
 router = APIRouter()
+_PROBE_CACHE: dict[str, tuple[datetime, dict[str, Any]]] = {}
+_PROBE_CACHE_TTL = timedelta(minutes=15)
 
 
 def _capabilities_url_to_wms_template(url: str, layer_name: str) -> str:
@@ -29,6 +32,27 @@ def _capabilities_url_to_wms_template(url: str, layer_name: str) -> str:
         "bbox": "{bbox-epsg-3857}",
     })
     return urlunparse(parsed._replace(query=urlencode(query, safe="{}")))
+
+
+def _probe_cache_key(source_id: str, endpoint_url: str | None, layer_name: str | None) -> str:
+    return "|".join([source_id, endpoint_url or "", layer_name or ""])
+
+
+def _cached_probe(key: str) -> dict[str, Any] | None:
+    cached = _PROBE_CACHE.get(key)
+    if not cached:
+        return None
+    expires_at, payload = cached
+    if expires_at <= datetime.now(timezone.utc):
+        _PROBE_CACHE.pop(key, None)
+        return None
+    return payload
+
+
+def _store_probe(key: str, payload: dict[str, Any]) -> dict[str, Any]:
+    _PROBE_CACHE[key] = (datetime.now(timezone.utc) + _PROBE_CACHE_TTL, payload)
+    payload["cache"] = {"status": "stored", "ttl_seconds": int(_PROBE_CACHE_TTL.total_seconds())}
+    return payload
 
 
 async def _probe_http_endpoint(url: str) -> dict[str, Any]:
@@ -58,7 +82,18 @@ async def get_live_layers():
 async def probe_live_layer(
     source_id: str = Query(..., description="Source registry id"),
     endpoint_url: str | None = Query(None, description="Candidate endpoint URL from live-layers"),
+    layer_name: str | None = Query(None, description="Optional WMS layer name to activate"),
 ):
+    cache_key = _probe_cache_key(source_id, endpoint_url, layer_name)
+    cached = _cached_probe(cache_key)
+    if cached:
+        cached_payload = {**cached, "cache": {"status": "hit", "ttl_seconds": int(_PROBE_CACHE_TTL.total_seconds())}}
+        return envelope(
+            cached_payload["status"],
+            message="Cached live endpoint probe result. Only activatable public WMS layers include a map tile template.",
+            layer=cached_payload,
+        )
+
     candidates = [layer for layer in live_layer_candidates() if layer.get("source_id") == source_id]
     if endpoint_url:
         candidates = [layer for layer in candidates if layer.get("url") == endpoint_url]
@@ -74,15 +109,16 @@ async def probe_live_layer(
         caps = await OGCService(wms_url=url).get_wms_capabilities()
         if "error" not in caps:
             layers = caps.get("contents") or []
-            first = next((item for item in layers if item.get("name")), None)
+            selected = next((item for item in layers if layer_name and item.get("name") == layer_name), None)
+            selected = selected or next((item for item in layers if item.get("name")), None)
             payload.update({
                 "status": "live",
-                "activatable": bool(first),
+                "activatable": bool(selected),
                 "service_type": "WMS",
                 "identification": caps.get("identification"),
                 "available_layers": layers[:25],
-                "selected_layer": first,
-                "tile_url": _capabilities_url_to_wms_template(url, first["name"]) if first else None,
+                "selected_layer": selected,
+                "tile_url": _capabilities_url_to_wms_template(url, selected["name"]) if selected else None,
             })
         else:
             payload.update({"status": "unavailable", "error": caps.get("error"), "service_type": "WMS"})
@@ -91,6 +127,7 @@ async def probe_live_layer(
         payload.update(probe)
         payload.update({"service_type": layer_type.upper(), "activatable": False})
 
+    payload = _store_probe(cache_key, payload)
     return envelope(
         payload["status"],
         message="Live endpoint probe result. Only activatable public WMS layers include a map tile template.",

@@ -108,6 +108,10 @@ export interface ProbedLiveMapLayer extends BackendMapLayerResponse {
   http_status?: number | null;
   content_type?: string | null;
   error?: string;
+  cache?: {
+    status?: string;
+    ttl_seconds?: number;
+  };
 }
 
 export interface LiveMapLayerProbeResponse {
