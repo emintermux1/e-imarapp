@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final appConfigProvider = Provider<AppConfig>((ref) => AppConfig.fromEnvironment());
+final appConfigProvider =
+    Provider<AppConfig>((ref) => AppConfig.fromEnvironment());
 
 class AppConfig {
   const AppConfig({
@@ -33,4 +34,3 @@ class AppConfig {
 
   bool get hasGateway => gatewayBaseUrl.trim().isNotEmpty;
 }
-

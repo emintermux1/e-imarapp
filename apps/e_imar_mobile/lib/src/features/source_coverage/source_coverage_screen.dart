@@ -33,7 +33,8 @@ class SourceCoverageScreen extends ConsumerWidget {
           children: [
             SectionHeader(
               title: 'Kaynak kapsamı',
-              subtitle: 'Gateway, sağlayıcı ve katman hazırlığını tek ekranda gösterir; veri yoksa bunu açıkça söyler.',
+              subtitle:
+                  'Gateway, sağlayıcı ve katman hazırlığını tek ekranda gösterir; veri yoksa bunu açıkça söyler.',
               trailing: IconButton.filledTonal(
                 onPressed: () {
                   ref.invalidate(gatewayHealthProvider);
@@ -46,16 +47,18 @@ class SourceCoverageScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             _HealthCard(health: health),
             const SizedBox(height: 16),
-            SectionHeader(
+            const SectionHeader(
               title: 'Sağlayıcılar',
-              subtitle: 'Resmi, metadata, türetilmiş ve hazır değil durumları ayrı tutulur.',
+              subtitle:
+                  'Resmi, metadata, türetilmiş ve hazır değil durumları ayrı tutulur.',
             ),
             const SizedBox(height: 12),
             providers.when(
               data: (items) => items.isEmpty
                   ? EmptyStateCard(
                       title: 'Gateway yapılandırılmadı',
-                      body: 'E_IMAR_GATEWAY_BASE_URL verilmediği için canlı sağlayıcı listesi alınmadı. Uygulama yine metadata/dürüst boş durumlarla çalışır.',
+                      body:
+                          'E_IMAR_GATEWAY_BASE_URL verilmediği için canlı sağlayıcı listesi alınmadı. Uygulama yine metadata/dürüst boş durumlarla çalışır.',
                       icon: Icons.cloud_off_rounded,
                       action: OutlinedButton.icon(
                         onPressed: () {
@@ -81,9 +84,10 @@ class SourceCoverageScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 4),
-            SectionHeader(
+            const SectionHeader(
               title: 'Mobil katman hazırlığı',
-              subtitle: 'Harita yüzeyinde gösterilecek katalog katmanları ve yetenekleri.',
+              subtitle:
+                  'Harita yüzeyinde gösterilecek katalog katmanları ve yetenekleri.',
             ),
             const SizedBox(height: 12),
             for (final layer in layers) ...[
@@ -99,7 +103,10 @@ class SourceCoverageScreen extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       'Mobil uygulama resmi veriyi taklit etmez: gateway yoksa, izinli TKGM adaptörü kapalıysa veya belediye katmanı metadata-only ise kullanıcıya hazır değil durumu gösterilir.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: scheme.onSurfaceVariant),
                     ),
                   ),
                 ],
@@ -130,18 +137,23 @@ class _HealthCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Gateway durumu', style: Theme.of(context).textTheme.titleMedium),
+                  Text('Gateway durumu',
+                      style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 6),
                   Text(
                     'status: ${value.status} · Turkey-only: ${value.turkeyOnly ? 'aktif' : 'kapalı'}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: scheme.onSurfaceVariant),
                   ),
                 ],
               ),
             ),
             StatusPill(
               label: value.status == 'healthy' ? 'canlı' : value.status,
-              color: value.status == 'healthy' ? scheme.primary : scheme.tertiary,
+              color:
+                  value.status == 'healthy' ? scheme.primary : scheme.tertiary,
             ),
           ],
         ),
@@ -182,11 +194,15 @@ class _ProviderCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(provider.displayName, style: Theme.of(context).textTheme.titleMedium),
+                    Text(provider.displayName,
+                        style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 6),
                     Text(
                       provider.id,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -202,7 +218,9 @@ class _ProviderCard extends StatelessWidget {
               StatusPill(
                 label: provider.enabled ? 'enabled' : 'disabled',
                 color: provider.enabled ? scheme.primary : scheme.outline,
-                icon: provider.enabled ? Icons.check_circle_rounded : Icons.lock_outline_rounded,
+                icon: provider.enabled
+                    ? Icons.check_circle_rounded
+                    : Icons.lock_outline_rounded,
               ),
               for (final capability in provider.capabilities.take(3))
                 StatusPill(label: capability, color: scheme.secondary),
@@ -212,7 +230,10 @@ class _ProviderCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               'Bölge: ${provider.regions.take(5).join(', ')}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ],
         ],
@@ -247,11 +268,15 @@ class _LayerReadinessCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(layer.name, style: Theme.of(context).textTheme.titleMedium),
+                    Text(layer.name,
+                        style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 6),
                     Text(
                       layer.description,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: scheme.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -267,7 +292,9 @@ class _LayerReadinessCard extends StatelessWidget {
               StatusPill(
                 label: layer.metadataOnly ? 'metadata-only' : 'endpoint-ready',
                 color: layer.isOperational ? scheme.primary : scheme.tertiary,
-                icon: layer.isOperational ? Icons.cloud_done_rounded : Icons.info_outline_rounded,
+                icon: layer.isOperational
+                    ? Icons.cloud_done_rounded
+                    : Icons.info_outline_rounded,
               ),
               for (final capability in layer.capabilities.take(4))
                 StatusPill(label: capability, color: scheme.secondary),

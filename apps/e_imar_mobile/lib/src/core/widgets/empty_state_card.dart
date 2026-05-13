@@ -27,7 +27,7 @@ class EmptyStateCard extends StatelessWidget {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: scheme.primary.withOpacity(0.12),
+              color: scheme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Icon(icon, color: scheme.primary),
@@ -55,4 +55,3 @@ class EmptyStateCard extends StatelessWidget {
     );
   }
 }
-

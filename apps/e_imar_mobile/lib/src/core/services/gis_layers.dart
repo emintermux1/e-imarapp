@@ -79,7 +79,8 @@ class GisLayerDescriptor {
   final bool metadataOnly;
   final Map<String, String> defaultQueryParameters;
 
-  bool get hasEndpoint => endpoint.scheme.isNotEmpty && endpoint.host.isNotEmpty;
+  bool get hasEndpoint =>
+      endpoint.scheme.isNotEmpty && endpoint.host.isNotEmpty;
   bool get isOperational => hasEndpoint && !metadataOnly;
 }
 
@@ -122,7 +123,8 @@ class GisFeature {
   factory GisFeature.fromJson(Map<String, Object?> json) => GisFeature(
         id: json['id']?.toString(),
         geometry: json['geometry'] is Map
-            ? GisGeometry.fromJson((json['geometry'] as Map).cast<String, Object?>())
+            ? GisGeometry.fromJson(
+                (json['geometry'] as Map).cast<String, Object?>())
             : null,
         properties: json['properties'] is Map
             ? (json['properties'] as Map).cast<String, Object?>()
@@ -160,16 +162,19 @@ class GisFeatureCollection {
   bool get hasError => errorMessage != null;
   bool get isEmpty => features.isEmpty;
 
-  factory GisFeatureCollection.withError(String message) => GisFeatureCollection(
+  factory GisFeatureCollection.withError(String message) =>
+      GisFeatureCollection(
         features: const [],
         errorMessage: message,
       );
 
-  factory GisFeatureCollection.fromJson(Map<String, Object?> json) => GisFeatureCollection(
+  factory GisFeatureCollection.fromJson(Map<String, Object?> json) =>
+      GisFeatureCollection(
         features: json['features'] is List
             ? (json['features'] as List)
                 .whereType<Map>()
-                .map((item) => GisFeature.fromJson(item.cast<String, Object?>()))
+                .map(
+                    (item) => GisFeature.fromJson(item.cast<String, Object?>()))
                 .toList(growable: false)
             : const [],
         metadata: json['metadata'] is Map
@@ -179,14 +184,16 @@ class GisFeatureCollection {
         attribution: json['attribution'] is List
             ? (json['attribution'] as List)
                 .whereType<Map>()
-                .map((item) => SourceAttribution.fromJson(item.cast<String, Object?>()))
+                .map((item) =>
+                    SourceAttribution.fromJson(item.cast<String, Object?>()))
                 .toList(growable: false)
             : const [],
       );
 
   Map<String, Object?> toJson() => {
         'type': 'FeatureCollection',
-        'features': features.map((feature) => feature.toJson()).toList(growable: false),
+        'features':
+            features.map((feature) => feature.toJson()).toList(growable: false),
         if (metadata.isNotEmpty) 'metadata': metadata,
         if (errorMessage != null) 'error': errorMessage,
         if (attribution.isNotEmpty)
@@ -206,7 +213,8 @@ class GisFeatureCollection {
 abstract class GisLayerRepository {
   Future<List<GisLayerDescriptor>> availableLayers();
   String buildRequestUrl(GisLayerDescriptor layer, GisLayerQuery query);
-  Future<GisFeatureCollection> fetchFeatures(GisLayerDescriptor layer, GisLayerQuery query);
+  Future<GisFeatureCollection> fetchFeatures(
+      GisLayerDescriptor layer, GisLayerQuery query);
   Future<String> fetchGeoJson(
     GisLayerDescriptor layer, {
     required double latitude,
@@ -229,10 +237,12 @@ final officialRiskLayerPresets = <GisLayerDescriptor>[
   GisLayerDescriptor(
     id: 'zoning-plan',
     name: 'İmar Planı',
-    description: 'Plan kullanım kararları ve lejant katmanı için katalog ögesi.',
+    description:
+        'Plan kullanım kararları ve lejant katmanı için katalog ögesi.',
     endpoint: Uri(),
     providerName: 'Kamu plan kataloğu',
-    attribution: const SourceAttribution(name: 'Kamu plan katalogları', url: ''),
+    attribution:
+        const SourceAttribution(name: 'Kamu plan katalogları', url: ''),
     trust: GisLayerTrust.publicMetadata,
     cacheTtl: const Duration(minutes: 20),
     capabilities: const ['zoning', 'parcel-context', 'plan-notes'],
@@ -244,7 +254,8 @@ final officialRiskLayerPresets = <GisLayerDescriptor>[
     description: 'Konuma göre parsel sınır görünümü ve çevresel bağlam.',
     endpoint: Uri(),
     providerName: 'Harita katalogu',
-    attribution: const SourceAttribution(name: 'Kamu harita katalogları', url: ''),
+    attribution:
+        const SourceAttribution(name: 'Kamu harita katalogları', url: ''),
     trust: GisLayerTrust.publicMetadata,
     cacheTtl: const Duration(minutes: 20),
     capabilities: const ['parcel-boundary', 'context'],
@@ -277,10 +288,12 @@ final officialRiskLayerPresets = <GisLayerDescriptor>[
   GisLayerDescriptor(
     id: 'aski-tracking',
     name: 'Askı İzleme',
-    description: 'Askı süreci ve plan değişikliği takibi için izlenebilir yüzey.',
+    description:
+        'Askı süreci ve plan değişikliği takibi için izlenebilir yüzey.',
     endpoint: Uri(),
     providerName: 'Takip kataloğu',
-    attribution: const SourceAttribution(name: 'Kamu takip metadatası', url: ''),
+    attribution:
+        const SourceAttribution(name: 'Kamu takip metadatası', url: ''),
     trust: GisLayerTrust.publicMetadata,
     cacheTtl: const Duration(minutes: 60),
     capabilities: const ['tracking', 'notifications'],
@@ -291,4 +304,3 @@ final officialRiskLayerPresets = <GisLayerDescriptor>[
 String gisFeatureCollectionToPrettyJson(GisFeatureCollection collection) {
   return const JsonEncoder.withIndent('  ').convert(collection.toJson());
 }
-
