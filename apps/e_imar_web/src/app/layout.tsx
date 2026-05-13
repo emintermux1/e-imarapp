@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const inter = Inter({
+const sourceSans = Source_Sans_3({
   subsets: ["latin", "latin-ext"],
   display: "swap",
-  variable: "--font-inter"
+  variable: "--font-sans"
 });
 
 export const metadata: Metadata = {
@@ -38,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr" className={inter.variable} suppressHydrationWarning>
+    <html lang="tr" className={sourceSans.variable} suppressHydrationWarning>
       <body className="font-sans antialiased min-h-screen bg-bg text-fg-primary">
         <Providers>{children}</Providers>
       </body>

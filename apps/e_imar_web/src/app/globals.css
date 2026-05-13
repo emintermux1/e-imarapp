@@ -21,10 +21,27 @@
   }
 
   body {
-    background-color: rgb(var(--bg));
+    background:
+      radial-gradient(circle at 18% 0%, rgb(var(--accent-navy) / 0.08), transparent 34rem),
+      linear-gradient(180deg, rgb(var(--surface-1)) 0%, rgb(var(--bg)) 46%, rgb(var(--surface-1)) 100%);
     color: rgb(var(--text-primary));
     font-size: 14px;
     line-height: 20px;
+    letter-spacing: -0.005em;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.018;
+    background-image:
+      linear-gradient(0deg, rgb(15 23 42 / 0.7) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(15 23 42 / 0.45) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: linear-gradient(to bottom, black, transparent 58%);
   }
 
   ::selection {

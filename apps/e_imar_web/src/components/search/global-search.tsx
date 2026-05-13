@@ -25,6 +25,7 @@ import { SourceBadge } from "@/components/gis/source-badge";
 import { geometryLabel, matchStatusLabel } from "@/lib/api/quality-labels";
 import type { SearchResult } from "@/types/geo";
 import { cn } from "@/lib/utils";
+import { getLocationBoundary } from "@/data/location-boundaries";
 
 const TABS: SearchMode[] = ["Hepsi", "AdaParsel", "Koordinat", "Adres", "Belediye"];
 const TAB_LABELS: Record<SearchMode, string> = {
@@ -54,6 +55,7 @@ export function GlobalSearch() {
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
   const flyTo = useMapStore((s) => s.flyTo);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
 
   const [mode, setMode] = React.useState<SearchMode>("Hepsi");
   const [query, setQuery] = React.useState("");
@@ -107,15 +109,35 @@ export function GlobalSearch() {
     setSearchOpen(false);
     setQuery("");
     if (r.type === "parcel") {
+      setSelectedArea(null);
       setSelectedParcelId(r.parcelId);
       setRightPanelOpen(true);
       if (r.centroid) {
         flyTo({ center: r.centroid, zoom: 16, parcelId: r.parcelId });
       }
     } else if (r.type === "coordinate") {
+      setSelectedArea(null);
+      setSelectedParcelId(null);
       flyTo({ center: [r.lng, r.lat], zoom: 14 });
     } else if (r.centroid) {
-      flyTo({ center: r.centroid, zoom: r.type === "address" ? 12 : 11 });
+      setSelectedParcelId(null);
+      const boundary = r.type === "address" || r.type === "location"
+        ? getLocationBoundary({ il: r.il, ilce: r.ilce, mahalle: r.mahalle })
+        : undefined;
+      setSelectedArea(boundary ? {
+        id: boundary.id,
+        kind: boundary.kind,
+        label: boundary.label,
+        il: boundary.il,
+        ilce: boundary.ilce,
+        mahalle: boundary.mahalle,
+        feature: boundary.feature
+      } : null);
+      flyTo({
+        center: r.centroid,
+        bounds: r.bbox ?? boundary?.bounds,
+        zoom: r.type === "address" ? 12 : 11
+      });
     }
   }
 
@@ -156,14 +178,14 @@ export function GlobalSearch() {
   return (
     <Popover open={searchOpen} onOpenChange={setSearchOpen}>
       <PopoverAnchor asChild>
-        <div className="w-full max-w-[720px] mx-auto">
+        <div className="mx-auto w-full max-w-[720px]">
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
             className={cn(
-              "group flex w-full items-center gap-2 h-9 px-2.5 rounded-md",
-              "border border-border-subtle bg-surface-1/92 text-fg-secondary text-sm shadow-[inset_0_1px_0_rgb(255_255_255/0.04),0_1px_10px_rgb(0_0_0/0.10)]",
-              "hover:bg-surface-2 hover:border-border-strong transition-colors",
+              "group flex h-9 w-full items-center gap-2 rounded-lg px-3",
+              "border border-border-strong/70 bg-bg/72 text-sm text-fg-secondary shadow-[inset_0_1px_0_rgb(255_255_255/0.78)]",
+              "transition-colors hover:border-brand-blue/45 hover:bg-surface-2",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             )}
             aria-label="Ara"

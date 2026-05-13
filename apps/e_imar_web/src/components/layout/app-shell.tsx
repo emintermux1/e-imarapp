@@ -29,13 +29,14 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
 
   const sidebarWidth =
     sidebarMode === "expanded"
-      ? "lg:pl-[280px]"
-      : sidebarMode === "collapsed"
-      ? "lg:pl-[64px]"
+      ? "lg:pl-[296px]"
+    : sidebarMode === "collapsed"
+      ? "lg:pl-[80px]"
       : "lg:pl-0";
 
   return (
-    <div className="min-h-dvh bg-bg text-fg-primary">
+    <div className="relative min-h-dvh overflow-hidden bg-bg text-fg-primary">
+      <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-0 h-40 border-b border-white/40 bg-[linear-gradient(180deg,rgb(var(--surface-2)/0.76),rgb(var(--bg)/0))]" />
       {!fullscreenMap && <TopBar onOpenMobileMenu={() => setMobileNavOpen(true)} />}
 
       {!fullscreenMap && <LeftSidebar />}
@@ -68,7 +69,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
       </Sheet>
 
       <main
-        className={`${fullscreenMap ? "pt-0 lg:pl-0" : `pt-14 ${sidebarWidth}`} h-dvh overflow-hidden transition-[padding] duration-200`}
+        className={`${fullscreenMap ? "pt-0 lg:pl-0" : `pt-16 ${sidebarWidth}`} relative z-10 h-dvh overflow-hidden transition-[padding] duration-200`}
       >
         {children ? (
           <div className="h-full w-full">{children}</div>
@@ -84,10 +85,10 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
               zoomReadoutRef={zoomReadoutRef}
             />
             <DataCoverageBadge />
-            <div className="pointer-events-none absolute left-3 top-24 z-10 hidden w-[min(860px,calc(100vw-1.5rem))] md:block">
+            <div className="pointer-events-none absolute left-4 top-28 z-10 hidden w-[min(860px,calc(100vw-2rem))] md:block">
               <MunicipalityWorkbench />
             </div>
-            <div className="pointer-events-auto absolute right-3 bottom-16 z-10 hidden md:block max-w-[280px]">
+            <div className="pointer-events-auto absolute right-4 bottom-16 z-10 hidden md:block max-w-[280px]">
               <GISLegend
                 collapsed={legendCollapsed}
                 onCollapsedChange={setLegendCollapsed}

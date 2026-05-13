@@ -3,7 +3,10 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { BasemapId } from "@/lib/maplibre/styles";
+import type { LocationBoundary } from "@/data/location-boundaries";
 import { mergeMultiSelection, toggleMultiSelection } from "@/lib/map/multi-select";
+
+export interface SelectedArea extends Pick<LocationBoundary, "id" | "kind" | "label" | "il" | "ilce" | "mahalle" | "feature"> {}
 
 export interface FlyTarget {
   center: [number, number];
@@ -32,6 +35,7 @@ interface MapState {
   basemap: BasemapId;
   hoveredParcelId: string | null;
   selectedParcelId: string | null;
+  selectedArea: SelectedArea | null;
   selectedPoint: SelectedPointState | null;
   multiSelectedParcelIds: string[];
   selectionNotice: string | null;
@@ -43,6 +47,7 @@ interface MapState {
   setBasemap: (b: BasemapId) => void;
   setHoveredParcelId: (id: string | null) => void;
   setSelectedParcelId: (id: string | null) => void;
+  setSelectedArea: (area: SelectedArea | null) => void;
   setSelectedPoint: (point: SelectedPointState | null) => void;
   toggleMultiSelectedParcelId: (id: string) => void;
   addMultiSelectedParcelIds: (ids: string[], limit?: number) => void;
@@ -62,6 +67,7 @@ export const useMapStore = create<MapState>()(
       basemap: "voyager",
       hoveredParcelId: null,
       selectedParcelId: null,
+      selectedArea: null,
       selectedPoint: null,
       multiSelectedParcelIds: [],
       selectionNotice: null,
@@ -74,6 +80,7 @@ export const useMapStore = create<MapState>()(
       setHoveredParcelId: (id) => set({ hoveredParcelId: id }),
       setSelectedParcelId: (id) =>
         set(id ? { selectedParcelId: id, selectedPoint: null } : { selectedParcelId: null }),
+      setSelectedArea: (area) => set({ selectedArea: area }),
       setSelectedPoint: (point) =>
         set(point ? { selectedPoint: point, selectedParcelId: null } : { selectedPoint: null }),
       toggleMultiSelectedParcelId: (id) =>

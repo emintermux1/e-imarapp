@@ -22,6 +22,7 @@ export function SectionGecmis({ parcel }: SectionGecmisProps) {
   const timelineYear = useUIStore((s) => s.timelineYear);
   const setMapMode = useUIStore((s) => s.setMapMode);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
   const flyTo = useMapStore((s) => s.flyTo);
 
   const entries = React.useMemo(() => getPlanChanges(parcel.id), [parcel.id]);
@@ -32,6 +33,7 @@ export function SectionGecmis({ parcel }: SectionGecmisProps) {
 
   function openInTimeline(year: number) {
     setTimelineYear(year);
+    setSelectedArea(null);
     setSelectedParcelId(parcel.id);
     if (parcel.centroid) {
       flyTo({ center: parcel.centroid, zoom: 16 });

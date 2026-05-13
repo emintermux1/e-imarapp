@@ -11,6 +11,7 @@ import {
   Loader2,
   Clock3,
   Database,
+  FileSearch,
   Building2,
   ShieldAlert,
   Route,
@@ -21,9 +22,7 @@ import {
   CheckCircle2,
   TriangleAlert,
   GitCompareArrows,
-  Sparkles,
   Crosshair,
-  WandSparkles,
   AlertTriangle,
   Navigation
 } from "lucide-react";
@@ -388,10 +387,10 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
             className={cn(
-              "fixed inset-x-0 bottom-0 top-auto z-30 flex max-h-[78dvh] flex-col rounded-t-xl md:inset-x-auto md:right-0 md:top-14 md:bottom-0 md:max-h-none md:rounded-none",
+            "fixed inset-x-0 bottom-0 top-auto z-30 flex max-h-[78dvh] flex-col rounded-t-xl md:inset-x-auto md:bottom-4 md:right-3 md:top-20 md:max-h-none md:rounded-xl",
               floating
-                ? "w-full md:w-[400px] xl:w-[400px] lg:w-[360px] border border-border-subtle md:border-y-0 md:border-r-0 bg-surface-2/98 shadow-sheet md:shadow-pop-dark"
-                : "w-full md:w-[400px] border border-border-subtle md:border-y-0 md:border-r-0 bg-surface-2/98 shadow-sheet md:shadow-pop-dark"
+                ? "w-full border border-border-strong/80 bg-surface-2/98 shadow-sheet md:w-[400px] md:shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(18_52_82/0.56)] lg:w-[360px] xl:w-[400px]"
+                : "w-full border border-border-strong/80 bg-surface-2/98 shadow-sheet md:w-[400px] md:shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(18_52_82/0.56)]"
             )}
             aria-label="En yeni imar bölgeleri paneli"
           >
@@ -517,20 +516,20 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
           exit={{ x: "100%" }}
           transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
           className={cn(
-            "fixed right-0 top-14 bottom-0 z-30 flex flex-col",
+            "fixed bottom-4 right-3 top-20 z-30 flex flex-col overflow-hidden rounded-xl",
             floating
-              ? "w-[400px] xl:w-[400px] lg:w-[360px] border-l border-border-subtle bg-surface-2"
-              : "w-[400px] border-l border-border-subtle bg-surface-2"
+              ? "w-[400px] border border-border-strong/80 bg-surface-2/98 shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(18_52_82/0.56)] lg:w-[360px] xl:w-[400px]"
+              : "w-[400px] border border-border-strong/80 bg-surface-2/98 shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(18_52_82/0.56)]"
           )}
           aria-label="Parsel detay paneli"
         >
-          <header className="flex flex-col gap-3 px-4 py-3 border-b border-border-subtle bg-surface-1/40">
+          <header className="flex flex-col gap-3 border-b border-border-subtle/80 bg-surface-3/65 px-4 py-4">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-baseline gap-2 min-w-0">
-                <span className="text-[11px] uppercase tracking-wider text-fg-muted">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fg-muted">
                   Ada/Parsel
                 </span>
-                <span className="text-xl font-semibold tabular-nums text-fg-primary">
+                <span className="text-2xl font-semibold tracking-[-0.035em] tabular-nums text-fg-primary">
                   {adaParselText(parcelData!.ada, parcelData!.parsel)}
                 </span>
               </div>
@@ -558,13 +557,13 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
               </div>
             </div>
             <div className="flex items-center justify-between gap-2 min-w-0">
-              <div className="flex items-center gap-2 min-w-0 text-xs text-fg-secondary">
+              <div className="flex min-w-0 items-center gap-2 text-xs text-fg-secondary">
                 <span className="truncate">
                   {parcelData!.mahalle} · {parcelData!.ilce} / {parcelData!.il}
                 </span>
                 <SourceBadge status={parcelData!.sourceStatus ?? "demo"} />
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex shrink-0 items-center gap-2">
                 <ZoningBadge type={parcelData!.zoningType} size="xs" />
                 <span className="text-[11px] tabular-nums text-fg-muted">
                   {formatArea(parcelData!.yuzolcumuM2)}
@@ -592,7 +591,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             <ParcelPanelSkeleton />
           ) : (
             <>
-          <section className="grid grid-cols-3 gap-2 px-3 py-2 border-b border-border-subtle bg-surface-1/20">
+          <section className="grid grid-cols-3 gap-2 border-b border-border-subtle/80 bg-bg/45 px-3 py-3">
             <MetricCard
               icon={<Building2 className="h-3.5 w-3.5" />}
               label="Yapı Potansiyeli"
@@ -637,7 +636,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             >
               {pointAnalysis && (
                 <AccordionItem value="ai-analiz">
-                  <AccordionTrigger>AI Nokta Analizi</AccordionTrigger>
+                  <AccordionTrigger>Yer analizi</AccordionTrigger>
                   <AccordionContent>
                     <SelectedPointAnalysisContent analysis={pointAnalysis} compact />
                   </AccordionContent>
@@ -866,26 +865,24 @@ function SelectedPointAnalysisPanel({
           exit={{ x: "100%", opacity: 0.92 }}
           transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
           className={cn(
-            "fixed right-0 top-14 bottom-0 z-30 flex flex-col border-l border-white/10 bg-slate-950/86 shadow-[0_24px_80px_rgba(2,6,23,0.55)] backdrop-blur-2xl",
+            "fixed bottom-4 right-3 top-20 z-30 flex flex-col overflow-hidden rounded-xl border border-border-strong/80 bg-surface-2/98 shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(18_52_82/0.56)]",
             floating ? "w-[400px] xl:w-[400px] lg:w-[360px]" : "w-[400px]"
           )}
           aria-label="Seçili nokta analizi paneli"
         >
-          <header className="relative overflow-hidden border-b border-white/10 px-4 py-4">
-            <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-sky-400/20 blur-3xl" />
-            <div className="absolute -left-12 top-10 h-32 w-32 rounded-full bg-cyan-300/10 blur-2xl" />
+          <header className="relative overflow-hidden border-b border-border-subtle/80 bg-surface-3/65 px-4 py-4">
             <div className="relative flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-sky-300/20 bg-sky-300/10 text-sky-200 shadow-[0_0_32px_rgba(56,189,248,0.28)]">
-                    <WandSparkles className="h-5 w-5" />
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-brand-blue/25 bg-[rgb(var(--accent-blue)/0.09)] text-[rgb(var(--accent-blue))] shadow-[inset_0_1px_0_rgb(255_255_255/0.7)]">
+                    <Crosshair className="h-5 w-5" />
                   </span>
                   <div>
-                    <div className="text-[10px] uppercase tracking-[0.24em] text-sky-200/70">Demo AI analiz</div>
-                    <h2 className="text-lg font-semibold text-white">{analysis.title}</h2>
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-fg-muted">Yer analizi</div>
+                    <h2 className="text-lg font-semibold tracking-[-0.02em] text-fg-primary">{analysis.title}</h2>
                   </div>
                 </div>
-                <p className="mt-3 text-xs leading-relaxed text-slate-300">{analysis.subtitle}</p>
+                <p className="mt-3 text-xs leading-relaxed text-fg-secondary">{analysis.subtitle}</p>
               </div>
               <IconButton label="Kapat" variant="ghost" onClick={onClose}>
                 <X className="h-4 w-4" />
@@ -917,7 +914,7 @@ function SelectedPointAnalysisContent({
 }) {
   return (
     <div className={cn("space-y-3", compact ? "p-0" : "p-3")}>
-      <div className="rounded-xl border border-amber-300/20 bg-amber-300/8 px-3 py-2 text-[11px] leading-relaxed text-amber-100">
+            <div className="rounded-xl border border-[rgb(var(--status-warning)/0.35)] bg-[rgb(var(--status-warning)/0.08)] px-3 py-2 text-[11px] leading-relaxed text-fg-secondary">
         <div className="flex items-start gap-2">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>{analysis.disclaimer}</span>
@@ -928,17 +925,17 @@ function SelectedPointAnalysisContent({
         <button
           type="button"
           onClick={onSelectNearest}
-          className="group flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border border-sky-300/20 bg-sky-300/10 px-3 py-3 text-left transition hover:border-sky-200/45 hover:bg-sky-300/15"
+          className="group flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border border-brand-blue/25 bg-[rgb(var(--accent-blue)/0.08)] px-3 py-3 text-left transition hover:border-brand-blue/45 hover:bg-[rgb(var(--accent-blue)/0.12)]"
         >
           <span>
-            <span className="block text-xs font-semibold text-sky-100">
+            <span className="block text-xs font-semibold text-fg-primary">
               Yakın parseli seç: {adaParselText(analysis.nearestParcel.parcel.ada, analysis.nearestParcel.parcel.parsel)}
             </span>
-            <span className="mt-1 block text-[11px] text-slate-300">
+            <span className="mt-1 block text-[11px] text-fg-secondary">
               {analysis.nearestParcel.distanceM.toLocaleString("tr-TR", { maximumFractionDigits: 0 })} m · {analysis.nearestParcel.parcel.mahalle}
             </span>
           </span>
-          <MapPinned className="h-4 w-4 text-sky-200 transition group-hover:scale-110" />
+          <MapPinned className="h-4 w-4 text-[rgb(var(--accent-blue))] transition group-hover:scale-110" />
         </button>
       )}
 
@@ -958,25 +955,25 @@ function InsightCard({ card, index }: { card: PlaceInsightCard; index: number })
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.18, delay: Math.min(index * 0.035, 0.18) }}
       className={cn(
-        "rounded-xl border bg-white/[0.045] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl",
+        "rounded-xl border bg-surface-2 p-3 shadow-[inset_0_1px_0_rgb(255_255_255/0.72)]",
         insightToneClass(card.tone)
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">
+          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-fg-muted">
             {insightIcon(card.kind)}
             <span>{card.title}</span>
           </div>
-          <div className="mt-1 text-base font-semibold text-white">{card.value}</div>
-          <p className="mt-1 text-xs leading-relaxed text-slate-300">{card.detail}</p>
+          <div className="mt-1 text-base font-semibold text-fg-primary">{card.value}</div>
+          <p className="mt-1 text-xs leading-relaxed text-fg-secondary">{card.detail}</p>
         </div>
         <SourceBadge status={card.provenance === "derived" ? "computed" : card.provenance} className="shrink-0" />
       </div>
-      <ul className="mt-3 space-y-1.5 text-[11px] leading-relaxed text-slate-300">
+      <ul className="mt-3 space-y-1.5 text-[11px] leading-relaxed text-fg-secondary">
         {card.bullets.slice(0, 3).map((bullet) => (
           <li key={bullet} className="flex gap-2">
-            <CheckCircle2 className="mt-0.5 h-3 w-3 shrink-0 text-sky-200/80" />
+            <CheckCircle2 className="mt-0.5 h-3 w-3 shrink-0 text-[rgb(var(--accent-blue))]" />
             <span>{bullet}</span>
           </li>
         ))}
@@ -987,12 +984,12 @@ function InsightCard({ card, index }: { card: PlaceInsightCard; index: number })
 
 function GlassMetric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="min-w-0 rounded-xl border border-white/10 bg-white/[0.055] px-3 py-2 backdrop-blur-xl">
-      <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.18em] text-slate-400">
+    <div className="min-w-0 rounded-xl border border-border-subtle bg-surface-2 px-3 py-2 shadow-[inset_0_1px_0_rgb(255_255_255/0.72)]">
+      <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.18em] text-fg-muted">
         {icon}
         <span>{label}</span>
       </div>
-      <div className="mt-1 truncate text-xs font-semibold text-slate-100">{value}</div>
+      <div className="mt-1 truncate text-xs font-semibold text-fg-primary">{value}</div>
     </div>
   );
 }
@@ -1000,16 +997,16 @@ function GlassMetric({ icon, label, value }: { icon: React.ReactNode; label: str
 function insightToneClass(tone: PlaceInsightCard["tone"]) {
   switch (tone) {
     case "good":
-      return "border-emerald-300/18 shadow-emerald-950/20";
+      return "border-status-success/30 bg-[rgb(var(--status-success)/0.06)]";
     case "warning":
-      return "border-amber-300/22 shadow-amber-950/20";
+      return "border-status-warning/35 bg-[rgb(var(--status-warning)/0.06)]";
     case "danger":
-      return "border-rose-300/24 shadow-rose-950/20";
+      return "border-status-error/30 bg-[rgb(var(--status-error)/0.055)]";
     case "info":
-      return "border-sky-300/18 shadow-sky-950/20";
+      return "border-brand-blue/25 bg-[rgb(var(--accent-blue)/0.055)]";
     case "muted":
     default:
-      return "border-white/10";
+      return "border-border-subtle";
   }
 }
 
@@ -1024,7 +1021,7 @@ function insightIcon(kind: PlaceInsightCard["kind"]) {
     case "confidence":
       return <Database className="h-3.5 w-3.5" />;
     case "opportunity":
-      return <Sparkles className="h-3.5 w-3.5" />;
+      return <FileSearch className="h-3.5 w-3.5" />;
     case "zoning":
     default:
       return <MapPinned className="h-3.5 w-3.5" />;
@@ -1043,7 +1040,7 @@ function MetricCard({
   hint: string;
 }) {
   return (
-    <article className="rounded-md border border-border-subtle bg-surface-2 px-2.5 py-2 min-w-0">
+    <article className="min-w-0 rounded-lg border border-border-subtle bg-surface-2 px-2.5 py-2 shadow-[inset_0_1px_0_rgb(255_255_255/0.72)]">
       <div className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-fg-muted">
         {icon}
         <span className="truncate">{label}</span>

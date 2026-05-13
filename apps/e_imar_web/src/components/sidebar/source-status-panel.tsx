@@ -13,7 +13,7 @@ import { summarizeSourceStatuses, useSourceStore } from "@/stores/source-store";
 import { cn } from "@/lib/utils";
 import type { DataSourceStatus, SourceQualityRecord } from "@/types/api";
 
-const FEATURED_SLUGS = ["pendik", "ibb", "ankara", "izmir", "cankaya", "tkgm", "eplan-csb", "tucbs-public-api"];
+const FEATURED_SLUGS = ["pendik", "ibb", "ankara", "izmir", "cankaya", "besiktas", "kadikoy", "bodrum", "tkgm", "eplan-csb", "tucbs-public-api"];
 
 export function SourceStatusPanel() {
   const sources = useSourceStore((s) => s.sources);
@@ -106,7 +106,9 @@ export function SourceStatusPanel() {
         {featured.map((item) => {
           if (!item) return null;
           if ("source_id" in item) return <QualityRow key={item.source_id} record={item} />;
-          const status = health[item.id]?.status ?? (item.requires_approval ? "requires_approval" : "external_only");
+          const status = health[item.id]?.status ?? (item.requires_approval || item.requires_credentials ? "requires_approval" : "external_only");
+          const slug = item.slug ?? item.id;
+          const homepageUrl = item.homepage_url ?? item.base_url ?? "#";
           return (
             <div key={item.id} className="rounded-lg border border-border-subtle bg-bg/70 px-2.5 py-2">
               <div className="flex items-start gap-2">
@@ -115,21 +117,21 @@ export function SourceStatusPanel() {
                   <div className="truncate text-[11px] font-semibold text-fg-primary">{item.name}</div>
                   <div className="truncate text-[9.5px] text-fg-muted">{statusLabel(status)}</div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    void discover(item.id);
-                    if (item.kind.startsWith("municipal")) void discoverMunicipalityGis(item.slug, true);
-                  }}
-                  className="min-h-7 rounded border border-border-subtle px-1.5 py-1 text-[10px] text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
-                >
-                  Keşfet
-                </button>
-                <a href={item.homepage_url} target="_blank" rel="noreferrer" className="inline-flex h-7 w-7 items-center justify-center rounded border border-border-subtle text-fg-secondary hover:bg-surface-1 hover:text-fg-primary" title="Resmi portalı aç">
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-              <DiscoveryDetails sourceId={item.id} slug={item.slug} discovery={discoveries[item.slug] ?? discoveries[item.id]} />
+	                <button
+	                  type="button"
+	                  onClick={() => {
+	                    void discover(item.id);
+	                    if ((item.kind ?? "").startsWith("municipal")) void discoverMunicipalityGis(slug, true);
+	                  }}
+	                  className="min-h-7 rounded border border-border-subtle px-1.5 py-1 text-[10px] text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
+	                >
+	                  Keşfet
+	                </button>
+	                <a href={homepageUrl} target="_blank" rel="noreferrer" className="inline-flex h-7 w-7 items-center justify-center rounded border border-border-subtle text-fg-secondary hover:bg-surface-1 hover:text-fg-primary" title="Resmi portalı aç">
+	                  <ExternalLink className="h-3 w-3" />
+	                </a>
+	              </div>
+	              <DiscoveryDetails sourceId={item.id} slug={slug} discovery={discoveries[slug] ?? discoveries[item.id]} />
             </div>
           );
         })}

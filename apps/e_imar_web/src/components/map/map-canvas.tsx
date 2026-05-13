@@ -43,6 +43,9 @@ import {
   buildDrawingPolygonOutlineLayer,
   buildDrawingPointLayer,
   buildDrawingLabelLayer,
+  buildSelectedAreaFillLayer,
+  buildSelectedAreaLineLayer,
+  SELECTED_AREA_SOURCE,
   DRAWING_SOURCE,
   buildAskiFillLayer,
   buildAskiLineLayer,
@@ -70,6 +73,7 @@ import { geoJsonBounds, geoJsonCentroid, toFeatureCollection } from "@/lib/geojs
 import { findNearestParcel } from "@/lib/analysis/selected-place-analysis";
 import { drawingFeatureCollection, useDrawingStore } from "@/stores/drawing-store";
 import { getParcelSourceMetadata } from "@/data/parcels";
+import { emptySelectedAreaCollection, getLocationBoundary } from "@/data/location-boundaries";
 
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
@@ -117,6 +121,7 @@ export function MapCanvas({
 
   const basemap = useMapStore((s) => s.basemap);
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
+  const selectedArea = useMapStore((s) => s.selectedArea);
   const multiSelectedParcelIds = useMapStore((s) => s.multiSelectedParcelIds);
   const selectedPoint = useMapStore((s) => s.selectedPoint);
   const selectedBackendFeature = useBackendParcelStore((s) => s.getFeature(selectedParcelId));
@@ -125,6 +130,7 @@ export function MapCanvas({
   const selectedLatestRegion = useLatestRegionsStore((s) => s.selectedRegion);
   const flyTarget = useMapStore((s) => s.flyTarget);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
   const setSelectedPoint = useMapStore((s) => s.setSelectedPoint);
   const toggleMultiSelectedParcelId = useMapStore((s) => s.toggleMultiSelectedParcelId);
   const addMultiSelectedParcelIds = useMapStore((s) => s.addMultiSelectedParcelIds);
@@ -307,6 +313,7 @@ export function MapCanvas({
           break;
         case "reset":
           clearSemanticFocus();
+          setSelectedArea(null);
           map.flyTo({
             center: TURKEY_CENTER,
             zoom: INITIAL_ZOOM,
@@ -335,6 +342,7 @@ export function MapCanvas({
       ensureBackendSelectedLayer(map);
       ensureSelectedPointLayer(map);
       ensureLatestRegionsLayer(map);
+      ensureSelectedAreaLayers(map);
       ensureDrawingLayers(map);
       applyLocationLabelTheme(map, basemap);
       applyVisibilityAndOpacity(map);
@@ -360,6 +368,7 @@ export function MapCanvas({
       ensureBackendSelectedLayer(map);
       ensureSelectedPointLayer(map);
       ensureLatestRegionsLayer(map);
+      ensureSelectedAreaLayers(map);
       ensureDrawingLayers(map);
       applyLocationLabelTheme(map, basemap);
       if (lastSelectedMapIdRef.current != null) {
@@ -457,10 +466,12 @@ export function MapCanvas({
       if (!parcel) return;
       if (e.originalEvent.shiftKey) {
         toggleMultiSelectedParcelId(parcel.properties.id);
+        setSelectedArea(null);
         setSelectedParcelId(parcel.properties.id);
         setRightPanelOpen(true);
         return;
       }
+      setSelectedArea(null);
       setSelectedParcelId(parcel.properties.id);
       setSelectedPoint(null);
       setRightPanelOpen(true);
@@ -501,19 +512,40 @@ export function MapCanvas({
       setSelectedParcelId(null);
       setSelectedPoint(null);
       setRightPanelOpen(false);
-      const { center, zoom, bearing, pitch } = buildFlyTargetFromLocationTarget(target, { zoom: props.zoom });
-      map.flyTo({
-        center,
-        zoom,
-        bearing,
-        pitch,
-        duration: 650,
-        essential: true,
-        padding:
-          window.innerWidth >= 1280
-            ? { top: 40, bottom: 40, left: 320, right: 440 }
-            : { top: 40, bottom: 40, left: 24, right: 24 }
-      });
+      const boundary = getLocationBoundary({ il: target.il, ilce: target.ilce, mahalle: target.mahalle });
+      setSelectedArea(boundary ? {
+        id: boundary.id,
+        kind: boundary.kind,
+        label: boundary.label,
+        il: boundary.il,
+        ilce: boundary.ilce,
+        mahalle: boundary.mahalle,
+        feature: boundary.feature
+      } : null);
+      const { center, zoom, bearing, pitch, bounds } = buildFlyTargetFromLocationTarget(target, { zoom: props.zoom });
+      const padding = window.innerWidth >= 1280
+        ? { top: 40, bottom: 40, left: 320, right: 440 }
+        : { top: 40, bottom: 40, left: 24, right: 24 };
+      if (bounds) {
+        map.fitBounds([[bounds.west, bounds.south], [bounds.east, bounds.north]], {
+          padding,
+          duration: 650,
+          maxZoom: zoom,
+          bearing,
+          pitch,
+          essential: true
+        });
+      } else {
+        map.flyTo({
+          center,
+          zoom,
+          bearing,
+          pitch,
+          duration: 650,
+          essential: true,
+          padding
+        });
+      }
     };
 
     map.on("mousemove", "parcels-fill", onParcelMouseMove);
@@ -546,6 +578,7 @@ export function MapCanvas({
       const maxY = Math.max(start.y, e.point.y);
       if (Math.abs(maxX - minX) < 8 || Math.abs(maxY - minY) < 8) return;
       const features = map.queryRenderedFeatures([[minX, minY], [maxX, maxY]], { layers: ["parcels-fill"] });
+      setSelectedArea(null);
       const ids = Array.from(new Set(features.map((feature) => {
         const parcel = feature.id == null ? null : getParcelByMapId(feature.id);
         return parcel?.properties.id;
@@ -668,9 +701,13 @@ export function MapCanvas({
       if (!f) return;
       const props = f.properties as Record<string, string | undefined>;
       const homepage = props.homepage_url;
+      const sourceUrl = props.url;
+      const endpointSummary = Number(props.candidate_endpoint_count ?? 0) > 0
+        ? `${props.candidate_endpoint_count} aday uç · ${props.candidate_endpoint_types ?? "portal"}`
+        : props.type ?? "portal";
       new maplibregl.Popup({ closeButton: true, closeOnClick: true })
         .setLngLat(e.lngLat)
-        .setHTML(`<div style="font:12px sans-serif;min-width:190px"><strong>${props.name ?? "Veri kaynağı"}</strong><br/><span>${props.status ?? "external_only"}</span>${homepage ? `<br/><a href="${homepage}" target="_blank" rel="noreferrer">Resmi portalı aç</a>` : ""}</div>`)
+        .setHTML(`<div style="font:12px sans-serif;min-width:220px"><strong>${props.name ?? "Veri kaynağı"}</strong><br/><span>${props.status ?? "external_only"} · ${endpointSummary}</span>${props.province ? `<br/><span>${props.province}${props.district ? ` / ${props.district}` : ""}</span>` : ""}${sourceUrl ? `<br/><a href="${sourceUrl}" target="_blank" rel="noreferrer">Aday servisi aç</a>` : ""}${homepage ? `<br/><a href="${homepage}" target="_blank" rel="noreferrer">Resmi portalı aç</a>` : ""}</div>`)
         .addTo(map);
     };
     const onSourceEnter = () => { map.getCanvas().style.cursor = "pointer"; };
@@ -856,6 +893,18 @@ export function MapCanvas({
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    const apply = () => {
+      ensureSelectedAreaLayers(map);
+      const source = map.getSource(SELECTED_AREA_SOURCE) as maplibregl.GeoJSONSource | undefined;
+      source?.setData(selectedArea ? { type: "FeatureCollection", features: [selectedArea.feature] } : emptySelectedAreaCollection());
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [selectedArea]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduce) return;
     let frame = 0;
@@ -888,13 +937,25 @@ export function MapCanvas({
     const map = mapRef.current;
     if (!map || !flyTarget) return;
     const padding = window.innerWidth >= 1280 ? { top: 40, bottom: 40, left: 320, right: 440 } : { top: 40, bottom: 40, left: 24, right: 24 };
+    const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700;
+    if (flyTarget.bounds) {
+      map.fitBounds([[flyTarget.bounds.west, flyTarget.bounds.south], [flyTarget.bounds.east, flyTarget.bounds.north]], {
+        padding,
+        duration,
+        maxZoom: flyTarget.zoom ?? Math.max(map.getZoom(), 14),
+        bearing: flyTarget.bearing,
+        pitch: flyTarget.pitch,
+        essential: true
+      });
+      return;
+    }
     map.flyTo({
       center: flyTarget.center,
       zoom: flyTarget.zoom ?? Math.max(map.getZoom(), 14),
       bearing: flyTarget.bearing,
       pitch: flyTarget.pitch,
       padding,
-      duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700,
+      duration,
       essential: true
     });
   }, [flyTarget]);
@@ -1097,6 +1158,21 @@ function registerParcelLayers(map: Map) {
   }
 }
 
+function ensureSelectedAreaLayers(map: Map) {
+  if (!map.getSource(SELECTED_AREA_SOURCE)) {
+    map.addSource(SELECTED_AREA_SOURCE, {
+      type: "geojson",
+      data: emptySelectedAreaCollection()
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("selected-area-fill")) {
+    map.addLayer(buildSelectedAreaFillLayer("selected-area-fill"), beforeId);
+  }
+  if (!map.getLayer("selected-area-line")) {
+    map.addLayer(buildSelectedAreaLineLayer("selected-area-line"), beforeId);
+  }
+}
 
 function ensureSelectedPointLayer(map: Map) {
   if (!map.getSource(SELECTED_POINT_SOURCE)) {
@@ -1461,6 +1537,7 @@ function ensureLiveSourceLayers(map: Map) {
             "blocked", "#EF4444",
             "requires_auth", "#EF4444",
             "requires_approval", "#EF4444",
+            "candidate", "#2563EB",
             "#0EA5E9"
           ] as never,
           "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 5, 8, 8, 12, 12] as never,
@@ -1495,7 +1572,7 @@ function ensureLiveSourceLayers(map: Map) {
   }
 }
 
-function buildLiveSourceFeatureCollection(layers: Array<{ id: string | number; source_id?: string; name?: string; title?: string; status?: string; homepage_url?: string; center?: [number, number]; province?: string; district?: string; kind?: string }>): GeoJSON.FeatureCollection {
+function buildLiveSourceFeatureCollection(layers: Array<{ id: string | number; source_id?: string; name?: string; title?: string; type?: string; status?: string; url?: string; homepage_url?: string; center?: [number, number]; province?: string; district?: string; kind?: string; candidate_endpoint_count?: number; candidate_endpoint_types?: string[] }>): GeoJSON.FeatureCollection {
   const seen = new Set<string>();
   const features = layers
     .filter((layer) => Array.isArray(layer.center) && layer.center.length === 2)
@@ -1514,10 +1591,14 @@ function buildLiveSourceFeatureCollection(layers: Array<{ id: string | number; s
         name: layer.name ?? layer.title ?? "Veri kaynağı",
         short_name: (layer.name ?? layer.title ?? "Kaynak").replace(/ (KEOS|WebGIS|İmar Durumu|CBS|Portalı).*/i, ""),
         status: layer.status ?? "external_only",
+        type: layer.type ?? "",
+        url: layer.url ?? "",
         homepage_url: layer.homepage_url ?? "",
         province: layer.province ?? "",
         district: layer.district ?? "",
-        kind: layer.kind ?? ""
+        kind: layer.kind ?? "",
+        candidate_endpoint_count: layer.candidate_endpoint_count ?? 0,
+        candidate_endpoint_types: (layer.candidate_endpoint_types ?? []).join(", ")
       }
     }));
   return { type: "FeatureCollection", features };

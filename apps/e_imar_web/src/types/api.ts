@@ -128,6 +128,8 @@ export interface BackendMapLayerResponse {
   requires_proxy?: boolean;
   requires_approval?: boolean;
   requires_credentials?: boolean;
+  candidate_endpoint_count?: number;
+  candidate_endpoint_types?: string[];
   layers?: string[];
   [key: string]: unknown;
 }
@@ -135,17 +137,23 @@ export interface BackendMapLayerResponse {
 export interface SourceRegistryRecord {
   id: string;
   name: string;
-  kind: string;
+  kind?: string;
   province?: string | null;
   district?: string | null;
-  slug: string;
-  homepage_url: string;
-  base_url: string;
+  slug?: string;
+  homepage_url?: string;
+  base_url?: string;
   candidate_endpoints?: string[];
   notes?: string;
   requires_approval?: boolean;
   requires_credentials?: boolean;
   center?: [number, number] | null;
+  provider?: string;
+  auth?: string;
+  category?: string;
+  discovery_strategy?: string;
+  capabilities?: string[];
+  municipality_name?: string | null;
 }
 
 export interface SourceHealthRecord {

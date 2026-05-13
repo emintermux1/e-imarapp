@@ -6,6 +6,7 @@ import { PROVINCES } from "@/data/provinces";
 import { DISTRICTS } from "@/data/districts";
 import { NEIGHBORHOODS } from "@/data/neighborhoods";
 import { BELEDIYE_LIST } from "@/data/belediye";
+import { getLocationBoundary } from "@/data/location-boundaries";
 import { adaParselText, adaParselSlug } from "@/lib/format";
 import { TURKEY_BOUNDS, inTurkey, safeParseFloat } from "@/lib/utils";
 import { parcelQualityMessage } from "@/lib/api/quality-labels";
@@ -160,6 +161,7 @@ function searchAddressResults(query: string, limit: number): SearchResult[] {
   const out: SearchResult[] = [];
   PROVINCES.forEach((il) => {
     if (il.name.toLocaleLowerCase("tr-TR").includes(q) || il.slug.includes(q)) {
+      const boundary = getLocationBoundary({ il: il.slug });
       out.push({
         id: `prov:${il.slug}`,
         type: "address",
@@ -167,7 +169,8 @@ function searchAddressResults(query: string, limit: number): SearchResult[] {
         secondary: `Plaka ${il.code}`,
         il: il.slug,
         ilce: "",
-        centroid: il.centroid
+        centroid: il.centroid,
+        bbox: boundary?.bounds
       });
     }
   });
@@ -178,6 +181,7 @@ function searchAddressResults(query: string, limit: number): SearchResult[] {
       d.ilSlug.includes(q)
     ) {
       const prov = PROVINCES.find((p) => p.slug === d.ilSlug);
+      const boundary = getLocationBoundary({ il: d.ilSlug, ilce: d.slug });
       out.push({
         id: `dist:${d.ilSlug}-${d.slug}`,
         type: "address",
@@ -185,7 +189,8 @@ function searchAddressResults(query: string, limit: number): SearchResult[] {
         secondary: "İlçe",
         il: d.ilSlug,
         ilce: d.slug,
-        centroid: d.centroid
+        centroid: d.centroid,
+        bbox: boundary?.bounds
       });
     }
   });
@@ -198,6 +203,7 @@ function searchAddressResults(query: string, limit: number): SearchResult[] {
       const dist = DISTRICTS.find(
         (d) => d.slug === n.ilceSlug && d.ilSlug === n.ilSlug
       );
+      const boundary = getLocationBoundary({ il: n.ilSlug, ilce: n.ilceSlug, mahalle: n.slug });
       out.push({
         id: `nh:${n.ilSlug}-${n.ilceSlug}-${n.slug}`,
         type: "address",
@@ -206,7 +212,8 @@ function searchAddressResults(query: string, limit: number): SearchResult[] {
         il: n.ilSlug,
         ilce: n.ilceSlug,
         mahalle: n.slug,
-        centroid: n.centroid
+        centroid: n.centroid,
+        bbox: boundary?.bounds
       });
     }
   });

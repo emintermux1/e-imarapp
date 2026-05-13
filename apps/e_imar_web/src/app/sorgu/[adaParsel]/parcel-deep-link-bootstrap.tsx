@@ -11,10 +11,12 @@ interface BootstrapProps {
 
 export function ParcelDeepLinkBootstrap({ parcelId, centroid }: BootstrapProps) {
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
   const flyTo = useMapStore((s) => s.flyTo);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
 
   React.useEffect(() => {
+    setSelectedArea(null);
     setSelectedParcelId(parcelId);
     setRightPanelOpen(true);
     if (centroid) {

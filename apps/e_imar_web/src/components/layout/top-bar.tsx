@@ -59,6 +59,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
   const okSources = healthRollup?.ok ?? 0;
   const totalSources = healthQuery.data?.ok ? healthQuery.data.data.total : 0;
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
   const latestRegionsRefresh = useLatestRegionsStore((s) => s.refresh);
   const latestRegionsStatus = useLatestRegionsStore((s) => s.status);
   const latestRegionsCount = useLatestRegionsStore((s) => s.total);
@@ -72,40 +73,41 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
   function focusNearestAski() {
     const next = ASKI_POLYGONS.find((p) => p.durum === "askida");
     if (!next) return;
+    setSelectedArea(null);
     flyTo({ center: midRing(next.ring), zoom: 14 });
   }
 
   return (
     <header
-      className="fixed top-0 inset-x-0 z-40 h-14 flex items-stretch border-b border-border-subtle bg-surface-2/95 shadow-[0_1px_0_rgb(255_255_255/0.03),0_8px_24px_rgb(0_0_0/0.18)] backdrop-blur-md"
+      className="fixed left-3 right-3 top-3 z-40 flex h-12 items-stretch overflow-hidden rounded-xl border border-border-strong/80 bg-surface-2/94 shadow-[0_1px_0_rgb(255_255_255/0.75)_inset,0_18px_44px_-28px_rgb(18_52_82/0.45)] backdrop-blur-md"
       role="banner"
     >
-      <div className="flex items-center gap-2 px-2 sm:px-3 min-w-[132px] sm:min-w-[190px] lg:min-w-[280px] border-r border-border-subtle">
+      <div className="flex min-w-[220px] items-center gap-2 border-r border-border-subtle/80 bg-surface-3/65 px-3 lg:min-w-[280px]">
         <button
           type="button"
           aria-label="Menüyü aç"
           onClick={onOpenMobileMenu ?? toggleSidebar}
-          className="lg:hidden h-9 w-9 inline-flex items-center justify-center rounded-md text-fg-secondary hover:bg-surface-1"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-fg-secondary transition-colors hover:bg-surface-1 hover:text-fg-primary lg:hidden"
         >
           <Menu className="h-4 w-4" />
         </button>
         <BrandMark />
       </div>
 
-      <div className="hidden md:flex items-center gap-3 px-4 border-r border-border-subtle min-w-0">
+      <div className="hidden min-w-0 items-center gap-3 border-r border-border-subtle/80 px-4 md:flex">
         <HeaderBreadcrumb />
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-1 sm:px-4 min-w-[120px]">
+      <div className="flex min-w-[180px] flex-1 items-center justify-center px-2 sm:px-4">
         <GlobalSearch />
       </div>
 
-      <div className="flex max-w-[46vw] sm:max-w-none items-center gap-1 px-1 sm:px-2 border-l border-border-subtle overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex items-center gap-1 overflow-x-auto border-l border-border-subtle/80 bg-surface-3/35 px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
               href="/kaynaklar"
-              className="hidden sm:inline-flex h-8 items-center gap-1.5 rounded-md border border-border-subtle bg-surface-1 px-2 text-[11px] text-fg-secondary hover:bg-surface-2"
+              className="hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-border-subtle bg-surface-2 px-2 text-[11px] text-fg-secondary transition-colors hover:border-border-strong hover:bg-surface-3 md:inline-flex"
             >
               <Activity className="h-3.5 w-3.5" />
               <span className="font-medium text-fg-primary">{okSources}/{totalSources || Object.keys(ASKI_LIST).length} kaynak aktif</span>
@@ -124,7 +126,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               }}
               aria-pressed={askiMode}
               className={cn(
-                "hidden lg:inline-flex items-center gap-1 h-8 px-2 rounded-md border text-[11px] font-medium transition-colors tabular-nums",
+                "hidden h-8 items-center gap-1 whitespace-nowrap rounded-lg border px-2 text-[11px] font-medium tabular-nums transition-colors md:inline-flex",
                 askiMode
                   ? "border-status-warning text-fg-primary bg-[rgb(var(--status-warning)/0.10)]"
                   : "border-border-subtle bg-surface-1 text-fg-secondary hover:bg-surface-2 hover:text-fg-primary"
@@ -156,7 +158,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
           <TooltipTrigger asChild>
             <Link
               href="/kaynaklar"
-              className="hidden sm:inline-flex h-8 items-center gap-1.5 rounded-md border border-border-subtle bg-surface-1 px-2 text-[11px] text-fg-secondary hover:bg-surface-2"
+              className="hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-border-subtle bg-surface-2 px-2 text-[11px] text-fg-secondary transition-colors hover:border-border-strong hover:bg-surface-3 sm:inline-flex"
             >
               <Database className="h-3.5 w-3.5" />
               <span className="font-medium text-fg-primary">Kaynaklar</span>
@@ -170,6 +172,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
             <button
               type="button"
               onClick={() => {
+                setSelectedArea(null);
                 setSelectedParcelId(null);
                 setRightPanelOpen(true);
                 setLatestRegionsPanelOpen(true);
@@ -177,7 +180,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               }}
               aria-label="En yeni imar bölgelerini aç"
               className={cn(
-                "hidden xl:inline-flex min-w-max items-center gap-2 h-9 px-2.5 rounded-md border text-[11px] font-semibold transition-colors tabular-nums",
+                "hidden h-9 min-w-max items-center gap-2 whitespace-nowrap rounded-lg border px-2.5 text-[11px] font-semibold tabular-nums transition-colors lg:inline-flex",
                 latestRegionsStatus === "loading"
                   ? "border-brand-blue/60 bg-[rgb(var(--accent-blue)/0.12)] text-fg-primary"
                   : "border-brand-blue/35 bg-[rgb(var(--accent-blue)/0.07)] text-fg-secondary hover:border-brand-blue/60 hover:bg-[rgb(var(--accent-blue)/0.12)] hover:text-fg-primary"
@@ -223,7 +226,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               disabled={mapMode === "3d"}
               aria-pressed={compareMode === "satellite"}
               className={cn(
-                "hidden sm:inline-flex items-center gap-1 h-8 px-2 rounded-md border transition-colors text-xs",
+                "hidden h-8 items-center gap-1 whitespace-nowrap rounded-lg border px-2 text-xs transition-colors sm:inline-flex",
                 compareMode === "satellite"
                   ? "border-brand-blue/65 bg-[rgb(var(--accent-blue)/0.10)] text-fg-primary"
                   : "border-border-subtle bg-surface-2 text-fg-secondary hover:bg-surface-1 hover:text-fg-primary",
@@ -244,6 +247,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
             <button
               type="button"
               onClick={() => {
+                setSelectedArea(null);
                 setSelectedParcelId(null);
                 setRightPanelOpen(true);
                 setLatestRegionsPanelOpen(true);
@@ -251,7 +255,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               }}
               aria-label="En yeni imar bölgelerini aç"
               className={cn(
-                "lg:hidden h-9 w-9 shrink-0 inline-flex items-center justify-center rounded-md border transition-colors",
+                "inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-colors lg:hidden",
                 latestRegionsStatus === "loading"
                   ? "border-brand-blue/60 bg-[rgb(var(--accent-blue)/0.12)] text-[rgb(var(--accent-blue))]"
                   : "border-border-subtle bg-surface-1 text-fg-secondary hover:bg-surface-2 hover:text-fg-primary"
@@ -299,7 +303,7 @@ function ModeToggle({
   setMapMode: (m: "2d" | "3d") => void;
 }) {
   return (
-    <div className="hidden sm:inline-flex relative items-center h-8 rounded-md border border-border-subtle bg-surface-1 p-0.5">
+    <div className="relative hidden h-8 items-center rounded-lg border border-border-subtle bg-surface-1 p-0.5 sm:inline-flex">
       <ToggleSegment active={mapMode === "2d"} onClick={() => setMapMode("2d")} label="2D" icon={<MapIcon className="h-3.5 w-3.5" />} />
       <ToggleSegment active={mapMode === "3d"} onClick={() => setMapMode("3d")} label="3D" icon={<Box className="h-3.5 w-3.5" />} />
     </div>
@@ -322,7 +326,7 @@ function ToggleSegment({
       type="button"
       onClick={onClick}
       className={cn(
-        "relative h-7 px-2.5 inline-flex items-center gap-1 rounded-sm text-[11px] font-medium transition-colors",
+        "relative inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-[11px] font-medium transition-colors",
         active ? "text-fg-primary" : "text-fg-secondary hover:text-fg-primary"
       )}
       aria-pressed={active}
@@ -332,7 +336,7 @@ function ToggleSegment({
         <motion.span
           layoutId="modeToggleIndicator"
           aria-hidden
-          className="absolute inset-0 rounded-sm bg-surface-2 shadow-card border border-border-subtle"
+          className="absolute inset-0 rounded-md border border-border-subtle bg-surface-2 shadow-card"
           transition={{ type: "spring", stiffness: 380, damping: 32 }}
         />
       )}

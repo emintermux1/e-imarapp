@@ -19,6 +19,7 @@ export const MUNICIPALITY_COVERAGE_SOURCE = "municipality-coverage";
 export const TURKEY_FOCUS_SOURCE = "turkey-focus";
 export const LOCATION_LABEL_SOURCE = "location-labels";
 export const DRAWING_SOURCE = "drawings-source";
+export const SELECTED_AREA_SOURCE = "selected-area";
 
 const zoningCases: (string | string[])[] = ["match", ["get", "zoningType"]];
 Object.values(ZONING_PRESETS).forEach((preset) => {
@@ -34,6 +35,31 @@ strokeCases.push("#C39A2B");
 
 export const zoningFillExpression = zoningCases as never;
 export const zoningStrokeExpression = strokeCases as never;
+
+export const buildSelectedAreaFillLayer = (
+  id = "selected-area-fill"
+): FillLayerSpecification => ({
+  id,
+  type: "fill",
+  source: SELECTED_AREA_SOURCE,
+  paint: {
+    "fill-color": "#EF4444",
+    "fill-opacity": ["interpolate", ["linear"], ["zoom"], 6, 0.1, 12, 0.16, 16, 0.12] as never
+  }
+});
+
+export const buildSelectedAreaLineLayer = (
+  id = "selected-area-line"
+): LineLayerSpecification => ({
+  id,
+  type: "line",
+  source: SELECTED_AREA_SOURCE,
+  paint: {
+    "line-color": "#EF0000",
+    "line-width": ["interpolate", ["linear"], ["zoom"], 6, 1.6, 12, 2.8, 16, 4.2] as never,
+    "line-opacity": 0.92
+  }
+});
 
 export const buildParcelFillLayer = (id = "parcels-fill"): FillLayerSpecification => ({
   id,

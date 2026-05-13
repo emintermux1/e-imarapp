@@ -12,7 +12,13 @@ router = APIRouter()
 
 @router.get("/live-layers")
 async def get_live_layers():
-    return live_layer_candidates()
+    layers = live_layer_candidates()
+    return envelope(
+        "ok",
+        message="Official source registry candidates. Candidate endpoints are advertised for discovery/proxy; protected data is not synthesized.",
+        layers=layers,
+        total=len(layers),
+    )
 
 
 @router.get("/layers")

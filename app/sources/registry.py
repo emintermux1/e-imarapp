@@ -308,6 +308,21 @@ _MUNICIPAL_SOURCES = [
     ("bel.gelibolu.keos", "Gelibolu", "https://keos.gelibolu.bel.tr/imardurumu/", SourceProvider.netcad_keos),
     ("bel.caycuma.keos", "Çaycuma", "https://keos.caycuma.bel.tr/", SourceProvider.netcad_keos),
     ("bel.kecioren.kbs", "Keçiören", "https://kbs.kecioren.bel.tr/", SourceProvider.netcad_webgis),
+    ("bel.besiktas.keos", "Beşiktaş", "https://keos.besiktas.bel.tr/imardurumu/", SourceProvider.netcad_keos),
+    ("bel.bakirkoy.keos", "Bakırköy", "https://keos.bakirkoy.bel.tr/imardurumu/", SourceProvider.netcad_keos),
+    ("bel.kadikoy.webgis", "Kadıköy", "https://webgis.kadikoy.bel.tr/imardurumu/", SourceProvider.netcad_webgis),
+    ("bel.gaziosmanpasa.keos", "Gaziosmanpaşa", "https://keos.gaziosmanpasa.bel.tr/keos/", SourceProvider.netcad_keos),
+    ("bel.bodrum.keos", "Bodrum", "https://keos.bodrum.bel.tr/imardurumu/", SourceProvider.netcad_keos),
+    ("bel.karsiyaka.keos", "Karşıyaka", "https://keos.karsiyaka.bel.tr/imardurumu/index.aspx", SourceProvider.netcad_keos),
+    ("bel.nilufer.webgis", "Nilüfer", "https://webgis.nilufer.bel.tr/imardurumu/", SourceProvider.netcad_webgis),
+    ("bel.bandirma.keos", "Bandırma", "https://keos.bandirma.bel.tr/imardurumu/", SourceProvider.netcad_keos),
+    ("bel.seyhan.keos", "Seyhan", "https://keos.seyhan.bel.tr/imardurumu/", SourceProvider.netcad_keos),
+    ("bel.dosemealti.keos", "Döşemealtı", "https://keos.dosemealti.bel.tr/imardurumu/", SourceProvider.netcad_keos),
+    ("bel.eregli.webgis", "Karadeniz Ereğli", "https://webgis.kdzeregli.bel.tr/imardurumu/", SourceProvider.netcad_webgis),
+    ("bel.cukurova.webgis", "Çukurova", "https://webgis.cukurova.bel.tr/imardurumu/", SourceProvider.netcad_webgis),
+    ("bel.inegol.imar", "İnegöl", "https://imar.inegol.bel.tr/", SourceProvider.netcad_webgis),
+    ("bel.odemis.imar", "Ödemiş", "https://imar.odemis.bel.tr/", SourceProvider.netcad_webgis),
+    ("bel.orhangazi.imar", "Orhangazi", "https://imar.orhangazi.bel.tr/", SourceProvider.netcad_webgis),
 ]
 for _id, _muni, _url, _provider in _MUNICIPAL_SOURCES:
     REGISTRY[_id] = _src(
