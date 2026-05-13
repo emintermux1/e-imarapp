@@ -155,14 +155,14 @@ export function GlobalSearch() {
   return (
     <Popover open={searchOpen} onOpenChange={setSearchOpen}>
       <PopoverAnchor asChild>
-        <div className="w-full max-w-[720px] mx-auto">
+        <div className="mx-auto w-full max-w-[720px]">
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
             className={cn(
-              "group flex w-full items-center gap-2 h-9 px-2.5 rounded-md",
-              "border border-border-subtle bg-surface-1/92 text-fg-secondary text-sm shadow-[inset_0_1px_0_rgb(255_255_255/0.04),0_1px_10px_rgb(0_0_0/0.10)]",
-              "hover:bg-surface-2 hover:border-border-strong transition-colors",
+              "group flex h-9 w-full items-center gap-2 rounded-lg px-3",
+              "border border-border-strong/70 bg-bg/72 text-sm text-fg-secondary shadow-[inset_0_1px_0_rgb(255_255_255/0.78)]",
+              "transition-colors hover:border-brand-blue/45 hover:bg-surface-2",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             )}
             aria-label="Ara"

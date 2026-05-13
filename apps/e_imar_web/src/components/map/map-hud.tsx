@@ -149,7 +149,7 @@ export function MapHud({
   return (
     <>
       {/* Top-left: mode + basemap chip */}
-      <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-col gap-1.5">
+      <div className="pointer-events-none absolute left-4 top-4 z-10 flex flex-col gap-2">
         <ChipPill>
           <span className="text-fg-muted">Mod</span>
           <span
@@ -178,14 +178,14 @@ export function MapHud({
       </div>
 
       {/* Top-right: zoom controls + compass + 3D toggle */}
-      <div className="pointer-events-auto absolute right-3 top-3 z-10 flex flex-col items-end gap-1.5">
-        <div className="flex flex-col rounded-md border border-border-strong bg-surface-2 shadow-card overflow-hidden">
+      <div className="pointer-events-auto absolute right-4 top-4 z-10 flex flex-col items-end gap-2">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border-strong/80 bg-surface-2/94 shadow-pop">
           <IconButton
             label="Yakınlaştır"
             variant="ghost"
             tooltipSide="left"
             onClick={() => emitMapControl("in")}
-            className="rounded-none border-b border-border-subtle h-8 w-8"
+              className="h-9 w-9 rounded-none border-b border-border-subtle"
           >
             <Plus className="h-4 w-4" />
           </IconButton>
@@ -194,7 +194,7 @@ export function MapHud({
             variant="ghost"
             tooltipSide="left"
             onClick={() => emitMapControl("out")}
-            className="rounded-none h-8 w-8"
+              className="h-9 w-9 rounded-none"
           >
             <Minus className="h-4 w-4" />
           </IconButton>
@@ -206,7 +206,7 @@ export function MapHud({
               type="button"
               aria-label="Kuzeye çevir"
               onClick={() => emitMapControl("north")}
-              className="h-8 w-8 inline-flex items-center justify-center rounded-md border border-border-strong bg-surface-2 shadow-card text-fg-secondary hover:bg-surface-3"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border-strong/80 bg-surface-2/94 text-fg-secondary shadow-pop transition-colors hover:bg-surface-3"
             >
               <span
                 className="inline-block"
@@ -230,7 +230,7 @@ export function MapHud({
               aria-pressed={mapMode === "3d"}
               onClick={() => setMapMode(mapMode === "3d" ? "2d" : "3d")}
               className={cn(
-                "h-8 w-8 inline-flex items-center justify-center rounded-md border bg-surface-2 shadow-card transition-colors",
+                "inline-flex h-9 w-9 items-center justify-center rounded-xl border bg-surface-2/94 shadow-pop transition-colors",
                 mapMode === "3d"
                   ? "border-brand-blue/60 text-fg-primary"
                   : "border-border-strong text-fg-secondary hover:bg-surface-3"
@@ -257,14 +257,14 @@ export function MapHud({
       </div>
 
       {/* Bottom-right floating cluster */}
-      <div className="pointer-events-auto absolute right-3 bottom-3 z-10 hidden md:flex flex-col items-end gap-1.5">
+      <div className="pointer-events-auto absolute bottom-4 right-4 z-10 hidden flex-col items-end gap-2 md:flex">
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild>
             <button
               type="button"
               aria-label="Konumum"
               onClick={() => emitMapControl("locate")}
-              className="h-9 w-9 inline-flex items-center justify-center rounded-md border border-border-strong bg-surface-2 shadow-card text-fg-secondary hover:bg-surface-3"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border-strong/80 bg-surface-2/94 text-fg-secondary shadow-pop transition-colors hover:bg-surface-3"
             >
               <Locate className="h-4 w-4" />
             </button>
@@ -274,13 +274,13 @@ export function MapHud({
         {locationStatus && (
           <span
             role="status"
-            className="max-w-[160px] rounded-md border border-border-subtle bg-surface-2/95 px-2 py-1 text-[11px] text-fg-secondary shadow-card"
+            className="max-w-[160px] rounded-lg border border-border-subtle bg-surface-2/95 px-2 py-1 text-[11px] text-fg-secondary shadow-card"
           >
             {locationStatus}
           </span>
         )}
         <LocationExplorerPopover />
-        <div className="flex flex-col rounded-md border border-border-strong bg-surface-2 shadow-card overflow-hidden">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border-strong/80 bg-surface-2/94 shadow-pop">
           {toolButton("distance", "Mesafe ölç", <Ruler className="h-4 w-4" />)}
           {toolButton("area", "Alan poligonu ölç", <Pentagon className="h-4 w-4" />)}
           {toolButton("radius", "Yarıçap çiz", <CircleDot className="h-4 w-4" />)}
@@ -302,7 +302,7 @@ export function MapHud({
             <TooltipContent side="left">Çizimleri temizle</TooltipContent>
           </Tooltip>
         </div>
-        <div className="flex flex-col rounded-md border border-border-strong bg-surface-2 shadow-card overflow-hidden">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border-strong/80 bg-surface-2/94 shadow-pop">
           <Tooltip delayDuration={250}>
             <TooltipTrigger asChild>
               <button type="button" aria-label="Ekran görüntüsü indir" onClick={captureScreenshot} className="h-11 w-11 inline-flex items-center justify-center border-b border-border-subtle bg-surface-2 text-fg-secondary hover:bg-surface-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent-blue))]">
@@ -321,7 +321,7 @@ export function MapHud({
           </Tooltip>
         </div>
         {(drawingMessage || selectionNotice || multiSelectedParcelIds.length > 0 || activeTool !== "idle") && (
-          <div className="max-w-[240px] rounded-md border border-border-strong bg-surface-2/95 px-3 py-2 text-[11px] text-fg-secondary shadow-sheet backdrop-blur-[3px]">
+          <div className="max-w-[250px] rounded-xl border border-border-strong bg-surface-2/95 px-3 py-2 text-[11px] text-fg-secondary shadow-sheet backdrop-blur-[3px]">
             <div className="flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-fg-muted"><MousePointer2 className="h-3 w-3" /> Seçim/ölçüm</span>
               {multiSelectedParcelIds.length > 0 && <button type="button" onClick={clearMultiSelection} className="text-[10px] font-medium text-fg-primary underline underline-offset-2">Temizle</button>}
@@ -359,7 +359,7 @@ export function MapHud({
       </div>
 
       {/* Bottom-left: scale + coords + crs */}
-      <div className="pointer-events-none absolute left-3 bottom-3 z-10 flex items-end gap-2 text-[11px] tabular-nums text-fg-secondary">
+      <div className="pointer-events-none absolute bottom-4 left-4 z-10 flex items-end gap-2 text-[11px] tabular-nums text-fg-secondary">
         <ScaleBar />
         <ChipPill>
           <span className="text-fg-muted">İmleç</span>
@@ -393,7 +393,7 @@ function ChipPill({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 px-2 h-6 rounded-sm border border-border-subtle bg-surface-2/95 backdrop-blur-[2px] text-[11px] text-fg-secondary shadow-card",
+        "inline-flex h-7 items-center gap-1.5 rounded-lg border border-border-strong/70 bg-surface-2/94 px-2.5 text-[11px] text-fg-secondary shadow-card backdrop-blur-[2px]",
         className
       )}
     >
@@ -423,7 +423,7 @@ function MapContextHint({
     ? "Askı modu açık; aktif askı poligonları tıklanabilir."
     : "Arama yapın, askı modunu açın veya tek bir yeni imar bölgesi seçin.";
   return (
-    <div className="pointer-events-none hidden max-w-[360px] items-start gap-2 rounded-md border border-border-subtle bg-surface-2/95 px-2.5 py-2 text-[11px] leading-snug text-fg-secondary shadow-pop backdrop-blur-[2px] md:flex">
+    <div className="pointer-events-none hidden max-w-[360px] items-start gap-2 rounded-xl border border-border-strong/70 bg-surface-2/95 px-3 py-2.5 text-[11px] leading-snug text-fg-secondary shadow-pop backdrop-blur-[2px] md:flex">
       <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[rgb(var(--accent-blue))]" />
       <span className="line-clamp-2">{copy}</span>
     </div>
