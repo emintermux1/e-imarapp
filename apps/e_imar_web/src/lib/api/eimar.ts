@@ -9,6 +9,11 @@ import type {
   SourceHealthResponse,
   SourcesResponse,
 } from "@/lib/api/types";
+import {
+  FALLBACK_SOURCE_HEALTH,
+  FALLBACK_SOURCES_RESPONSE,
+  getFallbackSourceDetail
+} from "@/data/generated/source-fixtures";
 
 async function request<T>(path: string): Promise<Result<T>> {
   try {
@@ -23,16 +28,21 @@ async function request<T>(path: string): Promise<Result<T>> {
   }
 }
 
-export function fetchSources() {
-  return request<SourcesResponse>("/api/v1/sources");
+export async function fetchSources() {
+  const result = await request<SourcesResponse>("/api/v1/sources");
+  return result.ok ? result : { ok: true as const, data: FALLBACK_SOURCES_RESPONSE };
 }
 
-export function fetchSourceHealth() {
-  return request<SourceHealthResponse>("/api/v1/sources/health");
+export async function fetchSourceHealth() {
+  const result = await request<SourceHealthResponse>("/api/v1/sources/health");
+  return result.ok ? result : { ok: true as const, data: FALLBACK_SOURCE_HEALTH };
 }
 
-export function fetchSourceDetail(sourceId: string) {
-  return request<SourceDetailResponse>(`/api/v1/sources/${encodeURIComponent(sourceId)}`);
+export async function fetchSourceDetail(sourceId: string) {
+  const result = await request<SourceDetailResponse>(`/api/v1/sources/${encodeURIComponent(sourceId)}`);
+  if (result.ok) return result;
+  const fallback = getFallbackSourceDetail(sourceId);
+  return fallback ? { ok: true as const, data: fallback } : result;
 }
 
 export function reprobeSource(sourceId: string) {

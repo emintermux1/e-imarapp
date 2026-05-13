@@ -158,6 +158,77 @@ export function MapCanvas({
       }),
     [activeConstraintFilter, activePlanNoteFilter, activeRiskFocus]
   );
+  const applyVisibilityAndOpacity = React.useCallback(
+    (map: Map) => {
+      Object.entries(layerVisibility).forEach(([id, vis]) => {
+        // The askida-overlay descriptor maps to two MapLibre layers
+        if (id === "askida-overlay") {
+          const reallyVisible = askiMode || vis;
+          ["askida-overlay-fill", "askida-overlay-line", "askida-overlay-hatched"].forEach(
+            (layerId) => {
+              if (!map.getLayer(layerId)) return;
+              map.setLayoutProperty(
+                layerId,
+                "visibility",
+                reallyVisible ? "visible" : "none"
+              );
+            }
+          );
+          return;
+        }
+        if (id === "live-source-markers") {
+          ["live-source-markers", "live-source-labels"].forEach((layerId) => {
+            if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", vis ? "visible" : "none");
+          });
+          return;
+        }
+        if (id === "drawings-line") {
+          ["drawings-line", "drawings-polygon", "drawings-polygon-outline", "drawings-point", "drawings-label"].forEach((layerId) => {
+            if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", vis ? "visible" : "none");
+          });
+          return;
+        }
+        if (!map.getLayer(id)) return;
+        map.setLayoutProperty(id, "visibility", vis ? "visible" : "none");
+      });
+
+      const fillOpacity = layerOpacity["parcels-fill"];
+      if (fillOpacity != null && map.getLayer("parcels-fill")) {
+        try {
+          map.setPaintProperty("parcels-fill", "fill-opacity", [
+            "case",
+            ["boolean", ["feature-state", "selected"], false],
+            Math.min(1, fillOpacity + 0.3),
+            ["boolean", ["feature-state", "multiSelected"], false],
+            Math.min(1, fillOpacity + 0.2),
+            ["boolean", ["feature-state", "hover"], false],
+            Math.min(1, fillOpacity + 0.18),
+            ["interpolate", ["linear"], ["zoom"], 11.4, Math.min(0.18, fillOpacity), 13.5, Math.min(0.38, fillOpacity), 16, fillOpacity]
+          ] as never);
+        } catch {
+          /* swallow */
+        }
+      }
+      setOpacityIfExists(map, "parcels-line", "line-opacity", layerOpacity["parcels-line"]);
+      setOpacityIfExists(map, "parcels-label", "text-opacity", layerOpacity["parcels-label"]);
+      setOpacityIfExists(
+        map,
+        "deprem-risk-grid",
+        "circle-opacity",
+        layerOpacity["deprem-risk-grid"] != null
+          ? Math.min(0.5, layerOpacity["deprem-risk-grid"] * 0.5)
+          : undefined
+      );
+      setOpacityIfExists(map, "live-source-markers", "circle-opacity", layerOpacity["live-source-markers"]);
+      setOpacityIfExists(map, "drawings-line", "line-opacity", layerOpacity["drawings-line"]);
+      setOpacityIfExists(map, "drawings-polygon", "fill-opacity", layerOpacity["drawings-line"] != null ? layerOpacity["drawings-line"] * 0.12 : undefined);
+      setOpacityIfExists(map, "drawings-polygon-outline", "line-opacity", layerOpacity["drawings-line"]);
+      setOpacityIfExists(map, "drawings-point", "circle-opacity", layerOpacity["drawings-line"]);
+      setOpacityIfExists(map, "drawings-label", "text-opacity", layerOpacity["drawings-line"]);
+      applySemanticFocusStyles(map, semanticFocus);
+    },
+    [askiMode, layerOpacity, layerVisibility, semanticFocus]
+  );
 
   const [municipalityGeoJson, setMunicipalityGeoJson] =
     React.useState<GeoJSON.FeatureCollection<GeoJSON.Point> | null>(null);
@@ -781,7 +852,7 @@ export function MapCanvas({
     };
     if (map.isStyleLoaded()) apply();
     else map.once("idle", apply);
-  }, [liveLayers]);
+  }, [applyVisibilityAndOpacity, liveLayers]);
 
   React.useEffect(() => {
     const map = mapRef.current;
@@ -789,7 +860,7 @@ export function MapCanvas({
     const apply = () => applyVisibilityAndOpacity(map);
     if (map.isStyleLoaded()) apply();
     else map.once("idle", apply);
-  }, [layerVisibility, layerOpacity, askiMode, semanticFocus]);
+  }, [applyVisibilityAndOpacity]);
 
   // Timeline year → re-color parcel fill expression by historical snapshot
   // We don't replace the source; instead we toggle a `historicalColor`
@@ -856,75 +927,6 @@ export function MapCanvas({
     if (map.isStyleLoaded()) apply();
     else map.once("idle", apply);
   }, [semanticFocus]);
-
-  function applyVisibilityAndOpacity(map: Map) {
-    Object.entries(layerVisibility).forEach(([id, vis]) => {
-      // The askida-overlay descriptor maps to two MapLibre layers
-      if (id === "askida-overlay") {
-        const reallyVisible = askiMode || vis;
-        ["askida-overlay-fill", "askida-overlay-line", "askida-overlay-hatched"].forEach(
-          (layerId) => {
-            if (!map.getLayer(layerId)) return;
-            map.setLayoutProperty(
-              layerId,
-              "visibility",
-              reallyVisible ? "visible" : "none"
-            );
-          }
-        );
-        return;
-      }
-      if (id === "live-source-markers") {
-        ["live-source-markers", "live-source-labels"].forEach((layerId) => {
-          if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", vis ? "visible" : "none");
-        });
-        return;
-      }
-      if (id === "drawings-line") {
-        ["drawings-line", "drawings-polygon", "drawings-polygon-outline", "drawings-point", "drawings-label"].forEach((layerId) => {
-          if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", vis ? "visible" : "none");
-        });
-        return;
-      }
-      if (!map.getLayer(id)) return;
-      map.setLayoutProperty(id, "visibility", vis ? "visible" : "none");
-    });
-
-    const fillOpacity = layerOpacity["parcels-fill"];
-    if (fillOpacity != null && map.getLayer("parcels-fill")) {
-      try {
-        map.setPaintProperty("parcels-fill", "fill-opacity", [
-          "case",
-          ["boolean", ["feature-state", "selected"], false],
-          Math.min(1, fillOpacity + 0.3),
-          ["boolean", ["feature-state", "multiSelected"], false],
-          Math.min(1, fillOpacity + 0.2),
-          ["boolean", ["feature-state", "hover"], false],
-          Math.min(1, fillOpacity + 0.18),
-          ["interpolate", ["linear"], ["zoom"], 11.4, Math.min(0.18, fillOpacity), 13.5, Math.min(0.38, fillOpacity), 16, fillOpacity]
-        ] as never);
-      } catch {
-        /* swallow */
-      }
-    }
-    setOpacityIfExists(map, "parcels-line", "line-opacity", layerOpacity["parcels-line"]);
-    setOpacityIfExists(map, "parcels-label", "text-opacity", layerOpacity["parcels-label"]);
-    setOpacityIfExists(
-      map,
-      "deprem-risk-grid",
-      "circle-opacity",
-      layerOpacity["deprem-risk-grid"] != null
-        ? Math.min(0.5, layerOpacity["deprem-risk-grid"] * 0.5)
-        : undefined
-    );
-    setOpacityIfExists(map, "live-source-markers", "circle-opacity", layerOpacity["live-source-markers"]);
-    setOpacityIfExists(map, "drawings-line", "line-opacity", layerOpacity["drawings-line"]);
-    setOpacityIfExists(map, "drawings-polygon", "fill-opacity", layerOpacity["drawings-line"] != null ? layerOpacity["drawings-line"] * 0.12 : undefined);
-    setOpacityIfExists(map, "drawings-polygon-outline", "line-opacity", layerOpacity["drawings-line"]);
-    setOpacityIfExists(map, "drawings-point", "circle-opacity", layerOpacity["drawings-line"]);
-    setOpacityIfExists(map, "drawings-label", "text-opacity", layerOpacity["drawings-line"]);
-    applySemanticFocusStyles(map, semanticFocus);
-  }
 
   return (
     <div

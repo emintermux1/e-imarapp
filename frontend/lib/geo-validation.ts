@@ -1,3 +1,5 @@
+import type * as GeoJSON from "geojson";
+
 export type ValidationSeverity = "info" | "warning" | "error";
 
 export interface ValidationIssue {
