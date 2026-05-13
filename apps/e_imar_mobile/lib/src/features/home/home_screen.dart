@@ -11,10 +11,16 @@ import '../../core/widgets/status_pill.dart';
 import '../map/domain/parcel.dart';
 
 class HomeSearchScreen extends ConsumerStatefulWidget {
-  const HomeSearchScreen({super.key, required this.onOpenMap, required this.onOpenCoverage});
+  const HomeSearchScreen({
+    super.key,
+    required this.onOpenMap,
+    required this.onOpenCoverage,
+    required this.onOpenWatchlist,
+  });
 
   final VoidCallback onOpenMap;
   final VoidCallback onOpenCoverage;
+  final VoidCallback onOpenWatchlist;
 
   @override
   ConsumerState<HomeSearchScreen> createState() => _HomeSearchScreenState();
@@ -58,7 +64,8 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
           _block.text.trim().isNotEmpty &&
           _parcel.text.trim().isNotEmpty;
 
-      final hasPointSearch = _lat.text.trim().isNotEmpty && _lng.text.trim().isNotEmpty;
+      final hasPointSearch =
+          _lat.text.trim().isNotEmpty && _lng.text.trim().isNotEmpty;
       ParcelLookupResult result;
       if (hasAdminSearch) {
         result = await api.lookupByAdmin(
@@ -69,19 +76,41 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
           parcel: _parcel.text,
         );
       } else if (hasPointSearch) {
-        final lat = double.parse(_lat.text.trim().replaceAll(',', '.'));
-        final lng = double.parse(_lng.text.trim().replaceAll(',', '.'));
-        result = await api.lookupByPoint(latitude: lat, longitude: lng, city: _city.text.trim());
+        final lat = double.tryParse(_lat.text.trim().replaceAll(',', '.'));
+        final lng = double.tryParse(_lng.text.trim().replaceAll(',', '.'));
+        if (lat == null || lng == null) {
+          result = ParcelLookupResult.unavailable(
+            title: 'Koordinat formatı geçersiz',
+            message:
+                'Enlem ve boylamı WGS84 ondalık sayı olarak girin. Örnek: 41.0151 / 28.9795',
+          );
+          setState(() => _result = result);
+          return;
+        }
+        result = await api.lookupByPoint(
+            latitude: lat, longitude: lng, city: _city.text.trim());
       } else {
         result = ParcelLookupResult.unavailable(
           title: 'Eksik arama girdisi',
-          message: 'Ada/parsel için idari alanları ya da konum için lat/lng girin.',
+          message:
+              'Ada/parsel için idari alanları ya da konum için lat/lng girin.',
         );
       }
 
       setState(() => _result = result);
       if (result.parcel != null && mounted) {
-        Navigator.of(context).pushNamed(AppRoutes.parcelDetail, arguments: result.parcel);
+        Navigator.of(context)
+            .pushNamed(AppRoutes.parcelDetail, arguments: result.parcel);
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(
+          () => _result = ParcelLookupResult.unavailable(
+            title: 'Sorgu tamamlanamadı',
+            message: 'Ağ ya da sağlayıcı yanıtı okunamadı: $error',
+            code: 'client_error',
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -96,11 +125,14 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
         children: [
-          _HeroHeader(onOpenMap: widget.onOpenMap, onOpenCoverage: widget.onOpenCoverage),
+          _HeroHeader(
+              onOpenMap: widget.onOpenMap,
+              onOpenCoverage: widget.onOpenCoverage),
           const SizedBox(height: 18),
-          SectionHeader(
+          const SectionHeader(
             title: 'Ada / parsel veya konum ile ara',
-            subtitle: 'Resmi olmayan demo içerik yerine yalnızca kaynak hazırsa sonuç gösterilir.',
+            subtitle:
+                'Resmi olmayan demo içerik yerine yalnızca kaynak hazırsa sonuç gösterilir.',
           ),
           const SizedBox(height: 12),
           PremiumCard(
@@ -110,25 +142,40 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
                   children: [
                     Expanded(child: _TextField(label: 'İl', controller: _city)),
                     const SizedBox(width: 12),
-                    Expanded(child: _TextField(label: 'İlçe', controller: _district)),
+                    Expanded(
+                        child:
+                            _TextField(label: 'İlçe', controller: _district)),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _TextField(label: 'Mahalle', controller: _neighborhood)),
+                    Expanded(
+                        child: _TextField(
+                            label: 'Mahalle', controller: _neighborhood)),
                     const SizedBox(width: 12),
-                    Expanded(child: _TextField(label: 'Ada', controller: _block)),
+                    Expanded(
+                        child: _TextField(label: 'Ada', controller: _block)),
                     const SizedBox(width: 12),
-                    Expanded(child: _TextField(label: 'Parsel', controller: _parcel)),
+                    Expanded(
+                        child:
+                            _TextField(label: 'Parsel', controller: _parcel)),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _TextField(label: 'Enlem', controller: _lat, keyboardType: TextInputType.number)),
+                    Expanded(
+                        child: _TextField(
+                            label: 'Enlem',
+                            controller: _lat,
+                            keyboardType: TextInputType.number)),
                     const SizedBox(width: 12),
-                    Expanded(child: _TextField(label: 'Boylam', controller: _lng, keyboardType: TextInputType.number)),
+                    Expanded(
+                        child: _TextField(
+                            label: 'Boylam',
+                            controller: _lng,
+                            keyboardType: TextInputType.number)),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -160,14 +207,20 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
                   StatusPill(
                     label: provider.displayName,
                     color: provider.enabled ? scheme.primary : scheme.outline,
-                    icon: provider.enabled ? Icons.check_circle_rounded : Icons.hourglass_bottom_rounded,
+                    icon: provider.enabled
+                        ? Icons.check_circle_rounded
+                        : Icons.hourglass_bottom_rounded,
                   ),
               ],
             ),
           const SizedBox(height: 16),
           if (_result != null) _LookupResultPanel(result: _result!),
           const SizedBox(height: 16),
-          const _QuickActions(),
+          _QuickActions(
+            onOpenMap: widget.onOpenMap,
+            onOpenCoverage: widget.onOpenCoverage,
+            onOpenWatchlist: widget.onOpenWatchlist,
+          ),
         ],
       ),
     );
@@ -196,9 +249,10 @@ class _HeroHeader extends StatelessWidget {
                   children: [
                     Text(
                       'E-İmar Mobil',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -222,7 +276,8 @@ class _HeroHeader extends StatelessWidget {
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: Icon(Icons.apartment_rounded, color: scheme.onPrimary, size: 34),
+                child: Icon(Icons.apartment_rounded,
+                    color: scheme.onPrimary, size: 34),
               ),
             ],
           ),
@@ -248,7 +303,8 @@ class _HeroHeader extends StatelessWidget {
 }
 
 class _TextField extends StatelessWidget {
-  const _TextField({required this.label, required this.controller, this.keyboardType});
+  const _TextField(
+      {required this.label, required this.controller, this.keyboardType});
 
   final String label;
   final TextEditingController controller;
@@ -277,11 +333,14 @@ class _LookupResultPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(parcel.trustLabel, style: Theme.of(context).textTheme.titleMedium),
+            Text(parcel.trustLabel,
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
-            Text(parcel.parcelLabel, style: Theme.of(context).textTheme.bodyMedium),
+            Text(parcel.parcelLabel,
+                style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 8),
-            Text(parcel.zoningStatus, style: Theme.of(context).textTheme.bodyMedium),
+            Text(parcel.zoningStatus,
+                style: Theme.of(context).textTheme.bodyMedium),
           ],
         ),
       );
@@ -297,7 +356,15 @@ class _LookupResultPanel extends StatelessWidget {
 }
 
 class _QuickActions extends StatelessWidget {
-  const _QuickActions();
+  const _QuickActions({
+    required this.onOpenMap,
+    required this.onOpenCoverage,
+    required this.onOpenWatchlist,
+  });
+
+  final VoidCallback onOpenMap;
+  final VoidCallback onOpenCoverage;
+  final VoidCallback onOpenWatchlist;
 
   @override
   Widget build(BuildContext context) {
@@ -305,22 +372,25 @@ class _QuickActions extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader(
+        const SectionHeader(
           title: 'Hızlı eylemler',
-          subtitle: 'Kaynak kapsama, harita workspace ve askı takibi için hızlı girişler.',
+          subtitle:
+              'Kaynak kapsama, harita workspace ve askı takibi için hızlı girişler.',
         ),
         const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
               child: PremiumCard(
-                onTap: () {},
+                onTap: onOpenMap,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.location_searching_rounded, color: scheme.primary),
+                    Icon(Icons.location_searching_rounded,
+                        color: scheme.primary),
                     const SizedBox(height: 12),
-                    Text('Konumdan tara', style: Theme.of(context).textTheme.titleMedium),
+                    Text('Konumdan tara',
+                        style: Theme.of(context).textTheme.titleMedium),
                   ],
                 ),
               ),
@@ -328,18 +398,29 @@ class _QuickActions extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: PremiumCard(
-                onTap: () {},
+                onTap: onOpenWatchlist,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(Icons.notifications_rounded, color: scheme.primary),
                     const SizedBox(height: 12),
-                    Text('Askıları izle', style: Theme.of(context).textTheme.titleMedium),
+                    Text('Askıları izle',
+                        style: Theme.of(context).textTheme.titleMedium),
                   ],
                 ),
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: onOpenCoverage,
+            icon: const Icon(Icons.shield_rounded),
+            label:
+                const Text('Kaynak kapsamını ve sağlayıcı durumunu kontrol et'),
+          ),
         ),
       ],
     );

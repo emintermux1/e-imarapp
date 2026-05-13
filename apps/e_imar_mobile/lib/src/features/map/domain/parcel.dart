@@ -33,7 +33,8 @@ class SourceAttribution {
     this.termsUrl,
   });
 
-  factory SourceAttribution.fromJson(Map<String, Object?> json) => SourceAttribution(
+  factory SourceAttribution.fromJson(Map<String, Object?> json) =>
+      SourceAttribution(
         name: '${json['name'] ?? 'Kaynak'}',
         url: '${json['url'] ?? ''}',
         license: json['license'] as String?,
@@ -60,7 +61,8 @@ class ProviderDescriptor {
     required this.attribution,
   });
 
-  factory ProviderDescriptor.fromJson(Map<String, Object?> json) => ProviderDescriptor(
+  factory ProviderDescriptor.fromJson(Map<String, Object?> json) =>
+      ProviderDescriptor(
         id: '${json['id'] ?? ''}',
         kind: '${json['kind'] ?? ''}',
         displayName: '${json['displayName'] ?? json['id'] ?? 'Sağlayıcı'}',
@@ -70,10 +72,13 @@ class ProviderDescriptor {
             ? (json['regions'] as List).map((e) => '$e').toList(growable: false)
             : const [],
         capabilities: json['capabilities'] is List
-            ? (json['capabilities'] as List).map((e) => '$e').toList(growable: false)
+            ? (json['capabilities'] as List)
+                .map((e) => '$e')
+                .toList(growable: false)
             : const [],
         attribution: json['attribution'] is Map
-            ? SourceAttribution.fromJson((json['attribution'] as Map).cast<String, Object?>())
+            ? SourceAttribution.fromJson(
+                (json['attribution'] as Map).cast<String, Object?>())
             : const SourceAttribution(name: 'Bilinmeyen kaynak', url: ''),
       );
 
@@ -153,6 +158,51 @@ class ParcelDetail {
     this.siteAreaSquareMeters,
     this.gabariMeters,
   });
+
+  factory ParcelDetail.sampleMetadataOnly() => ParcelDetail(
+        city: 'İstanbul',
+        district: 'Kadıköy',
+        neighborhood: 'Caferağa',
+        block: '1234',
+        parcel: '2',
+        titleType: 'Konut + ticaret',
+        zoningStatus: 'Örnek metadata kaydı — resmi parsel servisi bağlı değil',
+        taks: .35,
+        kaks: 1.8,
+        emsal: 1.8,
+        floorLimit: 5,
+        coverageRatio: 'TAKS 0.35',
+        roadFrontage: 18,
+        latitude: 40.991,
+        longitude: 29.025,
+        sourceName: 'E-İmar mobil demo metadata',
+        sourceKind: ParcelSourceKind.publicMetadata,
+        providerId: 'mobile-preview',
+        providerStatus: 'metadata_only',
+        providerCapabilities: const [
+          'parcel-context',
+          'plan-notes',
+          'readiness-preview'
+        ],
+        attributionUrl: null,
+        official: false,
+        restricted: false,
+        fetchedAt: DateTime(2026, 1, 1),
+        planFeatures: const [
+          PlanFeature(
+            title: 'Plan koşulları',
+            summary: 'KAKS 1.80 • TAKS 0.35 • yaklaşık 5 kat sınırı',
+            attributes: {'kaks': 1.8, 'taks': .35, 'floorLimit': 5},
+            layerName: 'metadata-preview',
+            provenance: 'public_metadata',
+          ),
+        ],
+        unavailableReason:
+            'Canlı resmi parsel adaptörü bağlanınca bu örnek kayıt yerine gerçek sonuç açılır.',
+        geometry: smallViewportPolygon(40.991, 29.025),
+        siteAreaSquareMeters: 640,
+        gabariMeters: 15.5,
+      );
 
   final String city;
   final String district;
@@ -314,7 +364,9 @@ String titleCaseTr(String value) {
   return trimmed
       .split(RegExp(r'\s+'))
       .map(
-        (part) => part.isEmpty ? part : '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}',
+        (part) => part.isEmpty
+            ? part
+            : '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}',
       )
       .join(' ');
 }
@@ -334,4 +386,3 @@ void debugDomain(String message) {
     debugPrint(message);
   }
 }
-

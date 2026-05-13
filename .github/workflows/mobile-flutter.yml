@@ -1,0 +1,31 @@
+name: Mobile Flutter
+
+on:
+  pull_request:
+    paths:
+      - "apps/e_imar_mobile/**"
+      - ".github/workflows/mobile-flutter.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/e_imar_mobile/**"
+      - ".github/workflows/mobile-flutter.yml"
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/e_imar_mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.41.9"
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build bundle --debug
