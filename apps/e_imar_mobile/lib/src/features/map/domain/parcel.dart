@@ -154,6 +154,46 @@ class ParcelDetail {
     this.gabariMeters,
   });
 
+  factory ParcelDetail.sampleMetadataOnly() => ParcelDetail(
+        city: 'İstanbul',
+        district: 'Kadıköy',
+        neighborhood: 'Caferağa',
+        block: '1234',
+        parcel: '2',
+        titleType: 'Konut + ticaret',
+        zoningStatus: 'Örnek metadata kaydı — resmi parsel servisi bağlı değil',
+        taks: .35,
+        kaks: 1.8,
+        emsal: 1.8,
+        floorLimit: 5,
+        coverageRatio: 'TAKS 0.35',
+        roadFrontage: 18,
+        latitude: 40.991,
+        longitude: 29.025,
+        sourceName: 'E-İmar mobil demo metadata',
+        sourceKind: ParcelSourceKind.publicMetadata,
+        providerId: 'mobile-preview',
+        providerStatus: 'metadata_only',
+        providerCapabilities: const ['parcel-context', 'plan-notes', 'readiness-preview'],
+        attributionUrl: null,
+        official: false,
+        restricted: false,
+        fetchedAt: DateTime(2026, 1, 1),
+        planFeatures: const [
+          PlanFeature(
+            title: 'Plan koşulları',
+            summary: 'KAKS 1.80 • TAKS 0.35 • yaklaşık 5 kat sınırı',
+            attributes: {'kaks': 1.8, 'taks': .35, 'floorLimit': 5},
+            layerName: 'metadata-preview',
+            provenance: 'public_metadata',
+          ),
+        ],
+        unavailableReason: 'Canlı resmi parsel adaptörü bağlanınca bu örnek kayıt yerine gerçek sonuç açılır.',
+        geometry: smallViewportPolygon(40.991, 29.025),
+        siteAreaSquareMeters: 640,
+        gabariMeters: 15.5,
+      );
+
   final String city;
   final String district;
   final String neighborhood;
@@ -334,4 +374,3 @@ void debugDomain(String message) {
     debugPrint(message);
   }
 }
-

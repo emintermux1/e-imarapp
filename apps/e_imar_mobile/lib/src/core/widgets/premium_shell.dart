@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../features/map/domain/parcel.dart';
-import '../../features/coverage/coverage_screen.dart';
+import '../../features/source_coverage/source_coverage_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/map/map_screen.dart';
 import '../../features/watchlist/watchlist_screen.dart';
@@ -17,14 +17,19 @@ class _PremiumShellState extends State<PremiumShell> {
   int _index = 0;
 
   late final _pages = <Widget>[
-    HomeSearchScreen(onOpenMap: _selectMap, onOpenCoverage: _selectCoverage),
+    HomeSearchScreen(
+      onOpenMap: _selectMap,
+      onOpenCoverage: _selectCoverage,
+      onOpenWatchlist: _selectWatchlist,
+    ),
     MapWorkspaceScreen(onOpenParcel: _openParcel),
-    const CoverageScreen(),
+    const SourceCoverageScreen(),
     const WatchlistScreen(),
   ];
 
   void _selectMap() => setState(() => _index = 1);
   void _selectCoverage() => setState(() => _index = 2);
+  void _selectWatchlist() => setState(() => _index = 3);
   void _openParcel(ParcelDetail parcel) {
     Navigator.of(context).pushNamed('/parcel-detail', arguments: parcel);
   }

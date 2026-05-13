@@ -11,10 +11,16 @@ import '../../core/widgets/status_pill.dart';
 import '../map/domain/parcel.dart';
 
 class HomeSearchScreen extends ConsumerStatefulWidget {
-  const HomeSearchScreen({super.key, required this.onOpenMap, required this.onOpenCoverage});
+  const HomeSearchScreen({
+    super.key,
+    required this.onOpenMap,
+    required this.onOpenCoverage,
+    required this.onOpenWatchlist,
+  });
 
   final VoidCallback onOpenMap;
   final VoidCallback onOpenCoverage;
+  final VoidCallback onOpenWatchlist;
 
   @override
   ConsumerState<HomeSearchScreen> createState() => _HomeSearchScreenState();
@@ -69,8 +75,16 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
           parcel: _parcel.text,
         );
       } else if (hasPointSearch) {
-        final lat = double.parse(_lat.text.trim().replaceAll(',', '.'));
-        final lng = double.parse(_lng.text.trim().replaceAll(',', '.'));
+        final lat = double.tryParse(_lat.text.trim().replaceAll(',', '.'));
+        final lng = double.tryParse(_lng.text.trim().replaceAll(',', '.'));
+        if (lat == null || lng == null) {
+          result = ParcelLookupResult.unavailable(
+            title: 'Koordinat formatı geçersiz',
+            message: 'Enlem ve boylamı WGS84 ondalık sayı olarak girin. Örnek: 41.0151 / 28.9795',
+          );
+          setState(() => _result = result);
+          return;
+        }
         result = await api.lookupByPoint(latitude: lat, longitude: lng, city: _city.text.trim());
       } else {
         result = ParcelLookupResult.unavailable(
@@ -82,6 +96,16 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
       setState(() => _result = result);
       if (result.parcel != null && mounted) {
         Navigator.of(context).pushNamed(AppRoutes.parcelDetail, arguments: result.parcel);
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(
+          () => _result = ParcelLookupResult.unavailable(
+            title: 'Sorgu tamamlanamadı',
+            message: 'Ağ ya da sağlayıcı yanıtı okunamadı: $error',
+            code: 'client_error',
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -167,7 +191,11 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
           const SizedBox(height: 16),
           if (_result != null) _LookupResultPanel(result: _result!),
           const SizedBox(height: 16),
-          const _QuickActions(),
+          _QuickActions(
+            onOpenMap: widget.onOpenMap,
+            onOpenCoverage: widget.onOpenCoverage,
+            onOpenWatchlist: widget.onOpenWatchlist,
+          ),
         ],
       ),
     );
@@ -297,7 +325,15 @@ class _LookupResultPanel extends StatelessWidget {
 }
 
 class _QuickActions extends StatelessWidget {
-  const _QuickActions();
+  const _QuickActions({
+    required this.onOpenMap,
+    required this.onOpenCoverage,
+    required this.onOpenWatchlist,
+  });
+
+  final VoidCallback onOpenMap;
+  final VoidCallback onOpenCoverage;
+  final VoidCallback onOpenWatchlist;
 
   @override
   Widget build(BuildContext context) {
@@ -314,7 +350,7 @@ class _QuickActions extends StatelessWidget {
           children: [
             Expanded(
               child: PremiumCard(
-                onTap: () {},
+                onTap: onOpenMap,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -328,7 +364,7 @@ class _QuickActions extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: PremiumCard(
-                onTap: () {},
+                onTap: onOpenWatchlist,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -340,6 +376,15 @@ class _QuickActions extends StatelessWidget {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: onOpenCoverage,
+            icon: const Icon(Icons.shield_rounded),
+            label: const Text('Kaynak kapsamını ve sağlayıcı durumunu kontrol et'),
+          ),
         ),
       ],
     );
