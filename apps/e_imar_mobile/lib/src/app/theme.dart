@@ -8,8 +8,8 @@ class AppThemeBundle {
 }
 
 AppThemeBundle buildAppTheme() {
-  final seed = const Color(0xFF0D4D7D);
-  final accent = const Color(0xFFC9A35A);
+  const seed = Color(0xFF0D4D7D);
+  const accent = Color(0xFFC9A35A);
   final lightScheme = ColorScheme.fromSeed(
     seedColor: seed,
     brightness: Brightness.light,
@@ -40,15 +40,15 @@ AppThemeBundle buildAppTheme() {
         scrolledUnderElevation: 0,
       ),
       cardTheme: CardThemeData(
-        color: scheme.surfaceContainerHighest.withOpacity(0.76),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.76),
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: scheme.surface.withOpacity(0.92),
-        indicatorColor: scheme.primary.withOpacity(0.15),
-        labelTextStyle: MaterialStatePropertyAll(
+        backgroundColor: scheme.surface.withValues(alpha: 0.92),
+        indicatorColor: scheme.primary.withValues(alpha: 0.15),
+        labelTextStyle: WidgetStatePropertyAll(
           TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
@@ -58,23 +58,26 @@ AppThemeBundle buildAppTheme() {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: scheme.surfaceContainerHighest.withOpacity(0.72),
+        fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.72),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: scheme.outlineVariant.withOpacity(0.8)),
+          borderSide:
+              BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.8)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: scheme.outlineVariant.withOpacity(0.75)),
+          borderSide:
+              BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.75)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide(color: scheme.primary, width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
       dividerTheme: DividerThemeData(
-        color: scheme.outlineVariant.withOpacity(0.7),
+        color: scheme.outlineVariant.withValues(alpha: 0.7),
         thickness: 1,
       ),
     );
@@ -97,5 +100,6 @@ AppThemeBundle buildAppTheme() {
     );
   }
 
-  return AppThemeBundle(light: themeFrom(lightScheme), dark: themeFrom(darkScheme));
+  return AppThemeBundle(
+      light: themeFrom(lightScheme), dark: themeFrom(darkScheme));
 }

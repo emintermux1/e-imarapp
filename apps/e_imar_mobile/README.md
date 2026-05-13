@@ -61,7 +61,14 @@ The UI is intentionally conservative: if a provider is not configured or returns
 
 ## Validation status
 
-Flutter SDK is not installed in this environment, so `flutter pub get`, `flutter analyze`, and device/runtime validation could not be executed here.
+Validated with Flutter 3.41.9 / Dart 3.11.5:
 
-The code is written to be idiomatic Flutter and ready for normal validation once Flutter is available locally or in CI.
+```bash
+flutter pub get
+flutter analyze
+flutter test
+flutter build bundle --debug
+```
 
+Android and iOS platform scaffolds are generated under `android/` and `ios/`.
+`flutter build apk --debug` additionally requires Android SDK/`ANDROID_HOME` on the build machine.
