@@ -23,6 +23,8 @@ describe('SOURCE_REGISTRY', () => {
 
   it('covers national, municipal, satellite, and tile service source families', () => {
     expect(ids.has('tkgm-parsel-sorgu')).toBe(true);
+    expect(ids.has('e-plan')).toBe(true);
+    expect(ids.has('csb-e-plan')).toBe(true);
     expect(ids.has('edevlet-csb-tucbs')).toBe(true);
     expect(ids.has('netcad-netgis-server')).toBe(true);
     expect(ids.has('copernicus-data-space')).toBe(true);
@@ -37,6 +39,21 @@ describe('SOURCE_REGISTRY', () => {
     expect(ids.has('gelibolu-keos-imar')).toBe(true);
     expect(ids.has('caycuma-keos')).toBe(true);
     expect(ids.has('kecioren-kbs')).toBe(true);
+    expect(ids.has('adana-netcad-coverage-candidate')).toBe(true);
+    expect(ids.has('ankara-netcad-coverage-candidate')).toBe(true);
+    expect(ids.has('istanbul-municipal-coverage-candidate')).toBe(true);
+  });
+
+  it('includes multiple municipal vendor patterns across the country-scale coverage set', () => {
+    const vendors = new Set(
+      SOURCE_REGISTRY.map((source) => source.metadata?.vendor).filter((vendor): vendor is string => Boolean(vendor))
+    );
+
+    expect(vendors.has('netcad')).toBe(true);
+    expect(vendors.has('webgis')).toBe(true);
+    expect(vendors.has('ekent')).toBe(true);
+    expect(vendors.has('municipal')).toBe(true);
+    expect(vendors.has('kbs')).toBe(true);
   });
 
   it('does not force municipal vendor portals into Netcad connector flow', () => {
