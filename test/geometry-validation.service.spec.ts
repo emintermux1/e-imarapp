@@ -1,3 +1,4 @@
+import type * as GeoJSON from 'geojson';
 import { GeometryValidationService } from '../src/geo/geometry-validation.service';
 
 describe('GeometryValidationService', () => {
