@@ -35,7 +35,10 @@ export function MarketPanel({
   const [filters, setFilters] = useWatchlistStore((s) => [s.marketFilters, s.setMarketFilters]);
   const favorites = useWatchlistStore((s) => s.listingFavorites);
   const toggleFavorite = useWatchlistStore((s) => s.toggleListingFavorite);
-  const activeFilters = filters ?? { providerIds: [], listingType: "all", sortBy: "freshness" };
+  const activeFilters = React.useMemo<MarketFilters>(
+    () => filters ?? { providerIds: [], listingType: "all", sortBy: "freshness" },
+    [filters]
+  );
   const listings = React.useMemo(() => filterListings(response?.listings ?? [], activeFilters), [activeFilters, response?.listings]);
 
   if (!response) {
