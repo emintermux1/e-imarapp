@@ -698,9 +698,13 @@ export function MapCanvas({
       if (!f) return;
       const props = f.properties as Record<string, string | undefined>;
       const homepage = props.homepage_url;
+      const sourceUrl = props.url;
+      const endpointSummary = Number(props.candidate_endpoint_count ?? 0) > 0
+        ? `${props.candidate_endpoint_count} aday uç · ${props.candidate_endpoint_types ?? "portal"}`
+        : props.type ?? "portal";
       new maplibregl.Popup({ closeButton: true, closeOnClick: true })
         .setLngLat(e.lngLat)
-        .setHTML(`<div style="font:12px sans-serif;min-width:190px"><strong>${props.name ?? "Veri kaynağı"}</strong><br/><span>${props.status ?? "external_only"}</span>${homepage ? `<br/><a href="${homepage}" target="_blank" rel="noreferrer">Resmi portalı aç</a>` : ""}</div>`)
+        .setHTML(`<div style="font:12px sans-serif;min-width:220px"><strong>${props.name ?? "Veri kaynağı"}</strong><br/><span>${props.status ?? "external_only"} · ${endpointSummary}</span>${props.province ? `<br/><span>${props.province}${props.district ? ` / ${props.district}` : ""}</span>` : ""}${sourceUrl ? `<br/><a href="${sourceUrl}" target="_blank" rel="noreferrer">Aday servisi aç</a>` : ""}${homepage ? `<br/><a href="${homepage}" target="_blank" rel="noreferrer">Resmi portalı aç</a>` : ""}</div>`)
         .addTo(map);
     };
     const onSourceEnter = () => { map.getCanvas().style.cursor = "pointer"; };
@@ -1530,6 +1534,7 @@ function ensureLiveSourceLayers(map: Map) {
             "blocked", "#EF4444",
             "requires_auth", "#EF4444",
             "requires_approval", "#EF4444",
+            "candidate", "#2563EB",
             "#0EA5E9"
           ] as never,
           "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 5, 8, 8, 12, 12] as never,
@@ -1564,7 +1569,7 @@ function ensureLiveSourceLayers(map: Map) {
   }
 }
 
-function buildLiveSourceFeatureCollection(layers: Array<{ id: string | number; source_id?: string; name?: string; title?: string; status?: string; homepage_url?: string; center?: [number, number]; province?: string; district?: string; kind?: string }>): GeoJSON.FeatureCollection {
+function buildLiveSourceFeatureCollection(layers: Array<{ id: string | number; source_id?: string; name?: string; title?: string; type?: string; status?: string; url?: string; homepage_url?: string; center?: [number, number]; province?: string; district?: string; kind?: string; candidate_endpoint_count?: number; candidate_endpoint_types?: string[] }>): GeoJSON.FeatureCollection {
   const seen = new Set<string>();
   const features = layers
     .filter((layer) => Array.isArray(layer.center) && layer.center.length === 2)
@@ -1583,10 +1588,14 @@ function buildLiveSourceFeatureCollection(layers: Array<{ id: string | number; s
         name: layer.name ?? layer.title ?? "Veri kaynağı",
         short_name: (layer.name ?? layer.title ?? "Kaynak").replace(/ (KEOS|WebGIS|İmar Durumu|CBS|Portalı).*/i, ""),
         status: layer.status ?? "external_only",
+        type: layer.type ?? "",
+        url: layer.url ?? "",
         homepage_url: layer.homepage_url ?? "",
         province: layer.province ?? "",
         district: layer.district ?? "",
-        kind: layer.kind ?? ""
+        kind: layer.kind ?? "",
+        candidate_endpoint_count: layer.candidate_endpoint_count ?? 0,
+        candidate_endpoint_types: (layer.candidate_endpoint_types ?? []).join(", ")
       }
     }));
   return { type: "FeatureCollection", features };

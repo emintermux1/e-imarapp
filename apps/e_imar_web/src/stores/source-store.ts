@@ -81,7 +81,7 @@ export const useSourceStore = create<SourceState>()((set, get) => ({
   loadLiveLayers: async () => {
     try {
       const liveLayers = await getLiveMapLayers();
-      set({ liveLayers: Array.isArray(liveLayers) ? liveLayers : [] });
+      set({ liveLayers: Array.isArray(liveLayers) ? liveLayers : liveLayers.layers ?? [] });
     } catch (error) {
       set({ error: `${humanizeApiError(error)} Haritada kaynak işaretleri için yerel kayıt kullanılacak.` });
     }
@@ -91,7 +91,7 @@ export const useSourceStore = create<SourceState>()((set, get) => ({
 export function summarizeSourceStatuses(sources: SourceRegistryRecord[], health: Record<string, SourceHealthRecord>) {
   return sources.reduce(
     (acc, source) => {
-      const status = health[source.id]?.status ?? (source.requires_approval || source.requires_credentials ? "requires_approval" : "external_only");
+      const status = health[source.id]?.status ?? (source.requires_approval || source.requires_credentials || source.auth === "requires_credentials" ? "requires_approval" : "external_only");
       if (status === "live") acc.live += 1;
       else if (status === "timeout") acc.timeout += 1;
       else if (["blocked", "requires_auth", "requires_approval"].includes(status)) acc.blocked += 1;
