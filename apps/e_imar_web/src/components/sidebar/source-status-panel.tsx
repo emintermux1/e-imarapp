@@ -17,6 +17,8 @@ export function SourceStatusPanel() {
   const discover = useSourceStore((s) => s.discover);
   const discoverMunicipalityGis = useSourceStore((s) => s.discoverMunicipalityGis);
   const loadLiveLayers = useSourceStore((s) => s.loadLiveLayers);
+  const activeMapLayers = useSourceStore((s) => s.activeMapLayers);
+  const deactivateLiveLayer = useSourceStore((s) => s.deactivateLiveLayer);
   const discoveries = useSourceStore((s) => s.discoveries);
 
   React.useEffect(() => {
@@ -95,6 +97,26 @@ export function SourceStatusPanel() {
           );
         })}
       </div>
+
+      {activeMapLayers.length > 0 && (
+        <div className="mt-2 rounded-md border border-emerald-300/50 bg-emerald-50/70 px-2 py-1.5">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-800">Haritada açık WMS</div>
+          <div className="mt-1 flex flex-col gap-1">
+            {activeMapLayers.map((layer) => (
+              <div key={String(layer.id)} className="flex items-center gap-2 text-[10.5px] text-emerald-950">
+                <span className="min-w-0 flex-1 truncate">{layer.name ?? layer.title ?? layer.source_id}</span>
+                <button
+                  type="button"
+                  onClick={() => deactivateLiveLayer(layer.id)}
+                  className="rounded border border-emerald-300/70 bg-white/70 px-1.5 py-0.5 text-[10px] text-emerald-900 hover:bg-white"
+                >
+                  Kapat
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error && <div className="mt-2 rounded-md border border-amber-300/50 bg-amber-100/40 px-2 py-1.5 text-[10.5px] leading-snug text-amber-900">{error}</div>}
     </div>

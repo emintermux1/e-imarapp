@@ -68,6 +68,7 @@ import { getSnapshotForYear } from "@/data/historical-snapshots";
 import { useBackendParcelStore } from "@/stores/backend-parcel-store";
 import { useSourceStore } from "@/stores/source-store";
 import { useLatestRegionsStore } from "@/stores/latest-regions-store";
+import type { ProbedLiveMapLayer } from "@/types/api";
 import { parseBackendParcelId } from "@/lib/api/parcel-normalizer";
 import { geoJsonBounds, geoJsonCentroid, toFeatureCollection } from "@/lib/geojson";
 import { findNearestParcel } from "@/lib/analysis/selected-place-analysis";
@@ -126,6 +127,8 @@ export function MapCanvas({
   const selectedPoint = useMapStore((s) => s.selectedPoint);
   const selectedBackendFeature = useBackendParcelStore((s) => s.getFeature(selectedParcelId));
   const liveLayers = useSourceStore((s) => s.liveLayers);
+  const activeMapLayers = useSourceStore((s) => s.activeMapLayers);
+  const activateLiveLayer = useSourceStore((s) => s.activateLiveLayer);
   const loadLiveLayers = useSourceStore((s) => s.loadLiveLayers);
   const selectedLatestRegion = useLatestRegionsStore((s) => s.selectedRegion);
   const flyTarget = useMapStore((s) => s.flyTarget);
@@ -702,9 +705,51 @@ export function MapCanvas({
       const endpointSummary = Number(props.candidate_endpoint_count ?? 0) > 0
         ? `${props.candidate_endpoint_count} aday uç · ${props.candidate_endpoint_types ?? "portal"}`
         : props.type ?? "portal";
+      const popupRoot = document.createElement("div");
+      popupRoot.style.cssText = "font:12px sans-serif;min-width:220px";
+      const title = document.createElement("strong");
+      title.textContent = props.name ?? "Veri kaynağı";
+      popupRoot.append(title);
+      const status = document.createElement("div");
+      status.textContent = `${props.status ?? "external_only"} · ${endpointSummary}`;
+      popupRoot.append(status);
+      if (props.province) {
+        const location = document.createElement("div");
+        location.textContent = `${props.province}${props.district ? ` / ${props.district}` : ""}`;
+        popupRoot.append(location);
+      }
+      if (sourceUrl) {
+        const activateButton = document.createElement("button");
+        activateButton.type = "button";
+        activateButton.textContent = "Probe et ve haritaya ekle";
+        activateButton.style.cssText = "display:block;margin-top:8px;width:100%;border:1px solid #CBD5E1;border-radius:4px;background:#F8FAFC;padding:5px 7px;text-align:left;cursor:pointer";
+        activateButton.addEventListener("click", () => {
+          void activateLiveLayer(props.source_id ?? props.id ?? "", sourceUrl);
+        });
+        popupRoot.append(activateButton);
+      }
+      if (sourceUrl) {
+        const serviceLink = document.createElement("a");
+        serviceLink.href = sourceUrl;
+        serviceLink.target = "_blank";
+        serviceLink.rel = "noreferrer";
+        serviceLink.textContent = "Aday servisi aç";
+        serviceLink.style.display = "block";
+        serviceLink.style.marginTop = "6px";
+        popupRoot.append(serviceLink);
+      }
+      if (homepage) {
+        const homepageLink = document.createElement("a");
+        homepageLink.href = homepage;
+        homepageLink.target = "_blank";
+        homepageLink.rel = "noreferrer";
+        homepageLink.textContent = "Resmi portalı aç";
+        homepageLink.style.display = "block";
+        popupRoot.append(homepageLink);
+      }
       new maplibregl.Popup({ closeButton: true, closeOnClick: true })
         .setLngLat(e.lngLat)
-        .setHTML(`<div style="font:12px sans-serif;min-width:220px"><strong>${props.name ?? "Veri kaynağı"}</strong><br/><span>${props.status ?? "external_only"} · ${endpointSummary}</span>${props.province ? `<br/><span>${props.province}${props.district ? ` / ${props.district}` : ""}</span>` : ""}${sourceUrl ? `<br/><a href="${sourceUrl}" target="_blank" rel="noreferrer">Aday servisi aç</a>` : ""}${homepage ? `<br/><a href="${homepage}" target="_blank" rel="noreferrer">Resmi portalı aç</a>` : ""}</div>`)
+        .setDOMContent(popupRoot)
         .addTo(map);
     };
     const onSourceEnter = () => { map.getCanvas().style.cursor = "pointer"; };
@@ -753,14 +798,15 @@ export function MapCanvas({
       (window as Window & { __mlMap?: Map }).__mlMap = undefined;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activateLiveLayer]);
 
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     map.setStyle(getStyleForBasemap(basemap));
     applyLocationLabelTheme(map, basemap);
-  }, [basemap]);
+    map.once("idle", () => syncActiveWmsLayers(map, activeMapLayers));
+  }, [activeMapLayers, basemap]);
 
   // Selection sync
   React.useEffect(() => {
@@ -973,6 +1019,14 @@ export function MapCanvas({
     if (map.isStyleLoaded()) apply();
     else map.once("idle", apply);
   }, [applyVisibilityAndOpacity, liveLayers]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => syncActiveWmsLayers(map, activeMapLayers);
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [activeMapLayers]);
 
   React.useEffect(() => {
     const map = mapRef.current;
@@ -1599,6 +1653,52 @@ function buildLiveSourceFeatureCollection(layers: Array<{ id: string | number; s
       }
     }));
   return { type: "FeatureCollection", features };
+}
+
+function syncActiveWmsLayers(map: Map, layers: ProbedLiveMapLayer[]) {
+  const activeIds = new Set(layers.map((layer) => activeWmsLayerId(layer.id)));
+  for (const layerId of map.getStyle().layers?.map((layer) => layer.id) ?? []) {
+    if (layerId.startsWith("active-ogc-wms-") && !activeIds.has(layerId)) {
+      if (map.getLayer(layerId)) map.removeLayer(layerId);
+    }
+  }
+  for (const sourceId of Object.keys(map.getStyle().sources ?? {})) {
+    if (sourceId.startsWith("active-ogc-wms-") && !activeIds.has(sourceId) && map.getSource(sourceId)) {
+      map.removeSource(sourceId);
+    }
+  }
+
+  for (const layer of layers) {
+    if (!layer.tile_url) continue;
+    const id = activeWmsLayerId(layer.id);
+    if (!map.getSource(id)) {
+      map.addSource(id, {
+        type: "raster",
+        tiles: [layer.tile_url],
+        tileSize: 256,
+        attribution: layer.name ?? layer.source_id ?? "Canlı WMS"
+      });
+    }
+    if (!map.getLayer(id)) {
+      const beforeId = map.getLayer("parcels-line") ? "parcels-line" : undefined;
+      map.addLayer(
+        {
+          id,
+          type: "raster",
+          source: id,
+          paint: {
+            "raster-opacity": 0.72,
+            "raster-fade-duration": 150
+          }
+        },
+        beforeId
+      );
+    }
+  }
+}
+
+function activeWmsLayerId(id: string | number) {
+  return `active-ogc-wms-${String(id).replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 }
 
 function ensureBackendSelectedLayer(map: Map) {

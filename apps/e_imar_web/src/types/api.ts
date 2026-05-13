@@ -95,6 +95,27 @@ export interface BackendMapLayerResponse {
   [key: string]: unknown;
 }
 
+export interface ProbedLiveMapLayer extends BackendMapLayerResponse {
+  activatable?: boolean;
+  service_type?: string;
+  tile_url?: string | null;
+  selected_layer?: {
+    name?: string;
+    title?: string | null;
+    abstract?: string | null;
+  } | null;
+  available_layers?: Array<Record<string, unknown>>;
+  http_status?: number | null;
+  content_type?: string | null;
+  error?: string;
+}
+
+export interface LiveMapLayerProbeResponse {
+  status: string;
+  message?: string;
+  layer: ProbedLiveMapLayer;
+}
+
 export interface SourceRegistryRecord {
   id: string;
   name: string;

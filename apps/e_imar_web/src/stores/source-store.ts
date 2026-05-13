@@ -7,11 +7,13 @@ import {
   getLiveMapLayers,
   getSourceHealth,
   humanizeApiError,
-  listSources
+  listSources,
+  probeLiveMapLayer
 } from "@/lib/api/backend-client";
 import type {
   BackendMapLayerResponse,
   MunicipalGISDiscoveryResponse,
+  ProbedLiveMapLayer,
   SourceHealthRecord,
   SourceRegistryRecord
 } from "@/types/api";
@@ -20,6 +22,7 @@ interface SourceState {
   sources: SourceRegistryRecord[];
   health: Record<string, SourceHealthRecord>;
   liveLayers: BackendMapLayerResponse[];
+  activeMapLayers: ProbedLiveMapLayer[];
   discoveries: Record<string, MunicipalGISDiscoveryResponse | Record<string, unknown>>;
   loading: boolean;
   healthLoading: boolean;
@@ -30,12 +33,15 @@ interface SourceState {
   discover: (sourceId: string) => Promise<void>;
   discoverMunicipalityGis: (slug: string, force?: boolean) => Promise<void>;
   loadLiveLayers: () => Promise<void>;
+  activateLiveLayer: (sourceId: string, endpointUrl?: string) => Promise<void>;
+  deactivateLiveLayer: (layerId: string | number) => void;
 }
 
 export const useSourceStore = create<SourceState>()((set, get) => ({
   sources: [],
   health: {},
   liveLayers: [],
+  activeMapLayers: [],
   discoveries: {},
   loading: false,
   healthLoading: false,
@@ -85,6 +91,26 @@ export const useSourceStore = create<SourceState>()((set, get) => ({
     } catch (error) {
       set({ error: `${humanizeApiError(error)} Haritada kaynak işaretleri için yerel kayıt kullanılacak.` });
     }
+  },
+  activateLiveLayer: async (sourceId: string, endpointUrl?: string) => {
+    set({ error: undefined });
+    try {
+      const result = await probeLiveMapLayer(sourceId, endpointUrl);
+      const layer = result.layer;
+      if (!layer.activatable || !layer.tile_url) {
+        set({ error: result.message ?? "Bu kaynak doğrulandı ama haritada açılabilir public WMS katmanı bulunamadı." });
+        return;
+      }
+      set((state) => {
+        const activeMapLayers = state.activeMapLayers.filter((item) => String(item.id) !== String(layer.id));
+        return { activeMapLayers: [...activeMapLayers, layer], lastChecked: new Date().toISOString() };
+      });
+    } catch (error) {
+      set({ error: humanizeApiError(error, "Kaynak probe edilemedi; katman haritaya eklenmedi.") });
+    }
+  },
+  deactivateLiveLayer: (layerId) => {
+    set((state) => ({ activeMapLayers: state.activeMapLayers.filter((layer) => String(layer.id) !== String(layerId)) }));
   }
 }));
 
