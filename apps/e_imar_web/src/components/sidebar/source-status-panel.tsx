@@ -18,6 +18,10 @@ export function SourceStatusPanel() {
   const discoverMunicipalityGis = useSourceStore((s) => s.discoverMunicipalityGis);
   const loadLiveLayers = useSourceStore((s) => s.loadLiveLayers);
   const activeMapLayers = useSourceStore((s) => s.activeMapLayers);
+  const probedLayers = useSourceStore((s) => s.probedLayers);
+  const liveLayers = useSourceStore((s) => s.liveLayers);
+  const probeLayerCatalog = useSourceStore((s) => s.probeLayerCatalog);
+  const activateLiveLayer = useSourceStore((s) => s.activateLiveLayer);
   const deactivateLiveLayer = useSourceStore((s) => s.deactivateLiveLayer);
   const discoveries = useSourceStore((s) => s.discoveries);
 
@@ -66,32 +70,72 @@ export function SourceStatusPanel() {
           const status = health[source.id]?.status ?? (source.requires_approval || source.requires_credentials ? "requires_approval" : "external_only");
           const slug = source.slug ?? source.id;
           const homepageUrl = source.homepage_url ?? source.base_url ?? "#";
+          const sourceLayers = liveLayers.filter((layer) => layer.source_id === source.id);
+          const wmsLayer = sourceLayers.find((layer) => layer.type === "wms");
+          const probe = sourceLayers.map((layer) => probedLayers[String(layer.id)]).find(Boolean);
           return (
-            <div key={source.id} className="flex items-center gap-2 rounded-md border border-border-subtle bg-bg/70 px-2 py-1.5">
-              <span className={cn("h-2 w-2 shrink-0 rounded-full", statusClass(status))} />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[11px] font-medium text-fg-primary">{source.name}</div>
-                <div className="truncate text-[9.5px] text-fg-muted">{statusLabel(status)}</div>
+            <div key={source.id} className="rounded-md border border-border-subtle bg-bg/70 px-2 py-1.5">
+              <div className="flex items-center gap-2">
+                <span className={cn("h-2 w-2 shrink-0 rounded-full", statusClass(probe?.status ?? status))} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[11px] font-medium text-fg-primary">{source.name}</div>
+                  <div className="truncate text-[9.5px] text-fg-muted">
+                    {probe ? `probe: ${statusLabel(probe.status ?? "unknown")} · ${probe.available_layers?.length ?? 0} katman` : statusLabel(status)}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void discover(source.id);
+                    if ((source.kind ?? "").startsWith("municipal")) void discoverMunicipalityGis(slug, true);
+                  }}
+                  className="rounded border border-border-subtle px-1.5 py-1 text-[10px] text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
+                >
+                  Keşfet
+                </button>
+                <button
+                  type="button"
+                  disabled={!wmsLayer}
+                  onClick={() => {
+                    if (wmsLayer) void probeLayerCatalog(source.id, wmsLayer.url);
+                  }}
+                  className="rounded border border-border-subtle px-1.5 py-1 text-[10px] text-fg-secondary hover:bg-surface-1 hover:text-fg-primary disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Katman
+                </button>
+                <a
+                  href={homepageUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded border border-border-subtle text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
+                  title="Resmi portalı aç"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </a>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  void discover(source.id);
-                  if ((source.kind ?? "").startsWith("municipal")) void discoverMunicipalityGis(slug, true);
-                }}
-                className="rounded border border-border-subtle px-1.5 py-1 text-[10px] text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
-              >
-                Keşfet
-              </button>
-              <a
-                href={homepageUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-6 w-6 items-center justify-center rounded border border-border-subtle text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
-                title="Resmi portalı aç"
-              >
-                <ExternalLink className="h-3 w-3" />
-              </a>
+              {probe?.available_layers && probe.available_layers.length > 0 && wmsLayer && (
+                <div className="mt-1 rounded border border-border-subtle bg-surface-1/60 p-1">
+                  <div className="mb-1 text-[9.5px] uppercase tracking-wide text-fg-muted">WMS katmanı seç</div>
+                  <div className="max-h-24 space-y-1 overflow-auto pr-1">
+                    {probe.available_layers.slice(0, 8).map((layer) => {
+                      const layerName = String(layer.name ?? "");
+                      if (!layerName) return null;
+                      return (
+                        <button
+                          key={layerName}
+                          type="button"
+                          onClick={() => void activateLiveLayer(source.id, wmsLayer.url, layerName)}
+                          className="block w-full truncate rounded border border-border-subtle bg-bg/80 px-1.5 py-1 text-left text-[10px] text-fg-secondary hover:bg-emerald-50 hover:text-emerald-900"
+                          title={String(layer.title ?? layerName)}
+                        >
+                          {String(layer.title ?? layerName)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {probe.cache?.status && <div className="mt-1 text-[9px] text-fg-muted">Cache: {probe.cache.status}</div>}
+                </div>
+              )}
               <DiscoveryDetails sourceId={source.id} slug={slug} discovery={discoveries[slug] ?? discoveries[source.id]} />
             </div>
           );
