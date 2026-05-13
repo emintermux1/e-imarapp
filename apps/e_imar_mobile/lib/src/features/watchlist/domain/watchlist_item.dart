@@ -17,4 +17,3 @@ class WatchlistItem {
   final String statusLabel;
   final String nextAction;
 }
-

@@ -21,4 +21,3 @@ class EImarApp extends ConsumerWidget {
     );
   }
 }
-

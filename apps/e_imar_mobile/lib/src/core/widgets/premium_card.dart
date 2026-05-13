@@ -25,14 +25,15 @@ class PremiumCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            scheme.surface.withOpacity(0.96),
-            scheme.surfaceContainerHighest.withOpacity(0.74),
+            scheme.surface.withValues(alpha: 0.96),
+            scheme.surfaceContainerHighest.withValues(alpha: 0.74),
           ],
         ),
-        border: Border.all(color: scheme.outlineVariant.withOpacity(0.65)),
+        border:
+            Border.all(color: scheme.outlineVariant.withValues(alpha: 0.65)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 24,
             offset: const Offset(0, 14),
           ),
@@ -52,4 +53,3 @@ class PremiumCard extends StatelessWidget {
     );
   }
 }
-
