@@ -10,24 +10,24 @@
 
 :root {
   /* Surfaces & background */
-  --bg: 255 255 255;
-  --surface-1: 247 248 250;
-  --surface-2: 255 255 255;
-  --surface-3: 252 252 253;
+  --bg: 244 246 248;
+  --surface-1: 238 242 246;
+  --surface-2: 252 253 253;
+  --surface-3: 247 249 251;
 
   /* Borders */
-  --border-subtle: 229 231 235;
-  --border-strong: 209 213 219;
+  --border-subtle: 217 224 232;
+  --border-strong: 188 199 211;
 
   /* Text */
-  --text-primary: 15 23 42;
-  --text-secondary: 71 85 105;
-  --text-muted: 107 114 128;
+  --text-primary: 18 30 44;
+  --text-secondary: 72 86 102;
+  --text-muted: 113 126 140;
 
   /* Accents */
-  --accent-red: 200 16 46;       /* #C8102E devlet kırmızısı */
-  --accent-navy: 16 42 76;       /* #102A4C koyu lacivert */
-  --accent-blue: 59 110 165;     /* #3B6EA5 muted blue */
+  --accent-red: 166 37 48;       /* ciddi uyarı / askı vurgusu */
+  --accent-navy: 18 52 82;       /* kurumsal lacivert */
+  --accent-blue: 57 103 143;     /* muted cadastral blue */
 
   /* Status */
   --status-success: 21 128 61;
@@ -65,10 +65,10 @@
 }
 
 .dark {
-  --bg: 11 15 20;                /* #0B0F14 */
-  --surface-1: 17 22 29;         /* #11161D */
-  --surface-2: 22 28 37;         /* #161C25 */
-  --surface-3: 26 33 44;
+  --bg: 14 20 27;
+  --surface-1: 20 28 37;
+  --surface-2: 25 34 45;
+  --surface-3: 31 42 55;
 
   --border-subtle: 30 37 48;     /* #1E2530 */
   --border-strong: 42 51 64;     /* #2A3340 */

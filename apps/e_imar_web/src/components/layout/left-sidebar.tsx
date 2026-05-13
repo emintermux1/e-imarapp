@@ -16,15 +16,15 @@ export function LeftSidebar() {
   return (
     <aside
       className={cn(
-        "fixed top-14 bottom-0 left-0 z-20 hidden lg:flex flex-col border-r border-border-subtle bg-surface-2 transition-[width] duration-200",
+        "fixed bottom-4 left-3 top-20 z-20 hidden flex-col overflow-hidden rounded-xl border border-border-strong/80 bg-surface-2/94 shadow-[0_1px_0_rgb(255_255_255/0.78)_inset,0_22px_54px_-34px_rgb(18_52_82/0.5)] backdrop-blur-md transition-[width] duration-200 lg:flex",
         collapsed ? "w-[64px]" : "w-[280px]"
       )}
       aria-label="Yan panel"
     >
-      <div className="h-10 flex items-center justify-between px-3 border-b border-border-subtle">
+      <div className="flex h-12 items-center justify-between border-b border-border-subtle/80 bg-surface-3/70 px-3">
         <span
           className={cn(
-            "text-[10px] uppercase tracking-wider text-fg-muted",
+            "text-[10px] font-semibold uppercase tracking-[0.18em] text-fg-muted",
             collapsed && "sr-only"
           )}
         >
@@ -34,7 +34,7 @@ export function LeftSidebar() {
           type="button"
           aria-label={collapsed ? "Paneli genişlet" : "Paneli daralt"}
           onClick={toggleSidebar}
-          className="h-7 w-7 inline-flex items-center justify-center rounded text-fg-muted hover:bg-surface-1 hover:text-fg-primary"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-surface-1 hover:text-fg-primary"
         >
           {collapsed ? (
             <PanelLeftOpen className="h-3.5 w-3.5" />
@@ -47,7 +47,7 @@ export function LeftSidebar() {
         <SidebarSections collapsed={collapsed} />
       </ScrollArea>
       {!collapsed && (
-        <div className="p-3 border-t border-border-subtle">
+        <div className="border-t border-border-subtle/80 bg-surface-3/45 p-3">
           <GISLegend />
         </div>
       )}
