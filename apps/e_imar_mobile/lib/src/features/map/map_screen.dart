@@ -61,6 +61,11 @@ class MapWorkspaceScreen extends ConsumerWidget {
             title: 'Bottom sheet hazır',
             body: 'Canlı sonuç geldiğinde bu alanda parsel özeti, kaynak güveni ve sonraki adımlar görünür.',
             icon: Icons.space_dashboard_rounded,
+            action: FilledButton.icon(
+              onPressed: () => onOpenParcel(ParcelDetail.sampleMetadataOnly()),
+              icon: const Icon(Icons.open_in_new_rounded),
+              label: const Text('Örnek detay akışını aç'),
+            ),
           ),
         ],
       ),
