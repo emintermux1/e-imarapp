@@ -24,6 +24,7 @@ import { ZoningBadge } from "@/components/gis/zoning-badge";
 import { SourceBadge } from "@/components/gis/source-badge";
 import type { SearchResult } from "@/types/geo";
 import { cn } from "@/lib/utils";
+import { getLocationBoundary } from "@/data/location-boundaries";
 
 const TABS: SearchMode[] = ["Hepsi", "AdaParsel", "Koordinat", "Adres", "Belediye"];
 const TAB_LABELS: Record<SearchMode, string> = {
@@ -53,6 +54,7 @@ export function GlobalSearch() {
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
   const flyTo = useMapStore((s) => s.flyTo);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
 
   const [mode, setMode] = React.useState<SearchMode>("Hepsi");
   const [query, setQuery] = React.useState("");
@@ -106,15 +108,35 @@ export function GlobalSearch() {
     setSearchOpen(false);
     setQuery("");
     if (r.type === "parcel") {
+      setSelectedArea(null);
       setSelectedParcelId(r.parcelId);
       setRightPanelOpen(true);
       if (r.centroid) {
         flyTo({ center: r.centroid, zoom: 16, parcelId: r.parcelId });
       }
     } else if (r.type === "coordinate") {
+      setSelectedArea(null);
+      setSelectedParcelId(null);
       flyTo({ center: [r.lng, r.lat], zoom: 14 });
     } else if (r.centroid) {
-      flyTo({ center: r.centroid, zoom: r.type === "address" ? 12 : 11 });
+      setSelectedParcelId(null);
+      const boundary = r.type === "address" || r.type === "location"
+        ? getLocationBoundary({ il: r.il, ilce: r.ilce, mahalle: r.mahalle })
+        : undefined;
+      setSelectedArea(boundary ? {
+        id: boundary.id,
+        kind: boundary.kind,
+        label: boundary.label,
+        il: boundary.il,
+        ilce: boundary.ilce,
+        mahalle: boundary.mahalle,
+        feature: boundary.feature
+      } : null);
+      flyTo({
+        center: r.centroid,
+        bounds: r.bbox ?? boundary?.bounds,
+        zoom: r.type === "address" ? 12 : 11
+      });
     }
   }
 

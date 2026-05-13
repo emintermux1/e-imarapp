@@ -51,6 +51,7 @@ const STATUS_ICON: Record<AskiPolygonFeature["durum"], React.ReactNode> = {
  */
 export function AskiPopover({ feature, position, onClose }: AskiPopoverProps) {
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
   const flyTo = useMapStore((s) => s.flyTo);
 
@@ -80,6 +81,7 @@ export function AskiPopover({ feature, position, onClose }: AskiPopoverProps) {
   function openParcel() {
     if (!feature.matchedParcelId) return;
     const f = getParcelById(feature.matchedParcelId);
+    setSelectedArea(null);
     setSelectedParcelId(feature.matchedParcelId);
     setRightPanelOpen(true);
     if (f?.properties.centroid) {

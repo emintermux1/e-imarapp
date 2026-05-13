@@ -43,6 +43,9 @@ import {
   buildDrawingPolygonOutlineLayer,
   buildDrawingPointLayer,
   buildDrawingLabelLayer,
+  buildSelectedAreaFillLayer,
+  buildSelectedAreaLineLayer,
+  SELECTED_AREA_SOURCE,
   DRAWING_SOURCE,
   buildAskiFillLayer,
   buildAskiLineLayer,
@@ -70,6 +73,7 @@ import { geoJsonBounds, geoJsonCentroid, toFeatureCollection } from "@/lib/geojs
 import { findNearestParcel } from "@/lib/analysis/selected-place-analysis";
 import { drawingFeatureCollection, useDrawingStore } from "@/stores/drawing-store";
 import { getParcelSourceMetadata } from "@/data/parcels";
+import { emptySelectedAreaCollection, getLocationBoundary } from "@/data/location-boundaries";
 
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
@@ -117,6 +121,7 @@ export function MapCanvas({
 
   const basemap = useMapStore((s) => s.basemap);
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
+  const selectedArea = useMapStore((s) => s.selectedArea);
   const multiSelectedParcelIds = useMapStore((s) => s.multiSelectedParcelIds);
   const selectedPoint = useMapStore((s) => s.selectedPoint);
   const selectedBackendFeature = useBackendParcelStore((s) => s.getFeature(selectedParcelId));
@@ -125,6 +130,7 @@ export function MapCanvas({
   const selectedLatestRegion = useLatestRegionsStore((s) => s.selectedRegion);
   const flyTarget = useMapStore((s) => s.flyTarget);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
   const setSelectedPoint = useMapStore((s) => s.setSelectedPoint);
   const toggleMultiSelectedParcelId = useMapStore((s) => s.toggleMultiSelectedParcelId);
   const addMultiSelectedParcelIds = useMapStore((s) => s.addMultiSelectedParcelIds);
@@ -304,6 +310,7 @@ export function MapCanvas({
           break;
         case "reset":
           clearSemanticFocus();
+          setSelectedArea(null);
           map.flyTo({
             center: TURKEY_CENTER,
             zoom: INITIAL_ZOOM,
@@ -332,6 +339,7 @@ export function MapCanvas({
       ensureBackendSelectedLayer(map);
       ensureSelectedPointLayer(map);
       ensureLatestRegionsLayer(map);
+      ensureSelectedAreaLayers(map);
       ensureDrawingLayers(map);
       applyLocationLabelTheme(map, basemap);
       applyVisibilityAndOpacity(map);
@@ -357,6 +365,7 @@ export function MapCanvas({
       ensureBackendSelectedLayer(map);
       ensureSelectedPointLayer(map);
       ensureLatestRegionsLayer(map);
+      ensureSelectedAreaLayers(map);
       ensureDrawingLayers(map);
       applyLocationLabelTheme(map, basemap);
       if (lastSelectedMapIdRef.current != null) {
@@ -454,10 +463,12 @@ export function MapCanvas({
       if (!parcel) return;
       if (e.originalEvent.shiftKey) {
         toggleMultiSelectedParcelId(parcel.properties.id);
+        setSelectedArea(null);
         setSelectedParcelId(parcel.properties.id);
         setRightPanelOpen(true);
         return;
       }
+      setSelectedArea(null);
       setSelectedParcelId(parcel.properties.id);
       setSelectedPoint(null);
       setRightPanelOpen(true);
@@ -498,19 +509,40 @@ export function MapCanvas({
       setSelectedParcelId(null);
       setSelectedPoint(null);
       setRightPanelOpen(false);
-      const { center, zoom, bearing, pitch } = buildFlyTargetFromLocationTarget(target, { zoom: props.zoom });
-      map.flyTo({
-        center,
-        zoom,
-        bearing,
-        pitch,
-        duration: 650,
-        essential: true,
-        padding:
-          window.innerWidth >= 1280
-            ? { top: 40, bottom: 40, left: 320, right: 440 }
-            : { top: 40, bottom: 40, left: 24, right: 24 }
-      });
+      const boundary = getLocationBoundary({ il: target.il, ilce: target.ilce, mahalle: target.mahalle });
+      setSelectedArea(boundary ? {
+        id: boundary.id,
+        kind: boundary.kind,
+        label: boundary.label,
+        il: boundary.il,
+        ilce: boundary.ilce,
+        mahalle: boundary.mahalle,
+        feature: boundary.feature
+      } : null);
+      const { center, zoom, bearing, pitch, bounds } = buildFlyTargetFromLocationTarget(target, { zoom: props.zoom });
+      const padding = window.innerWidth >= 1280
+        ? { top: 40, bottom: 40, left: 320, right: 440 }
+        : { top: 40, bottom: 40, left: 24, right: 24 };
+      if (bounds) {
+        map.fitBounds([[bounds.west, bounds.south], [bounds.east, bounds.north]], {
+          padding,
+          duration: 650,
+          maxZoom: zoom,
+          bearing,
+          pitch,
+          essential: true
+        });
+      } else {
+        map.flyTo({
+          center,
+          zoom,
+          bearing,
+          pitch,
+          duration: 650,
+          essential: true,
+          padding
+        });
+      }
     };
 
     map.on("mousemove", "parcels-fill", onParcelMouseMove);
@@ -543,6 +575,7 @@ export function MapCanvas({
       const maxY = Math.max(start.y, e.point.y);
       if (Math.abs(maxX - minX) < 8 || Math.abs(maxY - minY) < 8) return;
       const features = map.queryRenderedFeatures([[minX, minY], [maxX, maxY]], { layers: ["parcels-fill"] });
+      setSelectedArea(null);
       const ids = Array.from(new Set(features.map((feature) => {
         const parcel = feature.id == null ? null : getParcelByMapId(feature.id);
         return parcel?.properties.id;
@@ -853,6 +886,18 @@ export function MapCanvas({
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    const apply = () => {
+      ensureSelectedAreaLayers(map);
+      const source = map.getSource(SELECTED_AREA_SOURCE) as maplibregl.GeoJSONSource | undefined;
+      source?.setData(selectedArea ? { type: "FeatureCollection", features: [selectedArea.feature] } : emptySelectedAreaCollection());
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [selectedArea]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduce) return;
     let frame = 0;
@@ -885,13 +930,25 @@ export function MapCanvas({
     const map = mapRef.current;
     if (!map || !flyTarget) return;
     const padding = window.innerWidth >= 1280 ? { top: 40, bottom: 40, left: 320, right: 440 } : { top: 40, bottom: 40, left: 24, right: 24 };
+    const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700;
+    if (flyTarget.bounds) {
+      map.fitBounds([[flyTarget.bounds.west, flyTarget.bounds.south], [flyTarget.bounds.east, flyTarget.bounds.north]], {
+        padding,
+        duration,
+        maxZoom: flyTarget.zoom ?? Math.max(map.getZoom(), 14),
+        bearing: flyTarget.bearing,
+        pitch: flyTarget.pitch,
+        essential: true
+      });
+      return;
+    }
     map.flyTo({
       center: flyTarget.center,
       zoom: flyTarget.zoom ?? Math.max(map.getZoom(), 14),
       bearing: flyTarget.bearing,
       pitch: flyTarget.pitch,
       padding,
-      duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700,
+      duration,
       essential: true
     });
   }, [flyTarget]);
@@ -1094,6 +1151,21 @@ function registerParcelLayers(map: Map) {
   }
 }
 
+function ensureSelectedAreaLayers(map: Map) {
+  if (!map.getSource(SELECTED_AREA_SOURCE)) {
+    map.addSource(SELECTED_AREA_SOURCE, {
+      type: "geojson",
+      data: emptySelectedAreaCollection()
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("selected-area-fill")) {
+    map.addLayer(buildSelectedAreaFillLayer("selected-area-fill"), beforeId);
+  }
+  if (!map.getLayer("selected-area-line")) {
+    map.addLayer(buildSelectedAreaLineLayer("selected-area-line"), beforeId);
+  }
+}
 
 function ensureSelectedPointLayer(map: Map) {
   if (!map.getSource(SELECTED_POINT_SOURCE)) {

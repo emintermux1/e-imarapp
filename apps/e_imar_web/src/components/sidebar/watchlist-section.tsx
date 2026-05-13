@@ -16,6 +16,7 @@ export function WatchlistSection() {
   const toggleAlertIntent = useWatchlistStore((s) => s.toggleAlertIntent);
   const flyTo = useMapStore((s) => s.flyTo);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
 
   if (items.length === 0) {
@@ -62,6 +63,7 @@ export function WatchlistSection() {
                 zoningType: item.zoningType as never
               }}
               onClick={() => {
+                setSelectedArea(null);
                 flyTo({ center: item.centroid, zoom: 16, parcelId: item.id });
                 setSelectedParcelId(item.id);
                 setRightPanelOpen(true);

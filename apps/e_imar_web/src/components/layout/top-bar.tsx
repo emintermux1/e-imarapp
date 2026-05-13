@@ -59,6 +59,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
   const okSources = healthRollup?.ok ?? 0;
   const totalSources = healthQuery.data?.ok ? healthQuery.data.data.total : 0;
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedArea = useMapStore((s) => s.setSelectedArea);
   const latestRegionsRefresh = useLatestRegionsStore((s) => s.refresh);
   const latestRegionsStatus = useLatestRegionsStore((s) => s.status);
   const latestRegionsCount = useLatestRegionsStore((s) => s.total);
@@ -72,6 +73,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
   function focusNearestAski() {
     const next = ASKI_POLYGONS.find((p) => p.durum === "askida");
     if (!next) return;
+    setSelectedArea(null);
     flyTo({ center: midRing(next.ring), zoom: 14 });
   }
 
@@ -170,6 +172,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
             <button
               type="button"
               onClick={() => {
+                setSelectedArea(null);
                 setSelectedParcelId(null);
                 setRightPanelOpen(true);
                 setLatestRegionsPanelOpen(true);
@@ -244,6 +247,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
             <button
               type="button"
               onClick={() => {
+                setSelectedArea(null);
                 setSelectedParcelId(null);
                 setRightPanelOpen(true);
                 setLatestRegionsPanelOpen(true);

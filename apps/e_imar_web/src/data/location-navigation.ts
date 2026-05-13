@@ -2,6 +2,7 @@ import { adaParselText } from "@/lib/format";
 import type { ParcelFeature } from "@/types/parcel";
 import type { FlyTarget } from "@/stores/map-store";
 import { DEMO_PARCEL_CLUSTERS, type ParcelClusterSeed } from "./parcel-seeds";
+import { getLocationBoundary, type LocationBounds } from "./location-boundaries";
 import { slugify, getAllParcels } from "./parcels";
 
 export type LocationLevel = "il" | "ilce" | "mahalle" | "parcel";
@@ -12,6 +13,7 @@ export interface LocationTarget {
   center: [number, number];
   zoom: number;
   kind: LocationTargetKind;
+  bounds?: LocationBounds;
   il?: string;
   ilce?: string;
   mahalle?: string;
@@ -114,7 +116,7 @@ export function buildFlyTargetFromLocationTarget(
   return {
     center: target.center,
     zoom: options.zoom ?? target.zoom,
-    bounds: options.bounds,
+    bounds: options.bounds ?? target.bounds,
     parcelId: options.parcelId ?? target.parcelId
   };
 }
@@ -190,11 +192,13 @@ function targetFromGroup(
   zoom: number
 ): LocationTarget | undefined {
   if (!group || group.clusters.length === 0) return undefined;
+  const boundary = getLocationBoundary({ il: group.il, ilce: group.ilce, mahalle: group.mahalle });
   return {
     label: group.label,
     center: averageCenters(group.clusters.map((c) => c.center)),
     zoom,
     kind,
+    bounds: boundary?.bounds,
     il: group.il,
     ilce: group.ilce,
     mahalle: group.mahalle
@@ -265,11 +269,13 @@ function collapseFallback<T extends { label: string; center: [number, number]; i
   const out = new Map<string, LocationTarget>();
   for (const [key, items] of map.entries()) {
     const first = items[0];
+    const boundary = getLocationBoundary({ il: first.il, ilce: first.ilce, mahalle: first.mahalle });
     out.set(key, {
       label: first.label,
       center: averageCenters(items.map((item) => item.center)),
       zoom: kind === "il" ? cityZoom(first.il ?? first.label) : zoom,
       kind,
+      bounds: boundary?.bounds,
       il: first.il,
       ilce: first.ilce,
       mahalle: first.mahalle
