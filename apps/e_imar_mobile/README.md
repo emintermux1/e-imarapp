@@ -72,3 +72,14 @@ flutter build bundle --debug
 
 Android and iOS platform scaffolds are generated under `android/` and `ios/`.
 `flutter build apk --debug` additionally requires Android SDK/`ANDROID_HOME` on the build machine.
+
+## CI
+
+`.github/workflows/mobile-flutter.yml` runs on mobile PRs and `main` pushes:
+
+- `flutter pub get`
+- `flutter analyze`
+- `flutter test`
+- `flutter build bundle --debug`
+
+This keeps the mobile shell compile-safe even before store-signing and native release pipelines are added.

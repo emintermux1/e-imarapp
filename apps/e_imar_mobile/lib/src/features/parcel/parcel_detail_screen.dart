@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/router.dart';
 import '../../core/widgets/empty_state_card.dart';
@@ -6,22 +7,48 @@ import '../../core/widgets/premium_card.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_pill.dart';
 import '../map/domain/parcel.dart';
+import '../watchlist/watchlist_store.dart';
 
-class ParcelDetailScreen extends StatelessWidget {
+class ParcelDetailScreen extends ConsumerWidget {
   const ParcelDetailScreen({super.key, this.parcel});
 
   final ParcelDetail? parcel;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final data = parcel;
+    final isWatchlisted = data != null &&
+        ref.watch(watchlistProvider).any((item) {
+          final expected =
+              'parcel:${data.city}:${data.district}:${data.neighborhood}:${data.block}:${data.parcel}'
+                  .toLowerCase();
+          return item.id == expected;
+        });
     return Scaffold(
       appBar: AppBar(
         title: const Text('Parsel Detayı'),
         actions: [
           IconButton(
-              onPressed: () {}, icon: const Icon(Icons.bookmark_add_rounded)),
+            tooltip: isWatchlisted ? 'Takipten çıkar' : 'Takibe ekle',
+            onPressed: data == null
+                ? null
+                : () {
+                    ref.read(watchlistProvider.notifier).toggleParcel(data);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isWatchlisted
+                              ? 'Parsel takipten çıkarıldı'
+                              : 'Parsel yerel takip listesine eklendi',
+                        ),
+                      ),
+                    );
+                  },
+            icon: Icon(isWatchlisted
+                ? Icons.bookmark_added_rounded
+                : Icons.bookmark_add_rounded),
+          ),
         ],
       ),
       body: SafeArea(
