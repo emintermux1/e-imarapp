@@ -6,6 +6,26 @@ import { getBackendWatchlist } from "@/lib/api/backend-client";
 import type { MarketProviderId } from "@/types/api";
 import type { AskiAlertIntent, ProvenanceKind } from "../lib/aski-tracking";
 
+const noopStorage: Storage = {
+  getItem: () => null,
+  setItem: () => undefined,
+  removeItem: () => undefined,
+  clear: () => undefined,
+  key: () => null,
+  get length() {
+    return 0;
+  }
+};
+
+function resolveStorage() {
+  if (typeof window === "undefined") return noopStorage;
+  try {
+    return window.localStorage;
+  } catch {
+    return noopStorage;
+  }
+}
+
 export interface WatchlistEntry {
   id: string;
   ada: string;
@@ -126,7 +146,7 @@ export const useWatchlistStore = create<WatchlistState>()(
     {
       name: "eimar:watchlist",
       version: 3,
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(resolveStorage),
       migrate: (persistedState) => normalizePersistedState(persistedState),
       merge: (persistedState, currentState) => ({
         ...currentState,
