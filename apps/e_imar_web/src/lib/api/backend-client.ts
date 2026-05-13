@@ -184,7 +184,7 @@ export function refreshMunicipalityGisEndpoints(slug: string) {
 }
 
 export function getLiveMapLayers() {
-  return apiFetch<BackendMapLayerResponse[]>("/map/live-layers");
+  return apiFetch<{ layers?: BackendMapLayerResponse[] } | BackendMapLayerResponse[]>("/map/live-layers");
 }
 
 export function getBackendPlans() {

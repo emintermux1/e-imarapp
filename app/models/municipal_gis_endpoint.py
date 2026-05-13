@@ -15,8 +15,8 @@ class MunicipalGISEndpoint(Base):
     __table_args__ = (UniqueConstraint("source_id", "base_url", name="municipal_gis_endpoints_source_base_url_key"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    source_id: Mapped[str] = mapped_column(ForeignKey("data_sources.id", ondelete="CASCADE"), Text, nullable=False, index=True)
-    municipality_id: Mapped[int | None] = mapped_column(ForeignKey("municipalities.id", ondelete="SET NULL"), Integer, nullable=True, index=True)
+    source_id: Mapped[str] = mapped_column(Text, ForeignKey("data_sources.id", ondelete="CASCADE"), nullable=False, index=True)
+    municipality_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("municipalities.id", ondelete="SET NULL"), nullable=True, index=True)
     base_url: Mapped[str] = mapped_column(Text, nullable=False, index=True)
     wms_url: Mapped[str] = mapped_column(Text, nullable=False)
     wms_get_capabilities_url: Mapped[str] = mapped_column(Text, nullable=False)

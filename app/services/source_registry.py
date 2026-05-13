@@ -100,6 +100,21 @@ SOURCE_REGISTRY: List[SourceRecord] = [
     _m("kecioren-kbs", "Keçiören KBS", "municipal_webgis", "Ankara", "Keçiören", "kecioren", "https://kbs.kecioren.bel.tr/", "https://kbs.kecioren.bel.tr", [32.866, 40.000]),
     _m("gelibolu-keos-imar", "Gelibolu KEOS İmar Durumu", "municipal_keos", "Çanakkale", "Gelibolu", "gelibolu", "https://keos.gelibolu.bel.tr/imardurumu/", "https://keos.gelibolu.bel.tr", [26.670, 40.410]),
     _m("caycuma-keos", "Çaycuma KEOS", "municipal_keos", "Zonguldak", "Çaycuma", "caycuma", "https://keos.caycuma.bel.tr/", "https://keos.caycuma.bel.tr", [32.075, 41.427]),
+    _m("besiktas-keos-imar", "Beşiktaş KEOS İmar Durumu", "municipal_keos", "İstanbul", "Beşiktaş", "besiktas", "https://keos.besiktas.bel.tr/imardurumu/", "https://keos.besiktas.bel.tr", [29.007, 41.043]),
+    _m("bakirkoy-keos-imar", "Bakırköy KEOS İmar Durumu", "municipal_keos", "İstanbul", "Bakırköy", "bakirkoy", "https://keos.bakirkoy.bel.tr/imardurumu/", "https://keos.bakirkoy.bel.tr", [28.871, 40.981]),
+    _m("kadikoy-webgis-imar", "Kadıköy WebGIS İmar Durumu", "municipal_webgis", "İstanbul", "Kadıköy", "kadikoy", "https://webgis.kadikoy.bel.tr/imardurumu/", "https://webgis.kadikoy.bel.tr", [29.027, 40.991]),
+    _m("gaziosmanpasa-keos", "Gaziosmanpaşa KEOS", "municipal_keos", "İstanbul", "Gaziosmanpaşa", "gaziosmanpasa", "https://keos.gaziosmanpasa.bel.tr/keos/", "https://keos.gaziosmanpasa.bel.tr", [28.913, 41.058]),
+    _m("bodrum-keos-imar", "Bodrum KEOS İmar Durumu", "municipal_keos", "Muğla", "Bodrum", "bodrum", "https://keos.bodrum.bel.tr/imardurumu/", "https://keos.bodrum.bel.tr", [27.430, 37.034]),
+    _m("karsiyaka-keos-imar", "Karşıyaka KEOS İmar Durumu", "municipal_keos", "İzmir", "Karşıyaka", "karsiyaka", "https://keos.karsiyaka.bel.tr/imardurumu/index.aspx", "https://keos.karsiyaka.bel.tr", [27.112, 38.459]),
+    _m("nilufer-webgis-imar", "Nilüfer WebGIS İmar Durumu", "municipal_webgis", "Bursa", "Nilüfer", "nilufer", "https://webgis.nilufer.bel.tr/imardurumu/", "https://webgis.nilufer.bel.tr", [28.987, 40.214]),
+    _m("bandirma-keos-imar", "Bandırma KEOS İmar Durumu", "municipal_keos", "Balıkesir", "Bandırma", "bandirma", "https://keos.bandirma.bel.tr/imardurumu/", "https://keos.bandirma.bel.tr", [27.976, 40.353]),
+    _m("seyhan-keos-imar", "Seyhan İmar Portalı", "municipal_keos", "Adana", "Seyhan", "seyhan", "https://keos.seyhan.bel.tr/imardurumu/", "https://keos.seyhan.bel.tr", [35.306, 36.991]),
+    _m("dosemealti-keos-imar", "Döşemealtı İmar Portalı", "municipal_keos", "Antalya", "Döşemealtı", "dosemealti", "https://keos.dosemealti.bel.tr/imardurumu/", "https://keos.dosemealti.bel.tr", [30.602, 37.022]),
+    _m("eregli-webgis-imar", "Karadeniz Ereğli WebGIS İmar Durumu", "municipal_webgis", "Zonguldak", "Karadeniz Ereğli", "eregli", "https://webgis.kdzeregli.bel.tr/imardurumu/", "https://webgis.kdzeregli.bel.tr", [31.419, 41.282]),
+    _m("cukurova-webgis-imar", "Çukurova WebGIS İmar Durumu", "municipal_webgis", "Adana", "Çukurova", "cukurova", "https://webgis.cukurova.bel.tr/imardurumu/", "https://webgis.cukurova.bel.tr", [35.257, 37.057]),
+    _m("inegol-imar", "İnegöl İmar Durumu", "municipal_webgis", "Bursa", "İnegöl", "inegol", "https://imar.inegol.bel.tr/", "https://imar.inegol.bel.tr", [29.513, 40.080]),
+    _m("odemis-imar", "Ödemiş İmar Uygulaması", "municipal_webgis", "İzmir", "Ödemiş", "odemis", "https://imar.odemis.bel.tr/", "https://imar.odemis.bel.tr", [27.970, 38.228]),
+    _m("orhangazi-imar", "Orhangazi İmar Uygulaması", "municipal_webgis", "Bursa", "Orhangazi", "orhangazi", "https://imar.orhangazi.bel.tr/", "https://imar.orhangazi.bel.tr", [29.308, 40.489]),
     SourceRecord("tkgm-parsel-sorgu", "TKGM Parsel Sorgu", "national_parcel", None, None, "tkgm", "https://parselsorgu.tkgm.gov.tr/", "https://parselsorgu.tkgm.gov.tr", notes="Resmi parsel sorgu portalı; servis kullanımı yasal/kurumsal izinlere tabi olabilir.", requires_approval=True, center=[35.243, 38.963]),
     SourceRecord("tkgm-data-sharing-docs", "TKGM Veri Paylaşımı Usul ve Esasları", "registry", None, None, "tkgm-veri-paylasimi", "https://www.tkgm.gov.tr/mevzuat/tapu-ve-kadastro-verilerinin-paylasilmasina-iliskin-usul-ve-esaslar", "https://www.tkgm.gov.tr", requires_approval=True, center=[35.243, 38.963]),
     SourceRecord("eplan-csb", "e-Plan ÇŞB", "national_plan", None, None, "eplan-csb", "https://eplan.csb.gov.tr/", "https://eplan.csb.gov.tr", requires_approval=True, center=[35.243, 38.963]),
@@ -147,6 +162,8 @@ def live_layer_candidates(discovery_by_source: Optional[Dict[str, Dict[str, Any]
         discovery = discovery_by_source.get(source.id) or {}
         endpoints = discovery.get("endpoints") or discovery.get("live_endpoints") or []
         selected = [e for e in endpoints if isinstance(e, dict) and e.get("url")]
+        if not selected and source.candidate_endpoints:
+            selected = [{"url": url, "status": "candidate", "type": endpoint_type(url, source.kind)} for url in source.candidate_endpoints[:6]]
         if not selected:
             selected = [{"url": source.homepage_url, "status": "external_only", "type": "external_link"}]
         for index, endpoint in enumerate(selected[:6]):
@@ -170,5 +187,7 @@ def live_layer_candidates(discovery_by_source: Optional[Dict[str, Dict[str, Any]
                 "kind": source.kind,
                 "requires_approval": source.requires_approval,
                 "requires_credentials": source.requires_credentials,
+                "candidate_endpoint_count": len(source.candidate_endpoints),
+                "candidate_endpoint_types": sorted({endpoint_type(candidate, source.kind) for candidate in source.candidate_endpoints}),
             })
     return layers
