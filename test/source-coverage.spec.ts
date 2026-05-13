@@ -172,7 +172,8 @@ describe('website bootstrap source coverage', () => {
       {} as any,
       map as any,
       ingestion as any,
-      sources
+      sources,
+      {} as any
     );
 
     const bootstrap = (await service.bootstrap()) as { sourceCoverage?: { totalSources: number; publicCandidateCount: number }; websiteCapabilities?: { municipalParcelWorkflow: boolean } };

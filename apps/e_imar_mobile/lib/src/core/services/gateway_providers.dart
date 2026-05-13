@@ -7,7 +7,7 @@ final gatewayHealthProvider = FutureProvider<GatewayHealth>((ref) {
   return ref.watch(gatewayApiProvider).health();
 });
 
-final gatewayProvidersProvider = FutureProvider<List<ProviderDescriptor>>((ref) {
+final gatewayProvidersProvider =
+    FutureProvider<List<ProviderDescriptor>>((ref) {
   return ref.watch(gatewayApiProvider).providers();
 });
-

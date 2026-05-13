@@ -68,7 +68,7 @@ class _RateLimiter {
   }
 }
 
-Future<GisFeatureCollection> _parseGeoJsonMainThread(String rawJson) {
+Future<GisFeatureCollection> _parseGeoJsonMainThread(String rawJson) async {
   try {
     final decoded = jsonDecode(rawJson) as Map<String, dynamic>;
     final type = decoded['type'] as String? ?? '';
@@ -170,9 +170,9 @@ class _GisHttpResponse {
 
 class LiveGisLayerRepository implements GisLayerRepository {
   LiveGisLayerRepository({required Dio dio, GisCacheService? cache})
-    : _dio = dio,
-      _cache = cache,
-      _rateLimiter = _RateLimiter();
+      : _dio = dio,
+        _cache = cache,
+        _rateLimiter = _RateLimiter();
 
   final Dio _dio;
   final GisCacheService? _cache;
@@ -198,7 +198,7 @@ class LiveGisLayerRepository implements GisLayerRepository {
       final cacheKey = buildCacheKey(layer, query);
 
       if (_cache != null) {
-        final cached = await _cache!.get(cacheKey);
+        final cached = await _cache.get(cacheKey);
         if (cached != null) return cached;
       }
 
@@ -222,8 +222,7 @@ class LiveGisLayerRepository implements GisLayerRepository {
       }
 
       final body = response.body!;
-      final isJsonResponse =
-          response.isJson ||
+      final isJsonResponse = response.isJson ||
           body.trim().startsWith('{') ||
           body.trim().startsWith('[');
 
@@ -246,7 +245,7 @@ class LiveGisLayerRepository implements GisLayerRepository {
 
       if (_cache != null && !collection.hasError) {
         final ttl = layer.cacheTtl;
-        await _cache!.put(cacheKey, collection, ttl);
+        await _cache.put(cacheKey, collection, ttl);
       }
 
       return collection;

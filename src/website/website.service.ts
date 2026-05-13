@@ -7,6 +7,8 @@ import { provenanceRecord } from '../common/provenance';
 import { EplanService } from '../eplan/eplan.service';
 import { IngestionService } from '../ingestion/ingestion.service';
 import { MapService } from '../map/map.service';
+import { MarketService } from '../market/market.service';
+import type { ParcelMarketContext } from '../market/market.types';
 import { ParcelQueryDto } from '../parcels/dto/parcel-query.dto';
 import { ParcelsService } from '../parcels/parcels.service';
 import { SourcesService } from '../sources/sources.service';
@@ -42,7 +44,8 @@ export class WebsiteService {
     private readonly eplan: EplanService,
     private readonly map: MapService,
     private readonly ingestion: IngestionService,
-    private readonly sources: SourcesService
+    private readonly sources: SourcesService,
+    private readonly market: MarketService
   ) {}
 
   architecture() {
@@ -69,6 +72,11 @@ export class WebsiteService {
           module: 'parcel-workflow',
           endpoints: ['/website/bff/parcel-workflow', '/website/bff/municipal-parcel-workflow', '/website/bff/parcel-report', '/website/bff/plan-note-explain'],
           purpose: 'Aggregate multiple domain services into single website-friendly responses.'
+        },
+        {
+          module: 'market-cockpit',
+          endpoints: ['/website/bff/parcel-market'],
+          purpose: 'Return truthful parcel-scoped marketplace readiness, listings, and analysis placeholders.'
         },
         {
           module: 'workspace',
@@ -102,13 +110,18 @@ export class WebsiteService {
         parcelReport: true,
         planNoteExplain: true,
         watchlistNotifications: true,
-        emsalShareCalculator: true
+        emsalShareCalculator: true,
+        marketCockpit: true
       },
       map: { tileStatus, providers },
       ingestionRequirements: requirements,
       sourceCoverage,
       workspace
     };
+  }
+
+  async parcelMarket(input: { query: ParcelMarketContext }): Promise<unknown> {
+    return this.market.inspectParcelMarket(input.query);
   }
 
   startSession(input: { userReference: string; roles?: string[]; expiresInHours?: number }): unknown {

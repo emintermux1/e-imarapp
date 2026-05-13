@@ -11,17 +11,16 @@ final gatewayApiProvider = Provider<GatewayApi>((ref) {
 
 class GatewayApi {
   GatewayApi({required AppConfig config, Dio? dio})
-    : _config = config,
-      _dio =
-          dio ??
-          Dio(
-            BaseOptions(
-              baseUrl: config.gatewayBaseUrl,
-              connectTimeout: const Duration(seconds: 8),
-              receiveTimeout: const Duration(seconds: 14),
-              validateStatus: (_) => true,
-            ),
-          );
+      : _config = config,
+        _dio = dio ??
+            Dio(
+              BaseOptions(
+                baseUrl: config.gatewayBaseUrl,
+                connectTimeout: const Duration(seconds: 8),
+                receiveTimeout: const Duration(seconds: 14),
+                validateStatus: (_) => true,
+              ),
+            );
 
   final AppConfig _config;
   final Dio _dio;
@@ -92,8 +91,7 @@ class GatewayApi {
     if (envelope.isError) {
       return ParcelLookupResult.unavailable(
         title: 'Parsel geometrisi kısıtlı kaynakta',
-        message:
-            envelope.error?.message ??
+        message: envelope.error?.message ??
             'Bu sorgu sağlayıcı tarafından kullanılamıyor.',
         providerId: envelope.error?.providerId,
         code: envelope.error?.code,
@@ -158,8 +156,7 @@ class GatewayApi {
 
     return ParcelLookupResult.unavailable(
       title: 'Konumdan parsel bulunamadı',
-      message:
-          planEnvelope.error?.message ??
+      message: planEnvelope.error?.message ??
           parcelEnvelope.error?.message ??
           'Bu koordinat için canlı kamu plan katmanı kullanılamıyor.',
       providerId:
@@ -187,25 +184,23 @@ class GatewayApi {
   }) {
     final rawPlans = envelope.data['plans'];
     final plans = rawPlans is List
-        ? rawPlans
-              .whereType<Map>()
-              .map((item) {
-                final json = item.cast<String, Object?>();
-                final attributes = (json['attributes'] is Map)
-                    ? (json['attributes'] as Map).cast<String, Object?>()
-                    : <String, Object?>{};
-                final layerName = '${json['layerName'] ?? json['layer'] ?? ''}'
-                    .trim();
-                return PlanFeature(
-                  title: layerName.isEmpty ? 'Plan katmanı' : layerName,
-                  summary: _summarizeAttributes(attributes),
-                  layerName: layerName.isEmpty ? null : layerName,
-                  attributes: attributes,
-                );
-              })
-              .toList(growable: false)
+        ? rawPlans.whereType<Map>().map((item) {
+            final json = item.cast<String, Object?>();
+            final attributes = (json['attributes'] is Map)
+                ? (json['attributes'] as Map).cast<String, Object?>()
+                : <String, Object?>{};
+            final layerName =
+                '${json['layerName'] ?? json['layer'] ?? ''}'.trim();
+            return PlanFeature(
+              title: layerName.isEmpty ? 'Plan katmanı' : layerName,
+              summary: _summarizeAttributes(attributes),
+              layerName: layerName.isEmpty ? null : layerName,
+              attributes: attributes,
+            );
+          }).toList(growable: false)
         : const <PlanFeature>[];
-    final primaryAttributes = plans.isNotEmpty ? plans.first.attributes : const <String, Object?>{};
+    final primaryAttributes =
+        plans.isNotEmpty ? plans.first.attributes : const <String, Object?>{};
     final area = readFirstDouble(primaryAttributes, const [
       'area',
       'parcelArea',
@@ -220,27 +215,28 @@ class GatewayApi {
       'maxHeight',
     ]);
     final floorLimit = readFirstInt(primaryAttributes, const [
-      'kat',
-      'katSayisi',
-      'floorLimit',
-      'maxFloors',
-    ]) ??
+          'kat',
+          'katSayisi',
+          'floorLimit',
+          'maxFloors',
+        ]) ??
         0;
-    final taks = readFirstDouble(primaryAttributes, const ['taks', 'TAKS']) ?? 0;
-    final kaks = readFirstDouble(primaryAttributes, const ['kaks', 'KAKS', 'emsal']) ?? 0;
+    final taks =
+        readFirstDouble(primaryAttributes, const ['taks', 'TAKS']) ?? 0;
+    final kaks =
+        readFirstDouble(primaryAttributes, const ['kaks', 'KAKS', 'emsal']) ??
+            0;
     final primaryProvider = providers.cast<ProviderDescriptor?>().firstWhere(
-      (provider) => provider?.kind == 'public_municipal_gis',
-      orElse: () => providers.isNotEmpty ? providers.first : null,
-    );
-    final sourceName =
-        primaryProvider?.displayName ??
+          (provider) => provider?.kind == 'public_municipal_gis',
+          orElse: () => providers.isNotEmpty ? providers.first : null,
+        );
+    final sourceName = primaryProvider?.displayName ??
         (envelope.attribution.isNotEmpty
             ? envelope.attribution.first.name
             : 'E-İmar veri geçidi');
     final cityLabel = city == 'Konum' || city.trim().isEmpty ? 'Türkiye' : city;
-    final restrictedMessage = parcelEnvelope.isError
-        ? parcelEnvelope.error?.message
-        : null;
+    final restrictedMessage =
+        parcelEnvelope.isError ? parcelEnvelope.error?.message : null;
 
     return ParcelDetail(
       city: _titleCaseTr(cityLabel),
@@ -254,7 +250,9 @@ class GatewayApi {
           : 'Kamu plan katmanı bulundu',
       taks: taks,
       kaks: kaks,
-      emsal: readFirstDouble(primaryAttributes, const ['emsal', 'emsalOrani']) ?? kaks,
+      emsal:
+          readFirstDouble(primaryAttributes, const ['emsal', 'emsalOrani']) ??
+              kaks,
       floorLimit: floorLimit,
       coverageRatio: 'Bilinmiyor',
       roadFrontage: 0,
@@ -265,8 +263,7 @@ class GatewayApi {
       providerId: primaryProvider?.id,
       providerStatus: primaryProvider?.status ?? 'metadata_only',
       providerCapabilities: primaryProvider?.capabilities ?? const [],
-      attributionUrl:
-          primaryProvider?.attribution.url ??
+      attributionUrl: primaryProvider?.attribution.url ??
           (envelope.attribution.isNotEmpty
               ? envelope.attribution.first.url
               : null),
@@ -296,12 +293,12 @@ class GatewayApi {
           : null,
       attribution: body['attribution'] is List
           ? (body['attribution'] as List)
-                .whereType<Map>()
-                .map(
-                  (item) =>
-                      SourceAttribution.fromJson(item.cast<String, Object?>()),
-                )
-                .toList(growable: false)
+              .whereType<Map>()
+              .map(
+                (item) =>
+                    SourceAttribution.fromJson(item.cast<String, Object?>()),
+              )
+              .toList(growable: false)
           : const [],
     );
   }
@@ -310,8 +307,8 @@ class GatewayApi {
 class GatewayHealth {
   const GatewayHealth({required this.status, required this.turkeyOnly});
   const GatewayHealth.unconfigured()
-    : status = 'not_configured',
-      turkeyOnly = true;
+      : status = 'not_configured',
+        turkeyOnly = true;
   final String status;
   final bool turkeyOnly;
 }
@@ -341,10 +338,10 @@ class GatewayError {
   });
 
   factory GatewayError.fromJson(Map<String, Object?> json) => GatewayError(
-    code: '${json['code'] ?? 'provider_error'}',
-    message: '${json['message'] ?? 'Sağlayıcı yanıtı alınamadı.'}',
-    providerId: json['providerId'] as String?,
-  );
+        code: '${json['code'] ?? 'provider_error'}',
+        message: '${json['message'] ?? 'Sağlayıcı yanıtı alınamadı.'}',
+        providerId: json['providerId'] as String?,
+      );
 
   final String code;
   final String message;

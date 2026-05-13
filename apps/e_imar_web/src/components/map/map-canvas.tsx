@@ -22,6 +22,7 @@ import { PROVINCES } from "@/data/provinces";
 import { getStyleForBasemap, type BasemapId } from "@/lib/maplibre/styles";
 import {
   PARCEL_SOURCE,
+  SELECTED_POINT_SOURCE,
   ASKI_SOURCE,
   RISK_GRID_SOURCE,
   LIVE_SOURCE_REGISTRY_SOURCE,
@@ -35,6 +36,8 @@ import {
   buildParcelSelectedPulseLayer,
   buildParcelHoverHaloLayer,
   buildParcelHoverDotLayer,
+  buildSelectedPointHaloLayer,
+  buildSelectedPointCoreLayer,
   buildDrawingLineLayer,
   buildDrawingPolygonLayer,
   buildDrawingPolygonOutlineLayer,
@@ -64,6 +67,7 @@ import { useSourceStore } from "@/stores/source-store";
 import { useLatestRegionsStore } from "@/stores/latest-regions-store";
 import { parseBackendParcelId } from "@/lib/api/parcel-normalizer";
 import { geoJsonBounds, geoJsonCentroid, toFeatureCollection } from "@/lib/geojson";
+import { findNearestParcel } from "@/lib/analysis/selected-place-analysis";
 import { drawingFeatureCollection, useDrawingStore } from "@/stores/drawing-store";
 import { getParcelSourceMetadata } from "@/data/parcels";
 
@@ -71,6 +75,7 @@ const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
 const BACKEND_SELECTED_SOURCE = "backend-selected-parcel";
 const LIVE_PLAN_REGIONS_SOURCE = "live-plan-regions";
+const EMPTY_FEATURE_COLLECTION: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 
 interface MapCanvasProps {
   className?: string;
@@ -113,12 +118,14 @@ export function MapCanvas({
   const basemap = useMapStore((s) => s.basemap);
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
   const multiSelectedParcelIds = useMapStore((s) => s.multiSelectedParcelIds);
+  const selectedPoint = useMapStore((s) => s.selectedPoint);
   const selectedBackendFeature = useBackendParcelStore((s) => s.getFeature(selectedParcelId));
   const liveLayers = useSourceStore((s) => s.liveLayers);
   const loadLiveLayers = useSourceStore((s) => s.loadLiveLayers);
   const selectedLatestRegion = useLatestRegionsStore((s) => s.selectedRegion);
   const flyTarget = useMapStore((s) => s.flyTarget);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedPoint = useMapStore((s) => s.setSelectedPoint);
   const toggleMultiSelectedParcelId = useMapStore((s) => s.toggleMultiSelectedParcelId);
   const addMultiSelectedParcelIds = useMapStore((s) => s.addMultiSelectedParcelIds);
   const setHoveredParcelId = useMapStore((s) => s.setHoveredParcelId);
@@ -270,7 +277,9 @@ export function MapCanvas({
         minZoom: 3,
         hash: false,
         fadeDuration: 200,
-        preserveDrawingBuffer: true
+        preserveDrawingBuffer: true,
+        antialias: true,
+        refreshExpiredTiles: false
       });
     } catch (err) {
       const message =
@@ -324,6 +333,7 @@ export function MapCanvas({
       }
       ensureLiveSourceLayers(map);
       ensureBackendSelectedLayer(map);
+      ensureSelectedPointLayer(map);
       ensureLatestRegionsLayer(map);
       ensureDrawingLayers(map);
       applyLocationLabelTheme(map, basemap);
@@ -348,6 +358,7 @@ export function MapCanvas({
       }
       ensureLiveSourceLayers(map);
       ensureBackendSelectedLayer(map);
+      ensureSelectedPointLayer(map);
       ensureLatestRegionsLayer(map);
       ensureDrawingLayers(map);
       applyLocationLabelTheme(map, basemap);
@@ -451,6 +462,7 @@ export function MapCanvas({
         return;
       }
       setSelectedParcelId(parcel.properties.id);
+      setSelectedPoint(null);
       setRightPanelOpen(true);
       if (parcel.properties.centroid) {
         const [lng, lat] = parcel.properties.centroid;
@@ -487,6 +499,7 @@ export function MapCanvas({
       const target = findBestLocationTarget({ il: props.il, ilce: props.ilce, mahalle: props.mahalle });
       if (!target) return;
       setSelectedParcelId(null);
+      setSelectedPoint(null);
       setRightPanelOpen(false);
       const { center, zoom, bearing, pitch } = buildFlyTargetFromLocationTarget(target, { zoom: props.zoom });
       map.flyTo({
@@ -539,6 +552,40 @@ export function MapCanvas({
       }).filter(Boolean) as string[]));
       addMultiSelectedParcelIds(ids, 250);
     };
+
+    const onMapClick = (e: MapMouseEvent) => {
+      if (e.originalEvent.shiftKey || activeDrawingToolRef.current !== "idle") return;
+      const interactiveFeatures = map.queryRenderedFeatures(e.point, {
+        layers: [
+          "parcels-fill",
+          "askida-overlay-fill",
+          "askida-overlay-line",
+          "askida-overlay-hatched",
+          "live-source-markers",
+          "location-label-city",
+          "location-label-district",
+          "location-label-neighborhood",
+          "municipality-coverage-circles",
+          "municipality-coverage-labels",
+          "belediye-sinirlari",
+          "drawings-line",
+          "drawings-polygon",
+          "drawings-polygon-outline",
+          "drawings-point",
+          "drawings-label"
+        ].filter((layerId) => Boolean(map.getLayer(layerId)))
+      });
+      if (interactiveFeatures.length > 0) return;
+      const nearby = findNearestParcel(e.lngLat.lng, e.lngLat.lat, 2500);
+      setSelectedPoint({
+        lng: e.lngLat.lng,
+        lat: e.lngLat.lat,
+        source: "map",
+        nearestParcelId: nearby?.parcel.id
+      });
+      setRightPanelOpen(true);
+    };
+    map.on("click", onMapClick);
     const onDrawingClick = (e: MapMouseEvent) => {
       if (activeDrawingToolRef.current === "idle") return;
       addDrawingPoint([e.lngLat.lng, e.lngLat.lat]);
@@ -657,6 +704,7 @@ export function MapCanvas({
       map.off("mousemove", "parcels-fill", onParcelMouseMove);
       map.off("mouseleave", "parcels-fill", onParcelMouseLeave);
       map.off("click", "parcels-fill", onParcelClick);
+      map.off("click", onMapClick);
       map.off("mousedown", onMapMouseDown);
       map.off("mousemove", onMapDragMove);
       map.off("mouseup", onMapMouseUp);
@@ -709,6 +757,20 @@ export function MapCanvas({
     if (map.isStyleLoaded()) apply();
     else map.once("load", apply);
   }, [selectedParcelId]);
+
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      ensureSelectedPointLayer(map);
+      const source = map.getSource(SELECTED_POINT_SOURCE) as maplibregl.GeoJSONSource | undefined;
+      source?.setData(buildSelectedPointFeatureCollection(selectedPoint));
+    };
+    if (map.getSource(SELECTED_POINT_SOURCE)) apply();
+    else if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [selectedPoint]);
 
   React.useEffect(() => {
     const map = mapRef.current;
@@ -1033,6 +1095,45 @@ function registerParcelLayers(map: Map) {
   if (!map.getLayer("parcels-label")) {
     map.addLayer(buildParcelLabelLayer("parcels-label"));
   }
+}
+
+
+function ensureSelectedPointLayer(map: Map) {
+  if (!map.getSource(SELECTED_POINT_SOURCE)) {
+    map.addSource(SELECTED_POINT_SOURCE, {
+      type: "geojson",
+      data: EMPTY_FEATURE_COLLECTION
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("selected-point-halo")) {
+    map.addLayer(buildSelectedPointHaloLayer("selected-point-halo"), beforeId);
+  }
+  if (!map.getLayer("selected-point-core")) {
+    map.addLayer(buildSelectedPointCoreLayer("selected-point-core"), beforeId);
+  }
+}
+
+function buildSelectedPointFeatureCollection(
+  point: { lng: number; lat: number; source: string; nearestParcelId?: string } | null
+): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  if (!point) return EMPTY_FEATURE_COLLECTION as GeoJSON.FeatureCollection<GeoJSON.Point>;
+  return {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        properties: {
+          source: point.source,
+          nearestParcelId: point.nearestParcelId ?? ""
+        },
+        geometry: {
+          type: "Point",
+          coordinates: [point.lng, point.lat]
+        }
+      }
+    ]
+  };
 }
 
 function ensureDrawingLayers(map: Map) {

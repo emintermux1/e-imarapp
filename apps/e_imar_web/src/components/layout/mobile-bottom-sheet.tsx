@@ -34,6 +34,9 @@ import { formatQualityTimestamp, geometryLabel, matchStatusLabel, reportEligibil
 import type { ParcelContextResponse, ParcelSummaryResponse } from "@/types/api";
 import { cn } from "@/lib/utils";
 import { getParcelSourceMetadata } from "@/data/parcels";
+import { getParcelMarket } from "@/lib/market-client";
+import { MarketPanel } from "@/components/market/market-panel";
+import type { ParcelMarketResponse } from "@/types/api";
 
 const SNAP_HEIGHTS = {
   peek: 96,
@@ -61,6 +64,7 @@ export function MobileBottomSheet() {
   const latestRegionsTotal = useLatestRegionsStore((s) => s.total);
   const latestRegionsGeometryCount = useLatestRegionsStore((s) => s.geometryCount);
   const refreshLatestRegions = useLatestRegionsStore((s) => s.refresh);
+  const [marketResponse, setMarketResponse] = React.useState<ParcelMarketResponse | null>(null);
 
   const [emsalOpen, setEmsalOpen] = React.useState(false);
   const [vh, setVh] = React.useState<number>(800);
@@ -100,6 +104,30 @@ export function MobileBottomSheet() {
       cancelled = true;
     };
   }, [parcel?.backendId]);
+
+  React.useEffect(() => {
+    let alive = true;
+    if (!parcel) {
+      setMarketResponse(null);
+      return;
+    }
+    void getParcelMarket({
+      parcelId: parcel.id,
+      il: parcel.il,
+      ilce: parcel.ilce,
+      mahalle: parcel.mahalle,
+      ada: parcel.ada,
+      parsel: parcel.parsel,
+      areaM2: parcel.yuzolcumuM2,
+      zoningType: parcel.zoningType,
+      centroid: parcel.centroid ?? null
+    }).then((response) => {
+      if (alive) setMarketResponse(response);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [parcel]);
 
   if (!open || !parcel) return null;
 
@@ -278,6 +306,17 @@ export function MobileBottomSheet() {
             <AccordionTrigger>Yatırım Skoru</AccordionTrigger>
             <AccordionContent>
               <SectionYatirimSkoru parcel={parcel} />
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="piyasa">
+            <AccordionTrigger>Market</AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-2">
+                <div className="rounded-md border border-border-subtle bg-surface-1/50 px-3 py-2 text-[11px] text-fg-secondary">
+                  Sağlayıcı hazır değilse boş/uygunsuz durumlar açık gösterilir.
+                </div>
+                <MarketPanel response={marketResponse} compact />
+              </div>
             </AccordionContent>
           </AccordionItem>
         </Accordion>

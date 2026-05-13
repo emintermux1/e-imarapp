@@ -3,7 +3,28 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { getBackendWatchlist } from "@/lib/api/backend-client";
+import type { MarketProviderId } from "@/types/api";
 import type { AskiAlertIntent, ProvenanceKind } from "../lib/aski-tracking";
+
+const noopStorage: Storage = {
+  getItem: () => null,
+  setItem: () => undefined,
+  removeItem: () => undefined,
+  clear: () => undefined,
+  key: () => null,
+  get length() {
+    return 0;
+  }
+};
+
+function resolveStorage() {
+  if (typeof window === "undefined") return noopStorage;
+  try {
+    return window.localStorage;
+  } catch {
+    return noopStorage;
+  }
+}
 
 export interface WatchlistEntry {
   id: string;
@@ -21,6 +42,18 @@ export interface WatchlistEntry {
   trackingMode: "local_only";
 }
 
+export interface ListingFavorite {
+  listingId: string;
+  providerId: string;
+  savedAt: string;
+}
+
+export interface MarketFiltersState {
+  providerIds: MarketProviderId[];
+  listingType: "all" | "sale" | "rent" | "lease";
+  sortBy: "freshness" | "price_low" | "price_high" | "match";
+}
+
 type WatchlistAddEntry = Omit<WatchlistEntry, "addedAt" | "alertIntents" | "trackingMode" | "provenance"> & {
   provenance?: ProvenanceKind;
   alertIntents?: AskiAlertIntent[];
@@ -29,6 +62,8 @@ type WatchlistAddEntry = Omit<WatchlistEntry, "addedAt" | "alertIntents" | "trac
 
 interface WatchlistState {
   items: WatchlistEntry[];
+  listingFavorites: string[];
+  marketFilters: MarketFiltersState;
   add: (entry: WatchlistAddEntry) => void;
   remove: (id: string) => void;
   has: (id: string) => boolean;
@@ -36,6 +71,8 @@ interface WatchlistState {
   clear: () => void;
   updateAlertIntents: (id: string, alertIntents: AskiAlertIntent[]) => void;
   toggleAlertIntent: (id: string, intent: AskiAlertIntent) => void;
+  toggleListingFavorite: (listingId: string) => void;
+  setMarketFilters: (filters: MarketFiltersState) => void;
 }
 
 function normalizeEntry(entry: Partial<WatchlistEntry> & Pick<WatchlistEntry, "id" | "ada" | "parsel" | "il" | "ilce" | "mahalle" | "zoningType" | "yuzolcumuM2" | "centroid">): WatchlistEntry {
@@ -52,6 +89,12 @@ export const useWatchlistStore = create<WatchlistState>()(
   persist(
     (set, get) => ({
       items: [],
+      listingFavorites: [],
+      marketFilters: {
+        providerIds: [],
+        listingType: "all",
+        sortBy: "freshness"
+      },
       add: (entry) =>
         set((s) => {
           if (s.items.some((i) => i.id === entry.id)) return s;
@@ -91,29 +134,46 @@ export const useWatchlistStore = create<WatchlistState>()(
                 : [...item.alertIntents, intent]
             };
           })
-        }))
+        })),
+      toggleListingFavorite: (listingId) =>
+        set((s) => ({
+          listingFavorites: s.listingFavorites.includes(listingId)
+            ? s.listingFavorites.filter((id) => id !== listingId)
+            : [...s.listingFavorites, listingId]
+        })),
+      setMarketFilters: (filters) => set({ marketFilters: filters })
     }),
     {
       name: "eimar:watchlist",
-      version: 2,
-      storage: createJSONStorage(() => localStorage),
+      version: 3,
+      storage: createJSONStorage(resolveStorage),
       migrate: (persistedState) => normalizePersistedState(persistedState),
       merge: (persistedState, currentState) => ({
         ...currentState,
-        ...normalizePersistedState(persistedState)
+        ...normalizePersistedState(persistedState),
+        listingFavorites: normalizePersistedState(persistedState).listingFavorites ?? [],
+        marketFilters: normalizePersistedState(persistedState).marketFilters ?? currentState.marketFilters
       })
     }
   )
 );
 
 function normalizePersistedState(persistedState: unknown) {
-  if (!persistedState || typeof persistedState !== "object") return { items: [] as WatchlistEntry[] };
-  const record = persistedState as { items?: Partial<WatchlistEntry>[] };
+  if (!persistedState || typeof persistedState !== "object") return { items: [] as WatchlistEntry[], listingFavorites: [] as string[], marketFilters: { providerIds: [] as MarketProviderId[], listingType: "all" as const, sortBy: "freshness" as const } };
+  const record = persistedState as { items?: Partial<WatchlistEntry>[]; listingFavorites?: string[]; marketFilters?: Partial<MarketFiltersState> };
   return {
     items: Array.isArray(record.items)
       ? record.items
           .filter((item): item is Partial<WatchlistEntry> & Pick<WatchlistEntry, "id" | "ada" | "parsel" | "il" | "ilce" | "mahalle" | "zoningType" | "yuzolcumuM2" | "centroid"> => Boolean(item && item.id && item.ada && item.parsel))
           .map((item) => normalizeEntry(item))
-      : []
+      : [],
+    listingFavorites: Array.isArray(record.listingFavorites) ? record.listingFavorites.filter((value): value is string => typeof value === "string" && value.length > 0) : [],
+    marketFilters: {
+      providerIds: Array.isArray(record.marketFilters?.providerIds)
+        ? (record.marketFilters.providerIds.filter((value): value is MarketProviderId => ["sahibinden", "emlakjet", "hepsiemlak", "zingat"].includes(String(value))) as MarketProviderId[])
+        : [],
+      listingType: (record.marketFilters?.listingType === "sale" || record.marketFilters?.listingType === "rent" || record.marketFilters?.listingType === "lease" ? record.marketFilters.listingType : "all") as MarketFiltersState["listingType"],
+      sortBy: (record.marketFilters?.sortBy === "price_low" || record.marketFilters?.sortBy === "price_high" || record.marketFilters?.sortBy === "match" ? record.marketFilters.sortBy : "freshness") as MarketFiltersState["sortBy"]
+    }
   };
 }

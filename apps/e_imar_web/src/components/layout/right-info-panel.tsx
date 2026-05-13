@@ -20,7 +20,12 @@ import {
   MapPinOff,
   CheckCircle2,
   TriangleAlert,
-  GitCompareArrows
+  GitCompareArrows,
+  Sparkles,
+  Crosshair,
+  WandSparkles,
+  AlertTriangle,
+  Navigation
 } from "lucide-react";
 import {
   Accordion,
@@ -72,15 +77,26 @@ import { SectionGecmis } from "@/components/info/section-gecmis";
 import { SectionYatirimSkoru } from "@/components/info/section-yatirim-skoru";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmsalCalculatorPanel } from "@/components/emsal/emsal-calculator-panel";
+import {
+  buildSelectedPlaceAnalysis,
+  type PlaceInsightCard,
+  type SelectedPlaceAnalysis
+} from "@/lib/analysis/selected-place-analysis";
 import { cn } from "@/lib/utils";
+import { getParcelMarket } from "@/lib/market-client";
+import type { ParcelMarketResponse } from "@/types/api";
+import { MarketPanel } from "@/components/market/market-panel";
 
 export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   const open = useUIStore((s) => s.rightPanelOpen);
   const setOpen = useUIStore((s) => s.setRightPanelOpen);
   const selectedId = useMapStore((s) => s.selectedParcelId);
+  const selectedPoint = useMapStore((s) => s.selectedPoint);
   const multiSelectedParcelIds = useMapStore((s) => s.multiSelectedParcelIds);
   const clearMultiSelection = useMapStore((s) => s.clearMultiSelection);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedPoint = useMapStore((s) => s.setSelectedPoint);
+  const flyTo = useMapStore((s) => s.flyTo);
   const watchlistAdd = useWatchlistStore((s) => s.add);
   const watchlistRemove = useWatchlistStore((s) => s.remove);
   const watchlistHas = useWatchlistStore((s) => s.has);
@@ -115,6 +131,8 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
     url?: string;
     id?: number;
   }>({ state: "idle" });
+  const [marketResponse, setMarketResponse] = React.useState<ParcelMarketResponse | null>(null);
+  const [marketLoading, setMarketLoading] = React.useState(false);
   const [watchlistStatus, setWatchlistStatus] = React.useState<{
     state: "idle" | "loading" | "success" | "error";
     message?: string;
@@ -134,6 +152,37 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
     const timer = window.setTimeout(() => setPanelLoading(false), 320);
     return () => window.clearTimeout(timer);
   }, [selectedId]);
+
+  React.useEffect(() => {
+    let alive = true;
+    async function loadMarket() {
+      if (!parcel) {
+        setMarketResponse(null);
+        return;
+      }
+      setMarketLoading(true);
+      try {
+        const response = await getParcelMarket({
+          parcelId: parcel.id,
+          il: parcel.il,
+          ilce: parcel.ilce,
+          mahalle: parcel.mahalle,
+          ada: parcel.ada,
+          parsel: parcel.parsel,
+          areaM2: parcel.yuzolcumuM2,
+          zoningType: parcel.zoningType,
+          centroid: parcel.centroid ?? null
+        });
+        if (alive) setMarketResponse(response);
+      } finally {
+        if (alive) setMarketLoading(false);
+      }
+    }
+    void loadMarket();
+    return () => {
+      alive = false;
+    };
+  }, [parcel]);
 
   React.useEffect(() => {
     void hydrateWatchlist();
@@ -171,8 +220,12 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   }, [parcel?.backendId]);
 
   const showLatestRegions = !parcel && latestRegionsPanelOpen;
+  const pointAnalysis = React.useMemo(
+    () => buildSelectedPlaceAnalysis({ point: selectedPoint, parcel }),
+    [parcel, selectedPoint]
+  );
 
-  if (!parcel && !showLatestRegions) return null;
+  if (!parcel && !showLatestRegions && !pointAnalysis) return null;
 
   const parcelData = parcel ?? undefined;
 
@@ -184,6 +237,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   function deselect() {
     setOpen(false);
     setSelectedParcelId(null);
+    setSelectedPoint(null);
     setLatestRegionsPanelOpen(false);
   }
 
@@ -297,6 +351,30 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
         message: humanizeApiError(error, "Rapor durumu alınamadı.")
       });
     }
+  }
+
+
+  function selectNearestParcelFromPoint() {
+    const nearest = pointAnalysis?.nearestParcel;
+    if (!nearest) return;
+    setSelectedParcelId(nearest.parcel.id);
+    setSelectedPoint(null);
+    if (nearest.parcel.centroid) {
+      flyTo({ center: nearest.parcel.centroid, zoom: 16.5, pitch: 48, bearing: -12 });
+    }
+    setOpen(true);
+  }
+
+  if (pointAnalysis && !parcel && !showLatestRegions) {
+    return (
+      <SelectedPointAnalysisPanel
+        open={open}
+        floating={floating}
+        analysis={pointAnalysis}
+        onClose={deselect}
+        onSelectNearest={selectNearestParcelFromPoint}
+      />
+    );
   }
 
   if (showLatestRegions) {
@@ -554,9 +632,17 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             )}
             <Accordion
               type="multiple"
-              defaultValue={["guven", "ilgili-planlar", "konum", "imar"]}
+              defaultValue={["ai-analiz", "guven", "ilgili-planlar", "konum", "imar"]}
               className="divide-y divide-border-subtle"
             >
+              {pointAnalysis && (
+                <AccordionItem value="ai-analiz">
+                  <AccordionTrigger>AI Nokta Analizi</AccordionTrigger>
+                  <AccordionContent>
+                    <SelectedPointAnalysisContent analysis={pointAnalysis} compact />
+                  </AccordionContent>
+                </AccordionItem>
+              )}
               <AccordionItem value="guven">
                 <AccordionTrigger>Veri Kaynakları & Güven</AccordionTrigger>
                 <AccordionContent>
@@ -631,6 +717,19 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                 <AccordionTrigger>Yatırım Skoru</AccordionTrigger>
                 <AccordionContent>
                   <SectionYatirimSkoru parcel={parcelData!} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="piyasa">
+                <AccordionTrigger>Market Cockpit</AccordionTrigger>
+                <AccordionContent>
+                  {marketLoading && !marketResponse ? (
+                    <div className="rounded-md border border-border-subtle bg-surface-1/50 px-3 py-4 text-sm text-fg-secondary">
+                      Market payload yükleniyor…
+                    </div>
+                  ) : (
+                    <MarketPanel response={marketResponse} />
+                  )}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -743,6 +842,194 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   );
 }
 
+
+function SelectedPointAnalysisPanel({
+  open,
+  floating,
+  analysis,
+  onClose,
+  onSelectNearest
+}: {
+  open: boolean;
+  floating: boolean;
+  analysis: SelectedPlaceAnalysis;
+  onClose: () => void;
+  onSelectNearest: () => void;
+}) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.aside
+          key="selectedpointpanel"
+          initial={{ x: "100%", opacity: 0.92 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: "100%", opacity: 0.92 }}
+          transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
+          className={cn(
+            "fixed right-0 top-14 bottom-0 z-30 flex flex-col border-l border-white/10 bg-slate-950/86 shadow-[0_24px_80px_rgba(2,6,23,0.55)] backdrop-blur-2xl",
+            floating ? "w-[400px] xl:w-[400px] lg:w-[360px]" : "w-[400px]"
+          )}
+          aria-label="Seçili nokta analizi paneli"
+        >
+          <header className="relative overflow-hidden border-b border-white/10 px-4 py-4">
+            <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-sky-400/20 blur-3xl" />
+            <div className="absolute -left-12 top-10 h-32 w-32 rounded-full bg-cyan-300/10 blur-2xl" />
+            <div className="relative flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-sky-300/20 bg-sky-300/10 text-sky-200 shadow-[0_0_32px_rgba(56,189,248,0.28)]">
+                    <WandSparkles className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[0.24em] text-sky-200/70">Demo AI analiz</div>
+                    <h2 className="text-lg font-semibold text-white">{analysis.title}</h2>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs leading-relaxed text-slate-300">{analysis.subtitle}</p>
+              </div>
+              <IconButton label="Kapat" variant="ghost" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </IconButton>
+            </div>
+            <div className="relative mt-4 grid grid-cols-2 gap-2">
+              <GlassMetric icon={<Crosshair className="h-3.5 w-3.5" />} label="Koordinat" value={analysis.coordinateLabel} />
+              <GlassMetric icon={<Navigation className="h-3.5 w-3.5" />} label="Seçim" value={analysis.sourceLabel} />
+            </div>
+          </header>
+
+          <ScrollArea className="flex-1">
+            <SelectedPointAnalysisContent analysis={analysis} onSelectNearest={onSelectNearest} />
+          </ScrollArea>
+        </motion.aside>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function SelectedPointAnalysisContent({
+  analysis,
+  compact = false,
+  onSelectNearest
+}: {
+  analysis: SelectedPlaceAnalysis;
+  compact?: boolean;
+  onSelectNearest?: () => void;
+}) {
+  return (
+    <div className={cn("space-y-3", compact ? "p-0" : "p-3")}>
+      <div className="rounded-xl border border-amber-300/20 bg-amber-300/8 px-3 py-2 text-[11px] leading-relaxed text-amber-100">
+        <div className="flex items-start gap-2">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>{analysis.disclaimer}</span>
+        </div>
+      </div>
+
+      {analysis.nearestParcel && onSelectNearest && (
+        <button
+          type="button"
+          onClick={onSelectNearest}
+          className="group flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border border-sky-300/20 bg-sky-300/10 px-3 py-3 text-left transition hover:border-sky-200/45 hover:bg-sky-300/15"
+        >
+          <span>
+            <span className="block text-xs font-semibold text-sky-100">
+              Yakın parseli seç: {adaParselText(analysis.nearestParcel.parcel.ada, analysis.nearestParcel.parcel.parsel)}
+            </span>
+            <span className="mt-1 block text-[11px] text-slate-300">
+              {analysis.nearestParcel.distanceM.toLocaleString("tr-TR", { maximumFractionDigits: 0 })} m · {analysis.nearestParcel.parcel.mahalle}
+            </span>
+          </span>
+          <MapPinned className="h-4 w-4 text-sky-200 transition group-hover:scale-110" />
+        </button>
+      )}
+
+      <div className="grid gap-2">
+        {analysis.insights.map((card, index) => (
+          <InsightCard key={card.id} card={card} index={index} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function InsightCard({ card, index }: { card: PlaceInsightCard; index: number }) {
+  return (
+    <motion.article
+      initial={{ y: 8, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.18, delay: Math.min(index * 0.035, 0.18) }}
+      className={cn(
+        "rounded-xl border bg-white/[0.045] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl",
+        insightToneClass(card.tone)
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">
+            {insightIcon(card.kind)}
+            <span>{card.title}</span>
+          </div>
+          <div className="mt-1 text-base font-semibold text-white">{card.value}</div>
+          <p className="mt-1 text-xs leading-relaxed text-slate-300">{card.detail}</p>
+        </div>
+        <SourceBadge status={card.provenance === "derived" ? "computed" : card.provenance} className="shrink-0" />
+      </div>
+      <ul className="mt-3 space-y-1.5 text-[11px] leading-relaxed text-slate-300">
+        {card.bullets.slice(0, 3).map((bullet) => (
+          <li key={bullet} className="flex gap-2">
+            <CheckCircle2 className="mt-0.5 h-3 w-3 shrink-0 text-sky-200/80" />
+            <span>{bullet}</span>
+          </li>
+        ))}
+      </ul>
+    </motion.article>
+  );
+}
+
+function GlassMetric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-xl border border-white/10 bg-white/[0.055] px-3 py-2 backdrop-blur-xl">
+      <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.18em] text-slate-400">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <div className="mt-1 truncate text-xs font-semibold text-slate-100">{value}</div>
+    </div>
+  );
+}
+
+function insightToneClass(tone: PlaceInsightCard["tone"]) {
+  switch (tone) {
+    case "good":
+      return "border-emerald-300/18 shadow-emerald-950/20";
+    case "warning":
+      return "border-amber-300/22 shadow-amber-950/20";
+    case "danger":
+      return "border-rose-300/24 shadow-rose-950/20";
+    case "info":
+      return "border-sky-300/18 shadow-sky-950/20";
+    case "muted":
+    default:
+      return "border-white/10";
+  }
+}
+
+function insightIcon(kind: PlaceInsightCard["kind"]) {
+  switch (kind) {
+    case "potential":
+      return <Building2 className="h-3.5 w-3.5" />;
+    case "risk":
+      return <ShieldAlert className="h-3.5 w-3.5" />;
+    case "mobility":
+      return <Route className="h-3.5 w-3.5" />;
+    case "confidence":
+      return <Database className="h-3.5 w-3.5" />;
+    case "opportunity":
+      return <Sparkles className="h-3.5 w-3.5" />;
+    case "zoning":
+    default:
+      return <MapPinned className="h-3.5 w-3.5" />;
+  }
+}
 
 function MetricCard({
   icon,

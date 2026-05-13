@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ParcelQueryDto } from '../parcels/dto/parcel-query.dto';
 import { WebsiteService } from './website.service';
+import type { ParcelMarketContext } from '../market/market.types';
 
 @ApiTags('website')
 @Controller('website')
@@ -92,6 +93,11 @@ export class WebsiteController {
     }
   ) {
     return this.website.planNoteExplain(body);
+  }
+
+  @Post('bff/parcel-market')
+  parcelMarket(@Body() body: { query: ParcelMarketContext }) {
+    return this.website.parcelMarket(body);
   }
 
   @Get('workspace/:userReference')
