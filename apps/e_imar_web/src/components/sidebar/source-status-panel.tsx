@@ -5,7 +5,7 @@ import { ExternalLink, Radar, RefreshCw } from "lucide-react";
 import { summarizeSourceStatuses, useSourceStore } from "@/stores/source-store";
 import { cn } from "@/lib/utils";
 
-const FEATURED_SLUGS = ["pendik", "ibb", "ankara", "izmir", "cankaya", "tkgm", "eplan-csb", "tucbs-public-api"];
+const FEATURED_SLUGS = ["pendik", "ibb", "ankara", "izmir", "cankaya", "besiktas", "kadikoy", "bodrum", "tkgm", "eplan-csb", "tucbs-public-api"];
 
 export function SourceStatusPanel() {
   const sources = useSourceStore((s) => s.sources);
@@ -27,7 +27,7 @@ export function SourceStatusPanel() {
   }, [loadSources, loadLiveLayers, refreshHealth]);
 
   const summary = summarizeSourceStatuses(sources, health);
-  const featured = FEATURED_SLUGS.map((slug) => sources.find((source) => source.slug === slug)).filter(Boolean).slice(0, 8);
+  const featured = FEATURED_SLUGS.map((slug) => sources.find((source) => source.slug === slug)).filter(Boolean).slice(0, 9);
 
   return (
     <div className="rounded-lg border border-border-subtle bg-surface-1/70 p-2.5 shadow-sm">
@@ -38,7 +38,7 @@ export function SourceStatusPanel() {
             Canlı Veri Kaynakları
           </div>
           <p className="mt-1 text-[10.5px] leading-snug text-fg-secondary">
-            Resmi belediye/TKGM/e-Plan/TUCBS bağlantıları seeded; kapalı servisler demo katmanla etiketlenir.
+            Resmi belediye/TKGM/e-Plan/TUCBS bağlantıları ve aday OGC/KEOS uçları seeded; kapalı servisler veri varmış gibi çizilmez.
           </p>
         </div>
         <button
@@ -61,7 +61,9 @@ export function SourceStatusPanel() {
       <div className="mt-2 flex flex-col gap-1.5">
         {featured.map((source) => {
           if (!source) return null;
-          const status = health[source.id]?.status ?? (source.requires_approval ? "requires_approval" : "external_only");
+          const status = health[source.id]?.status ?? (source.requires_approval || source.requires_credentials ? "requires_approval" : "external_only");
+          const slug = source.slug ?? source.id;
+          const homepageUrl = source.homepage_url ?? source.base_url ?? "#";
           return (
             <div key={source.id} className="flex items-center gap-2 rounded-md border border-border-subtle bg-bg/70 px-2 py-1.5">
               <span className={cn("h-2 w-2 shrink-0 rounded-full", statusClass(status))} />
@@ -73,14 +75,14 @@ export function SourceStatusPanel() {
                 type="button"
                 onClick={() => {
                   void discover(source.id);
-                  if (source.kind.startsWith("municipal")) void discoverMunicipalityGis(source.slug, true);
+                  if ((source.kind ?? "").startsWith("municipal")) void discoverMunicipalityGis(slug, true);
                 }}
                 className="rounded border border-border-subtle px-1.5 py-1 text-[10px] text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
               >
                 Keşfet
               </button>
               <a
-                href={source.homepage_url}
+                href={homepageUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex h-6 w-6 items-center justify-center rounded border border-border-subtle text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
@@ -88,7 +90,7 @@ export function SourceStatusPanel() {
               >
                 <ExternalLink className="h-3 w-3" />
               </a>
-              <DiscoveryDetails sourceId={source.id} slug={source.slug} discovery={discoveries[source.slug] ?? discoveries[source.id]} />
+              <DiscoveryDetails sourceId={source.id} slug={slug} discovery={discoveries[slug] ?? discoveries[source.id]} />
             </div>
           );
         })}
