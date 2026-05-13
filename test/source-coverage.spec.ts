@@ -3,6 +3,7 @@ import { DiscoveryService } from '../src/connectors/discovery.service';
 import { HttpProbeService } from '../src/connectors/http-probe.service';
 import { SOURCE_REGISTRY } from '../src/sources/source-registry';
 import { summarizeSources } from '../src/sources/source-coverage';
+import { TURKEY_PROVINCES } from '../src/sources/turkey-coverage';
 import { SourcesController } from '../src/sources/sources.controller';
 import { SourcesService } from '../src/sources/sources.service';
 import { WebsiteService } from '../src/website/website.service';
@@ -15,11 +16,30 @@ describe('source coverage summary', () => {
     expect(summary.municipalSources).toBe(SOURCE_REGISTRY.filter((source) => source.jurisdiction === 'municipal').length);
     expect(summary.nationalSources).toBe(SOURCE_REGISTRY.filter((source) => source.jurisdiction === 'national').length);
     expect(summary.globalSources).toBe(SOURCE_REGISTRY.filter((source) => source.jurisdiction === 'global').length);
+    expect(summary.nationalMunicipalCount.national).toBe(summary.nationalSources);
+    expect(summary.nationalMunicipalCount.municipal).toBe(summary.municipalSources);
     expect(summary.byVendor.netcad).toBeGreaterThan(20);
+    expect(summary.byCategory.municipal_gis).toBeGreaterThan(0);
+    expect(summary.byCapability.municipal_gis).toBeGreaterThan(0);
     expect(summary.byProvince['İstanbul']).toBeGreaterThan(0);
     expect(summary.byConnectorKind[ConnectorKind.NetcadKeos]).toBeGreaterThan(0);
     expect(summary.publicCandidateCount).toBeGreaterThan(summary.protectedCount);
+    expect(summary.legalProtectedCount).toBeGreaterThan(0);
+    expect(summary.topCoveredProvinces.length).toBeGreaterThan(0);
+    expect(summary.metadataOnlyProvinces.length).toBeGreaterThan(0);
+    expect(summary.uncoveredProvinces.length).toBeLessThan(TURKEY_PROVINCES.length);
     expect(summary.lastGeneratedAt).toBe('2026-05-08T00:00:00.000Z');
+  });
+
+  it('covers all 81 provinces in the turkey coverage dataset', () => {
+    const provinceNames = new Set(TURKEY_PROVINCES.map((province) => province.name));
+
+    expect(TURKEY_PROVINCES).toHaveLength(81);
+    expect(provinceNames.size).toBe(81);
+    expect(provinceNames.has('İstanbul')).toBe(true);
+    expect(provinceNames.has('Ankara')).toBe(true);
+    expect(provinceNames.has('İzmir')).toBe(true);
+    expect(provinceNames.has('Düzce')).toBe(true);
   });
 
   it('returns requested municipal seeds through municipalities summary filters', () => {
@@ -77,6 +97,16 @@ describe('source coverage summary', () => {
     expect(serialized).toContain('CESIUM_ION_TOKEN');
     expect(serialized).toContain('HERE_API_KEY');
     expect(serialized).not.toMatch(/pk\.|sk\.|eyJ|AIza|glpat|ghp_/);
+  });
+
+  it('does not fabricate official parcel results for protected national systems', () => {
+    const tkgm = SOURCE_REGISTRY.find((source) => source.id === 'tkgm-parsel-sorgu');
+    const parcelSources = SOURCE_REGISTRY.filter((source) => source.category === 'parcel');
+
+    expect(tkgm?.access.status).toBe('requires_legal_agreement');
+    expect(tkgm?.access.notes).toContain('lawful automation');
+    expect(parcelSources.every((source) => source.access.status !== 'public')).toBe(true);
+    expect(parcelSources.some((source) => source.access.status === 'requires_legal_agreement')).toBe(true);
   });
 });
 

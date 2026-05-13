@@ -1,6 +1,7 @@
 import { ConnectorKind } from '../connectors/connector.types';
+import { TURKEY_MUNICIPAL_COVERAGE_CANDIDATES } from './turkey-coverage';
 
-export type SourceAccessStatus = 'public' | 'public_metadata' | 'unknown' | 'requires_credentials' | 'requires_legal_agreement';
+export type SourceAccessStatus = 'public' | 'public_metadata' | 'metadata_only' | 'unknown' | 'requires_credentials' | 'requires_legal_agreement';
 export type SourceJurisdiction = 'national' | 'municipal' | 'global';
 export type SourceCategory = 'parcel' | 'plan' | 'municipal_gis' | 'open_data' | 'basemap' | 'satellite' | 'tile_service' | 'address';
 
@@ -28,7 +29,7 @@ const nationalNotes = 'Official public metadata entry. Connector discovery must 
 export const SOURCE_REGISTRY: SourceRegistryEntry[] = [
   {
     id: 'tkgm-parsel-sorgu', name: 'TKGM Parsel Sorgu Uygulaması', jurisdiction: 'national', category: 'parcel', homepageUrl: 'https://parselsorgu.tkgm.gov.tr/',
-    connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'unknown', notes: 'Official parcel query portal; lawful automation, session, captcha, and data-sharing constraints must be verified at runtime.' },
+    connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'requires_legal_agreement', notes: 'Official parcel query portal; lawful automation, session, captcha, and data-sharing constraints must be verified at runtime.' },
     capabilities: ['parcel_lookup', 'municipal_gis'], documentationUrls: ['https://www.tkgm.gov.tr/mevzuat/tapu-ve-kadastro-verilerinin-paylasilmasina-iliskin-usul-ve-esaslar']
   },
   {
@@ -38,6 +39,10 @@ export const SOURCE_REGISTRY: SourceRegistryEntry[] = [
   {
     id: 'csb-e-plan', name: 'ÇŞİDB E-Plan Güncel', jurisdiction: 'national', category: 'plan', homepageUrl: 'https://eplan.csb.gov.tr/',
     connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'unknown', notes: 'Official e-Plan portal; public plan catalog and protected workflows must be separated by discovery.' }, capabilities: ['plan_catalog', 'plan_lookup'], documentationUrls: ['https://e-plan.gov.tr/']
+  },
+  {
+    id: 'e-plan', name: 'E-Plan Portalı', jurisdiction: 'national', category: 'plan', homepageUrl: 'https://e-plan.gov.tr/',
+    connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'unknown', notes: 'Legacy e-Plan hostname retained for compatibility and canonical redirect checks.' }, capabilities: ['plan_catalog']
   },
   {
     id: 'csb-e-plan-legacy', name: 'ÇŞİDB E-Plan Legacy/Alternatif', jurisdiction: 'national', category: 'plan', homepageUrl: 'https://e-plan.gov.tr/',
@@ -61,8 +66,29 @@ export const SOURCE_REGISTRY: SourceRegistryEntry[] = [
   { id: 'cesium-ion', name: 'Cesium ion', jurisdiction: 'global', category: 'tile_service', homepageUrl: 'https://cesium.com/platform/cesium-ion/', connectorKinds: [ConnectorKind.Documentation], access: { status: 'requires_credentials', notes: 'Cesium ion requires CESIUM_ION_TOKEN via environment variables for hosted terrain and 3D Tiles.' }, capabilities: ['basemap_context'] },
   { id: 'openstreetmap-api', name: 'OpenStreetMap API', jurisdiction: 'global', category: 'basemap', homepageUrl: 'https://wiki.openstreetmap.org/wiki/API', connectorKinds: [ConnectorKind.PublicApi], access: { status: 'public_metadata', notes: 'Public OSM documentation. Production use must respect OSM tile and API usage policies.' }, capabilities: ['basemap_context'] },
   { id: 'usgs-landsat', name: 'USGS Landsat Data', jurisdiction: 'global', category: 'satellite', homepageUrl: 'https://landsat.gsfc.nasa.gov/data/', connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'unknown', notes: 'Landsat data portal documentation; exact API account requirements must be verified per product.' }, capabilities: ['satellite_imagery'] },
-  ...municipalSources()
+  ...municipalSources(),
+  ...generatedTurkeyMunicipalCoverage()
 ];
+
+function generatedTurkeyMunicipalCoverage(): SourceRegistryEntry[] {
+  return TURKEY_MUNICIPAL_COVERAGE_CANDIDATES.map((source) => ({
+    id: source.id,
+    name: source.name,
+    jurisdiction: source.jurisdiction,
+    category: source.category,
+    homepageUrl: source.homepageUrl,
+    connectorKinds: source.connectorKinds,
+    access: { status: source.access.status, notes: source.access.notes },
+    capabilities: source.capabilities,
+    documentationUrls: source.documentationUrls,
+    metadata: {
+      province: source.province,
+      district: source.district,
+      municipalitySlug: source.municipalitySlug,
+      vendor: source.vendor
+    }
+  }));
+}
 
 function municipalSources(): SourceRegistryEntry[] {
   const rows: Array<[string, string, string, string, string, string?, string?]> = [

@@ -44,16 +44,18 @@ export class SourcesService {
     const normalizedProvince = this.normalize(filters.province);
     const normalizedDistrict = this.normalize(filters.district);
     const normalizedVendor = this.normalize(filters.vendor);
-    const sources = SOURCE_REGISTRY.filter((source) => {
+    const matchedSources = SOURCE_REGISTRY.filter((source) => {
       if (source.jurisdiction !== 'municipal') return false;
       if (normalizedProvince && this.normalize(source.metadata?.province) !== normalizedProvince) return false;
       if (normalizedDistrict && this.normalize(source.metadata?.district) !== normalizedDistrict) return false;
       if (normalizedVendor && this.normalize(source.metadata?.vendor) !== normalizedVendor) return false;
       if (filters.accessStatus && source.access.status !== filters.accessStatus) return false;
       return true;
-    }).map((source) => ({ ...toMunicipalitySummary(source), capability: this.municipalityCapabilityForSource(source) }));
+    });
+    const municipalities = matchedSources.map((source) => ({ ...toMunicipalitySummary(source), capability: this.municipalityCapabilityForSource(source) }));
+    const sourceCoverage = summarizeSources(matchedSources);
 
-    return { status: 'ok', count: sources.length, municipalities: sources };
+    return { status: 'ok', count: municipalities.length, municipalities, sourceCoverage, summary: sourceCoverage };
   }
 
   municipalityCoverage(filters: { province?: string; district?: string; vendor?: string; accessStatus?: SourceAccessStatus }) {

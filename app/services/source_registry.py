@@ -75,6 +75,60 @@ def _m(id: str, name: str, kind: str, province: str, district: Optional[str], sl
     return SourceRecord(id, name, kind, province, district, slug, homepage, base, _endpoints(base), center=center)
 
 
+TURKEY_PROVINCES: list[tuple[str, str, str]] = [
+    ("01", "adana", "Adana"), ("02", "adiyaman", "Adıyaman"), ("03", "afyonkarahisar", "Afyonkarahisar"),
+    ("04", "agri", "Ağrı"), ("05", "amasya", "Amasya"), ("06", "ankara", "Ankara"), ("07", "antalya", "Antalya"),
+    ("08", "artvin", "Artvin"), ("09", "aydin", "Aydın"), ("10", "balikesir", "Balıkesir"), ("11", "bilecik", "Bilecik"),
+    ("12", "bingol", "Bingöl"), ("13", "bitlis", "Bitlis"), ("14", "bolu", "Bolu"), ("15", "burdur", "Burdur"),
+    ("16", "bursa", "Bursa"), ("17", "canakkale", "Çanakkale"), ("18", "cankiri", "Çankırı"), ("19", "corum", "Çorum"),
+    ("20", "denizli", "Denizli"), ("21", "diyarbakir", "Diyarbakır"), ("22", "edirne", "Edirne"), ("23", "elazig", "Elazığ"),
+    ("24", "erzincan", "Erzincan"), ("25", "erzurum", "Erzurum"), ("26", "eskisehir", "Eskişehir"), ("27", "gaziantep", "Gaziantep"),
+    ("28", "giresun", "Giresun"), ("29", "gumushane", "Gümüşhane"), ("30", "hakkari", "Hakkari"), ("31", "hatay", "Hatay"),
+    ("32", "isparta", "Isparta"), ("33", "mersin", "Mersin"), ("34", "istanbul", "İstanbul"), ("35", "izmir", "İzmir"),
+    ("36", "kars", "Kars"), ("37", "kastamonu", "Kastamonu"), ("38", "kayseri", "Kayseri"), ("39", "kirklareli", "Kırklareli"),
+    ("40", "kirsehir", "Kırşehir"), ("41", "kocaeli", "Kocaeli"), ("42", "konya", "Konya"), ("43", "kutahya", "Kütahya"),
+    ("44", "malatya", "Malatya"), ("45", "manisa", "Manisa"), ("46", "kahramanmaras", "Kahramanmaraş"), ("47", "mardin", "Mardin"),
+    ("48", "mugla", "Muğla"), ("49", "mus", "Muş"), ("50", "nevsehir", "Nevşehir"), ("51", "nigde", "Niğde"),
+    ("52", "ordu", "Ordu"), ("53", "rize", "Rize"), ("54", "sakarya", "Sakarya"), ("55", "samsun", "Samsun"),
+    ("56", "siirt", "Siirt"), ("57", "sinop", "Sinop"), ("58", "sivas", "Sivas"), ("59", "tekirdag", "Tekirdağ"),
+    ("60", "tokat", "Tokat"), ("61", "trabzon", "Trabzon"), ("62", "tunceli", "Tunceli"), ("63", "sanliurfa", "Şanlıurfa"),
+    ("64", "usak", "Uşak"), ("65", "van", "Van"), ("66", "yozgat", "Yozgat"), ("67", "zonguldak", "Zonguldak"),
+    ("68", "aksaray", "Aksaray"), ("69", "bayburt", "Bayburt"), ("70", "karaman", "Karaman"), ("71", "kirikkale", "Kırıkkale"),
+    ("72", "batman", "Batman"), ("73", "sirnak", "Şırnak"), ("74", "bartin", "Bartın"), ("75", "ardahan", "Ardahan"),
+    ("76", "igdir", "Iğdır"), ("77", "yalova", "Yalova"), ("78", "karabuk", "Karabük"), ("79", "kilis", "Kilis"),
+    ("80", "osmaniye", "Osmaniye"), ("81", "duzce", "Düzce"),
+]
+
+
+def _generated_turkey_province_sources() -> list[SourceRecord]:
+    rows: list[SourceRecord] = []
+    vendors = ['netcad', 'webgis', 'netcad', 'webgis', 'municipal']
+    for idx, (_, slug, name) in enumerate(TURKEY_PROVINCES):
+        vendor = vendors[idx % len(vendors)]
+        if vendor == 'netcad':
+            kind = 'municipal_keos'
+            homepage = f'https://keos.{slug}.bel.tr/imardurumu/'
+        elif vendor == 'webgis':
+            kind = 'municipal_webgis'
+            homepage = f'https://webgis.{slug}.bel.tr/imardurumu/'
+        else:
+            kind = 'municipal_webgis'
+            homepage = f'https://cbs.{slug}.bel.tr/'
+        rows.append(SourceRecord(
+            id=f'prov.{slug}.coverage',
+            name=f'{name} Belediye İmar Adayı',
+            kind=kind,
+            province=name,
+            district=name,
+            slug=slug,
+            homepage_url=homepage,
+            base_url=homepage.rstrip('/'),
+            candidate_endpoints=_endpoints(homepage.rstrip('/')),
+            notes=f'{name} için metadata_only aday kayıt; canlı endpoint ve izin durumu doğrulanmadı.',
+        ))
+    return rows
+
+
 SOURCE_REGISTRY: List[SourceRecord] = [
     _m("pendik-keos-imar", "Pendik KEOS İmar Durumu", "municipal_keos", "İstanbul", "Pendik", "pendik", "https://keos.pendik.bel.tr/imardurumu/", "https://keos.pendik.bel.tr", [29.258, 40.877]),
     _m("esenler-keos-imar", "Esenler KEOS İmar Durumu", "municipal_keos", "İstanbul", "Esenler", "esenler", "https://keos.esenler.bel.tr/imardurumu/index.aspx", "https://keos.esenler.bel.tr", [28.876, 41.040]),
@@ -111,7 +165,7 @@ SOURCE_REGISTRY: List[SourceRecord] = [
     SourceRecord("yerel-veri-platformlari", "Yerel Veri Platformları", "registry", None, None, "yerel-veri-platformlari", "https://akillisehirler.csb.gov.tr/yerel-veri-platformlari/", "https://akillisehirler.csb.gov.tr", center=[35.243, 38.963]),
     SourceRecord("bulutkbs-vatandas", "BulutKBS Vatandaş Portalı", "national_geodata", None, None, "bulutkbs", "https://bulutkbs.gov.tr/", "https://bulutkbs.gov.tr", center=[35.243, 38.963]),
     SourceRecord("maks", "MAKS", "registry", None, None, "maks", "https://maks.nvi.gov.tr/", "https://maks.nvi.gov.tr", notes="Mekansal Adres Kayıt Sistemi; servis erişimi kurum yetkisi gerektirebilir.", requires_credentials=True, requires_approval=True, center=[35.243, 38.963]),
-]
+] + _generated_turkey_province_sources()
 
 
 def list_sources() -> List[Dict[str, Any]]:
