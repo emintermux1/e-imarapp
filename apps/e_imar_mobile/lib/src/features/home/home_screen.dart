@@ -112,16 +112,6 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
           ),
         );
       }
-    } catch (error) {
-      if (mounted) {
-        setState(
-          () => _result = ParcelLookupResult.unavailable(
-            title: 'Sorgu tamamlanamadı',
-            message: 'Ağ ya da sağlayıcı yanıtı okunamadı: $error',
-            code: 'client_error',
-          ),
-        );
-      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
