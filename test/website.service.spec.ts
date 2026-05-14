@@ -9,9 +9,10 @@ import { SimulationService } from '../src/simulation/simulation.service';
 import { UserDataService } from '../src/user-data/user-data.service';
 import { WebsiteService } from '../src/website/website.service';
 import { SourcesService } from '../src/sources/sources.service';
+import { SourceActivationService } from '../src/sources/source-activation.service';
 
 describe('WebsiteService', () => {
-  const makeService = (overrides: Partial<{ parcels: ParcelsService; analysis: AnalysisService; simulation: SimulationService; userData: UserDataService; sources: SourcesService; market: MarketService }> = {}) => {
+  const makeService = (overrides: Partial<{ parcels: ParcelsService; analysis: AnalysisService; simulation: SimulationService; userData: UserDataService; sources: SourcesService; sourceActivation: SourceActivationService; market: MarketService }> = {}) => {
     const config = {
       get: (key: string) => (key === 'WEBSITE_SESSION_SECRET' ? 'test-secret' : undefined)
     } as unknown as ConfigService;
@@ -25,6 +26,7 @@ describe('WebsiteService', () => {
       {} as MapService,
       {} as IngestionService,
       overrides.sources ?? {} as SourcesService,
+      overrides.sourceActivation ?? new SourceActivationService(),
       (overrides.market ?? {
         inspectParcelMarket: async () => ({
           status: 'unavailable',
@@ -64,11 +66,12 @@ describe('WebsiteService', () => {
 
     const result = await service.municipalParcelWorkflow({ province: 'İstanbul', district: 'Pendik', ada: '1', parsel: '2' }) as any;
 
-    expect(result.status).toBe('method_contract_required');
+    expect(result.status).toBe('needs_contract');
     expect(result.query.municipalityId).toBe('pendik-keos-imar');
     expect(result.parcelGeometryAttempt.status).toBe('not_ready');
     expect(result.zoningAttempt.status).toBe('method_contract_required');
-    expect(result.noDataReason).toBe('Kaynak bulundu ama method contract çözülmedi');
+    expect(result.noDataReason).toContain('Public discovery');
+    expect(result.sourceActivation.activationStatus).toBe('needs_contract');
     expect(result.provenance[0]).toEqual(expect.objectContaining({ sourceId: 'pendik-keos-imar', dataType: 'public_metadata', confidence: expect.any(Number) }));
     expect(result.provenance[0]).not.toHaveProperty('responseHash');
   });

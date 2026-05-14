@@ -6,6 +6,7 @@ import {
   discoverMunicipalityGis,
   getLiveMapLayers,
   getSourceHealth,
+  getSourceActivation,
   getSourceQuality,
   humanizeApiError,
   listSources
@@ -15,6 +16,7 @@ import type {
   MunicipalGISDiscoveryResponse,
   SourceHealthRecord,
   SourceQualityResponse,
+  SourceActivationResponse,
   SourceRegistryRecord
 } from "@/types/api";
 
@@ -23,6 +25,7 @@ interface SourceState {
   health: Record<string, SourceHealthRecord>;
   liveLayers: BackendMapLayerResponse[];
   quality?: SourceQualityResponse;
+  activation?: SourceActivationResponse;
   discoveries: Record<string, MunicipalGISDiscoveryResponse | Record<string, unknown>>;
   loading: boolean;
   healthLoading: boolean;
@@ -32,6 +35,7 @@ interface SourceState {
   loadSources: () => Promise<void>;
   refreshHealth: () => Promise<void>;
   refreshQuality: (params?: { limit?: number; live_check?: boolean; capability?: string }) => Promise<void>;
+  refreshActivation: (params?: { limit?: number; live_check?: boolean }) => Promise<void>;
   discover: (sourceId: string) => Promise<void>;
   discoverMunicipalityGis: (slug: string, force?: boolean) => Promise<void>;
   loadLiveLayers: () => Promise<void>;
@@ -71,6 +75,15 @@ export const useSourceStore = create<SourceState>()((set, get) => ({
       set({ quality, qualityLoading: false, lastChecked: quality.fetched_at ?? new Date().toISOString() });
     } catch (error) {
       set({ qualityLoading: false, error: `${humanizeApiError(error, "Canlı veri kalite paneli alınamadı.")} Neden veri yok sorusu için sağlık/portal etiketleri korunuyor.`, lastChecked: new Date().toISOString() });
+    }
+  },
+  refreshActivation: async (params = {}) => {
+    set({ qualityLoading: true, error: undefined });
+    try {
+      const activation = await getSourceActivation({ limit: 24, ...params });
+      set({ activation, qualityLoading: false, lastChecked: activation.generatedAt ?? new Date().toISOString() });
+    } catch (error) {
+      set({ qualityLoading: false, error: `${humanizeApiError(error, "Devlet kaynak aktivasyon paneli alınamadı.")} Mevcut kalite/portal etiketleri korunuyor.`, lastChecked: new Date().toISOString() });
     }
   },
   discover: async (sourceId: string) => {

@@ -2,6 +2,7 @@ import { ConnectorKind, ProbeStatus } from '../src/connectors/connector.types';
 import { DiscoveryService } from '../src/connectors/discovery.service';
 import { HttpProbeService } from '../src/connectors/http-probe.service';
 import { SOURCE_REGISTRY } from '../src/sources/source-registry';
+import { SourceActivationService } from '../src/sources/source-activation.service';
 import { summarizeSources } from '../src/sources/source-coverage';
 import { TURKEY_PROVINCES } from '../src/sources/turkey-coverage';
 import { SourcesController } from '../src/sources/sources.controller';
@@ -155,6 +156,56 @@ describe('public source health discovery', () => {
   });
 });
 
+describe('government source activation', () => {
+  it('keeps protected government systems blocked without live probing', () => {
+    const activation = new SourceActivationService();
+    const result = activation.activation();
+    const tkgm = result.sources.find((source) => source.sourceId === 'tkgm-parsel-sorgu');
+    const edevlet = result.sources.find((source) => source.sourceId === 'edevlet-csb-tucbs');
+
+    expect(tkgm?.activationStatus).toBe('blocked');
+    expect(tkgm?.blockedReason).toBe('requires_legal_agreement');
+    expect(tkgm?.usableEndpoints).toHaveLength(0);
+    expect(edevlet?.activationStatus).toBe('blocked');
+    expect(edevlet?.blockedReason).toBe('requires_credentials');
+    expect(result.summary.blocked).toBeGreaterThanOrEqual(2);
+  });
+
+  it('promotes public probe availability into active activation state', () => {
+    const activation = new SourceActivationService();
+    const source = SOURCE_REGISTRY.find((entry) => entry.id === 'pendik-keos-imar')!;
+    const record = activation.activationForSource(source, [
+      {
+        endpoint: 'https://keos.pendik.bel.tr/imardurumu/Services/MapService.ashx',
+        status: ProbeStatus.Available,
+        detectedKinds: [ConnectorKind.NetcadKeos]
+      }
+    ]);
+
+    expect(record.activationStatus).toBe('active');
+    expect(record.runtimeStatus).toBe('public');
+    expect(record.usableEndpoints[0]).toContain('MapService');
+    expect(record.nextAction).toContain('Public endpoint aktif');
+  });
+
+  it('maps captcha or credential probes to blocked activation state', () => {
+    const activation = new SourceActivationService();
+    const source = SOURCE_REGISTRY.find((entry) => entry.id === 'pendik-keos-imar')!;
+    const record = activation.activationForSource(source, [
+      {
+        endpoint: source.homepageUrl,
+        status: ProbeStatus.CaptchaRequired,
+        detectedKinds: [ConnectorKind.NetcadKeos]
+      }
+    ]);
+
+    expect(record.activationStatus).toBe('blocked');
+    expect(record.runtimeStatus).toBe('captcha_required');
+    expect(record.blockedReason).toBe('captcha_required');
+    expect(record.usableEndpoints).toHaveLength(0);
+  });
+});
+
 describe('website bootstrap source coverage', () => {
   it('returns registry-only source coverage without live probing', async () => {
     const map = {
@@ -163,6 +214,7 @@ describe('website bootstrap source coverage', () => {
     };
     const ingestion = { accessRequirements: jest.fn(() => ({ status: 'ok' })) };
     const sources = new SourcesService();
+    const sourceActivation = new SourceActivationService();
     const service = new WebsiteService(
       {} as any,
       {} as any,
@@ -173,12 +225,16 @@ describe('website bootstrap source coverage', () => {
       map as any,
       ingestion as any,
       sources,
+      sourceActivation,
       {} as any
     );
 
-    const bootstrap = (await service.bootstrap()) as { sourceCoverage?: { totalSources: number; publicCandidateCount: number }; websiteCapabilities?: { municipalParcelWorkflow: boolean } };
+    const bootstrap = (await service.bootstrap()) as { sourceCoverage?: { totalSources: number; publicCandidateCount: number }; sourceActivation?: { total: number; blocked: number }; activeSources?: unknown[]; websiteCapabilities?: { municipalParcelWorkflow: boolean } };
 
     expect(bootstrap.sourceCoverage?.totalSources).toBe(SOURCE_REGISTRY.length);
+    expect(bootstrap.sourceActivation?.total).toBeGreaterThan(0);
+    expect(bootstrap.sourceActivation?.blocked).toBeGreaterThan(0);
+    expect(bootstrap.activeSources?.length).toBeGreaterThan(0);
     expect(bootstrap.sourceCoverage?.publicCandidateCount).toBeGreaterThan(0);
     expect(bootstrap.websiteCapabilities?.municipalParcelWorkflow).toBe(true);
     expect(map.tileServerStatus).toHaveBeenCalledTimes(1);

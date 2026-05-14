@@ -178,6 +178,9 @@ class _ProviderCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final color = switch (provider.stateLevel) {
       ProviderStateLevel.official => scheme.primary,
+      ProviderStateLevel.active => scheme.primary,
+      ProviderStateLevel.needsContract => scheme.tertiary,
+      ProviderStateLevel.blocked => scheme.error,
       ProviderStateLevel.publicMetadata => scheme.secondary,
       ProviderStateLevel.derived => scheme.tertiary,
       ProviderStateLevel.unavailable => scheme.outline,
@@ -230,6 +233,16 @@ class _ProviderCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               'Bölge: ${provider.regions.take(5).join(', ')}',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ],
+          if ((provider.nextAction ?? '').isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              provider.nextAction!,
               style: Theme.of(context)
                   .textTheme
                   .bodySmall

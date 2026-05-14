@@ -23,7 +23,7 @@ enum ParcelSourceKind {
   unavailable,
 }
 
-enum ProviderStateLevel { official, publicMetadata, derived, unavailable }
+enum ProviderStateLevel { official, active, needsContract, blocked, publicMetadata, derived, unavailable }
 
 class SourceAttribution {
   const SourceAttribution({
@@ -59,6 +59,9 @@ class ProviderDescriptor {
     required this.regions,
     required this.capabilities,
     required this.attribution,
+    this.activationStatus,
+    this.nextAction,
+    this.blockedReason,
   });
 
   factory ProviderDescriptor.fromJson(Map<String, Object?> json) =>
@@ -80,6 +83,9 @@ class ProviderDescriptor {
             ? SourceAttribution.fromJson(
                 (json['attribution'] as Map).cast<String, Object?>())
             : const SourceAttribution(name: 'Bilinmeyen kaynak', url: ''),
+        activationStatus: json['activationStatus']?.toString(),
+        nextAction: json['nextAction']?.toString(),
+        blockedReason: json['blockedReason']?.toString(),
       );
 
   final String id;
@@ -90,16 +96,32 @@ class ProviderDescriptor {
   final List<String> regions;
   final List<String> capabilities;
   final SourceAttribution attribution;
+  final String? activationStatus;
+  final String? nextAction;
+  final String? blockedReason;
 
   ProviderStateLevel get stateLevel => switch (status) {
         'official' => ProviderStateLevel.official,
+        'active' || 'live' => ProviderStateLevel.active,
+        'needs_contract' => ProviderStateLevel.needsContract,
+        'blocked' || 'requires_approval' || 'requires_credentials' =>
+          ProviderStateLevel.blocked,
         'public_metadata' => ProviderStateLevel.publicMetadata,
         'derived' => ProviderStateLevel.derived,
-        _ => ProviderStateLevel.unavailable,
+        _ => switch (activationStatus) {
+            'active' => ProviderStateLevel.active,
+            'needs_contract' => ProviderStateLevel.needsContract,
+            'blocked' => ProviderStateLevel.blocked,
+            'metadata_only' => ProviderStateLevel.publicMetadata,
+            _ => ProviderStateLevel.unavailable,
+          },
       };
 
   String get stateLabel => switch (stateLevel) {
         ProviderStateLevel.official => 'Resmi',
+        ProviderStateLevel.active => 'Aktif public',
+        ProviderStateLevel.needsContract => 'Kontrat gerekli',
+        ProviderStateLevel.blocked => 'Erişim gerekli',
         ProviderStateLevel.publicMetadata => 'Kamu metadata',
         ProviderStateLevel.derived => 'Türetilmiş',
         ProviderStateLevel.unavailable => 'Hazır değil',

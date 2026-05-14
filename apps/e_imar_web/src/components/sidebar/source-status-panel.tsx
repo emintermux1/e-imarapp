@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Activity, AlertTriangle, CheckCircle2, Clock3, Database, ExternalLink, MapPinOff, RefreshCw, TimerReset } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle2, Clock3, Database, ExternalLink, LockKeyhole, MapPinOff, RadioTower, RefreshCw, TimerReset } from "lucide-react";
 import { SourceBadge } from "@/components/gis/source-badge";
 import {
   explainMissingData,
@@ -19,11 +19,13 @@ export function SourceStatusPanel() {
   const sources = useSourceStore((s) => s.sources);
   const health = useSourceStore((s) => s.health);
   const quality = useSourceStore((s) => s.quality);
+  const activation = useSourceStore((s) => s.activation);
   const loading = useSourceStore((s) => s.loading || s.healthLoading || s.qualityLoading);
   const error = useSourceStore((s) => s.error);
   const loadSources = useSourceStore((s) => s.loadSources);
   const refreshHealth = useSourceStore((s) => s.refreshHealth);
   const refreshQuality = useSourceStore((s) => s.refreshQuality);
+  const refreshActivation = useSourceStore((s) => s.refreshActivation);
   const discover = useSourceStore((s) => s.discover);
   const discoverMunicipalityGis = useSourceStore((s) => s.discoverMunicipalityGis);
   const loadLiveLayers = useSourceStore((s) => s.loadLiveLayers);
@@ -34,8 +36,9 @@ export function SourceStatusPanel() {
       void loadLiveLayers();
       void refreshHealth();
       void refreshQuality({ limit: 10 });
+      void refreshActivation({ limit: 16 });
     });
-  }, [loadSources, loadLiveLayers, refreshHealth, refreshQuality]);
+  }, [loadSources, loadLiveLayers, refreshHealth, refreshQuality, refreshActivation]);
 
   const summary = summarizeSourceStatuses(sources, health);
   const rollup = quality?.rollup ?? {};
@@ -47,6 +50,7 @@ export function SourceStatusPanel() {
   function refreshAll(liveCheck = false) {
     void refreshHealth();
     void refreshQuality({ limit: 10, live_check: liveCheck });
+    void refreshActivation({ limit: 16, live_check: liveCheck });
   }
 
   return (
@@ -82,10 +86,10 @@ export function SourceStatusPanel() {
       </div>
 
       <div className="mt-2 grid grid-cols-4 gap-1 text-center text-[10px]">
-        <Metric label="canlı" value={quality ? Number(rollup.live ?? 0) : summary.live} tone="live" />
+        <Metric label="aktif" value={activation?.summary.active ?? (quality ? Number(rollup.live ?? 0) : summary.live)} tone="live" />
         <Metric label="yedek" value={Number(rollup.fallback ?? 0)} tone="fallback" />
-        <Metric label="kapalı" value={quality ? Number(rollup.unavailable ?? 0) : summary.blocked + summary.timeout} tone="blocked" />
-        <Metric label="geom" value={qualitySources.filter((item) => item.geometry_available).length} tone="external" />
+        <Metric label="bloklu" value={activation?.summary.blocked ?? (quality ? Number(rollup.unavailable ?? 0) : summary.blocked + summary.timeout)} tone="blocked" />
+        <Metric label="kontrat" value={activation?.summary.needsContract ?? qualitySources.filter((item) => item.geometry_available).length} tone="external" />
       </div>
 
       <div className="mt-2 rounded-lg border border-border-subtle bg-bg/55 px-2.5 py-2 text-[10.5px] leading-relaxed text-fg-secondary">
@@ -101,6 +105,33 @@ export function SourceStatusPanel() {
           </span>
         </div>
       </div>
+
+      {activation && (
+        <div className="mt-2 rounded-lg border border-brand-blue/25 bg-[rgb(var(--accent-blue)/0.06)] px-2.5 py-2">
+          <div className="flex items-center justify-between gap-2 text-[10.5px]">
+            <span className="inline-flex items-center gap-1.5 font-semibold text-fg-primary">
+              <RadioTower className="h-3.5 w-3.5 text-[rgb(var(--accent-blue))]" />
+              Devlet kaynak aktivasyonu
+            </span>
+            <span className="text-fg-muted">{activation.summary.total} kayıt</span>
+          </div>
+          <div className="mt-2 grid gap-1.5">
+            {activation.sources.slice(0, 5).map((source) => (
+              <div key={source.sourceId} className="rounded-md border border-border-subtle bg-bg/65 px-2 py-1.5">
+                <div className="flex items-start gap-2">
+                  <span className={cn("mt-1 h-2 w-2 shrink-0 rounded-full", activationDot(source.activationStatus))} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[10.5px] font-semibold text-fg-primary">{source.name}</div>
+                    <div className="truncate text-[9.5px] text-fg-muted">{activationLabel(source.activationStatus)} · {source.metadata?.province ?? source.jurisdiction}</div>
+                  </div>
+                  {source.activationStatus === "blocked" && <LockKeyhole className="h-3.5 w-3.5 text-status-warning" />}
+                </div>
+                <div className="mt-1 line-clamp-2 text-[9.5px] leading-snug text-fg-secondary">{source.nextAction}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-2 flex flex-col gap-1.5">
         {featured.map((item) => {
@@ -239,6 +270,25 @@ function statusLabel(status: string) {
     requires_approval: "yasal/kurumsal onay gerekli",
     external_only: "portal linki hazır",
     not_found: "endpoint bulunamadı"
+  };
+  return labels[status] ?? status;
+}
+
+function activationDot(status: string) {
+  if (status === "active") return "bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,.16)]";
+  if (status === "blocked") return "bg-rose-500";
+  if (status === "needs_contract") return "bg-amber-500";
+  if (status === "metadata_only") return "bg-sky-500";
+  return "bg-zinc-400";
+}
+
+function activationLabel(status: string) {
+  const labels: Record<string, string> = {
+    active: "public endpoint aktif",
+    blocked: "credential/protokol gerekli",
+    needs_contract: "method contract gerekli",
+    metadata_only: "metadata aktif",
+    unavailable: "erişilemiyor"
   };
   return labels[status] ?? status;
 }

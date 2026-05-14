@@ -12,6 +12,7 @@ import type {
   ReportResponse,
   SourceHealthRecord,
   SourceQualityResponse,
+  SourceActivationResponse,
   SourceRegistryRecord
 } from "@/types/api";
 
@@ -195,6 +196,10 @@ export function getSourceQuality(params: {
 
 export function getSourceQualityDetail(sourceId: string, liveCheck = false) {
   return apiFetch<SourceQualityResponse>(`/sources/quality/${sourceId}${queryString({ live_check: liveCheck })}`);
+}
+
+export function getSourceActivation(params: { limit?: number; live_check?: boolean } = {}) {
+  return apiFetch<SourceActivationResponse>(`/sources/activation${queryString(params)}`);
 }
 
 export function discoverSource(sourceId: string) {

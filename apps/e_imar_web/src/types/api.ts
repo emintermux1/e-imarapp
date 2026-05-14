@@ -218,6 +218,55 @@ export interface SourceQualityResponse {
   message?: string | null;
 }
 
+export type SourceActivationStatus =
+  | "active"
+  | "blocked"
+  | "needs_contract"
+  | "unavailable"
+  | "metadata_only";
+
+export interface SourceActivationRecord {
+  sourceId: string;
+  name: string;
+  jurisdiction: string;
+  category: string;
+  homepageUrl: string;
+  accessStatus: string;
+  runtimeStatus: string;
+  activationStatus: SourceActivationStatus;
+  capabilities: string[];
+  connectorKinds: string[];
+  usableEndpoints: string[];
+  blockedReason?: string;
+  nextAction: string;
+  metadata?: {
+    province?: string;
+    district?: string;
+    municipalitySlug?: string;
+    vendor?: string;
+  };
+  provenance: Array<{ endpoint: string; status: string; connectorKind?: string; confidence: number }>;
+  lastCheckedAt: string;
+}
+
+export interface SourceActivationResponse {
+  status: string;
+  generatedAt: string;
+  liveChecked: boolean;
+  summary: {
+    total: number;
+    active: number;
+    blocked: number;
+    needsContract: number;
+    metadataOnly: number;
+    unavailable: number;
+    byActivationStatus: Record<string, number>;
+    byCategory: Record<string, number>;
+    byJurisdiction: Record<string, number>;
+  };
+  sources: SourceActivationRecord[];
+}
+
 export interface RelatedPlanItem {
   id: number;
   label: string;
