@@ -91,6 +91,17 @@ export interface ParcelReportResponse {
   message?: string;
 }
 
+export interface WebsiteLiveReadinessResponse {
+  status?: string;
+  generatedAt?: string;
+  deployment?: {
+    apiBaseUrl?: string | null;
+    httpsReady?: boolean;
+    requiredEnv?: Array<{ key?: string; configured?: boolean; purpose?: string }>;
+  };
+  sources?: Array<Record<string, unknown>>;
+}
+
 export interface PlanNoteExplainResponse {
   status?: string;
   provider?: string;
