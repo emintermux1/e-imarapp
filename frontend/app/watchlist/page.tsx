@@ -50,7 +50,7 @@ export default function WatchlistPage() {
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex items-center gap-2">
         <Bell size={20} className="text-[var(--accent-cyan)]" />
-        <h1 className="text-2xl font-bold">İzleme Listesi</h1>
+        <h1 className="text-2xl font-bold">Parsel Alarm</h1>
       </div>
 
       <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl p-5 flex gap-3">

@@ -404,7 +404,7 @@ class _QuickActions extends StatelessWidget {
                   children: [
                     Icon(Icons.notifications_rounded, color: scheme.primary),
                     const SizedBox(height: 12),
-                    Text('Askıları izle',
+                    Text('Parsel Alarm',
                         style: Theme.of(context).textTheme.titleMedium),
                   ],
                 ),

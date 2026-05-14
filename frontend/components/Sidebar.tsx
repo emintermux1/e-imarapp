@@ -33,7 +33,7 @@ const navItems = [
   { href: "/analysis", label: "Analiz", icon: BarChart3 },
   { href: "/reports", label: "Raporlar", icon: FileText },
   { href: "/sources", label: "Kaynak Önizleme", icon: Link2 },
-  { href: "/watchlist", label: "İzleme Listesi", icon: Bell },
+  { href: "/watchlist", label: "Parsel Alarm", icon: Bell },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/login", label: "Giriş", icon: LogIn },
   { href: "/register", label: "Kayıt", icon: UserPlus },

@@ -25,7 +25,7 @@ import { useEffect } from 'react';
 const TAB_ITEMS: TabItem[] = [
   { id: 'layers', label: 'Katmanlar', icon: <Layers className="h-3.5 w-3.5" aria-hidden /> },
   { id: 'saved', label: 'Kayıtlı', icon: <Bookmark className="h-3.5 w-3.5" aria-hidden /> },
-  { id: 'watchlist', label: 'Watchlist', icon: <Star className="h-3.5 w-3.5" aria-hidden /> },
+  { id: 'watchlist', label: 'Alarm', icon: <Star className="h-3.5 w-3.5" aria-hidden /> },
   { id: 'history', label: 'Geçmiş', icon: <History className="h-3.5 w-3.5" aria-hidden /> },
   { id: 'filters', label: 'Filtreler', icon: <Filter className="h-3.5 w-3.5" aria-hidden /> },
 ];
@@ -136,10 +136,10 @@ function WatchlistTab() {
     <PanelContent>
       <ReadinessGate
         status="not_ready"
-        notReadyTitle="Watchlist Sprint 2"
-        notReadyDescription="Watchlist CRUD ve bildirim kuralları Sprint 2'de aktive edilecek."
+        notReadyTitle="Parsel Alarm Sprint 2"
+        notReadyDescription="Parsel Alarm kuralları ve bildirim tercihleri Sprint 2'de aktive edilecek."
         nextActions={[
-          'Sprint 2: /eplan/subscriptions ile kullanıcı kuralı oluşturma',
+          'Sprint 2: /eplan/subscriptions ile Parsel Alarm kuralı oluşturma',
           'Sprint 2: WebSocket bildirim akışı',
         ]}
       >

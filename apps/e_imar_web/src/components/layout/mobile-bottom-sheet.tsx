@@ -327,7 +327,7 @@ export function MobileBottomSheet() {
         </Button>
         <Button variant="secondary" size="sm" onClick={toggleWatchlist} className="min-h-11">
           <Star className={cn("h-3.5 w-3.5", isWatchlisted && "fill-[rgb(var(--accent-red))] text-[rgb(var(--accent-red))]")} />
-          {isWatchlisted ? "Listede" : "Takip Et"}
+          {isWatchlisted ? "Alarmda" : "Alarm Kur"}
         </Button>
         <Button variant="ghost" size="sm" className="min-h-11">
           <Share2 className="h-3.5 w-3.5" /> Özet

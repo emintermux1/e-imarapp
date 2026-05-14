@@ -58,7 +58,7 @@ class _PremiumShellState extends State<PremiumShell> {
           ),
           NavigationDestination(
             icon: Icon(Icons.notifications_active_rounded),
-            label: 'Takip',
+            label: 'Alarm',
           ),
         ],
       ),

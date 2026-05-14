@@ -244,9 +244,9 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
     if (!parcel) return;
     if (watchlistHas(parcel.id)) {
       watchlistRemove(parcel.id);
-      setWatchlistStatus({ state: "success", message: "Yerel listeden çıkarıldı" });
+      setWatchlistStatus({ state: "success", message: "Parsel Alarm'dan çıkarıldı" });
     } else {
-      setWatchlistStatus({ state: "loading", message: "Watchlist güncelleniyor…" });
+      setWatchlistStatus({ state: "loading", message: "Parsel Alarm güncelleniyor…" });
       const addLocal = (message: string, state: "success" | "error" = "success") => {
         watchlistAdd({
           id: parcel.id,
@@ -268,12 +268,12 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             label: `${parcel.ada}/${parcel.parsel} ${parcel.ilce}/${parcel.il}`,
             notification_channels: ["push", "email"]
           });
-          addLocal("Canlı watchlist'e eklendi");
+          addLocal("Parsel Alarm canlı kayıt isteğiyle eklendi");
         } catch (error) {
           addLocal(`${humanizeApiError(error)} Yerel yedek listeye eklendi.`, "error");
         }
       } else {
-        addLocal("Canlı API parseli değil — yerel yedek listeye eklendi");
+        addLocal("Canlı API parseli değil — yerel Parsel Alarm profiline eklendi");
       }
     }
   }
@@ -535,7 +535,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
               </div>
               <div className="flex items-center gap-1">
                 <IconButton
-                  label={isWatchlisted ? "Watchlist'ten Çıkar" : "Watchlist'e Ekle"}
+                  label={isWatchlisted ? "Parsel Alarm'dan çıkar" : "Parsel Alarm'a ekle"}
                   variant="ghost"
                   onClick={toggleWatchlist}
                 >
@@ -809,7 +809,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                     "fill-[rgb(var(--accent-red))] text-[rgb(var(--accent-red))]"
                 )}
               />)}
-              {isWatchlisted ? "Listeden Çıkar" : "Watchlist'e Ekle"}
+              {isWatchlisted ? "Alarmdan çıkar" : "Parsel Alarm'a ekle"}
             </Button>
             <Button variant="ghost" size="sm">
               <Share2 className="h-4 w-4" /> Özeti paylaş

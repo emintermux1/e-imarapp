@@ -19,9 +19,9 @@ class WatchlistScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
         children: [
           const SectionHeader(
-            title: 'Askı ve takip yüzeyi',
+            title: 'Parsel Alarm',
             subtitle:
-                'Provenance temelli bildirimler ve eylem niyeti odaklı tasarım.',
+                'İmar değişimi, askı planı ve kaynak durumu için yerel alarm profilleri.',
           ),
           const SizedBox(height: 12),
           for (final item in items) ...[
@@ -34,9 +34,9 @@ class WatchlistScreen extends ConsumerWidget {
             const SizedBox(height: 12),
           ],
           const EmptyStateCard(
-            title: 'Bildirimler yerel modda hazır',
+            title: 'Parsel Alarm yerel modda hazır',
             body:
-                'Canlı bildirim servisi bağlanana kadar takipler cihaz içi oturumda tutulur; resmi veri gibi sunulmaz.',
+                'Canlı bildirim servisi bağlanana kadar alarm profilleri cihaz içi oturumda tutulur; resmi veri gibi sunulmaz.',
             icon: Icons.notifications_none_rounded,
           ),
         ],
@@ -84,7 +84,7 @@ class _WatchlistCard extends StatelessWidget {
             runSpacing: 8,
             children: [
               StatusPill(label: item.provenance, color: scheme.secondary),
-              StatusPill(label: item.intent.name, color: scheme.tertiary),
+              StatusPill(label: _intentLabel(item.intent), color: scheme.tertiary),
               if (item.parcelLabel != null)
                 StatusPill(
                   label: item.parcelLabel!,
@@ -112,11 +112,24 @@ class _WatchlistCard extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onRemove,
               icon: const Icon(Icons.delete_outline_rounded),
-              label: const Text('Takipten çıkar'),
+              label: const Text('Alarmdan çıkar'),
             ),
           ],
         ],
       ),
     );
+  }
+}
+
+String _intentLabel(WatchlistIntent intent) {
+  switch (intent) {
+    case WatchlistIntent.aski:
+      return 'Askı';
+    case WatchlistIntent.zoningChange:
+      return 'İmar değişimi';
+    case WatchlistIntent.permitReminder:
+      return 'Ruhsat hatırlatma';
+    case WatchlistIntent.providerHealth:
+      return 'Kaynak erişimi';
   }
 }

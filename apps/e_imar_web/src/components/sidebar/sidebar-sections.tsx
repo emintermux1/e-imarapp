@@ -47,7 +47,7 @@ export function SidebarSections({ collapsed = false }: { collapsed?: boolean }) 
     },
     {
       id: "watchlist",
-      title: "Watchlist",
+      title: "Parsel Alarm",
       icon: <Star className="h-4 w-4" />,
       body: <WatchlistSection />,
       defaultOpen: true

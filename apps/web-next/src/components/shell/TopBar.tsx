@@ -19,7 +19,7 @@ export function TopBar() {
           placeholder="Ada / Parsel, koordinat, adres, belediye ile ara..."
         />
         <button className="rounded-lg border border-slate-300 px-3 py-2 text-sm">Yeni Sorgu</button>
-        <Link href="/watchlist" className="rounded-lg border border-slate-300 px-3 py-2 text-sm">Watchlist</Link>
+        <Link href="/watchlist" className="rounded-lg border border-slate-300 px-3 py-2 text-sm">Parsel Alarm</Link>
         <Link href="/reports" className="rounded-lg border border-slate-300 px-3 py-2 text-sm">Rapor</Link>
         <button
           onClick={() => toggle3DMode()}
