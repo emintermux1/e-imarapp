@@ -18,8 +18,8 @@ import {
   Layers,
   Satellite,
   Home,
-  ChevronLeft,
-  ChevronRight,
+  Menu,
+  X,
 } from "lucide-react";
 
 const navItems = [
@@ -40,55 +40,82 @@ const navItems = [
 ];
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
   return (
-    <aside
-      className={`fixed top-0 left-0 h-screen z-50 flex flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-card)] transition-all duration-300 ${
-        collapsed ? "w-16" : "w-64"
-      }`}
-    >
-      <div className="flex items-center justify-between p-4 border-b border-[var(--border-subtle)]">
-        {!collapsed && (
-          <span className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
-            <span className="text-[var(--accent-cyan)]">e</span>Imar<span className="text-[var(--accent-magenta)]">TR</span>
-          </span>
-        )}
+    <>
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-14 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-card)]/95 px-4 backdrop-blur md:hidden">
+        <Link href="/" className="text-lg font-bold tracking-tight" onClick={() => setMobileOpen(false)}>
+          <span className="text-[var(--accent-cyan)]">e</span>ImarTR
+        </Link>
         <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-1 rounded hover:bg-white/5 text-[var(--text-secondary)]"
+          onClick={() => setMobileOpen((open) => !open)}
+          className="rounded-xl border border-[var(--border-subtle)] p-2 text-[var(--text-primary)]"
+          aria-label={mobileOpen ? "Menüyü kapat" : "Menüyü aç"}
         >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          {mobileOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
-      </div>
+      </header>
 
-      <nav className="flex-1 overflow-y-auto py-4 space-y-1">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg text-sm transition-colors ${
-                isActive
-                  ? "bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)]"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5"
-              }`}
-            >
-              <Icon size={18} />
-              {!collapsed && <span>{item.label}</span>}
-            </Link>
-          );
-        })}
-      </nav>
+      {mobileOpen ? (
+        <div className="fixed inset-0 z-40 bg-slate-950/70 pt-14 backdrop-blur-sm md:hidden" onClick={() => setMobileOpen(false)}>
+          <nav className="mx-3 mt-3 max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-card)] p-3 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex min-h-12 items-center gap-3 rounded-2xl px-4 text-sm transition-colors ${
+                    isActive
+                      ? "bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)]"
+                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5"
+                  }`}
+                >
+                  <Icon size={18} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      ) : null}
 
-      {!collapsed && (
-        <div className="p-4 border-t border-[var(--border-subtle)] text-xs text-[var(--text-secondary)]">
+      <aside className="fixed left-0 top-0 z-50 hidden h-[100dvh] w-64 flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-card)] md:flex">
+        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] p-4">
+          <Link href="/" className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
+            <span className="text-[var(--accent-cyan)]">e</span>Imar<span className="text-[var(--accent-magenta)]">TR</span>
+          </Link>
+        </div>
+
+        <nav className="flex-1 space-y-1 overflow-y-auto py-4">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`mx-2 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-colors ${
+                  isActive
+                    ? "bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)]"
+                    : "text-[var(--text-secondary)] hover:bg-white/5 hover:text-[var(--text-primary)]"
+                }`}
+              >
+                <Icon size={18} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="border-t border-[var(--border-subtle)] p-4 text-xs text-[var(--text-secondary)]">
           <p>v0.1.0 — Beta</p>
         </div>
-      )}
-    </aside>
+      </aside>
+    </>
   );
 }

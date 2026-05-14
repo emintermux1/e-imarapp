@@ -28,11 +28,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className={`${outfit.variable} ${spaceMono.variable}`}>
-      <body className={`${outfit.className} antialiased bg-[var(--bg-primary)] text-[var(--text-primary)] min-h-screen`}>
-        <div className="flex min-h-screen">
+      <body className={`${outfit.className} min-h-[100dvh] bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased`}>
+        <div className="flex min-h-[100dvh]">
           <Sidebar />
-          <main className="flex-1 ml-0 md:ml-64 transition-all duration-300">
-            <div className="p-6 md:p-8 max-w-7xl mx-auto">
+          <main className="flex-1 pt-14 transition-all duration-300 md:ml-64 md:pt-0">
+            <div className="mx-auto max-w-7xl p-4 md:p-8">
               {children}
             </div>
           </main>

@@ -19,6 +19,11 @@ export class WebsiteController {
     return this.website.bootstrap(userReference);
   }
 
+  @Get('live-readiness')
+  liveReadiness() {
+    return this.website.liveReadiness();
+  }
+
   @Post('session/start')
   startSession(@Body() body: { userReference: string; roles?: string[]; expiresInHours?: number }) {
     return this.website.startSession(body);

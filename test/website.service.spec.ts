@@ -12,9 +12,9 @@ import { SourcesService } from '../src/sources/sources.service';
 import { SourceActivationService } from '../src/sources/source-activation.service';
 
 describe('WebsiteService', () => {
-  const makeService = (overrides: Partial<{ parcels: ParcelsService; analysis: AnalysisService; simulation: SimulationService; userData: UserDataService; sources: SourcesService; sourceActivation: SourceActivationService; market: MarketService }> = {}) => {
+  const makeService = (overrides: Partial<{ config: Record<string, string | undefined>; parcels: ParcelsService; analysis: AnalysisService; simulation: SimulationService; userData: UserDataService; sources: SourcesService; sourceActivation: SourceActivationService; market: MarketService }> = {}) => {
     const config = {
-      get: (key: string) => (key === 'WEBSITE_SESSION_SECRET' ? 'test-secret' : undefined)
+      get: (key: string) => ({ WEBSITE_SESSION_SECRET: 'test-secret', ...overrides.config }[key])
     } as unknown as ConfigService;
     return new WebsiteService(
       config,
@@ -84,6 +84,21 @@ describe('WebsiteService', () => {
     expect(result.status).toBe('source_not_found');
     expect(result.parcelGeometryAttempt.status).toBe('not_ready');
     expect(result.provenance).toEqual([]);
+  });
+
+  it('reports live readiness without claiming official connector data', () => {
+    const service = makeService({ config: { DATABASE_URL: 'postgres://test', REDIS_URL: 'redis://test', PUBLIC_API_BASE_URL: 'https://api.example.test/api/v1' } });
+
+    const result = service.liveReadiness() as any;
+
+    expect(result.status).toBe('ok');
+    expect(result.deployment.httpsReady).toBe(true);
+    expect(result.sources).toEqual(expect.arrayContaining([
+      expect.objectContaining({ sourceId: 'tkgm-parsel-sorgu', status: 'not_ready', dataType: 'unavailable' }),
+      expect.objectContaining({ sourceId: 'municipality-registry', status: 'public_metadata', dataType: 'public_metadata' }),
+      expect.objectContaining({ sourceId: 'eplan', status: 'method_contract_required', dataType: 'unavailable' })
+    ]));
+    expect(result.sources.some((source: { status: string }) => source.status === 'verified_live')).toBe(false);
   });
 
   it('returns truthful parcel market payload from the BFF path', async () => {
