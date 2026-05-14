@@ -47,7 +47,7 @@ export function Sidebar() {
     <>
       <header className="fixed left-0 right-0 top-0 z-50 flex h-14 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-card)]/95 px-4 backdrop-blur md:hidden">
         <Link href="/" className="text-lg font-bold tracking-tight" onClick={() => setMobileOpen(false)}>
-          <span className="text-[var(--accent-cyan)]">e</span>ImarTR
+          <span className="text-[var(--accent-cyan)]">e</span> imar
         </Link>
         <button
           onClick={() => setMobileOpen((open) => !open)}
@@ -87,7 +87,7 @@ export function Sidebar() {
       <aside className="fixed left-0 top-0 z-50 hidden h-[100dvh] w-64 flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-card)] md:flex">
         <div className="flex items-center justify-between border-b border-[var(--border-subtle)] p-4">
           <Link href="/" className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
-            <span className="text-[var(--accent-cyan)]">e</span>Imar<span className="text-[var(--accent-magenta)]">TR</span>
+            <span className="text-[var(--accent-cyan)]">e</span> imar
           </Link>
         </div>
 
