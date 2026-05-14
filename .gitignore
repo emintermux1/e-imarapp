@@ -13,3 +13,4 @@ tmp/
 frontend/.next/
 **/__pycache__/
 *.pyc
+.superpowers/

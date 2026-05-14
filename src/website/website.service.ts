@@ -33,6 +33,17 @@ interface MunicipalParcelWorkflowInput {
   parsel?: string;
 }
 
+type WebsiteProbeStatus =
+  | 'verified_live'
+  | 'method_contract_required'
+  | 'protected'
+  | 'requires_credentials'
+  | 'captcha_required'
+  | 'public_metadata'
+  | 'not_ready'
+  | 'source_not_found'
+  | 'unavailable';
+
 @Injectable()
 export class WebsiteService {
   constructor(
@@ -120,8 +131,80 @@ export class WebsiteService {
     };
   }
 
+  liveReadiness(): unknown {
+    const apiBaseUrl = this.config.get<string>('PUBLIC_API_BASE_URL') ?? this.config.get<string>('NEXT_PUBLIC_API_BASE_URL');
+    const hasDatabase = Boolean(this.config.get<string>('DATABASE_URL'));
+    const hasRedis = Boolean(this.config.get<string>('REDIS_URL'));
+    const hasSessionSecret = Boolean(this.config.get<string>('WEBSITE_SESSION_SECRET'));
+    const generatedAt = new Date().toISOString();
+    const envStatus = hasDatabase && hasRedis && hasSessionSecret ? 'ok' : 'not_ready';
+
+    return {
+      status: envStatus,
+      generatedAt,
+      deployment: {
+        apiBaseUrl: apiBaseUrl ?? null,
+        httpsReady: apiBaseUrl ? apiBaseUrl.startsWith('https://') || apiBaseUrl.startsWith('http://localhost') : false,
+        requiredEnv: [
+          { key: 'DATABASE_URL', configured: hasDatabase, purpose: 'Parcel, plan, source registry, and report persistence.' },
+          { key: 'REDIS_URL', configured: hasRedis, purpose: 'Async workflow, queue, and cache readiness.' },
+          { key: 'WEBSITE_SESSION_SECRET', configured: hasSessionSecret, purpose: 'Website session token signing.' }
+        ]
+      },
+      sources: [
+        this.readinessSource({
+          sourceId: 'tkgm-parsel-sorgu',
+          sourceName: 'TKGM Parsel Sorgu',
+          category: 'tkgm',
+          status: 'not_ready',
+          endpoint: 'https://parselsorgu.tkgm.gov.tr/',
+          message: 'Resmî TKGM geometri sonucu için doğrulanmış public contract henüz etkin değil.',
+          nextAction: 'Yasal erişim ve public method contract doğrulanınca verified_live açılabilir.'
+        }),
+        this.readinessSource({
+          sourceId: 'municipality-registry',
+          sourceName: 'Belediye kaynak registry',
+          category: 'municipality',
+          status: 'public_metadata',
+          message: 'Belediye kaynakları registry ve discovery metadata seviyesinde gösteriliyor.',
+          nextAction: 'Belediye bazında KEOS/Netcad/WMS method contract doğrulanmalı.'
+        }),
+        this.readinessSource({
+          sourceId: 'eplan',
+          sourceName: 'e-Plan',
+          category: 'eplan',
+          status: 'method_contract_required',
+          message: 'e-Plan entegrasyonu için canlı sorgu contract doğrulaması gerekiyor.',
+          nextAction: 'Plan sorgu contract ve rate/access koşulları sabitlenmeli.'
+        })
+      ]
+    };
+  }
+
   async parcelMarket(input: { query: ParcelMarketContext }): Promise<unknown> {
     return this.market.inspectParcelMarket(input.query);
+  }
+
+  private readinessSource(input: {
+    sourceId: string;
+    sourceName: string;
+    category: 'tkgm' | 'municipality' | 'eplan' | 'other';
+    status: WebsiteProbeStatus;
+    endpoint?: string;
+    message: string;
+    nextAction: string;
+  }) {
+    return {
+      sourceId: input.sourceId,
+      sourceName: input.sourceName,
+      category: input.category,
+      status: input.status,
+      endpoint: input.endpoint,
+      checkedAt: new Date().toISOString(),
+      dataType: input.status === 'verified_live' ? 'official' : input.status === 'public_metadata' ? 'public_metadata' : 'unavailable',
+      message: input.message,
+      nextAction: input.nextAction
+    };
   }
 
   startSession(input: { userReference: string; roles?: string[]; expiresInHours?: number }): unknown {

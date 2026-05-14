@@ -114,6 +114,10 @@ export async function generateParcelReport(body: {
   });
 }
 
+export async function getWebsiteLiveReadiness() {
+  return apiFetch<import("./types").WebsiteLiveReadinessResponse>("/website/live-readiness");
+}
+
 // Watchlist
 export async function getWatchlist() {
   return apiFetch<import("./types").WatchlistItemResponse[]>("/watchlist");
