@@ -25,9 +25,9 @@ export class SourcesController {
   }
 
   @Get('activation')
-  activationState(@Query('live_check') liveCheck?: string, @Query('limit') limit?: string) {
+  activationState(@Query('live_check') liveCheck?: string, @Query('limit') limit?: string, @Query('force') force?: string) {
     return liveCheck === 'true'
-      ? this.activation?.activateLive({ limit: this.parseLimit(limit) })
+      ? this.activation?.activateLive({ limit: this.parseLimit(limit), force: force === 'true' })
       : this.activation?.activation({ limit: this.parseLimit(limit) });
   }
 

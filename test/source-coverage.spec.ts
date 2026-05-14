@@ -204,6 +204,32 @@ describe('government source activation', () => {
     expect(record.blockedReason).toBe('captcha_required');
     expect(record.usableEndpoints).toHaveLength(0);
   });
+
+  it('caches live activation probes without re-probing until forced', async () => {
+    const source = SOURCE_REGISTRY.find((entry) => entry.id === 'pendik-keos-imar')!;
+    const discovery = {
+      discoverSource: jest.fn(async () => ({
+        source,
+        candidates: [source.homepageUrl],
+        generatedAt: '2026-05-14T00:00:00.000Z',
+        probes: [{
+          endpoint: 'https://keos.pendik.bel.tr/imardurumu/Services/MapService.ashx',
+          status: ProbeStatus.Available,
+          detectedKinds: [ConnectorKind.NetcadKeos]
+        }]
+      }))
+    } as unknown as DiscoveryService;
+    const activation = new SourceActivationService(discovery);
+
+    const first = await activation.activateLive({ sourceIds: [source.id] });
+    const second = await activation.activateLive({ sourceIds: [source.id] });
+    const third = await activation.activateLive({ sourceIds: [source.id], force: true });
+
+    expect(discovery.discoverSource).toHaveBeenCalledTimes(2);
+    expect(first.sources[0].cache?.status).toBe('stored');
+    expect(second.sources[0].cache?.status).toBe('hit');
+    expect(third.sources[0].cache?.status).toBe('stored');
+  });
 });
 
 describe('website bootstrap source coverage', () => {

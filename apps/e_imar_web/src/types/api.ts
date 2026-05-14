@@ -272,6 +272,10 @@ export interface SourceActivationRecord {
   };
   provenance: Array<{ endpoint: string; status: string; connectorKind?: string; confidence: number }>;
   lastCheckedAt: string;
+  cache?: {
+    status: "hit" | "stored" | "registry_only";
+    ttlSeconds?: number;
+  };
 }
 
 export interface SourceActivationResponse {

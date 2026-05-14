@@ -30,10 +30,17 @@ export interface SourceActivationRecord {
     confidence: number;
   }>;
   lastCheckedAt: string;
+  cache?: {
+    status: 'hit' | 'stored' | 'registry_only';
+    ttlSeconds?: number;
+  };
 }
 
 @Injectable()
 export class SourceActivationService {
+  private readonly liveCache = new Map<string, { expiresAt: number; record: SourceActivationRecord }>();
+  private readonly liveCacheTtlMs = 15 * 60 * 1000;
+
   constructor(private readonly discovery?: DiscoveryService) {}
 
   activationSummary(records: SourceActivationRecord[] = this.activation({ liveCheck: false }).sources) {
@@ -68,7 +75,7 @@ export class SourceActivationService {
     };
   }
 
-  async activateLive(options: { limit?: number; sourceIds?: string[] } = {}) {
+  async activateLive(options: { limit?: number; sourceIds?: string[]; force?: boolean } = {}) {
     if (!this.discovery) return this.activation({ ...options, liveCheck: false });
     const generatedAt = new Date().toISOString();
     const sourceIds = options.sourceIds ? new Set(options.sourceIds) : undefined;
@@ -79,9 +86,14 @@ export class SourceActivationService {
         records.push(this.registryOnlyRecord(source, generatedAt));
         continue;
       }
+      const cached = options.force ? undefined : this.cachedLiveRecord(source.id, generatedAt);
+      if (cached) {
+        records.push(cached);
+        continue;
+      }
       try {
         const discovered = await this.discovery.discoverSource(source.id);
-        records.push(this.liveRecord(source, discovered.probes, generatedAt));
+        records.push(this.storeLiveRecord(source.id, this.liveRecord(source, discovered.probes, generatedAt), generatedAt));
       } catch {
         records.push({ ...this.registryOnlyRecord(source, generatedAt), activationStatus: 'unavailable', runtimeStatus: 'endpoint_changed', blockedReason: 'probe_failed', nextAction: 'Canlı discovery başarısız oldu; daha düşük hızla veya manuel resmi portal kontrolüyle tekrar deneyin.' });
       }
@@ -130,7 +142,8 @@ export class SourceActivationService {
         status: 'registry_metadata',
         confidence: metadataOnly ? 0.55 : 0.4
       }],
-      lastCheckedAt: generatedAt
+      lastCheckedAt: generatedAt,
+      cache: { status: 'registry_only' }
     };
   }
 
@@ -153,8 +166,33 @@ export class SourceActivationService {
         connectorKind: probe.detectedKinds[0] ?? source.connectorKinds[0],
         status: probe.status,
         confidence: probe.status === ProbeStatus.Available ? 0.85 : probe.status === ProbeStatus.MethodContractRequired ? 0.7 : 0.45
-      }))
+      })),
+      cache: { status: 'stored', ttlSeconds: Math.trunc(this.liveCacheTtlMs / 1000) }
     };
+  }
+
+  private cachedLiveRecord(sourceId: string, generatedAt: string): SourceActivationRecord | undefined {
+    const cached = this.liveCache.get(sourceId);
+    if (!cached) return undefined;
+    if (cached.expiresAt <= Date.now()) {
+      this.liveCache.delete(sourceId);
+      return undefined;
+    }
+    return {
+      ...cached.record,
+      lastCheckedAt: generatedAt,
+      cache: { status: 'hit', ttlSeconds: Math.max(0, Math.ceil((cached.expiresAt - Date.now()) / 1000)) }
+    };
+  }
+
+  private storeLiveRecord(sourceId: string, record: SourceActivationRecord, generatedAt: string): SourceActivationRecord {
+    const stored = {
+      ...record,
+      lastCheckedAt: generatedAt,
+      cache: { status: 'stored' as const, ttlSeconds: Math.trunc(this.liveCacheTtlMs / 1000) }
+    };
+    this.liveCache.set(sourceId, { expiresAt: Date.now() + this.liveCacheTtlMs, record: stored });
+    return stored;
   }
 
   private activationStatusForProbe(source: SourceRegistryEntry, status?: ProbeStatus): SourceActivationStatus {

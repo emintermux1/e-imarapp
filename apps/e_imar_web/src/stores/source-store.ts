@@ -39,7 +39,7 @@ interface SourceState {
   loadSources: () => Promise<void>;
   refreshHealth: () => Promise<void>;
   refreshQuality: (params?: { limit?: number; live_check?: boolean; capability?: string }) => Promise<void>;
-  refreshActivation: (params?: { limit?: number; live_check?: boolean }) => Promise<void>;
+  refreshActivation: (params?: { limit?: number; live_check?: boolean; force?: boolean }) => Promise<void>;
   discover: (sourceId: string) => Promise<void>;
   discoverMunicipalityGis: (slug: string, force?: boolean) => Promise<void>;
   loadLiveLayers: () => Promise<void>;

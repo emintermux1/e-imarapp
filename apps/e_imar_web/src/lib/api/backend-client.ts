@@ -199,7 +199,7 @@ export function getSourceQualityDetail(sourceId: string, liveCheck = false) {
   return apiFetch<SourceQualityResponse>(`/sources/quality/${sourceId}${queryString({ live_check: liveCheck })}`);
 }
 
-export function getSourceActivation(params: { limit?: number; live_check?: boolean } = {}) {
+export function getSourceActivation(params: { limit?: number; live_check?: boolean; force?: boolean } = {}) {
   return apiFetch<SourceActivationResponse>(`/sources/activation${queryString(params)}`);
 }
 

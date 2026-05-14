@@ -56,7 +56,7 @@ export function SourceStatusPanel() {
   function refreshAll(liveCheck = false) {
     void refreshHealth();
     void refreshQuality({ limit: 10, live_check: liveCheck });
-    void refreshActivation({ limit: 16, live_check: liveCheck });
+    void refreshActivation({ limit: 16, live_check: liveCheck, force: liveCheck });
   }
 
   return (
@@ -132,7 +132,10 @@ export function SourceStatusPanel() {
                   </div>
                   {source.activationStatus === "blocked" && <LockKeyhole className="h-3.5 w-3.5 text-status-warning" />}
                 </div>
-                <div className="mt-1 line-clamp-2 text-[9.5px] leading-snug text-fg-secondary">{source.nextAction}</div>
+                <div className="mt-1 line-clamp-2 text-[9.5px] leading-snug text-fg-secondary">
+                  {source.nextAction}
+                  {source.cache?.status === "hit" && " · cache hit"}
+                </div>
               </div>
             ))}
           </div>
