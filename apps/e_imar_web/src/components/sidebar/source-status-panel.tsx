@@ -29,6 +29,12 @@ export function SourceStatusPanel() {
   const discover = useSourceStore((s) => s.discover);
   const discoverMunicipalityGis = useSourceStore((s) => s.discoverMunicipalityGis);
   const loadLiveLayers = useSourceStore((s) => s.loadLiveLayers);
+  const activeMapLayers = useSourceStore((s) => s.activeMapLayers);
+  const probedLayers = useSourceStore((s) => s.probedLayers);
+  const liveLayers = useSourceStore((s) => s.liveLayers);
+  const probeLayerCatalog = useSourceStore((s) => s.probeLayerCatalog);
+  const activateLiveLayer = useSourceStore((s) => s.activateLiveLayer);
+  const deactivateLiveLayer = useSourceStore((s) => s.deactivateLiveLayer);
   const discoveries = useSourceStore((s) => s.discoveries);
 
   React.useEffect(() => {
@@ -140,29 +146,67 @@ export function SourceStatusPanel() {
           const status = health[item.id]?.status ?? (item.requires_approval || item.requires_credentials ? "requires_approval" : "external_only");
           const slug = item.slug ?? item.id;
           const homepageUrl = item.homepage_url ?? item.base_url ?? "#";
+          const sourceLayers = liveLayers.filter((layer) => layer.source_id === item.id);
+          const wmsLayer = sourceLayers.find((layer) => layer.type === "wms");
+          const probe = sourceLayers.map((layer) => probedLayers[String(layer.id)]).find(Boolean);
           return (
             <div key={item.id} className="rounded-lg border border-border-subtle bg-bg/70 px-2.5 py-2">
               <div className="flex items-start gap-2">
-                <span className={cn("mt-1 h-2 w-2 shrink-0 rounded-full", statusClass(status))} />
+                <span className={cn("mt-1 h-2 w-2 shrink-0 rounded-full", statusClass(probe?.status ?? status))} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[11px] font-semibold text-fg-primary">{item.name}</div>
-                  <div className="truncate text-[9.5px] text-fg-muted">{statusLabel(status)}</div>
+                  <div className="truncate text-[9.5px] text-fg-muted">
+                    {probe ? `probe: ${statusLabel(probe.status ?? "unknown")} · ${probe.available_layers?.length ?? 0} katman` : statusLabel(status)}
+                  </div>
                 </div>
-	                <button
-	                  type="button"
-	                  onClick={() => {
-	                    void discover(item.id);
-	                    if ((item.kind ?? "").startsWith("municipal")) void discoverMunicipalityGis(slug, true);
-	                  }}
-	                  className="min-h-7 rounded border border-border-subtle px-1.5 py-1 text-[10px] text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
-	                >
-	                  Keşfet
-	                </button>
-	                <a href={homepageUrl} target="_blank" rel="noreferrer" className="inline-flex h-7 w-7 items-center justify-center rounded border border-border-subtle text-fg-secondary hover:bg-surface-1 hover:text-fg-primary" title="Resmi portalı aç">
-	                  <ExternalLink className="h-3 w-3" />
-	                </a>
-	              </div>
-	              <DiscoveryDetails sourceId={item.id} slug={slug} discovery={discoveries[slug] ?? discoveries[item.id]} />
+                <button
+                  type="button"
+                  onClick={() => {
+                    void discover(item.id);
+                    if ((item.kind ?? "").startsWith("municipal")) void discoverMunicipalityGis(slug, true);
+                  }}
+                  className="min-h-7 rounded border border-border-subtle px-1.5 py-1 text-[10px] text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
+                >
+                  Keşfet
+                </button>
+                <button
+                  type="button"
+                  disabled={!wmsLayer}
+                  onClick={() => {
+                    if (wmsLayer) void probeLayerCatalog(item.id, wmsLayer.url);
+                  }}
+                  className="min-h-7 rounded border border-border-subtle px-1.5 py-1 text-[10px] text-fg-secondary hover:bg-surface-1 hover:text-fg-primary disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Katman
+                </button>
+                <a href={homepageUrl} target="_blank" rel="noreferrer" className="inline-flex h-7 w-7 items-center justify-center rounded border border-border-subtle text-fg-secondary hover:bg-surface-1 hover:text-fg-primary" title="Resmi portalı aç">
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+              {probe?.available_layers && probe.available_layers.length > 0 && wmsLayer && (
+                <div className="mt-1 rounded border border-border-subtle bg-surface-1/60 p-1">
+                  <div className="mb-1 text-[9.5px] uppercase tracking-wide text-fg-muted">WMS katmanı seç</div>
+                  <div className="max-h-24 space-y-1 overflow-auto pr-1">
+                    {probe.available_layers.slice(0, 8).map((layer) => {
+                      const layerName = String(layer.name ?? "");
+                      if (!layerName) return null;
+                      return (
+                        <button
+                          key={layerName}
+                          type="button"
+                          onClick={() => void activateLiveLayer(item.id, wmsLayer.url, layerName)}
+                          className="block w-full truncate rounded border border-border-subtle bg-bg/80 px-1.5 py-1 text-left text-[10px] text-fg-secondary hover:bg-emerald-50 hover:text-emerald-900"
+                          title={String(layer.title ?? layerName)}
+                        >
+                          {String(layer.title ?? layerName)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {probe.cache?.status && <div className="mt-1 text-[9px] text-fg-muted">Cache: {probe.cache.status}</div>}
+                </div>
+              )}
+              <DiscoveryDetails sourceId={item.id} slug={slug} discovery={discoveries[slug] ?? discoveries[item.id]} />
             </div>
           );
         })}
@@ -172,6 +216,26 @@ export function SourceStatusPanel() {
         <div className="mt-2 flex items-start gap-2 rounded-md border border-status-warning/35 bg-status-warning/10 px-2 py-1.5 text-[10.5px] leading-snug text-status-warning">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>Kalite satırı yok. Backend kalite endpoint'i kapalıysa kaynak yokluğu uydurulmaz; demo/yedek etiketleri görünür kalır.</span>
+        </div>
+      )}
+
+      {activeMapLayers.length > 0 && (
+        <div className="mt-2 rounded-md border border-emerald-300/50 bg-emerald-50/70 px-2 py-1.5">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-800">Haritada açık WMS</div>
+          <div className="mt-1 flex flex-col gap-1">
+            {activeMapLayers.map((layer) => (
+              <div key={String(layer.id)} className="flex items-center gap-2 text-[10.5px] text-emerald-950">
+                <span className="min-w-0 flex-1 truncate">{layer.name ?? layer.title ?? layer.source_id}</span>
+                <button
+                  type="button"
+                  onClick={() => deactivateLiveLayer(layer.id)}
+                  className="rounded border border-emerald-300/70 bg-white/70 px-1.5 py-0.5 text-[10px] text-emerald-900 hover:bg-white"
+                >
+                  Kapat
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
       {error && <div className="mt-2 rounded-md border border-amber-300/50 bg-amber-100/40 px-2 py-1.5 text-[10.5px] leading-snug text-amber-900">{error}</div>}

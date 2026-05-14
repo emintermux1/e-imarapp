@@ -10,6 +10,7 @@ import type {
   ParcelSummaryResponse,
   PlanResponse,
   ReportResponse,
+  LiveMapLayerProbeResponse,
   SourceHealthRecord,
   SourceQualityResponse,
   SourceActivationResponse,
@@ -224,6 +225,10 @@ export function refreshMunicipalityGisEndpoints(slug: string) {
 
 export function getLiveMapLayers() {
   return apiFetch<{ layers?: BackendMapLayerResponse[] } | BackendMapLayerResponse[]>("/map/live-layers");
+}
+
+export function probeLiveMapLayer(sourceId: string, endpointUrl?: string, layerName?: string) {
+  return apiFetch<LiveMapLayerProbeResponse>(`/map/live-layers/probe${queryString({ source_id: sourceId, endpoint_url: endpointUrl, layer_name: layerName })}`);
 }
 
 export function getBackendPlans() {
