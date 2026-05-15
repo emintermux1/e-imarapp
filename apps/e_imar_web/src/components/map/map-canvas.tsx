@@ -325,6 +325,38 @@ export function MapCanvas({
             duration: 700
           });
           break;
+        case "locate":
+          if (!navigator.geolocation) {
+            window.dispatchEvent(new CustomEvent("eimar:map:location-status", { detail: { message: "Konum izni bu tarayıcıda yok." } }));
+            break;
+          }
+          window.dispatchEvent(new CustomEvent("eimar:map:location-status", { detail: { message: "Konum aranıyor…" } }));
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const center: [number, number] = [position.coords.longitude, position.coords.latitude];
+              setSelectedArea(null);
+              setSelectedPoint({
+                lng: center[0],
+                lat: center[1],
+                source: "system",
+                nearestParcelId: findNearestParcel(center[0], center[1], 2500)?.parcel.id
+              });
+              setRightPanelOpen(true);
+              map.flyTo({
+                center,
+                zoom: Math.max(map.getZoom(), 15),
+                duration: 700,
+                padding: window.innerWidth >= 1280 ? { top: 104, bottom: 96, left: 112, right: 360 } : { top: 86, bottom: 92, left: 24, right: 24 },
+                essential: true
+              });
+              window.dispatchEvent(new CustomEvent("eimar:map:location-status", { detail: { message: "Konum haritaya taşındı." } }));
+            },
+            () => {
+              window.dispatchEvent(new CustomEvent("eimar:map:location-status", { detail: { message: "Konum izni alınamadı." } }));
+            },
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+          );
+          break;
       }
     };
     window.addEventListener("eimar:map:control", onControl);
@@ -480,7 +512,7 @@ export function MapCanvas({
       setRightPanelOpen(true);
       if (parcel.properties.centroid) {
         const [lng, lat] = parcel.properties.centroid;
-        const padding = window.innerWidth >= 1280 ? { top: 40, bottom: 40, left: 320, right: 440 } : { top: 40, bottom: 40, left: 24, right: 24 };
+        const padding = window.innerWidth >= 1280 ? { top: 104, bottom: 96, left: 112, right: 360 } : { top: 86, bottom: 92, left: 24, right: 24 };
         map.flyTo({
           center: [lng, lat],
           zoom: Math.max(map.getZoom(), 16),
@@ -527,8 +559,8 @@ export function MapCanvas({
       } : null);
       const { center, zoom, bearing, pitch, bounds } = buildFlyTargetFromLocationTarget(target, { zoom: props.zoom });
       const padding = window.innerWidth >= 1280
-        ? { top: 40, bottom: 40, left: 320, right: 440 }
-        : { top: 40, bottom: 40, left: 24, right: 24 };
+        ? { top: 104, bottom: 96, left: 112, right: 360 }
+        : { top: 86, bottom: 92, left: 24, right: 24 };
       if (bounds) {
         map.fitBounds([[bounds.west, bounds.south], [bounds.east, bounds.north]], {
           padding,
@@ -868,7 +900,7 @@ export function MapCanvas({
       source?.setData(toFeatureCollection(feature as unknown as GeoJSON.Feature | null));
       if (feature) {
         const bounds = geometryBounds(feature.geometry);
-        const padding = window.innerWidth >= 1280 ? { top: 72, bottom: 72, left: 320, right: 440 } : { top: 56, bottom: 56, left: 24, right: 24 };
+        const padding = window.innerWidth >= 1280 ? { top: 112, bottom: 96, left: 112, right: 360 } : { top: 86, bottom: 92, left: 24, right: 24 };
         if (bounds) {
           map.fitBounds(bounds, { padding, duration: 700, maxZoom: 17 });
         } else if (feature.properties.centroid) {
@@ -888,7 +920,7 @@ export function MapCanvas({
       const source = map.getSource(LIVE_PLAN_REGIONS_SOURCE) as maplibregl.GeoJSONSource | undefined;
       source?.setData(toFeatureCollection(selectedLatestRegion?.has_geometry ? selectedLatestRegion.geom_geojson ?? null : null));
       if (selectedLatestRegion?.has_geometry) {
-        const padding = window.innerWidth >= 1280 ? { top: 72, bottom: 72, left: 320, right: 440 } : { top: 56, bottom: 56, left: 24, right: 24 };
+        const padding = window.innerWidth >= 1280 ? { top: 112, bottom: 96, left: 112, right: 360 } : { top: 86, bottom: 92, left: 24, right: 24 };
         const bounds = geometryBounds(selectedLatestRegion.geom_geojson ?? null);
         if (bounds) {
           map.fitBounds(bounds, { padding, duration: 700, maxZoom: 15 });
@@ -982,7 +1014,7 @@ export function MapCanvas({
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map || !flyTarget) return;
-    const padding = window.innerWidth >= 1280 ? { top: 40, bottom: 40, left: 320, right: 440 } : { top: 40, bottom: 40, left: 24, right: 24 };
+    const padding = window.innerWidth >= 1280 ? { top: 104, bottom: 96, left: 112, right: 360 } : { top: 86, bottom: 92, left: 24, right: 24 };
     const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700;
     if (flyTarget.bounds) {
       map.fitBounds([[flyTarget.bounds.west, flyTarget.bounds.south], [flyTarget.bounds.east, flyTarget.bounds.north]], {

@@ -7,7 +7,6 @@ import {
   HelpCircle,
   UserCircle2,
   Box,
-  Database,
   Activity,
   GitCompareArrows,
   AlertTriangle,
@@ -18,7 +17,6 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { BrandMark } from "@/components/layout/brand-mark";
-import { GlobalSearch } from "@/components/search/global-search";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { BasemapSwitcher } from "@/components/map/basemap-switcher";
 import { HeaderBreadcrumb } from "@/components/layout/header-breadcrumb";
@@ -79,10 +77,10 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
 
   return (
     <header
-      className="fixed left-3 right-3 top-3 z-40 flex h-14 items-stretch overflow-hidden rounded-[1.35rem] border border-white/55 bg-surface-2/92 shadow-[inset_0_1px_0_rgb(255_255_255/0.82),0_24px_70px_-42px_rgb(var(--accent-navy)/0.72)] backdrop-blur-md"
+      className="pointer-events-none fixed left-4 right-4 top-4 z-40 flex h-14 items-center gap-2"
       role="banner"
     >
-      <div className="flex min-w-[190px] items-center gap-2 border-r border-border-subtle/70 bg-[linear-gradient(135deg,rgb(var(--accent-navy)/0.96),rgb(var(--accent-green)/0.88))] px-3 text-white lg:min-w-[280px]">
+      <div className="pointer-events-auto flex h-14 min-w-[64px] items-center gap-2 rounded-full border border-white/12 bg-[linear-gradient(135deg,rgb(var(--accent-navy)/0.98),rgb(var(--accent-green)/0.86))] px-3 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_24px_70px_-48px_rgb(var(--accent-navy)/0.92)] md:min-w-[178px] lg:min-w-[228px]">
         <button
           type="button"
           aria-label="Menüyü aç"
@@ -94,20 +92,18 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
         <BrandMark />
       </div>
 
-      <div className="hidden min-w-0 items-center gap-3 border-r border-border-subtle/70 px-4 md:flex">
+      <div className="pointer-events-auto hidden h-12 min-w-0 items-center gap-3 rounded-full border border-white/50 bg-surface-2/88 px-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.78),0_18px_54px_-42px_rgb(var(--accent-navy)/0.72)] backdrop-blur-md xl:flex">
         <HeaderBreadcrumb />
       </div>
 
-      <div className="flex min-w-[180px] flex-1 items-center justify-center px-2 sm:px-4">
-        <GlobalSearch />
-      </div>
+      <div className="pointer-events-none flex min-w-0 flex-1" />
 
-      <div className="flex items-center gap-1 overflow-x-auto border-l border-border-subtle/70 bg-surface-3/45 px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="pointer-events-auto flex h-12 items-center gap-1 overflow-x-auto rounded-full border border-white/50 bg-surface-2/88 px-2 shadow-[inset_0_1px_0_rgb(255_255_255/0.78),0_18px_54px_-42px_rgb(var(--accent-navy)/0.72)] backdrop-blur-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
               href="/kaynaklar"
-              className="hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-green/20 bg-brand-green/10 px-2.5 text-[11px] text-fg-secondary transition-colors hover:border-brand-green/40 hover:bg-brand-green/15 md:inline-flex soft-press"
+              className="hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-green/20 bg-brand-green/10 px-2.5 text-[11px] text-fg-secondary transition-colors hover:border-brand-green/40 hover:bg-brand-green/15 xl:inline-flex soft-press"
             >
               <Activity className="h-3.5 w-3.5" />
               <span className="font-medium text-fg-primary">{okSources}/{totalSources || Object.keys(ASKI_LIST).length} kaynak aktif</span>
@@ -126,7 +122,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               }}
               aria-pressed={askiMode}
               className={cn(
-                "hidden h-8 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 text-[11px] font-semibold tabular-nums transition-colors md:inline-flex soft-press",
+                "hidden h-8 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 text-[11px] font-semibold tabular-nums transition-colors lg:inline-flex soft-press",
                 askiMode
                   ? "border-brand-amber text-fg-primary bg-[rgb(var(--accent-amber)/0.16)]"
                   : "border-border-subtle bg-surface-1 text-fg-secondary hover:bg-surface-2 hover:text-fg-primary"
@@ -156,19 +152,6 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Link
-              href="/kaynaklar"
-              className="hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-border-subtle bg-surface-2 px-2.5 text-[11px] text-fg-secondary transition-colors hover:border-border-strong hover:bg-surface-3 sm:inline-flex soft-press"
-            >
-              <Database className="h-3.5 w-3.5" />
-              <span className="font-medium text-fg-primary">Kaynaklar</span>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">Kaynak registry ekranını aç</TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
             <button
               type="button"
               onClick={() => {
@@ -180,7 +163,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               }}
               aria-label="En yeni imar bölgelerini aç"
               className={cn(
-                "hidden h-9 min-w-max items-center gap-2 whitespace-nowrap rounded-full border px-3 text-[11px] font-semibold tabular-nums transition-colors lg:inline-flex soft-press",
+                "hidden h-9 min-w-max items-center gap-2 whitespace-nowrap rounded-full border px-3 text-[11px] font-semibold tabular-nums transition-colors 2xl:inline-flex soft-press",
                 latestRegionsStatus === "loading"
                   ? "border-brand-green/60 bg-[rgb(var(--accent-green)/0.14)] text-fg-primary"
                   : "border-brand-green/35 bg-[rgb(var(--accent-green)/0.08)] text-fg-secondary hover:border-brand-green/60 hover:bg-[rgb(var(--accent-green)/0.14)] hover:text-fg-primary"
@@ -214,34 +197,6 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
           </TooltipContent>
         </Tooltip>
 
-        {/* Compare button */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              onClick={() => {
-                if (mapMode === "3d") return;
-                setCompareMode(compareMode === "satellite" ? "off" : "satellite");
-              }}
-              disabled={mapMode === "3d"}
-              aria-pressed={compareMode === "satellite"}
-              className={cn(
-                "hidden h-8 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 text-xs transition-colors sm:inline-flex soft-press",
-                compareMode === "satellite"
-                  ? "border-brand-blue/65 bg-[rgb(var(--accent-blue)/0.10)] text-fg-primary"
-                  : "border-border-subtle bg-surface-2 text-fg-secondary hover:bg-surface-1 hover:text-fg-primary",
-                mapMode === "3d" && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              <GitCompareArrows className="h-3.5 w-3.5" />
-              Karşılaştır
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            {mapMode === "3d" ? "Karşılaştırma için 2D moduna geçin" : "Eski/Güncel uydu karşılaştırma sürgüsü"}
-          </TooltipContent>
-        </Tooltip>
-
         <Tooltip>
           <TooltipTrigger asChild>
             <button
@@ -266,9 +221,14 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
           </TooltipTrigger>
           <TooltipContent side="bottom">En yeni imar bölgeleri</TooltipContent>
         </Tooltip>
+        <CompareIconButton
+          mapMode={mapMode}
+          compareMode={compareMode}
+          setCompareMode={setCompareMode}
+        />
         <ModeToggle mapMode={mapMode} setMapMode={setMapMode} />
-        <span className="hidden sm:inline-flex"><BasemapSwitcher /></span>
-        <ThemeToggle />
+        <span className="hidden md:inline-flex"><BasemapSwitcher /></span>
+        <span className="hidden lg:inline-flex"><ThemeToggle /></span>
         <Tooltip>
           <TooltipTrigger asChild>
             <span>
@@ -280,6 +240,44 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
         <IconButton label="Profil" variant="ghost"><UserCircle2 className="h-4 w-4" /></IconButton>
       </div>
     </header>
+  );
+}
+
+function CompareIconButton({
+  mapMode,
+  compareMode,
+  setCompareMode
+}: {
+  mapMode: "2d" | "3d";
+  compareMode: "off" | "timeMachine" | "satellite";
+  setCompareMode: (m: "off" | "timeMachine" | "satellite") => void;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          onClick={() => {
+            if (mapMode === "3d") return;
+            setCompareMode(compareMode === "satellite" ? "off" : "satellite");
+          }}
+          disabled={mapMode === "3d"}
+          aria-pressed={compareMode === "satellite"}
+          className={cn(
+            "hidden h-9 w-9 items-center justify-center rounded-full border transition-colors sm:inline-flex soft-press",
+            compareMode === "satellite"
+              ? "border-brand-blue/65 bg-[rgb(var(--accent-blue)/0.10)] text-fg-primary"
+              : "border-border-subtle bg-surface-2 text-fg-secondary hover:bg-surface-1 hover:text-fg-primary",
+            mapMode === "3d" && "cursor-not-allowed opacity-50"
+          )}
+        >
+          <GitCompareArrows className="h-3.5 w-3.5" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">
+        {mapMode === "3d" ? "Karşılaştırma için 2D moduna geçin" : "Eski/Güncel uydu karşılaştırma"}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

@@ -16,12 +16,12 @@ export function LeftSidebar() {
   return (
     <aside
       className={cn(
-        "fixed bottom-4 left-3 top-24 z-20 hidden flex-col overflow-hidden rounded-[1.7rem] border border-white/15 bg-[linear-gradient(180deg,rgb(var(--accent-navy)/0.98),rgb(6_20_14/0.96))] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_28px_84px_-44px_rgb(var(--accent-navy)/0.9)] backdrop-blur-md transition-[width] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] lg:flex",
-        collapsed ? "w-[68px]" : "w-[292px]"
+        "fixed bottom-24 left-4 top-28 z-20 hidden flex-col overflow-hidden rounded-full border border-white/12 bg-[linear-gradient(180deg,rgb(var(--accent-navy)/0.98),rgb(6_20_14/0.96))] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_28px_84px_-44px_rgb(var(--accent-navy)/0.9)] backdrop-blur-md transition-[width,border-radius] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] lg:flex",
+        collapsed ? "w-[60px]" : "w-[292px] rounded-[1.7rem]"
       )}
       aria-label="Yan panel"
     >
-      <div className="flex h-14 items-center justify-between border-b border-white/10 bg-white/[0.06] px-3">
+      <div className={cn("flex h-14 items-center justify-between border-b border-white/10 bg-white/[0.06] px-3", collapsed && "justify-center")}>
         <span
           className={cn(
             "text-[10px] font-bold uppercase tracking-[0.22em] text-white/58",
