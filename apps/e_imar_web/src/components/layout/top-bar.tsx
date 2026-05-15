@@ -79,22 +79,22 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
 
   return (
     <header
-      className="fixed left-3 right-3 top-3 z-40 flex h-12 items-stretch overflow-hidden rounded-xl border border-border-strong/80 bg-surface-2/94 shadow-[0_1px_0_rgb(255_255_255/0.75)_inset,0_18px_44px_-28px_rgb(18_52_82/0.45)] backdrop-blur-md"
+      className="fixed left-3 right-3 top-3 z-40 flex h-14 items-stretch overflow-hidden rounded-[1.35rem] border border-white/55 bg-surface-2/92 shadow-[inset_0_1px_0_rgb(255_255_255/0.82),0_24px_70px_-42px_rgb(var(--accent-navy)/0.72)] backdrop-blur-md"
       role="banner"
     >
-      <div className="flex min-w-[220px] items-center gap-2 border-r border-border-subtle/80 bg-surface-3/65 px-3 lg:min-w-[280px]">
+      <div className="flex min-w-[190px] items-center gap-2 border-r border-border-subtle/70 bg-[linear-gradient(135deg,rgb(var(--accent-navy)/0.96),rgb(var(--accent-green)/0.88))] px-3 text-white lg:min-w-[280px]">
         <button
           type="button"
           aria-label="Menüyü aç"
           onClick={onOpenMobileMenu ?? toggleSidebar}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-fg-secondary transition-colors hover:bg-surface-1 hover:text-fg-primary lg:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/12 hover:text-white lg:hidden soft-press"
         >
           <Menu className="h-4 w-4" />
         </button>
         <BrandMark />
       </div>
 
-      <div className="hidden min-w-0 items-center gap-3 border-r border-border-subtle/80 px-4 md:flex">
+      <div className="hidden min-w-0 items-center gap-3 border-r border-border-subtle/70 px-4 md:flex">
         <HeaderBreadcrumb />
       </div>
 
@@ -102,12 +102,12 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
         <GlobalSearch />
       </div>
 
-      <div className="flex items-center gap-1 overflow-x-auto border-l border-border-subtle/80 bg-surface-3/35 px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex items-center gap-1 overflow-x-auto border-l border-border-subtle/70 bg-surface-3/45 px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
               href="/kaynaklar"
-              className="hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-border-subtle bg-surface-2 px-2 text-[11px] text-fg-secondary transition-colors hover:border-border-strong hover:bg-surface-3 md:inline-flex"
+              className="hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-green/20 bg-brand-green/10 px-2.5 text-[11px] text-fg-secondary transition-colors hover:border-brand-green/40 hover:bg-brand-green/15 md:inline-flex soft-press"
             >
               <Activity className="h-3.5 w-3.5" />
               <span className="font-medium text-fg-primary">{okSources}/{totalSources || Object.keys(ASKI_LIST).length} kaynak aktif</span>
@@ -126,9 +126,9 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               }}
               aria-pressed={askiMode}
               className={cn(
-                "hidden h-8 items-center gap-1 whitespace-nowrap rounded-lg border px-2 text-[11px] font-medium tabular-nums transition-colors md:inline-flex",
+                "hidden h-8 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 text-[11px] font-semibold tabular-nums transition-colors md:inline-flex soft-press",
                 askiMode
-                  ? "border-status-warning text-fg-primary bg-[rgb(var(--status-warning)/0.10)]"
+                  ? "border-brand-amber text-fg-primary bg-[rgb(var(--accent-amber)/0.16)]"
                   : "border-border-subtle bg-surface-1 text-fg-secondary hover:bg-surface-2 hover:text-fg-primary"
               )}
             >
@@ -158,7 +158,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
           <TooltipTrigger asChild>
             <Link
               href="/kaynaklar"
-              className="hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-border-subtle bg-surface-2 px-2 text-[11px] text-fg-secondary transition-colors hover:border-border-strong hover:bg-surface-3 sm:inline-flex"
+              className="hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-border-subtle bg-surface-2 px-2.5 text-[11px] text-fg-secondary transition-colors hover:border-border-strong hover:bg-surface-3 sm:inline-flex soft-press"
             >
               <Database className="h-3.5 w-3.5" />
               <span className="font-medium text-fg-primary">Kaynaklar</span>
@@ -180,10 +180,10 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               }}
               aria-label="En yeni imar bölgelerini aç"
               className={cn(
-                "hidden h-9 min-w-max items-center gap-2 whitespace-nowrap rounded-lg border px-2.5 text-[11px] font-semibold tabular-nums transition-colors lg:inline-flex",
+                "hidden h-9 min-w-max items-center gap-2 whitespace-nowrap rounded-full border px-3 text-[11px] font-semibold tabular-nums transition-colors lg:inline-flex soft-press",
                 latestRegionsStatus === "loading"
-                  ? "border-brand-blue/60 bg-[rgb(var(--accent-blue)/0.12)] text-fg-primary"
-                  : "border-brand-blue/35 bg-[rgb(var(--accent-blue)/0.07)] text-fg-secondary hover:border-brand-blue/60 hover:bg-[rgb(var(--accent-blue)/0.12)] hover:text-fg-primary"
+                  ? "border-brand-green/60 bg-[rgb(var(--accent-green)/0.14)] text-fg-primary"
+                  : "border-brand-green/35 bg-[rgb(var(--accent-green)/0.08)] text-fg-secondary hover:border-brand-green/60 hover:bg-[rgb(var(--accent-green)/0.14)] hover:text-fg-primary"
               )}
             >
               <span className="relative inline-flex h-5 w-5 items-center justify-center rounded-sm border border-brand-blue/30 bg-[rgb(var(--accent-blue)/0.12)] text-[rgb(var(--accent-blue))]">
@@ -226,7 +226,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               disabled={mapMode === "3d"}
               aria-pressed={compareMode === "satellite"}
               className={cn(
-                "hidden h-8 items-center gap-1 whitespace-nowrap rounded-lg border px-2 text-xs transition-colors sm:inline-flex",
+                "hidden h-8 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 text-xs transition-colors sm:inline-flex soft-press",
                 compareMode === "satellite"
                   ? "border-brand-blue/65 bg-[rgb(var(--accent-blue)/0.10)] text-fg-primary"
                   : "border-border-subtle bg-surface-2 text-fg-secondary hover:bg-surface-1 hover:text-fg-primary",

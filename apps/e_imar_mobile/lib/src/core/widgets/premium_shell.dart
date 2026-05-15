@@ -17,26 +17,25 @@ class _PremiumShellState extends State<PremiumShell> {
   int _index = 0;
 
   late final _pages = <Widget>[
+    MapWorkspaceScreen(onOpenParcel: _openParcel),
+    const SourceCoverageScreen(),
+    const WatchlistScreen(),
     HomeSearchScreen(
       onOpenMap: _selectMap,
       onOpenCoverage: _selectCoverage,
       onOpenWatchlist: _selectWatchlist,
     ),
-    MapWorkspaceScreen(onOpenParcel: _openParcel),
-    const SourceCoverageScreen(),
-    const WatchlistScreen(),
   ];
 
-  void _selectMap() => setState(() => _index = 1);
-  void _selectCoverage() => setState(() => _index = 2);
-  void _selectWatchlist() => setState(() => _index = 3);
+  void _selectMap() => setState(() => _index = 0);
+  void _selectCoverage() => setState(() => _index = 1);
+  void _selectWatchlist() => setState(() => _index = 2);
   void _openParcel(ParcelDetail parcel) {
     Navigator.of(context).pushNamed('/parcel-detail', arguments: parcel);
   }
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       extendBody: true,
       body: IndexedStack(index: _index, children: _pages),
@@ -45,32 +44,27 @@ class _PremiumShellState extends State<PremiumShell> {
         onDestinationSelected: (index) => setState(() => _index = index),
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.search_rounded),
-            label: 'Ara',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.map_rounded),
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map_rounded),
             label: 'Harita',
           ),
           NavigationDestination(
-            icon: Icon(Icons.shield_rounded),
-            label: 'Kapsam',
+            icon: Icon(Icons.analytics_outlined),
+            selectedIcon: Icon(Icons.analytics_rounded),
+            label: 'Analiz',
           ),
           NavigationDestination(
-            icon: Icon(Icons.notifications_active_rounded),
-            label: 'Alarm',
+            icon: Icon(Icons.bookmark_border_rounded),
+            selectedIcon: Icon(Icons.bookmark_rounded),
+            label: 'Favoriler',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.search_rounded),
+            selectedIcon: Icon(Icons.manage_search_rounded),
+            label: 'Ara',
           ),
         ],
       ),
-      floatingActionButton: _index == 1
-          ? FloatingActionButton.extended(
-              onPressed: _selectCoverage,
-              backgroundColor: scheme.primary,
-              foregroundColor: scheme.onPrimary,
-              icon: const Icon(Icons.layers_rounded),
-              label: const Text('Katmanlar'),
-            )
-          : null,
     );
   }
 }

@@ -17,13 +17,14 @@
     color: rgb(var(--text-primary));
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    font-feature-settings: "ss01", "cv11";
+    font-feature-settings: "ss01", "ss02", "cv11";
   }
 
   body {
     background:
-      radial-gradient(circle at 18% 0%, rgb(var(--accent-navy) / 0.08), transparent 34rem),
-      linear-gradient(180deg, rgb(var(--surface-1)) 0%, rgb(var(--bg)) 46%, rgb(var(--surface-1)) 100%);
+      radial-gradient(circle at 12% -10%, rgb(var(--accent-green) / 0.20), transparent 36rem),
+      radial-gradient(circle at 88% 8%, rgb(var(--accent-blue) / 0.12), transparent 32rem),
+      linear-gradient(180deg, rgb(var(--bg)) 0%, rgb(var(--surface-1)) 48%, rgb(var(--bg)) 100%);
     color: rgb(var(--text-primary));
     font-size: 14px;
     line-height: 20px;
@@ -36,11 +37,11 @@
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.018;
+    opacity: 0.026;
     background-image:
-      linear-gradient(0deg, rgb(15 23 42 / 0.7) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(15 23 42 / 0.45) 1px, transparent 1px);
-    background-size: 28px 28px;
+      linear-gradient(0deg, rgb(10 51 35 / 0.55) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(10 51 35 / 0.38) 1px, transparent 1px);
+    background-size: 30px 30px;
     mask-image: linear-gradient(to bottom, black, transparent 58%);
   }
 
@@ -129,6 +130,21 @@
   }
   .data-label {
     @apply text-xs uppercase tracking-wider text-fg-muted;
+  }
+  .map-glass-shell {
+    @apply border border-white/50 bg-surface-2/90 shadow-card backdrop-blur-md;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.72),
+      0 28px 90px -48px rgb(var(--accent-navy) / 0.58);
+  }
+  .civic-panel {
+    background:
+      radial-gradient(circle at 20% 0%, rgb(var(--accent-green) / 0.26), transparent 20rem),
+      linear-gradient(145deg, rgb(var(--accent-navy) / 0.98), rgb(6 20 14 / 0.96));
+    color: rgb(246 250 244);
+  }
+  .soft-press {
+    @apply transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:translate-y-px active:scale-[0.99];
   }
   /* tiny utility that fakes a "shimmer" overlay over a skeleton bar */
   .shimmer-overlay {

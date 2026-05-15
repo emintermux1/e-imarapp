@@ -129,6 +129,8 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
               onOpenMap: widget.onOpenMap,
               onOpenCoverage: widget.onOpenCoverage),
           const SizedBox(height: 18),
+          const _RecentSearches(),
+          const SizedBox(height: 18),
           const SectionHeader(
             title: 'Ada / parsel veya konum ile ara',
             subtitle:
@@ -227,6 +229,48 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
   }
 }
 
+class _RecentSearches extends StatelessWidget {
+  const _RecentSearches();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final items = [
+      ('Gömü-160/19', 'Bartın · Amasra · 3.098,75 m²'),
+      ('Hamzalı-122/530', 'Ankara · Şereflikoçhisar · Ham Toprak'),
+    ];
+    return PremiumCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text('Son Aramalar',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const Spacer(),
+              Text('Temizle',
+                  style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          for (final item in items)
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.history_rounded, color: scheme.primary),
+              title: Text(item.$1,
+                  style: const TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: Text(item.$2),
+              trailing: const Icon(Icons.close_rounded, size: 18),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _HeroHeader extends StatelessWidget {
   const _HeroHeader({required this.onOpenMap, required this.onOpenCoverage});
 
@@ -236,63 +280,89 @@ class _HeroHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return PremiumCard(
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(36),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0B3324), Color(0xFF1E803E)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.primary.withValues(alpha: 0.30),
+            blurRadius: 42,
+            offset: const Offset(0, 24),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'E-İmar Mobil',
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Türkiye için premium, hızlı ve dürüst parsel keşfi. Resmi veri yoksa bunu açıkça söyler.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
-                    ),
-                  ],
-                ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: const Text(
+              'BÖLGESEL AKILLI ARAMA',
+              style: TextStyle(
+                color: Color(0xFF73D39B),
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 2.1,
               ),
-              const SizedBox(width: 12),
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(22),
-                  gradient: LinearGradient(
-                    colors: [scheme.primary, scheme.tertiary],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Icon(Icons.apartment_rounded,
-                    color: scheme.onPrimary, size: 34),
-              ),
-            ],
+            ),
           ),
           const SizedBox(height: 18),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
+          const Text(
+            'Parsel ve imar\nsorgulama',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 38,
+              height: .95,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1.4,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Haritadan nokta seç, ada/parsel gir veya koordinatla kaynak durumunu gör. Resmi veri yoksa arayüz bunu saklamaz.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.76),
+              fontWeight: FontWeight.w600,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
             children: [
-              FilledButton(
-                onPressed: onOpenMap,
-                child: const Text('Haritaya geç'),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onOpenMap,
+                  icon: const Icon(Icons.map_rounded),
+                  label: const Text('Haritadan sorgula'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF0B3324),
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
               ),
-              OutlinedButton(
+              const SizedBox(width: 10),
+              IconButton.filledTonal(
                 onPressed: onOpenCoverage,
-                child: const Text('Kapsamı gör'),
+                icon: const Icon(Icons.analytics_rounded),
+                color: Colors.white,
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.white.withValues(alpha: 0.14),
+                  fixedSize: const Size(54, 54),
+                ),
               ),
             ],
           ),

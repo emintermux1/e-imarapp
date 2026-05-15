@@ -90,7 +90,7 @@ export function SidebarSections({ collapsed = false }: { collapsed?: boolean }) 
   if (collapsed) return <CollapsedRail sections={sections} />;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col py-1">
       {sections.map((s) => (
         <SidebarSection key={s.id} {...s} />
       ))}
@@ -101,29 +101,29 @@ export function SidebarSections({ collapsed = false }: { collapsed?: boolean }) 
 function SidebarSection({ title, icon, body, defaultOpen }: SectionDef) {
   const [open, setOpen] = React.useState(defaultOpen ?? false);
   return (
-    <section className="border-b border-border-subtle">
+    <section className="border-b border-white/10">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "w-full flex items-center justify-between gap-2 px-3 h-10",
-          "text-left text-sm font-medium text-fg-primary",
-          "hover:bg-surface-1 transition-colors"
+          "w-full flex items-center justify-between gap-2 px-3 h-11",
+          "text-left text-sm font-semibold text-white/88",
+          "hover:bg-white/[0.08] transition-colors soft-press"
         )}
       >
         <span className="inline-flex items-center gap-2">
-          <span className="text-fg-muted">{icon}</span>
+          <span className="text-white/56">{icon}</span>
           <span>{title}</span>
         </span>
         <ChevronDown
           className={cn(
-            "h-3.5 w-3.5 text-fg-muted transition-transform duration-200",
+            "h-3.5 w-3.5 text-white/44 transition-transform duration-200",
             open ? "rotate-180" : "rotate-0"
           )}
         />
       </button>
       {open && (
-        <div className="px-3 pb-4 pt-1 bg-bg/40">
+        <div className="px-3 pb-4 pt-1 text-fg-primary [&_*]:border-white/10">
           {body}
         </div>
       )}
@@ -133,12 +133,12 @@ function SidebarSection({ title, icon, body, defaultOpen }: SectionDef) {
 
 function CollapsedRail({ sections }: { sections: SectionDef[] }) {
   return (
-    <div className="flex flex-col items-center pt-2 gap-0.5">
+    <div className="flex flex-col items-center gap-1.5 pt-3">
       {sections.map((s) => (
         <button
           key={s.id}
           aria-label={s.title}
-          className="h-9 w-9 inline-flex items-center justify-center rounded-md text-fg-secondary hover:bg-surface-1 hover:text-fg-primary transition-colors"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full text-white/58 transition-colors hover:bg-white/10 hover:text-white soft-press"
           title={s.title}
         >
           {s.icon}

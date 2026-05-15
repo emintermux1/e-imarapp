@@ -8,23 +8,25 @@ class AppThemeBundle {
 }
 
 AppThemeBundle buildAppTheme() {
-  const seed = Color(0xFF0D4D7D);
-  const accent = Color(0xFFC9A35A);
+  const seed = Color(0xFF1E803E);
+  const accent = Color(0xFFCF9321);
   final lightScheme = ColorScheme.fromSeed(
     seedColor: seed,
     brightness: Brightness.light,
   ).copyWith(
-    secondary: const Color(0xFF29465B),
+    secondary: const Color(0xFF147EA6),
     tertiary: accent,
-    surface: const Color(0xFFF9F6F1),
+    surface: const Color(0xFFEFF5EE),
+    surfaceContainerHighest: const Color(0xFFFFFFFF),
   );
   final darkScheme = ColorScheme.fromSeed(
     seedColor: seed,
     brightness: Brightness.dark,
   ).copyWith(
-    secondary: const Color(0xFF7AAED6),
+    secondary: const Color(0xFF42ACD3),
     tertiary: accent,
-    surface: const Color(0xFF111827),
+    surface: const Color(0xFF06140E),
+    surfaceContainerHighest: const Color(0xFF0F2A1D),
   );
 
   ThemeData themeFrom(ColorScheme scheme) {
@@ -33,21 +35,21 @@ AppThemeBundle buildAppTheme() {
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       appBarTheme: AppBarTheme(
-        backgroundColor: scheme.surface,
-        foregroundColor: scheme.onSurface,
+        backgroundColor: scheme.primary,
+        foregroundColor: scheme.onPrimary,
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
       cardTheme: CardThemeData(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.76),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.94),
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: scheme.surface.withValues(alpha: 0.92),
-        indicatorColor: scheme.primary.withValues(alpha: 0.15),
+        backgroundColor: scheme.surfaceContainerHighest.withValues(alpha: 0.96),
+        indicatorColor: scheme.primary.withValues(alpha: 0.16),
         labelTextStyle: WidgetStatePropertyAll(
           TextStyle(
             fontSize: 12,
@@ -58,19 +60,19 @@ AppThemeBundle buildAppTheme() {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.72),
+        fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.88),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(22),
           borderSide:
               BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.8)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(22),
           borderSide:
               BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.75)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(22),
           borderSide: BorderSide(color: scheme.primary, width: 1.5),
         ),
         contentPadding:
@@ -85,12 +87,12 @@ AppThemeBundle buildAppTheme() {
     return base.copyWith(
       textTheme: base.textTheme.copyWith(
         headlineSmall: base.textTheme.headlineSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.3,
+          fontWeight: FontWeight.w900,
+          letterSpacing: -0.8,
         ),
         titleLarge: base.textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.45,
         ),
         titleMedium: base.textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w600,

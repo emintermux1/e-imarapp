@@ -11,7 +11,7 @@ export function BrandMark({ className, showLabel = true }: BrandMarkProps) {
       className={`inline-flex items-center gap-2.5 ${className ?? ""}`}
       aria-label="E-İmar"
     >
-      <span className="grid h-8 w-8 place-items-center rounded-lg border border-brand-navy/20 bg-[rgb(var(--accent-navy)/0.07)] shadow-[inset_0_1px_0_rgb(255_255_255/0.7)]">
+      <span className="grid h-9 w-9 place-items-center rounded-2xl border border-white/18 bg-white/12 shadow-[inset_0_1px_0_rgb(255_255_255/0.24)]">
         <svg
         width="21"
         height="21"
@@ -26,18 +26,18 @@ export function BrandMark({ className, showLabel = true }: BrandMarkProps) {
           width="20"
           height="20"
           rx="3"
-          stroke="rgb(var(--accent-navy))"
+          stroke="currentColor"
           strokeWidth="1.5"
         />
         <path
           d="M2 12 H22"
-          stroke="rgb(var(--accent-navy))"
+          stroke="currentColor"
           strokeWidth="1.5"
           strokeOpacity="0.65"
         />
         <path
           d="M12 2 V22"
-          stroke="rgb(var(--accent-navy))"
+          stroke="currentColor"
           strokeWidth="1.5"
           strokeOpacity="0.65"
         />
@@ -51,7 +51,7 @@ export function BrandMark({ className, showLabel = true }: BrandMarkProps) {
           width="7.6"
           height="7.6"
           rx="0.6"
-          stroke="rgb(var(--accent-red))"
+          stroke="rgb(var(--accent-green))"
           strokeWidth="1"
           fill="none"
         />
@@ -59,10 +59,10 @@ export function BrandMark({ className, showLabel = true }: BrandMarkProps) {
       </span>
       {showLabel && (
         <span className="flex flex-col leading-[0.95]">
-          <span className="text-[14px] font-semibold tracking-[-0.025em] text-fg-primary">
+          <span className="text-[15px] font-black tracking-[-0.035em] text-current">
             E-İmar
           </span>
-          <span className="mt-1 text-[9px] font-medium uppercase tracking-[0.18em] text-fg-muted">
+          <span className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-current/60">
             Parsel · Plan · GIS
           </span>
         </span>

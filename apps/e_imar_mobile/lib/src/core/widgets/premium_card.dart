@@ -20,22 +20,27 @@ class PremiumCard extends StatelessWidget {
     final card = Container(
       margin: margin,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(32),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            scheme.surface.withValues(alpha: 0.96),
-            scheme.surfaceContainerHighest.withValues(alpha: 0.74),
+            scheme.surfaceContainerHighest.withValues(alpha: 0.98),
+            scheme.surface.withValues(alpha: 0.90),
           ],
         ),
         border:
             Border.all(color: scheme.outlineVariant.withValues(alpha: 0.65)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 24,
-            offset: const Offset(0, 14),
+            color: scheme.primary.withValues(alpha: 0.14),
+            blurRadius: 34,
+            offset: const Offset(0, 20),
+          ),
+          BoxShadow(
+            color: Colors.white.withValues(alpha: 0.46),
+            blurRadius: 0,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -46,7 +51,7 @@ class PremiumCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(32),
         onTap: onTap,
         child: card,
       ),
