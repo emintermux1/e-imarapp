@@ -9,6 +9,31 @@ export type DataSourceStatus =
   | "derived"
   | "not_ready";
 
+export interface ParcelSourceMetadata {
+  source_id?: string | null;
+  source_name?: string | null;
+  municipality?: string | null;
+  provider?: string | null;
+  source_status: DataSourceStatus;
+  source_message?: string | null;
+  last_checked_at?: string | null;
+}
+
+export interface ParcelQualityMetadata {
+  geometry_available: boolean;
+  source_status: DataSourceStatus;
+  source_name?: string | null;
+  source_municipality?: string | null;
+  source_provider?: string | null;
+  confidence?: number | null;
+  confidence_label: "low" | "medium" | "high" | string;
+  quality_hints: string[];
+  plan_match_status: "matched" | "unknown" | "none" | string;
+  aski_match_status: "matched" | "unknown" | "none" | string;
+  imar_params_status: "known" | "unknown" | "not_available" | string;
+  message?: string | null;
+}
+
 export interface ParcelResponse {
   id: number;
   ada: string;
@@ -22,6 +47,20 @@ export interface ParcelResponse {
   geometri?: GeoJSON.Geometry | GeoJSON.Feature | GeoJSON.FeatureCollection | Record<string, unknown>;
   pafta?: string;
   mevkii?: string;
+  geometry_available?: boolean;
+  source_status?: DataSourceStatus;
+  source_name?: string | null;
+  source_municipality?: string | null;
+  source_provider?: string | null;
+  source?: ParcelSourceMetadata | null;
+  confidence?: number | null;
+  confidence_label?: string;
+  quality_hints?: string[];
+  plan_match_status?: string;
+  aski_match_status?: string;
+  imar_params_status?: string;
+  status_message?: string | null;
+  quality?: ParcelQualityMetadata | null;
 }
 
 export interface PlanResponse {
@@ -145,14 +184,165 @@ export interface SourceRegistryRecord {
 export interface SourceHealthRecord {
   source_id: string;
   name: string;
-  slug: string;
-  kind: string;
-  homepage_url: string;
+  slug?: string;
+  kind?: string;
+  homepage_url?: string;
   status: string;
   http_status?: number | null;
   checked_url?: string;
   requires_approval?: boolean;
   requires_credentials?: boolean;
+}
+
+export interface SourceCoverageHints {
+  has_geometry: boolean;
+  has_imar: boolean;
+  has_aski: boolean;
+  has_documents: boolean;
+  capabilities: string[];
+}
+
+export interface SourceQualityRecord {
+  source_id: string;
+  key: string;
+  name: string;
+  province?: string | null;
+  district?: string | null;
+  municipality_name?: string | null;
+  category?: string | null;
+  type?: string | null;
+  provider?: string | null;
+  status: DataSourceStatus;
+  raw_status?: string | null;
+  last_checked_at?: string | null;
+  last_success_at?: string | null;
+  latency_ms?: number | null;
+  http_status?: number | null;
+  endpoint_url?: string | null;
+  service_url?: string | null;
+  failure_reason?: string | null;
+  coverage: SourceCoverageHints;
+  geometry_available: boolean;
+  imar_available: boolean;
+  aski_available: boolean;
+  history_available: boolean;
+  endpoint_count: number;
+  discovered_endpoints: Array<{ url?: string; [key: string]: unknown }>;
+  next_action?: string | null;
+  user_message?: string | null;
+}
+
+export interface SourceQualityResponse {
+  status: DataSourceStatus;
+  fetched_at: string;
+  history_available: boolean;
+  total: number;
+  live_checked: boolean;
+  rollup: Record<string, number>;
+  sources: SourceQualityRecord[];
+  message?: string | null;
+}
+
+export type SourceActivationStatus =
+  | "active"
+  | "blocked"
+  | "needs_contract"
+  | "unavailable"
+  | "metadata_only";
+
+export interface SourceActivationRecord {
+  sourceId: string;
+  name: string;
+  jurisdiction: string;
+  category: string;
+  homepageUrl: string;
+  accessStatus: string;
+  runtimeStatus: string;
+  activationStatus: SourceActivationStatus;
+  capabilities: string[];
+  connectorKinds: string[];
+  usableEndpoints: string[];
+  blockedReason?: string;
+  nextAction: string;
+  metadata?: {
+    province?: string;
+    district?: string;
+    municipalitySlug?: string;
+    vendor?: string;
+  };
+  provenance: Array<{ endpoint: string; status: string; connectorKind?: string; confidence: number }>;
+  lastCheckedAt: string;
+  cache?: {
+    status: "hit" | "stored" | "registry_only";
+    ttlSeconds?: number;
+  };
+}
+
+export interface SourceActivationResponse {
+  status: string;
+  generatedAt: string;
+  liveChecked: boolean;
+  summary: {
+    total: number;
+    active: number;
+    blocked: number;
+    needsContract: number;
+    metadataOnly: number;
+    unavailable: number;
+    byActivationStatus: Record<string, number>;
+    byCategory: Record<string, number>;
+    byJurisdiction: Record<string, number>;
+  };
+  sources: SourceActivationRecord[];
+}
+
+export interface RelatedPlanItem {
+  id: number;
+  label: string;
+  municipality_id?: number | null;
+  municipality_name?: string | null;
+  municipality_slug?: string | null;
+  province?: string | null;
+  district?: string | null;
+  status?: string | null;
+  plan_type?: string | null;
+  aski_start?: string | null;
+  aski_end?: string | null;
+  pdf_url?: string | null;
+  gml_url?: string | null;
+  has_geometry: boolean;
+  geom_geojson?: GeoJSON.Geometry | GeoJSON.Feature | GeoJSON.FeatureCollection | Record<string, unknown> | null;
+  relation: string;
+}
+
+export interface ParcelContextResponse {
+  parcel: Partial<ParcelResponse> & { id: number; ada: string; parsel: string };
+  quality: ParcelQualityMetadata;
+  match_method: "municipality" | "district" | "none" | "spatial" | string;
+  related_plans: RelatedPlanItem[];
+  active_aski_plans: RelatedPlanItem[];
+  total_related: number;
+  geometry_included: boolean;
+  history_available: boolean;
+  generated_at: string;
+  message?: string | null;
+}
+
+export interface ParcelSummaryResponse {
+  parcel: Partial<ParcelResponse> & { id: number; ada: string; parsel: string };
+  location: {
+    il?: string | null;
+    ilce?: string | null;
+    mahalle?: string | null;
+    municipality?: string | null;
+  };
+  geometry_status: "available" | "missing" | string;
+  source_trust: ParcelSourceMetadata;
+  related_plan_count: number;
+  related_aski_count: number;
+  report_eligibility: "eligible" | "eligible_with_warnings" | "limited" | string;
+  warnings: string[];
+  generated_at: string;
 }
 
 export interface OgcLayerSummary {

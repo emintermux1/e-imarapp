@@ -6,7 +6,7 @@ import { ParcelCard } from "@/components/gis/parcel-card";
 import { useWatchlistStore } from "@/stores/watchlist-store";
 import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
-import { ASKI_ALERT_INTENT_LABELS, DEFAULT_WATCHLIST_ALERT_INTENTS, formatProvenanceBadge } from "@/lib/aski-tracking";
+import { ASKI_ALERT_INTENT_LABELS, DEFAULT_WATCHLIST_ALERT_INTENTS, PARSEL_ALARM_NAME, formatProvenanceBadge } from "@/lib/aski-tracking";
 import { cn } from "@/lib/utils";
 
 export function WatchlistSection() {
@@ -28,16 +28,16 @@ export function WatchlistSection() {
       <div className="rounded-md border border-border-subtle bg-surface-1/60 px-3 py-2 text-[11px] text-fg-secondary">
         <div className="flex items-center gap-2 text-fg-primary">
           <ShieldAlert className="h-3.5 w-3.5 text-fg-muted" />
-          <span className="font-medium">Local tracking aktif</span>
+          <span className="font-medium">{PARSEL_ALARM_NAME} yerel modda</span>
         </div>
         <p className="mt-1 leading-relaxed">
-          Watchlist yalnızca bu tarayıcıda saklanır. Server sync ve bildirimler hazır değil; burada gördüğünüz intent ayarları yerel takip tercihidir.
+          Alarm profilleri yalnızca bu tarayıcıda saklanır. Server sync ve canlı bildirimler hazır değil; burada gördüğünüz niyet ayarları yerel alarm tercihidir.
         </p>
       </div>
 
       <div className="flex items-center justify-between px-1">
         <span className="text-[10px] uppercase tracking-wider text-fg-muted">
-          {items.length} parsel
+          {items.length} {PARSEL_ALARM_NAME}
         </span>
         <button
           type="button"
@@ -113,10 +113,10 @@ function EmptyState() {
     <div className="rounded-md border border-dashed border-border-subtle bg-surface-1/40 px-3 py-5 text-center">
       <Star className="mx-auto h-5 w-5 text-fg-muted/70" />
       <p className="mt-2 text-xs text-fg-secondary">
-        Takip ettiğiniz parsel yok.
+        Henüz {PARSEL_ALARM_NAME} yok.
       </p>
       <p className="mt-1 text-[11px] text-fg-muted leading-relaxed">
-        Bir parsel seçip sağ paneldeki <span className="text-fg-secondary font-medium">Watchlist&apos;e Ekle</span> ile listeyi başlatın.
+        Bir parsel seçip sağ paneldeki <span className="text-fg-secondary font-medium">{PARSEL_ALARM_NAME}&apos;a ekle</span> ile alarm profilini başlatın.
       </p>
     </div>
   );

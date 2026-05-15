@@ -25,9 +25,9 @@ class WatchlistController extends StateNotifier<List<WatchlistItem>> {
 
     final item = WatchlistItem(
       id: id,
-      title: 'Parsel takibi',
+      title: 'Parsel Alarm',
       subtitle:
-          '${parcel.parcelLabel} için plan notu, askı ve kaynak durumu değişikliklerini izle.',
+          '${parcel.parcelLabel} için plan notu, askı ve kaynak durumu değişikliklerinde alarm kur.',
       intent: WatchlistIntent.zoningChange,
       provenance: parcel.provenanceLabel,
       statusLabel: parcel.restricted ? 'Kısıtlı' : 'Aktif',
@@ -52,16 +52,16 @@ String _parcelWatchId(ParcelDetail parcel) =>
 const _seedItems = <WatchlistItem>[
   WatchlistItem(
     id: 'seed-aski',
-    title: 'Askı değişikliği',
+    title: 'Askı alarmı',
     subtitle: 'Seçili parselin plan notu veya askı durumu değişirse uyarı.',
     intent: WatchlistIntent.aski,
     provenance: 'metadata',
     statusLabel: 'Beklemede',
-    nextAction: 'Parseli watchlist’e ekle',
+    nextAction: 'Parseli Parsel Alarm’a ekle',
   ),
   WatchlistItem(
     id: 'seed-zoning',
-    title: 'İmar kararı güncellemesi',
+    title: 'İmar değişikliği alarmı',
     subtitle:
         'Plan notu ve kullanıma dair yeni kamu metadatası geldiğinde bildir.',
     intent: WatchlistIntent.zoningChange,

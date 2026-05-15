@@ -1,6 +1,7 @@
 import { ASKI_POLYGONS } from "../apps/e_imar_web/src/data/aski-polygons";
 import {
   DEFAULT_WATCHLIST_ALERT_INTENTS,
+  PARSEL_ALARM_NAME,
   filterAskiRecords,
   findAskiMatchesForParcel,
   summarizeAskiProvenance
@@ -75,6 +76,16 @@ describe("watchlist store", () => {
     expect(item.trackingMode).toBe("local_only");
     expect(item.provenance).toBe("demo");
     expect(item.alertIntents).toEqual(DEFAULT_WATCHLIST_ALERT_INTENTS);
+  });
+
+  test("names the local watchlist surface as Parsel Alarm with all default alarm intents", () => {
+    expect(PARSEL_ALARM_NAME).toBe("Parsel Alarm");
+    expect(DEFAULT_WATCHLIST_ALERT_INTENTS).toEqual([
+      "imar_change",
+      "aski_plan",
+      "cevre_plan",
+      "source_access_status_change"
+    ]);
   });
 
   test("toggles a configured alert intent", () => {

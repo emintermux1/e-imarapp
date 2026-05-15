@@ -25,6 +25,16 @@ export interface ParcelSearchResult extends SearchResultBase {
   parcelId: string;
   zoningType: import("./parcel").ZoningType;
   sourceStatus?: import("./api").DataSourceStatus;
+  sourceName?: string;
+  sourceProvider?: string;
+  geometryAvailable?: boolean;
+  qualityHints?: string[];
+  planMatchStatus?: string;
+  askiMatchStatus?: string;
+  imarParamsStatus?: string;
+  ambiguityKey?: string;
+  ambiguityCount?: number;
+  confidenceLabel?: string;
 }
 
 export interface AddressSearchResult extends SearchResultBase {

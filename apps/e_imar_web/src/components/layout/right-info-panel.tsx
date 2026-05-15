@@ -41,10 +41,12 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip";
 import { SourceBadge } from "@/components/gis/source-badge";
-import type { DataSourceStatus } from "@/types/api";
+import type { DataSourceStatus, ParcelContextResponse, ParcelSummaryResponse, RelatedPlanItem } from "@/types/api";
 import {
   createBackendWatchlistItem,
   generateBackendReport,
+  getBackendParcelContext,
+  getBackendParcelSummary,
   getBackendReport,
   humanizeApiError
 } from "@/lib/api/backend-client";
@@ -57,6 +59,13 @@ import { useBackendParcelStore } from "@/stores/backend-parcel-store";
 import { useAskiStore } from "@/stores/aski-store";
 import { useLatestRegionsStore } from "@/stores/latest-regions-store";
 import { adaParselText, formatArea, formatDate } from "@/lib/format";
+import {
+  formatQualityTimestamp,
+  geometryLabel,
+  matchStatusLabel,
+  reportEligibilityLabel,
+  sourceStatusLabel
+} from "@/lib/api/quality-labels";
 import { SectionKonum } from "@/components/info/section-konum";
 import { SectionImar } from "@/components/info/section-imar";
 import { SectionPlanNotlari } from "@/components/info/section-plan-notlari";
@@ -65,7 +74,6 @@ import { SectionAski } from "@/components/info/section-aski";
 import { SectionCevre } from "@/components/info/section-cevre";
 import { SectionGecmis } from "@/components/info/section-gecmis";
 import { SectionYatirimSkoru } from "@/components/info/section-yatirim-skoru";
-import { SectionParcelSummary } from "@/components/info/section-parcel-summary";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmsalCalculatorPanel } from "@/components/emsal/emsal-calculator-panel";
 import {
@@ -129,6 +137,12 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
     message?: string;
   }>({ state: "idle" });
   const [panelLoading, setPanelLoading] = React.useState(false);
+  const [parcelContext, setParcelContext] = React.useState<ParcelContextResponse | null>(null);
+  const [parcelSummary, setParcelSummary] = React.useState<ParcelSummaryResponse | null>(null);
+  const [parcelContextStatus, setParcelContextStatus] = React.useState<{
+    state: "idle" | "loading" | "ready" | "unavailable";
+    message?: string;
+  }>({ state: "idle" });
 
   React.useEffect(() => {
     setReportStatus({ state: "idle" });
@@ -173,6 +187,37 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
     void hydrateWatchlist();
   }, [hydrateWatchlist]);
 
+  React.useEffect(() => {
+    if (!parcel?.backendId) {
+      setParcelContext(null);
+      setParcelSummary(null);
+      setParcelContextStatus({ state: "idle", message: "Canlı API parseli değil; bağlamsal plan önerisi gösterilmiyor." });
+      return;
+    }
+    let cancelled = false;
+    setParcelContextStatus({ state: "loading", message: "Parsel bağlamı ve özet kartı hazırlanıyor…" });
+    Promise.allSettled([
+      getBackendParcelContext(parcel.backendId, { include_geometry: true, limit: 6 }),
+      getBackendParcelSummary(parcel.backendId)
+    ]).then(([contextResult, summaryResult]) => {
+      if (cancelled) return;
+      const context = contextResult.status === "fulfilled" ? contextResult.value : null;
+      const summary = summaryResult.status === "fulfilled" ? summaryResult.value : null;
+      setParcelContext(context);
+      setParcelSummary(summary);
+      if (context || summary) {
+        const failures = [contextResult, summaryResult].filter((result) => result.status === "rejected").length;
+        setParcelContextStatus({ state: "ready", message: failures ? "Özetin bir bölümü alınamadı; erişilebilir canlı veriler gösteriliyor." : undefined });
+      } else {
+        const reason = contextResult.status === "rejected" ? contextResult.reason : summaryResult.status === "rejected" ? summaryResult.reason : undefined;
+        setParcelContextStatus({ state: "unavailable", message: humanizeApiError(reason, "Parsel özet/context endpoint'i şu an kullanılamıyor.") });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [parcel?.backendId]);
+
   const showLatestRegions = !parcel && latestRegionsPanelOpen;
   const pointAnalysis = React.useMemo(
     () => buildSelectedPlaceAnalysis({ point: selectedPoint, parcel }),
@@ -199,9 +244,9 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
     if (!parcel) return;
     if (watchlistHas(parcel.id)) {
       watchlistRemove(parcel.id);
-      setWatchlistStatus({ state: "success", message: "Yerel listeden çıkarıldı" });
+      setWatchlistStatus({ state: "success", message: "Parsel Alarm'dan çıkarıldı" });
     } else {
-      setWatchlistStatus({ state: "loading", message: "Watchlist güncelleniyor…" });
+      setWatchlistStatus({ state: "loading", message: "Parsel Alarm güncelleniyor…" });
       const addLocal = (message: string, state: "success" | "error" = "success") => {
         watchlistAdd({
           id: parcel.id,
@@ -223,14 +268,36 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             label: `${parcel.ada}/${parcel.parsel} ${parcel.ilce}/${parcel.il}`,
             notification_channels: ["push", "email"]
           });
-          addLocal("Canlı watchlist'e eklendi");
+          addLocal("Parsel Alarm canlı kayıt isteğiyle eklendi");
         } catch (error) {
           addLocal(`${humanizeApiError(error)} Yerel yedek listeye eklendi.`, "error");
         }
       } else {
-        addLocal("Canlı API parseli değil — yerel yedek listeye eklendi");
+        addLocal("Canlı API parseli değil — yerel Parsel Alarm profiline eklendi");
       }
     }
+  }
+
+  function selectRelatedPlan(item: RelatedPlanItem) {
+    if (!item.has_geometry || !item.geom_geojson) return;
+    selectLatestRegion({
+      id: item.id,
+      label: item.label,
+      municipality_id: item.municipality_id ?? undefined,
+      municipality_name: item.municipality_name ?? undefined,
+      municipality_slug: item.municipality_slug ?? undefined,
+      province: item.province ?? undefined,
+      district: item.district ?? undefined,
+      plan_type: item.plan_type ?? undefined,
+      status: item.status ?? undefined,
+      aski_start: item.aski_start ?? undefined,
+      aski_end: item.aski_end ?? undefined,
+      pdf_url: item.pdf_url ?? undefined,
+      gml_url: item.gml_url ?? undefined,
+      source: "computed",
+      has_geometry: item.has_geometry,
+      geom_geojson: item.geom_geojson ?? undefined
+    });
   }
 
   async function generateReport() {
@@ -468,7 +535,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
               </div>
               <div className="flex items-center gap-1">
                 <IconButton
-                  label={isWatchlisted ? "Watchlist'ten Çıkar" : "Watchlist'e Ekle"}
+                  label={isWatchlisted ? "Parsel Alarm'dan çıkar" : "Parsel Alarm'a ekle"}
                   variant="ghost"
                   onClick={toggleWatchlist}
                 >
@@ -545,7 +612,13 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             />
           </section>
 
-          <SectionParcelSummary parcel={parcelData!} />
+          <ParcelShareSummaryCard
+            parcel={parcelData!}
+            summary={parcelSummary}
+            context={parcelContext}
+            status={parcelContextStatus}
+            geometrySource={backendGeometry ? "live" : parcelData!.centroid ? "demo" : "unavailable"}
+          />
           {comparisonParcels.length >= 2 && (
             <ParcelComparisonCard parcels={comparisonParcels} onClear={clearMultiSelection} />
           )}
@@ -558,7 +631,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             )}
             <Accordion
               type="multiple"
-              defaultValue={["ai-analiz", "guven", "konum", "imar"]}
+              defaultValue={["ai-analiz", "guven", "ilgili-planlar", "konum", "imar"]}
               className="divide-y divide-border-subtle"
             >
               {pointAnalysis && (
@@ -580,6 +653,13 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                     liveAskiCount={askiPlans.length}
                     lastCheckedAt={askiLastCheckedAt}
                   />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="ilgili-planlar">
+                <AccordionTrigger>İlgili plan / askı önerileri</AccordionTrigger>
+                <AccordionContent>
+                  <RelatedPlansSection context={parcelContext} status={parcelContextStatus} onSelectGeometry={selectRelatedPlan} />
                 </AccordionContent>
               </AccordionItem>
 
@@ -677,13 +757,13 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <FileDown className="h-4 w-4" />
-                    )} PDF Rapor
+                    )} Parsel Raporu
                   </Button>
                 </span>
               </TooltipTrigger>
               <TooltipContent>
                 <span className="inline-flex items-center gap-1">
-                  {parcelData!.backendId ? "Canlı API ile rapor üret" : "Canlı API parseli olmadan resmi rapor üretilemez"}
+                    {parcelData!.backendId ? "Canlı parsel raporu üret; eksik geometri/plan uyarıları özet kartında görünür" : "Canlı API parseli olmadan resmi rapor üretilemez"}
                 </span>
               </TooltipContent>
             </Tooltip>
@@ -729,10 +809,10 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                     "fill-[rgb(var(--accent-red))] text-[rgb(var(--accent-red))]"
                 )}
               />)}
-              {isWatchlisted ? "Listeden Çıkar" : "Watchlist'e Ekle"}
+              {isWatchlisted ? "Alarmdan çıkar" : "Parsel Alarm'a ekle"}
             </Button>
             <Button variant="ghost" size="sm">
-              <Share2 className="h-4 w-4" /> Paylaş
+              <Share2 className="h-4 w-4" /> Özeti paylaş
             </Button>
             {watchlistStatus.message && (
               <div
@@ -1103,6 +1183,164 @@ function ParcelComparisonCard({
         ))}
       </div>
     </section>
+  );
+}
+
+function ParcelShareSummaryCard({
+  parcel,
+  summary,
+  context,
+  status,
+  geometrySource
+}: {
+  parcel: NonNullable<ReturnType<typeof useParcel>>["properties"];
+  summary: ParcelSummaryResponse | null;
+  context: ParcelContextResponse | null;
+  status: { state: "idle" | "loading" | "ready" | "unavailable"; message?: string };
+  geometrySource: "live" | "demo" | "unavailable";
+}) {
+  const relatedPlanCount = summary?.related_plan_count ?? context?.related_plans.length ?? 0;
+  const relatedAskiCount = summary?.related_aski_count ?? context?.active_aski_plans.length ?? 0;
+  const generatedAt = summary?.generated_at ?? context?.generated_at;
+  const sourceTrust = summary?.source_trust;
+  const sourceStatus = sourceTrust?.source_status ?? parcel.sourceStatus ?? "demo";
+  const geometryStatus = summary?.geometry_status === "available" || geometrySource !== "unavailable";
+  return (
+    <section className="border-b border-border-subtle bg-[radial-gradient(circle_at_top_right,rgb(var(--accent-blue)/0.12),transparent_42%),rgb(var(--surface-1)/0.46)] px-3 py-3">
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div>
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-fg-primary">
+            <FileText className="h-3.5 w-3.5 text-[rgb(var(--accent-blue))]" />
+            Parsel özet / paylaşım kartı
+          </div>
+          <p className="mt-0.5 text-[11px] leading-snug text-fg-muted">
+            Rapor öncesi kaynak, geometri ve plan uyarıları tek kartta; endpoint yoksa durum açık gösterilir.
+          </p>
+        </div>
+        <SourceBadge status={sourceStatus} label={sourceStatusLabel(sourceStatus)} className="shrink-0" />
+      </div>
+      <div className="rounded-xl border border-border-subtle bg-surface-2/88 p-3 shadow-[inset_0_1px_0_rgb(255_255_255/0.035)]">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-wider text-fg-muted">Ada/Parsel</div>
+            <div className="mt-0.5 text-lg font-semibold tabular-nums text-fg-primary">{adaParselText(parcel.ada, parcel.parsel)}</div>
+            <div className="mt-1 truncate text-[11px] text-fg-secondary">
+              {[summary?.location.mahalle ?? parcel.mahalle, summary?.location.ilce ?? parcel.ilce, summary?.location.il ?? parcel.il].filter(Boolean).join(" / ")}
+            </div>
+          </div>
+          <div className="grid shrink-0 grid-cols-2 gap-1.5 text-[10px]">
+            <ShareMetric label="Plan" value={String(relatedPlanCount)} />
+            <ShareMetric label="Askı" value={String(relatedAskiCount)} />
+          </div>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <ShareFact label="Kaynak güveni" value={sourceTrust?.source_name ?? sourceTrust?.provider ?? sourceStatusLabel(sourceStatus)} status={sourceStatus} />
+          <ShareFact label="Geometri" value={summary?.geometry_status ? geometryLabel(summary.geometry_status === "available") : geometryLabel(geometryStatus)} status={geometryStatus ? geometrySource : "unavailable"} />
+          <ShareFact label="Rapor" value={reportEligibilityLabel(summary?.report_eligibility)} status={summary?.report_eligibility === "limited" ? "fallback" : parcel.backendId ? "computed" : "unavailable"} />
+          <ShareFact label="Üretim" value={generatedAt ? formatQualityTimestamp(generatedAt) : status.state === "loading" ? "hazırlanıyor" : "endpoint yok"} status={generatedAt ? "public_metadata" : status.state === "loading" ? "computed" : "unavailable"} />
+        </div>
+        {(summary?.warnings?.length || status.message) && (
+          <div className="mt-3 rounded-md border border-status-warning/30 bg-status-warning/10 px-2.5 py-2 text-[11px] leading-snug text-status-warning">
+            {summary?.warnings?.length ? summary.warnings.slice(0, 2).join(" · ") : status.message}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ShareMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-[54px] rounded-md border border-border-subtle bg-surface-1 px-2 py-1.5 text-center">
+      <div className="text-[9px] uppercase tracking-wider text-fg-muted">{label}</div>
+      <div className="mt-0.5 font-semibold tabular-nums text-fg-primary">{value}</div>
+    </div>
+  );
+}
+
+function ShareFact({
+  label,
+  value,
+  status
+}: {
+  label: string;
+  value: string;
+  status: DataSourceStatus | "live" | "fallback" | "demo" | "unavailable";
+}) {
+  return (
+    <div className="min-w-0 rounded-md border border-border-subtle bg-surface-1/70 px-2 py-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="truncate text-[9px] uppercase tracking-wider text-fg-muted">{label}</span>
+        <SourceBadge status={status} className="h-4 px-1 text-[8px]" />
+      </div>
+      <div className="mt-1 truncate text-[11px] font-medium text-fg-primary">{value}</div>
+    </div>
+  );
+}
+
+function RelatedPlansSection({
+  context,
+  status,
+  onSelectGeometry
+}: {
+  context: ParcelContextResponse | null;
+  status: { state: "idle" | "loading" | "ready" | "unavailable"; message?: string };
+  onSelectGeometry: (item: RelatedPlanItem) => void;
+}) {
+  const items = [
+    ...(context?.active_aski_plans ?? []),
+    ...(context?.related_plans ?? []).filter((item) => !(context?.active_aski_plans ?? []).some((aski) => aski.id === item.id))
+  ].slice(0, 6);
+  if (status.state === "loading") {
+    return <div className="rounded-lg border border-border-subtle bg-surface-2 px-3 py-3 text-[12px] text-fg-secondary">İlgili plan ve askı kayıtları sorgulanıyor…</div>;
+  }
+  if (!context || items.length === 0) {
+    return (
+      <div className="rounded-lg border border-border-subtle bg-surface-2 px-3 py-3">
+        <div className="text-sm font-semibold text-fg-primary">Eşleşen plan/askı yok</div>
+        <p className="mt-1 text-[12px] leading-relaxed text-fg-muted">
+          {status.message ?? "Backend spatial/municipality/district eşleşmesi kayıt döndürmedi; öneri uydurulmadı."}
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      <div className="rounded-md border border-border-subtle bg-surface-2 px-3 py-2 text-[11px] leading-relaxed text-fg-secondary">
+        Eşleşme yöntemi: <span className="font-semibold text-fg-primary">{matchStatusLabel(context.match_method)}</span>. Haritada yalnız tıklanan ve geometrisi olan kayıt çizilir.
+      </div>
+      {items.map((item) => (
+        <article key={`${item.relation}-${item.id}`} className="rounded-lg border border-border-subtle bg-surface-2 px-3 py-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5 text-[10px] uppercase tracking-wider text-fg-muted">
+                <span>{matchStatusLabel(item.relation)}</span>
+                {item.status && <span>· {item.status}</span>}
+              </div>
+              <div className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-fg-primary">{item.label}</div>
+              <div className="mt-1 text-[11px] text-fg-secondary">{[item.district, item.province].filter(Boolean).join(" / ") || item.municipality_name || "Konum sınırlı"}</div>
+            </div>
+            <SourceBadge status={item.has_geometry ? "computed" : "unavailable"} label={item.has_geometry ? "geom var" : "geom yok"} className="shrink-0 h-4 px-1.5 text-[8px]" />
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-1.5 text-[10px]">
+            <LatestRegionFact label="Plan" value={item.plan_type ?? "Tür yok"} />
+            <LatestRegionFact label="Askı" value={[item.aski_start ? formatDate(item.aski_start) : null, item.aski_end ? formatDate(item.aski_end) : null].filter(Boolean).join(" – ") || "Pencere yok"} />
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+            {item.pdf_url && <a className="rounded border border-border-subtle px-2 py-1 text-fg-secondary underline-offset-2 hover:text-fg-primary hover:underline" href={item.pdf_url} target="_blank" rel="noreferrer">PDF</a>}
+            {item.gml_url && <a className="rounded border border-border-subtle px-2 py-1 text-fg-secondary underline-offset-2 hover:text-fg-primary hover:underline" href={item.gml_url} target="_blank" rel="noreferrer">GML</a>}
+            <button
+              type="button"
+              disabled={!item.has_geometry}
+              onClick={() => onSelectGeometry(item)}
+              className="rounded border border-brand-blue/35 px-2 py-1 text-[rgb(var(--accent-blue))] disabled:border-border-subtle disabled:text-fg-muted"
+            >
+              {item.has_geometry ? "Bu geometriyi göster" : "Geometri yok"}
+            </button>
+          </div>
+        </article>
+      ))}
+    </div>
   );
 }
 

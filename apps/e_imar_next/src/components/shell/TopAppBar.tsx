@@ -121,11 +121,11 @@ export function TopAppBar() {
                 </IconButton>
               </div>
             </Tooltip>
-            <Tooltip content="Watchlist" side="bottom">
+            <Tooltip content="Parsel Alarm" side="bottom">
               <Link
                 href="/watchlist"
                 className="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-bg-subtle hover:text-text-primary focus-visible:shadow-focus focus-visible:outline-none"
-                aria-label="Watchlist"
+                aria-label="Parsel Alarm"
               >
                 <Star className="h-4 w-4" aria-hidden />
               </Link>

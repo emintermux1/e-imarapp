@@ -12,6 +12,7 @@ import type { ParcelMarketContext } from '../market/market.types';
 import { ParcelQueryDto } from '../parcels/dto/parcel-query.dto';
 import { ParcelsService } from '../parcels/parcels.service';
 import { SourcesService } from '../sources/sources.service';
+import { SourceActivationService } from '../sources/source-activation.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { UserDataService } from '../user-data/user-data.service';
 import { buildParcelReport } from './parcel-report';
@@ -56,6 +57,7 @@ export class WebsiteService {
     private readonly map: MapService,
     private readonly ingestion: IngestionService,
     private readonly sources: SourcesService,
+    private readonly sourceActivation: SourceActivationService,
     private readonly market: MarketService
   ) {}
 
@@ -107,6 +109,7 @@ export class WebsiteService {
     const [tileStatus, providers] = await Promise.all([this.map.tileServerStatus(), this.map.providers()]);
     const requirements = this.ingestion.accessRequirements();
     const sourceCoverage = this.sources.summary().sourceCoverage;
+    const sourceActivation = this.sourceActivation.activation({ limit: 100 });
     const workspace = userReference ? await this.workspace(userReference) : null;
     return {
       status: 'ok',
@@ -127,6 +130,8 @@ export class WebsiteService {
       map: { tileStatus, providers },
       ingestionRequirements: requirements,
       sourceCoverage,
+      sourceActivation: sourceActivation.summary,
+      activeSources: sourceActivation.sources,
       workspace
     };
   }
@@ -299,6 +304,7 @@ export class WebsiteService {
       };
     }
     const capability = this.sources.municipalityCapabilityForSource(source);
+    const activation = this.sourceActivation.activationForSource(source);
     const protectedSource = capability.protected;
     const endpointCandidate = source.homepageUrl;
     const provenance = [provenanceRecord({ sourceId: source.id, sourceName: source.name, endpoint: endpointCandidate, dataType: 'public_metadata', connectorKind: source.connectorKinds[0], status: 'registry_metadata', confidence: 0.45 })];
@@ -306,18 +312,18 @@ export class WebsiteService {
       status: protectedSource ? 'protected' : 'not_ready',
       source: 'tkgm-parsel-sorgu',
       endpoint: 'https://parselsorgu.tkgm.gov.tr/',
-      message: protectedSource ? 'Kaynak korumalı olduğu için parsel geometri akışı durduruldu.' : 'TKGM/parsel geometri entegrasyonu aday durumda; doğrulanmış public geometri endpointi henüz hazır değil.'
+      message: protectedSource ? 'Kaynak korumalı olduğu için parsel geometri akışı durduruldu.' : activation.activationStatus === 'active' ? 'Public kaynak aktif; TKGM eşleştirmesi resmi endpoint/protokol doğrulaması bekliyor.' : 'TKGM/parsel geometri entegrasyonu aday durumda; doğrulanmış public geometri endpointi henüz hazır değil.'
     };
     const zoningAttempt = {
-      status: protectedSource ? 'protected' : 'method_contract_required',
+      status: protectedSource ? 'protected' : activation.activationStatus === 'active' ? 'active_public_source' : 'method_contract_required',
       source: source.id,
-      endpoint: endpointCandidate,
+      endpoint: activation.usableEndpoints[0] ?? endpointCandidate,
       method: undefined as string | undefined,
-      message: protectedSource ? 'Kaynak captcha/login gerektiriyor.' : 'Kaynak bulundu ama method contract çözülmedi.'
+      message: protectedSource ? 'Kaynak captcha/login gerektiriyor.' : activation.activationStatus === 'active' ? 'Public kaynak aktif; veri metodu provenance ile kullanılabilir.' : 'Kaynak bulundu ama method contract çözülmedi.'
     };
-    const status = protectedSource ? 'protected' : 'method_contract_required';
-    const noDataReason = protectedSource ? 'Kaynak captcha/login gerektiriyor' : 'Kaynak bulundu ama method contract çözülmedi';
-    return { status, query: normalized, municipalityCapability: capability, parcelGeometryAttempt, zoningAttempt, noDataReason, provenance };
+    const status = protectedSource ? 'protected' : activation.activationStatus;
+    const noDataReason = protectedSource ? 'Kaynak captcha/login gerektiriyor' : activation.nextAction;
+    return { status, query: normalized, municipalityCapability: capability, sourceActivation: activation, parcelGeometryAttempt, zoningAttempt, noDataReason, provenance };
   }
 
   async parcelReport(input: {

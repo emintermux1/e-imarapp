@@ -15,7 +15,7 @@ import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useParcel } from "@/hooks/use-parcel";
 import { useWatchlistStore } from "@/stores/watchlist-store";
-import { adaParselText, formatArea } from "@/lib/format";
+import { adaParselText, formatArea, formatDate } from "@/lib/format";
 import { SectionKonum } from "@/components/info/section-konum";
 import { SectionImar } from "@/components/info/section-imar";
 import { SectionPlanNotlari } from "@/components/info/section-plan-notlari";
@@ -25,7 +25,13 @@ import { SectionCevre } from "@/components/info/section-cevre";
 import { SectionGecmis } from "@/components/info/section-gecmis";
 import { SectionYatirimSkoru } from "@/components/info/section-yatirim-skoru";
 import { SectionParcelSummary } from "@/components/info/section-parcel-summary";
+import { SourceBadge } from "@/components/gis/source-badge";
 import { EmsalCalculatorPanel } from "@/components/emsal/emsal-calculator-panel";
+import { useBackendParcelStore } from "@/stores/backend-parcel-store";
+import { useLatestRegionsStore } from "@/stores/latest-regions-store";
+import { getBackendParcelContext, getBackendParcelSummary, humanizeApiError } from "@/lib/api/backend-client";
+import { formatQualityTimestamp, geometryLabel, matchStatusLabel, reportEligibilityLabel, sourceStatusLabel } from "@/lib/api/quality-labels";
+import type { ParcelContextResponse, ParcelSummaryResponse } from "@/types/api";
 import { cn } from "@/lib/utils";
 import { getParcelSourceMetadata } from "@/data/parcels";
 import { getParcelMarket } from "@/lib/market-client";
@@ -52,10 +58,19 @@ export function MobileBottomSheet() {
   const parcel = parcelFeature?.properties ?? null;
   const dragControls = useDragControls();
   const parcelSource = getParcelSourceMetadata();
+  const backendGeometry = useBackendParcelStore((s) => s.getGeometry(selectedId));
+  const latestRegionsItems = useLatestRegionsStore((s) => s.items);
+  const latestRegionsStatus = useLatestRegionsStore((s) => s.status);
+  const latestRegionsTotal = useLatestRegionsStore((s) => s.total);
+  const latestRegionsGeometryCount = useLatestRegionsStore((s) => s.geometryCount);
+  const refreshLatestRegions = useLatestRegionsStore((s) => s.refresh);
   const [marketResponse, setMarketResponse] = React.useState<ParcelMarketResponse | null>(null);
 
   const [emsalOpen, setEmsalOpen] = React.useState(false);
   const [vh, setVh] = React.useState<number>(800);
+  const [parcelContext, setParcelContext] = React.useState<ParcelContextResponse | null>(null);
+  const [parcelSummary, setParcelSummary] = React.useState<ParcelSummaryResponse | null>(null);
+  const [summaryMessage, setSummaryMessage] = React.useState<string | undefined>();
 
   React.useEffect(() => {
     const apply = () => setVh(window.innerHeight);
@@ -65,8 +80,37 @@ export function MobileBottomSheet() {
   }, []);
 
   React.useEffect(() => {
+    if (!parcel?.backendId) {
+      setParcelContext(null);
+      setParcelSummary(null);
+      setSummaryMessage(undefined);
+      return;
+    }
+    let cancelled = false;
+    setSummaryMessage("Canlı parsel özeti hazırlanıyor…");
+    Promise.allSettled([
+      getBackendParcelContext(parcel.backendId, { include_geometry: false, limit: 4 }),
+      getBackendParcelSummary(parcel.backendId)
+    ]).then(([contextResult, summaryResult]) => {
+      if (cancelled) return;
+      const context = contextResult.status === "fulfilled" ? contextResult.value : null;
+      const summary = summaryResult.status === "fulfilled" ? summaryResult.value : null;
+      setParcelContext(context);
+      setParcelSummary(summary);
+      if (context || summary) setSummaryMessage(undefined);
+      else setSummaryMessage(humanizeApiError(contextResult.status === "rejected" ? contextResult.reason : undefined, "Mobil özet endpoint'i kullanılamıyor."));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [parcel?.backendId]);
+
+  React.useEffect(() => {
     let alive = true;
-    if (!parcel) return;
+    if (!parcel) {
+      setMarketResponse(null);
+      return;
+    }
     void getParcelMarket({
       parcelId: parcel.id,
       il: parcel.il,
@@ -175,6 +219,10 @@ export function MobileBottomSheet() {
           <div className="text-[11px] text-fg-secondary truncate">
             {parcel.mahalle} · {parcel.ilce} / {parcel.il} · {formatArea(parcel.yuzolcumuM2)}
           </div>
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <SourceBadge status={parcel.sourceStatus ?? "demo"} className="h-4 px-1.5 text-[8px]" />
+            <SourceBadge status={backendGeometry ? "live" : parcel.centroid ? "demo" : "unavailable"} label={backendGeometry ? "canlı geometri" : parcel.centroid ? "yaklaşık konum" : "geometri yok"} className="h-4 px-1.5 text-[8px]" />
+          </div>
         </div>
         <button
           type="button"
@@ -188,12 +236,30 @@ export function MobileBottomSheet() {
       <div className="flex-1 overflow-y-auto">
         <Accordion
           type="multiple"
-          defaultValue={["konum", "imar"]}
+          defaultValue={["ozet", "son-bolgeler", "konum", "imar"]}
           className="divide-y divide-border-subtle"
         >
               <div className="px-0">
                 <SectionParcelSummary parcel={parcel} />
               </div>
+              <AccordionItem value="ozet">
+                <AccordionTrigger>Paylaşılabilir özet</AccordionTrigger>
+                <AccordionContent>
+                  <MobileShareSummary parcel={parcel} summary={parcelSummary} context={parcelContext} message={summaryMessage} hasGeometry={Boolean(backendGeometry || parcel.centroid)} />
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="son-bolgeler">
+                <AccordionTrigger>En yeni bölgeler</AccordionTrigger>
+                <AccordionContent>
+                  <MobileLatestRegions
+                    total={latestRegionsTotal}
+                    geometryCount={latestRegionsGeometryCount}
+                    status={latestRegionsStatus}
+                    items={latestRegionsItems.slice(0, 3)}
+                    onRefresh={() => void refreshLatestRegions({ limit: 10 })}
+                  />
+                </AccordionContent>
+              </AccordionItem>
               <AccordionItem value="konum">
             <AccordionTrigger>Konum & Tapu</AccordionTrigger>
             <AccordionContent>
@@ -261,10 +327,10 @@ export function MobileBottomSheet() {
         </Button>
         <Button variant="secondary" size="sm" onClick={toggleWatchlist} className="min-h-11">
           <Star className={cn("h-3.5 w-3.5", isWatchlisted && "fill-[rgb(var(--accent-red))] text-[rgb(var(--accent-red))]")} />
-          {isWatchlisted ? "Listede" : "Takip Et"}
+          {isWatchlisted ? "Alarmda" : "Alarm Kur"}
         </Button>
         <Button variant="ghost" size="sm" className="min-h-11">
-          <Share2 className="h-3.5 w-3.5" /> Paylaş
+          <Share2 className="h-3.5 w-3.5" /> Özet
         </Button>
       </footer>
       <EmsalCalculatorPanel
@@ -273,5 +339,111 @@ export function MobileBottomSheet() {
         parcel={parcel}
       />
     </motion.div>
+  );
+}
+
+function MobileShareSummary({
+  parcel,
+  summary,
+  context,
+  message,
+  hasGeometry
+}: {
+  parcel: NonNullable<ReturnType<typeof useParcel>>["properties"];
+  summary: ParcelSummaryResponse | null;
+  context: ParcelContextResponse | null;
+  message?: string;
+  hasGeometry: boolean;
+}) {
+  const relatedPlanCount = summary?.related_plan_count ?? context?.related_plans.length ?? 0;
+  const relatedAskiCount = summary?.related_aski_count ?? context?.active_aski_plans.length ?? 0;
+  const sourceStatus = summary?.source_trust.source_status ?? parcel.sourceStatus ?? "demo";
+  return (
+    <div className="space-y-2">
+      <div className="rounded-xl border border-border-subtle bg-surface-2/90 p-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-wider text-fg-muted">Rapor özeti</div>
+            <div className="mt-0.5 text-base font-semibold tabular-nums text-fg-primary">{adaParselText(parcel.ada, parcel.parsel)}</div>
+            <div className="mt-1 truncate text-[11px] text-fg-secondary">{parcel.mahalle} · {parcel.ilce} / {parcel.il}</div>
+          </div>
+          <SourceBadge status={sourceStatus} label={sourceStatusLabel(sourceStatus)} />
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+          <MobileSummaryFact label="Geometri" value={summary?.geometry_status ? geometryLabel(summary.geometry_status === "available") : geometryLabel(hasGeometry)} />
+          <MobileSummaryFact label="Plan / Askı" value={`${relatedPlanCount} / ${relatedAskiCount}`} />
+          <MobileSummaryFact label="Rapor" value={reportEligibilityLabel(summary?.report_eligibility)} />
+          <MobileSummaryFact label="Üretim" value={summary?.generated_at ? formatQualityTimestamp(summary.generated_at) : "endpoint bekleniyor"} />
+        </div>
+        {(summary?.warnings?.length || message) && (
+          <div className="mt-3 rounded-md border border-status-warning/30 bg-status-warning/10 px-2 py-1.5 text-[11px] leading-snug text-status-warning">
+            {summary?.warnings?.slice(0, 2).join(" · ") ?? message}
+          </div>
+        )}
+      </div>
+      {context?.match_method && (
+        <div className="rounded-md border border-border-subtle bg-surface-2 px-2.5 py-2 text-[11px] text-fg-secondary">
+          Plan öneri yöntemi: <span className="font-semibold text-fg-primary">{matchStatusLabel(context.match_method)}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileSummaryFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-border-subtle bg-surface-1/70 px-2 py-1.5">
+      <div className="text-[9px] uppercase tracking-wider text-fg-muted">{label}</div>
+      <div className="mt-0.5 truncate font-medium text-fg-primary">{value}</div>
+    </div>
+  );
+}
+
+function MobileLatestRegions({
+  total,
+  geometryCount,
+  status,
+  items,
+  onRefresh
+}: {
+  total: number;
+  geometryCount: number;
+  status: string;
+  items: Array<{
+    id: number;
+    label: string;
+    status?: string;
+    aski_start?: string;
+    aski_end?: string;
+    has_geometry: boolean;
+  }>;
+  onRefresh: () => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+        <MobileSummaryFact label="Kayıt" value={String(total)} />
+        <MobileSummaryFact label="Geometri" value={String(geometryCount)} />
+        <button type="button" onClick={onRefresh} className="min-h-11 rounded-md border border-border-subtle bg-surface-2 px-3 text-[11px] font-medium text-fg-secondary">
+          Yenile
+        </button>
+      </div>
+      <div className="rounded-md border border-border-subtle bg-surface-2 px-2.5 py-2 text-[11px] text-fg-secondary">
+        Durum: {sourceStatusLabel(status)}. Toplu poligon çizilmez; masaüstünde yalnız seçili kayıt vurgulanır.
+      </div>
+      {items.length === 0 ? (
+        <div className="rounded-md border border-border-subtle bg-surface-2 px-2.5 py-2 text-[11px] text-fg-muted">Henüz yeni bölge listesi yok.</div>
+      ) : (
+        items.map((item) => (
+          <div key={item.id} className="rounded-md border border-border-subtle bg-surface-2 px-2.5 py-2">
+            <div className="line-clamp-2 text-[12px] font-medium text-fg-primary">{item.label}</div>
+            <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-fg-muted">
+              <span>{item.status ?? "durum yok"} · {item.aski_start ? formatDate(item.aski_start) : "askı tarihi yok"}</span>
+              <SourceBadge status={item.has_geometry ? "computed" : "unavailable"} label={item.has_geometry ? "geom" : "yok"} className="h-4 px-1 text-[8px]" />
+            </div>
+          </div>
+        ))
+      )}
+    </div>
   );
 }

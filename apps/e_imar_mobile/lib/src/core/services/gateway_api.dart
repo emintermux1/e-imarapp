@@ -41,23 +41,39 @@ class GatewayApi {
 
   Future<List<ProviderDescriptor>> providers({String? city}) async {
     if (!isConfigured) return const [];
-    final response = await _dio.get<Map<String, Object?>>(
-      '/providers',
-      queryParameters: {
-        if (city != null && city.trim().isNotEmpty)
-          'city': city.trim().toLowerCase(),
-      },
-    );
+    final response = await _dio.get<Map<String, Object?>>('/sources/activation');
     final envelope = _envelope(response);
     if (envelope.isError) throw GatewayException.fromEnvelope(envelope);
-    final rawProviders = envelope.data['providers'];
+    final rawProviders = envelope.data['sources'];
     if (rawProviders is! List) return const [];
     return rawProviders
         .whereType<Map>()
         .map(
-          (item) => ProviderDescriptor.fromJson(item.cast<String, Object?>()),
+          (item) => _providerFromActivation(item.cast<String, Object?>()),
         )
         .toList(growable: false);
+  }
+
+  ProviderDescriptor _providerFromActivation(Map<String, Object?> json) {
+    final metadata = json['metadata'] is Map
+        ? (json['metadata'] as Map).cast<String, Object?>()
+        : const <String, Object?>{};
+    return ProviderDescriptor.fromJson({
+      'id': json['sourceId'],
+      'kind': json['category'],
+      'displayName': json['name'],
+      'status': json['activationStatus'],
+      'enabled': json['activationStatus'] == 'active',
+      'regions': [
+        if (metadata['province'] != null) metadata['province'],
+        if (metadata['district'] != null) metadata['district'],
+      ],
+      'capabilities': json['capabilities'],
+      'attribution': {'name': json['name'], 'url': json['homepageUrl']},
+      'activationStatus': json['activationStatus'],
+      'nextAction': json['nextAction'],
+      'blockedReason': json['blockedReason'],
+    });
   }
 
   Future<ParcelLookupResult> lookupByAdmin({

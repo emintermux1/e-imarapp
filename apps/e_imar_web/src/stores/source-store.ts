@@ -6,6 +6,8 @@ import {
   discoverMunicipalityGis,
   getLiveMapLayers,
   getSourceHealth,
+  getSourceActivation,
+  getSourceQuality,
   humanizeApiError,
   listSources,
   probeLiveMapLayer
@@ -15,6 +17,8 @@ import type {
   MunicipalGISDiscoveryResponse,
   ProbedLiveMapLayer,
   SourceHealthRecord,
+  SourceQualityResponse,
+  SourceActivationResponse,
   SourceRegistryRecord
 } from "@/types/api";
 
@@ -22,15 +26,20 @@ interface SourceState {
   sources: SourceRegistryRecord[];
   health: Record<string, SourceHealthRecord>;
   liveLayers: BackendMapLayerResponse[];
+  quality?: SourceQualityResponse;
+  activation?: SourceActivationResponse;
   activeMapLayers: ProbedLiveMapLayer[];
   probedLayers: Record<string, ProbedLiveMapLayer>;
   discoveries: Record<string, MunicipalGISDiscoveryResponse | Record<string, unknown>>;
   loading: boolean;
   healthLoading: boolean;
+  qualityLoading: boolean;
   error?: string;
   lastChecked?: string;
   loadSources: () => Promise<void>;
   refreshHealth: () => Promise<void>;
+  refreshQuality: (params?: { limit?: number; live_check?: boolean; capability?: string }) => Promise<void>;
+  refreshActivation: (params?: { limit?: number; live_check?: boolean; force?: boolean }) => Promise<void>;
   discover: (sourceId: string) => Promise<void>;
   discoverMunicipalityGis: (slug: string, force?: boolean) => Promise<void>;
   loadLiveLayers: () => Promise<void>;
@@ -48,6 +57,7 @@ export const useSourceStore = create<SourceState>()((set, get) => ({
   discoveries: {},
   loading: false,
   healthLoading: false,
+  qualityLoading: false,
   loadSources: async () => {
     set({ loading: true, error: undefined });
     try {
@@ -65,6 +75,24 @@ export const useSourceStore = create<SourceState>()((set, get) => ({
       set({ health, healthLoading: false, lastChecked: new Date().toISOString() });
     } catch (error) {
       set({ healthLoading: false, error: `${humanizeApiError(error)} Canlı durum alınamadı; portal bağlantıları açık kalır.`, lastChecked: new Date().toISOString() });
+    }
+  },
+  refreshQuality: async (params = {}) => {
+    set({ qualityLoading: true, error: undefined });
+    try {
+      const quality = await getSourceQuality({ limit: 12, ...params });
+      set({ quality, qualityLoading: false, lastChecked: quality.fetched_at ?? new Date().toISOString() });
+    } catch (error) {
+      set({ qualityLoading: false, error: `${humanizeApiError(error, "Canlı veri kalite paneli alınamadı.")} Neden veri yok sorusu için sağlık/portal etiketleri korunuyor.`, lastChecked: new Date().toISOString() });
+    }
+  },
+  refreshActivation: async (params = {}) => {
+    set({ qualityLoading: true, error: undefined });
+    try {
+      const activation = await getSourceActivation({ limit: 24, ...params });
+      set({ activation, qualityLoading: false, lastChecked: activation.generatedAt ?? new Date().toISOString() });
+    } catch (error) {
+      set({ qualityLoading: false, error: `${humanizeApiError(error, "Devlet kaynak aktivasyon paneli alınamadı.")} Mevcut kalite/portal etiketleri korunuyor.`, lastChecked: new Date().toISOString() });
     }
   },
   discover: async (sourceId: string) => {

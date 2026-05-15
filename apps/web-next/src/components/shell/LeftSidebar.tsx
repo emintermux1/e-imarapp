@@ -22,8 +22,8 @@ export function LeftSidebar() {
       </div>
 
       <div className="rounded-lg border border-slate-200 p-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Watchlist</h3>
-        <p className="mt-1 text-sm text-slate-700">4 aktif parsel, 2 belediye kararı takibi</p>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Parsel Alarm</h3>
+        <p className="mt-1 text-sm text-slate-700">4 aktif parsel alarmı, 2 belediye kararı alarmı</p>
       </div>
     </aside>
   );

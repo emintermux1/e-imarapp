@@ -64,6 +64,57 @@ def _src(**kwargs) -> SourceEntry:
     return SourceEntry(**kwargs)
 
 
+TURKEY_PROVINCES: list[tuple[str, str, str]] = [
+    ("01", "adana", "Adana"), ("02", "adiyaman", "Adıyaman"), ("03", "afyonkarahisar", "Afyonkarahisar"),
+    ("04", "agri", "Ağrı"), ("05", "amasya", "Amasya"), ("06", "ankara", "Ankara"), ("07", "antalya", "Antalya"),
+    ("08", "artvin", "Artvin"), ("09", "aydin", "Aydın"), ("10", "balikesir", "Balıkesir"), ("11", "bilecik", "Bilecik"),
+    ("12", "bingol", "Bingöl"), ("13", "bitlis", "Bitlis"), ("14", "bolu", "Bolu"), ("15", "burdur", "Burdur"),
+    ("16", "bursa", "Bursa"), ("17", "canakkale", "Çanakkale"), ("18", "cankiri", "Çankırı"), ("19", "corum", "Çorum"),
+    ("20", "denizli", "Denizli"), ("21", "diyarbakir", "Diyarbakır"), ("22", "edirne", "Edirne"), ("23", "elazig", "Elazığ"),
+    ("24", "erzincan", "Erzincan"), ("25", "erzurum", "Erzurum"), ("26", "eskisehir", "Eskişehir"), ("27", "gaziantep", "Gaziantep"),
+    ("28", "giresun", "Giresun"), ("29", "gumushane", "Gümüşhane"), ("30", "hakkari", "Hakkari"), ("31", "hatay", "Hatay"),
+    ("32", "isparta", "Isparta"), ("33", "mersin", "Mersin"), ("34", "istanbul", "İstanbul"), ("35", "izmir", "İzmir"),
+    ("36", "kars", "Kars"), ("37", "kastamonu", "Kastamonu"), ("38", "kayseri", "Kayseri"), ("39", "kirklareli", "Kırklareli"),
+    ("40", "kirsehir", "Kırşehir"), ("41", "kocaeli", "Kocaeli"), ("42", "konya", "Konya"), ("43", "kutahya", "Kütahya"),
+    ("44", "malatya", "Malatya"), ("45", "manisa", "Manisa"), ("46", "kahramanmaras", "Kahramanmaraş"), ("47", "mardin", "Mardin"),
+    ("48", "mugla", "Muğla"), ("49", "mus", "Muş"), ("50", "nevsehir", "Nevşehir"), ("51", "nigde", "Niğde"),
+    ("52", "ordu", "Ordu"), ("53", "rize", "Rize"), ("54", "sakarya", "Sakarya"), ("55", "samsun", "Samsun"),
+    ("56", "siirt", "Siirt"), ("57", "sinop", "Sinop"), ("58", "sivas", "Sivas"), ("59", "tekirdag", "Tekirdağ"),
+    ("60", "tokat", "Tokat"), ("61", "trabzon", "Trabzon"), ("62", "tunceli", "Tunceli"), ("63", "sanliurfa", "Şanlıurfa"),
+    ("64", "usak", "Uşak"), ("65", "van", "Van"), ("66", "yozgat", "Yozgat"), ("67", "zonguldak", "Zonguldak"),
+    ("68", "aksaray", "Aksaray"), ("69", "bayburt", "Bayburt"), ("70", "karaman", "Karaman"), ("71", "kirikkale", "Kırıkkale"),
+    ("72", "batman", "Batman"), ("73", "sirnak", "Şırnak"), ("74", "bartin", "Bartın"), ("75", "ardahan", "Ardahan"),
+    ("76", "igdir", "Iğdır"), ("77", "yalova", "Yalova"), ("78", "karabuk", "Karabük"), ("79", "kilis", "Kilis"),
+    ("80", "osmaniye", "Osmaniye"), ("81", "duzce", "Düzce"),
+]
+
+
+def _generated_turkey_province_sources() -> list[SourceEntry]:
+    vendors = [SourceProvider.netcad_keos, SourceProvider.netcad_webgis, SourceProvider.netcad_keos, SourceProvider.netcad_webgis, SourceProvider.netcad_webgis]
+    rows: list[SourceEntry] = []
+    for idx, (_, slug, name) in enumerate(TURKEY_PROVINCES):
+        provider = vendors[idx % len(vendors)]
+        if provider == SourceProvider.netcad_keos:
+            base_url = f"https://keos.{slug}.bel.tr/imardurumu/"
+            capabilities = ["portal", "parcel-query", "layers", "aski-list"]
+        else:
+            base_url = f"https://webgis.{slug}.bel.tr/imardurumu/"
+            capabilities = ["portal", "parcel-query", "layers"]
+        rows.append(_src(
+            id=f"prov.{slug}.coverage",
+            name=f"{name} Belediye İmar Adayı",
+            base_url=base_url,
+            provider=provider,
+            auth=SourceAuth.public_partial,
+            category=SourceCategory.municipal,
+            discovery_strategy="keos-html",
+            capabilities=capabilities,
+            municipality_name=f"{name} İl Merkezi",
+            notes=f"{name} için metadata_only aday kayıt; canlı endpoint ve izin durumu doğrulanmadı.",
+        ))
+    return rows
+
+
 REGISTRY: dict[str, SourceEntry] = {
     "tkgm.parselsorgu": _src(
         id="tkgm.parselsorgu",
@@ -286,6 +337,9 @@ for _id, _muni, _url, _provider in _MUNICIPAL_SOURCES:
         municipality_name=_muni,
         notes=f"{_muni} belediye imar/KEOS portalı; HTML/JS discovery ile servis uçları aranır.",
     )
+
+for source in _generated_turkey_province_sources():
+    REGISTRY[source.id] = source
 
 
 def list_sources() -> list[SourceEntry]:

@@ -94,7 +94,7 @@ export function ParcelCard({
             e.stopPropagation();
             onRemove();
           }}
-          aria-label="Watchlist'ten kaldır"
+          aria-label="Parsel Alarm'dan kaldır"
           className="self-start mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-sm text-fg-muted hover:text-fg-primary hover:bg-surface-3 transition-colors"
         >
           <X className="h-3.5 w-3.5" />

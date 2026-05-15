@@ -30,7 +30,7 @@ class ParcelDetailScreen extends ConsumerWidget {
         title: const Text('Parsel Detayı'),
         actions: [
           IconButton(
-            tooltip: isWatchlisted ? 'Takipten çıkar' : 'Takibe ekle',
+            tooltip: isWatchlisted ? 'Parsel Alarm’dan çıkar' : 'Parsel Alarm kur',
             onPressed: data == null
                 ? null
                 : () {
@@ -39,8 +39,8 @@ class ParcelDetailScreen extends ConsumerWidget {
                       SnackBar(
                         content: Text(
                           isWatchlisted
-                              ? 'Parsel takipten çıkarıldı'
-                              : 'Parsel yerel takip listesine eklendi',
+                              ? 'Parsel Alarm’dan çıkarıldı'
+                              : 'Parsel yerel alarm profiline eklendi',
                         ),
                       ),
                     );

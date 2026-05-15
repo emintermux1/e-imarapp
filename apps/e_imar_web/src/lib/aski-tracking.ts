@@ -30,6 +30,8 @@ export const ASKI_ALERT_INTENT_LABELS: Record<AskiAlertIntent, string> = {
   source_access_status_change: "Kaynak erişim durumu"
 };
 
+export const PARSEL_ALARM_NAME = "Parsel Alarm";
+
 export const DEFAULT_WATCHLIST_ALERT_INTENTS: AskiAlertIntent[] = [
   "imar_change",
   "aski_plan",

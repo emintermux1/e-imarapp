@@ -22,6 +22,7 @@ import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
 import { ZoningBadge } from "@/components/gis/zoning-badge";
 import { SourceBadge } from "@/components/gis/source-badge";
+import { geometryLabel, matchStatusLabel } from "@/lib/api/quality-labels";
 import type { SearchResult } from "@/types/geo";
 import { cn } from "@/lib/utils";
 import { getLocationBoundary } from "@/data/location-boundaries";
@@ -395,12 +396,30 @@ function ResultRow({
             {result.secondary}
           </div>
         )}
+        {result.type === "parcel" && (result.meta || result.qualityHints?.length || result.ambiguityCount) && (
+          <div className="mt-1 flex flex-wrap gap-1 overflow-hidden text-[9.5px] leading-none text-fg-muted">
+            {result.meta && <span className="truncate rounded-sm border border-border-subtle bg-surface-1 px-1.5 py-1">{result.meta}</span>}
+            {result.ambiguityCount && result.ambiguityCount > 1 && <span className="rounded-sm border border-status-warning/30 bg-status-warning/10 px-1.5 py-1 text-status-warning">Aynı ada/parsel farklı ilçelerde var</span>}
+            {result.qualityHints?.slice(0, 1).map((hint) => <span key={hint} className="hidden max-w-[220px] truncate rounded-sm border border-border-subtle bg-surface-1 px-1.5 py-1 sm:inline">{hint}</span>)}
+          </div>
+        )}
       </div>
       {result.type === "parcel" && (
-        <span className="inline-flex items-center gap-1.5">
-          {result.sourceStatus && <SourceBadge status={result.sourceStatus} />}
-          <ZoningBadge type={result.zoningType} size="xs" />
-        </span>
+        <div className="flex max-w-[52%] shrink-0 flex-col items-end gap-1">
+          <span className="inline-flex items-center gap-1.5">
+            {result.sourceStatus && <SourceBadge status={result.sourceStatus} />}
+            <ZoningBadge type={result.zoningType} size="xs" />
+          </span>
+          <span className="hidden max-w-full items-center gap-1 overflow-hidden text-[9.5px] text-fg-muted sm:inline-flex">
+            {result.geometryAvailable != null && (
+              <span className={cn("truncate", result.geometryAvailable ? "text-status-success" : "text-status-warning")}>
+                {geometryLabel(result.geometryAvailable)}
+              </span>
+            )}
+            {result.planMatchStatus && <span className="truncate">Plan {matchStatusLabel(result.planMatchStatus)}</span>}
+            {result.askiMatchStatus && <span className="truncate">Askı {matchStatusLabel(result.askiMatchStatus)}</span>}
+          </span>
+        </div>
       )}
       {result.type !== "parcel" && result.meta && (
         <span className="text-[11px] uppercase tracking-wider text-fg-muted">
