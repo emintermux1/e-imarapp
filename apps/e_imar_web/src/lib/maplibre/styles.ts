@@ -1,6 +1,4 @@
 import type { StyleSpecification } from "maplibre-gl";
-import { TURKEY_RASTER_BOUNDS } from "@/lib/geo/turkey";
-
 /**
  * Carto Voyager (no API key required) — clean, neutral basemap. We compose
  * a JSON style so the app starts even if external style URLs are blocked.
@@ -18,7 +16,6 @@ export const cartoVoyagerStyle = (): StyleSpecification => ({
         "https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
       ],
       tileSize: 256,
-      bounds: TURKEY_RASTER_BOUNDS,
       attribution:
         '© <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a> · © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
     }
@@ -59,7 +56,6 @@ export const cartoDarkStyle = (): StyleSpecification => ({
         "https://d.basemaps.cartocdn.com/rastertiles/dark_only_labels/{z}/{x}/{y}.png"
       ],
       tileSize: 256,
-      bounds: TURKEY_RASTER_BOUNDS,
       attribution:
         '© <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a> · © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
     }
@@ -98,7 +94,6 @@ export const esriSatelliteStyle = (): StyleSpecification => ({
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
       ],
       tileSize: 256,
-      bounds: TURKEY_RASTER_BOUNDS,
       attribution:
         "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
     }
@@ -109,7 +104,14 @@ export const esriSatelliteStyle = (): StyleSpecification => ({
       type: "raster",
       source: "esri-satellite",
       minzoom: 0,
-      maxzoom: 22
+      maxzoom: 22,
+      paint: {
+        "raster-opacity": 1,
+        "raster-brightness-min": 0.72,
+        "raster-brightness-max": 1,
+        "raster-saturation": -0.34,
+        "raster-contrast": 0.08
+      }
     }
   ]
 });
@@ -127,7 +129,6 @@ export const topographicStyle = (): StyleSpecification => ({
         "https://c.tile.opentopomap.org/{z}/{x}/{y}.png"
       ],
       tileSize: 256,
-      bounds: TURKEY_RASTER_BOUNDS,
       attribution:
         "© <a href=\"https://opentopomap.org\" target=\"_blank\" rel=\"noreferrer\">OpenTopoMap</a> (CC-BY-SA), Map data: © <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\" rel=\"noreferrer\">OpenStreetMap</a> contributors"
     }
