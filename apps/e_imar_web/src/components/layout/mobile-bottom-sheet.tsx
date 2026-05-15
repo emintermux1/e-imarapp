@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, useDragControls, type PanInfo } from "framer-motion";
-import { X, Star, Calculator, Share2 } from "lucide-react";
+import { X, Star, Calculator, Share2, FileDown, Globe2, Route, Navigation } from "lucide-react";
 import {
   Accordion,
   AccordionItem,
@@ -191,10 +191,10 @@ export function MobileBottomSheet() {
       dragConstraints={{ top: 0, bottom: 0 }}
       onDragEnd={onDragEnd}
       animate={{ height: snapHeight }}
-      transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
+      transition={{ type: "spring", stiffness: 260, damping: 28 }}
       className={cn(
-        "lg:hidden fixed left-0 right-0 bottom-0 z-30 bg-surface-2/98 border-t border-border-strong backdrop-blur-sm",
-        "rounded-t-[18px] shadow-sheet flex flex-col touch-pan-y"
+        "lg:hidden fixed left-0 right-0 bottom-0 z-30 border-t border-white/70 bg-surface-2/98 backdrop-blur-sm",
+        "rounded-t-[2rem] shadow-sheet flex flex-col touch-pan-y"
       )}
     >
       <button
@@ -203,15 +203,16 @@ export function MobileBottomSheet() {
         className="self-stretch py-3 cursor-grab active:cursor-grabbing"
         onPointerDown={(e) => dragControls.start(e)}
       >
-        <span className="block mx-auto h-1.5 w-12 rounded-full bg-border-strong" />
+        <span className="block mx-auto h-1.5 w-12 rounded-full bg-border-strong/70" />
       </button>
-      <header className="flex items-start justify-between gap-2 px-4 pb-2 border-b border-border-subtle">
+      <header className="border-b border-border-subtle px-4 pb-3">
+        <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-baseline gap-2">
             <span className="text-[11px] uppercase tracking-wider text-fg-muted">
               Ada/Parsel
             </span>
-            <span className="text-base font-semibold tabular-nums text-fg-primary">
+            <span className="text-xl font-black tabular-nums tracking-tight text-fg-primary">
               {adaParselText(parcel.ada, parcel.parsel)}
             </span>
             <ZoningBadge type={parcel.zoningType} size="xs" />
@@ -232,6 +233,13 @@ export function MobileBottomSheet() {
         >
           <X className="h-4 w-4" />
         </button>
+        </div>
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          <MobileAction icon={<Route className="h-4 w-4" />} label="Rota" />
+          <MobileAction icon={<Star className={cn("h-4 w-4", isWatchlisted && "fill-brand-green text-brand-green")} />} label={isWatchlisted ? "Alarmda" : "Favori"} onClick={toggleWatchlist} />
+          <MobileAction icon={<FileDown className="h-4 w-4" />} label="PDF" />
+          <MobileAction icon={<Globe2 className="h-4 w-4" />} label="Earth" />
+        </div>
       </header>
       <div className="flex-1 overflow-y-auto">
         <Accordion
@@ -321,13 +329,13 @@ export function MobileBottomSheet() {
           </AccordionItem>
         </Accordion>
       </div>
-      <footer className="grid grid-cols-3 gap-2 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2 border-t border-border-subtle bg-surface-1/60">
+      <footer className="grid grid-cols-3 gap-2 border-t border-border-subtle bg-surface-1/60 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2">
         <Button variant="primary" size="sm" onClick={() => setEmsalOpen(true)} className="min-h-11">
           <Calculator className="h-3.5 w-3.5" /> Emsal
         </Button>
-        <Button variant="secondary" size="sm" onClick={toggleWatchlist} className="min-h-11">
-          <Star className={cn("h-3.5 w-3.5", isWatchlisted && "fill-[rgb(var(--accent-red))] text-[rgb(var(--accent-red))]")} />
-          {isWatchlisted ? "Alarmda" : "Alarm Kur"}
+        <Button variant="secondary" size="sm" className="min-h-11">
+          <Navigation className="h-3.5 w-3.5" />
+          Koordinat
         </Button>
         <Button variant="ghost" size="sm" className="min-h-11">
           <Share2 className="h-3.5 w-3.5" /> Özet
@@ -339,6 +347,27 @@ export function MobileBottomSheet() {
         parcel={parcel}
       />
     </motion.div>
+  );
+}
+
+function MobileAction({
+  icon,
+  label,
+  onClick
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="soft-press flex h-16 flex-col items-center justify-center gap-1 rounded-2xl border border-border-subtle bg-surface-1/70 text-[11px] font-bold text-fg-secondary hover:bg-white hover:text-fg-primary"
+    >
+      <span className="text-brand-green">{icon}</span>
+      {label}
+    </button>
   );
 }
 

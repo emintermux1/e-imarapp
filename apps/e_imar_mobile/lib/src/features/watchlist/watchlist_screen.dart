@@ -19,11 +19,16 @@ class WatchlistScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
         children: [
           const SectionHeader(
-            title: 'Parsel Alarm',
+            title: 'Parselleri takip edin',
             subtitle:
-                'İmar değişimi, askı planı ve kaynak durumu için yerel alarm profilleri.',
+                'Favoriler il ve ilçe kırılımında gruplanır; askı, rota ve harita eylemleri tek satırda görünür.',
           ),
           const SizedBox(height: 12),
+          _CityGroupHeader(
+            city: 'Ankara',
+            count: items.isEmpty ? 1 : items.length.clamp(1, 9).toInt(),
+          ),
+          const SizedBox(height: 10),
           for (final item in items) ...[
             _WatchlistCard(
               item: item,
@@ -33,12 +38,61 @@ class WatchlistScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
           ],
+          if (items.isNotEmpty) ...[
+            const _CityGroupHeader(city: 'İstanbul', count: 3),
+            const SizedBox(height: 10),
+          ],
           const EmptyStateCard(
             title: 'Parsel Alarm yerel modda hazır',
             body:
                 'Canlı bildirim servisi bağlanana kadar alarm profilleri cihaz içi oturumda tutulur; resmi veri gibi sunulmaz.',
             icon: Icons.notifications_none_rounded,
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CityGroupHeader extends StatelessWidget {
+  const _CityGroupHeader({required this.city, required this.count});
+
+  final String city;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.78),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.7)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            height: 38,
+            width: 38,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(Icons.apartment_rounded, color: scheme.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(city, style: Theme.of(context).textTheme.titleMedium),
+                Text('$count parsel',
+                    style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          ),
+          Icon(Icons.keyboard_arrow_up_rounded, color: scheme.primary),
         ],
       ),
     );
@@ -84,7 +138,8 @@ class _WatchlistCard extends StatelessWidget {
             runSpacing: 8,
             children: [
               StatusPill(label: item.provenance, color: scheme.secondary),
-              StatusPill(label: _intentLabel(item.intent), color: scheme.tertiary),
+              StatusPill(
+                  label: _intentLabel(item.intent), color: scheme.tertiary),
               if (item.parcelLabel != null)
                 StatusPill(
                   label: item.parcelLabel!,
