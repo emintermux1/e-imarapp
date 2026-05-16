@@ -11,4 +11,9 @@ export class IngestionController {
   requirements() {
     return this.ingestion.accessRequirements();
   }
+
+  @Get('readiness')
+  readiness() {
+    return this.ingestion.readiness();
+  }
 }

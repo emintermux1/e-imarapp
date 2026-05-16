@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Activity, AlertTriangle, CheckCircle2, Clock3, Database, ExternalLink, LockKeyhole, MapPinOff, RadioTower, RefreshCw, TimerReset } from "lucide-react";
 import { SourceBadge } from "@/components/gis/source-badge";
+import { SourceHealthTrend } from "@/components/source/source-health-trend";
 import {
   explainMissingData,
   formatQualityTimestamp,
@@ -266,6 +267,7 @@ function QualityRow({ record }: { record: SourceQualityRecord }) {
         <MiniFact label="Gecikme" value={record.latency_ms == null ? "—" : `${record.latency_ms} ms`} warn={slow} />
         <MiniFact label="Geometri" value={geometryLabel(record.geometry_available)} warn={noGeometry} />
       </div>
+      <SourceHealthTrend record={record} className="mt-2" />
       <div className="mt-2 flex flex-wrap gap-1.5">
         {slow && <Pill tone="warning">slow</Pill>}
         {record.status === "fallback" && <Pill tone="warning">fallback</Pill>}

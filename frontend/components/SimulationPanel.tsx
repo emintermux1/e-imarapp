@@ -52,57 +52,57 @@ export function SimulationPanel() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-[#17231f]">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs text-[var(--text-secondary)] mb-1">Kat Sayısı</label>
-          <input type="number" value={floors} onChange={(e) => setFloors(Number(e.target.value))} className="w-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg px-3 py-2 text-sm" />
+          <label className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#65726b]">Kat Sayısı</label>
+          <input type="number" value={floors} onChange={(e) => setFloors(Number(e.target.value))} className="w-full rounded-2xl border border-[#d7d0bc]/85 bg-white px-3 py-2 text-sm outline-none focus:border-[#087d7f]" />
         </div>
         <div>
-          <label className="block text-xs text-[var(--text-secondary)] mb-1">Kat Yüksekliği (m)</label>
-          <input type="number" step={0.1} value={floorHeight} onChange={(e) => setFloorHeight(Number(e.target.value))} className="w-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg px-3 py-2 text-sm" />
+          <label className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#65726b]">Kat Yüksekliği (m)</label>
+          <input type="number" step={0.1} value={floorHeight} onChange={(e) => setFloorHeight(Number(e.target.value))} className="w-full rounded-2xl border border-[#d7d0bc]/85 bg-white px-3 py-2 text-sm outline-none focus:border-[#087d7f]" />
         </div>
         <div>
-          <label className="block text-xs text-[var(--text-secondary)] mb-1">Parsel Alanı (m²)</label>
-          <input type="number" value={parcelArea} onChange={(e) => setParcelArea(Number(e.target.value))} className="w-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg px-3 py-2 text-sm" />
+          <label className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#65726b]">Parsel Alanı (m²)</label>
+          <input type="number" value={parcelArea} onChange={(e) => setParcelArea(Number(e.target.value))} className="w-full rounded-2xl border border-[#d7d0bc]/85 bg-white px-3 py-2 text-sm outline-none focus:border-[#087d7f]" />
         </div>
         <div>
-          <label className="block text-xs text-[var(--text-secondary)] mb-1">Emsal</label>
-          <input type="number" step={0.1} value={emsal} onChange={(e) => setEmsal(Number(e.target.value))} className="w-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg px-3 py-2 text-sm" />
+          <label className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#65726b]">Emsal</label>
+          <input type="number" step={0.1} value={emsal} onChange={(e) => setEmsal(Number(e.target.value))} className="w-full rounded-2xl border border-[#d7d0bc]/85 bg-white px-3 py-2 text-sm outline-none focus:border-[#087d7f]" />
         </div>
         <div>
-          <label className="block text-xs text-[var(--text-secondary)] mb-1">Gabari (m)</label>
-          <input type="number" value={gabari} onChange={(e) => setGabari(Number(e.target.value))} className="w-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg px-3 py-2 text-sm" />
+          <label className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#65726b]">Gabari (m)</label>
+          <input type="number" value={gabari} onChange={(e) => setGabari(Number(e.target.value))} className="w-full rounded-2xl border border-[#d7d0bc]/85 bg-white px-3 py-2 text-sm outline-none focus:border-[#087d7f]" />
         </div>
         <div>
-          <label className="block text-xs text-[var(--text-secondary)] mb-1">Hmax (m)</label>
-          <input type="number" value={hMax} onChange={(e) => setHMax(Number(e.target.value))} className="w-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg px-3 py-2 text-sm" />
+          <label className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#65726b]">Hmax (m)</label>
+          <input type="number" value={hMax} onChange={(e) => setHMax(Number(e.target.value))} className="w-full rounded-2xl border border-[#d7d0bc]/85 bg-white px-3 py-2 text-sm outline-none focus:border-[#087d7f]" />
         </div>
       </div>
 
-      <div className="flex gap-3">
-        <button onClick={runVolume} disabled={loading} className="flex-1 bg-[var(--accent-cyan)] text-[var(--bg-primary)] font-medium rounded-lg py-2.5 hover:opacity-90 transition-opacity disabled:opacity-50">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <button onClick={runVolume} disabled={loading} className="rounded-full bg-[#17231f] py-2.5 text-sm font-extrabold text-[#fffaf0] transition-colors hover:bg-[#26362f] disabled:opacity-50">
           {loading ? "Hesaplanıyor..." : "Hacim Hesapla"}
         </button>
-        <button onClick={runCompliance} disabled={loading} className="flex-1 bg-[var(--accent-magenta)] text-white font-medium rounded-lg py-2.5 hover:opacity-90 transition-opacity disabled:opacity-50">
+        <button onClick={runCompliance} disabled={loading} className="rounded-full border border-[#d7d0bc]/85 bg-white py-2.5 text-sm font-extrabold text-[#17231f] transition-colors hover:bg-[#f6f1e6] disabled:opacity-50">
           {loading ? "Kontrol ediliyor..." : "Uygunluk Kontrolü"}
         </button>
       </div>
 
       {result && result.type === "volume" && (
-        <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg p-4 text-sm space-y-1">
-          <p><span className="text-[var(--text-secondary)]">Taban Alanı:</span> {((result.data as Record<string, unknown>).base_area_m2 as number)?.toLocaleString("tr-TR")} m²</p>
-          <p><span className="text-[var(--text-secondary)]">Toplam Alan:</span> {((result.data as Record<string, unknown>).total_floor_area_m2 as number)?.toLocaleString("tr-TR")} m²</p>
-          <p><span className="text-[var(--text-secondary)]">Hacim:</span> {((result.data as Record<string, unknown>).volume_m3 as number)?.toLocaleString("tr-TR")} m³</p>
-          <p><span className="text-[var(--text-secondary)]">Yükseklik:</span> {String((result.data as Record<string, unknown>).height_m)} m</p>
+        <div className="space-y-1 rounded-2xl border border-[#d7d0bc]/85 bg-[#f6f1e6] p-4 text-sm">
+          <p><span className="text-[#65726b]">Taban Alanı:</span> {((result.data as Record<string, unknown>).base_area_m2 as number)?.toLocaleString("tr-TR")} m²</p>
+          <p><span className="text-[#65726b]">Toplam Alan:</span> {((result.data as Record<string, unknown>).total_floor_area_m2 as number)?.toLocaleString("tr-TR")} m²</p>
+          <p><span className="text-[#65726b]">Hacim:</span> {((result.data as Record<string, unknown>).volume_m3 as number)?.toLocaleString("tr-TR")} m³</p>
+          <p><span className="text-[#65726b]">Yükseklik:</span> {String((result.data as Record<string, unknown>).height_m)} m</p>
         </div>
       )}
 
       {result && result.type === "compliance" && (
-        <div className={`border rounded-lg p-4 text-sm ${(result.data as Record<string, unknown>).compliant ? "border-emerald-500/30 bg-emerald-500/5" : "border-red-500/30 bg-red-500/5"}`}>
-          <p className="font-semibold mb-2">{(result.data as Record<string, unknown>).compliant === true ? "✅ Uygun" : "❌ Uygun Değil"}</p>
+        <div className={`rounded-2xl border p-4 text-sm ${(result.data as Record<string, unknown>).compliant ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"}`}>
+          <p className="mb-2 font-semibold">{(result.data as Record<string, unknown>).compliant === true ? "Uygun" : "Uygun Değil"}</p>
           {((result.data as Record<string, unknown>).violations as string[]).length > 0 && (
-            <ul className="list-disc list-inside text-red-400">
+            <ul className="list-inside list-disc text-red-700">
               {((result.data as Record<string, unknown>).violations as string[]).map((v, i) => <li key={i}>{v}</li>)}
             </ul>
           )}
@@ -110,7 +110,7 @@ export function SimulationPanel() {
       )}
 
       {result && result.type === "error" && (
-        <div className="border border-red-500/30 bg-red-500/5 rounded-lg p-4 text-sm text-red-400">{result.message as string}</div>
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{result.message as string}</div>
       )}
     </div>
   );

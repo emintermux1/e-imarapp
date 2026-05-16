@@ -51,6 +51,7 @@ The running NestJS service exposes Swagger UI and JSON at:
 ### Ingestion
 - `GET /ingestion/capabilities`
 - `GET /ingestion/requirements`
+- `GET /ingestion/readiness`
 - `GET /ingestion/ai-gis-pipeline`
 
 ### Analysis / AI-GIS

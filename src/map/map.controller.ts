@@ -50,4 +50,9 @@ export class MapController {
   providerStyles() {
     return this.map.providerStyles();
   }
+
+  @Get('providers/readiness')
+  providerReadiness() {
+    return this.map.providerHealth();
+  }
 }

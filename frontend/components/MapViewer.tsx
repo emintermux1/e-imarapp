@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Ruler, ScanLine, Layers, ShieldAlert, Sparkles } from "lucide-react";
+import { Ruler, ScanLine, Layers, ShieldAlert, Sparkles, LocateFixed } from "lucide-react";
 import { validateAndRepairGeoJson } from "@/lib/geo-validation";
 
 interface MapViewerProps {
@@ -12,6 +12,9 @@ interface MapViewerProps {
   geojson?: GeoJSON.FeatureCollection | GeoJSON.Feature;
   wmsUrl?: string;
   wmsLayers?: string[];
+  onLocate?: () => void;
+  locateBusy?: boolean;
+  statusMessage?: string;
 }
 
 type DrawMode = "none" | "measure-distance" | "radius" | "polygon";
@@ -31,11 +34,15 @@ export function MapViewer({
   zoom = 12,
   geojson,
   wmsUrl,
-  wmsLayers = []
+  wmsLayers = [],
+  onLocate,
+  locateBusy = false,
+  statusMessage
 }: MapViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [mapError, setMapError] = useState("");
   const [drawMode, setDrawMode] = useState<DrawMode>("none");
   const [distanceValue, setDistanceValue] = useState(0);
   const [radiusValue, setRadiusValue] = useState(0);
@@ -57,22 +64,45 @@ export function MapViewer({
   /* MapLibre: mount once. Sync center/zoom/geojson/opacity/WMS via dedicated effects below. */
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: {
-        version: 8,
-        sources: {
-          osm: {
-            type: "raster",
-            tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
-            tileSize: 256,
-            attribution: "&copy; OpenStreetMap contributors"
-          }
+    if (!supportsWebGL()) {
+      setMapError("Tarayıcı WebGL haritayı açamadı; statik parsel önizlemesi gösteriliyor.");
+      return;
+    }
+    let map: maplibregl.Map;
+    try {
+      map = new maplibregl.Map({
+        container: containerRef.current,
+        style: {
+          version: 8,
+          sources: {
+            osm: {
+              type: "raster",
+              tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
+              tileSize: 256,
+              attribution: "&copy; OpenStreetMap contributors"
+            }
+          },
+          layers: [{ id: "osm", type: "raster", source: "osm" }]
         },
-        layers: [{ id: "osm", type: "raster", source: "osm" }]
-      },
-      center: [center[0], center[1]],
-      zoom
+        center: [center[0], center[1]],
+        zoom
+      });
+    } catch {
+      setMapError("Tarayıcı WebGL haritayı açamadı; statik parsel önizlemesi gösteriliyor.");
+      return;
+    }
+
+    map.on("error", (event) => {
+      const message = String(event.error?.message ?? "");
+      if (message.toLowerCase().includes("webgl") || message.toLowerCase().includes("context")) {
+        setMapError("Tarayıcı WebGL haritayı açamadı; statik parsel önizlemesi gösteriliyor.");
+        try {
+          map.remove();
+        } catch {
+          // MapLibre may already be partially torn down after a context failure.
+        }
+        mapRef.current = null;
+      }
     });
 
     map.on("load", () => {
@@ -186,25 +216,6 @@ export function MapViewer({
         layout: { "text-field": ["get", "point_count_abbreviated"], "text-size": 12 },
         paint: { "text-color": "#fff" }
       });
-
-      if (wmsUrl && wmsLayers.length > 0) {
-        wmsLayers.forEach((layerName) => {
-          const sourceId = `wms-${layerName}`;
-          const layerId = `wms-layer-${layerName}`;
-          map.addSource(sourceId, {
-            type: "raster",
-            tiles: [`${wmsUrl}?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=${layerName}&STYLES=&FORMAT=image/png&TRANSPARENT=true&SRS=EPSG:3857&BBOX={bbox-epsg-3857}&WIDTH=256&HEIGHT=256`],
-            tileSize: 256
-          });
-          map.addLayer({
-            id: layerId,
-            type: "raster",
-            source: sourceId,
-            paint: { "raster-opacity": wmsOpacity },
-            layout: { visibility: "none" }
-          });
-        });
-      }
 
       bindInteractions(map);
       bindShiftDragSelection(map);
@@ -374,14 +385,38 @@ export function MapViewer({
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!map || !loaded || !wmsUrl) return;
     wmsLayers.forEach((layerName) => {
+      const sourceId = `wms-${layerName}`;
       const layerId = `wms-layer-${layerName}`;
-      if (!map.getLayer(layerId)) return;
+      if (!map.getSource(sourceId)) {
+        map.addSource(sourceId, {
+          type: "raster",
+          tiles: [`${wmsUrl}?SERVICE=WMS&REQUEST=GetMap&VERSION=1.1.1&LAYERS=${layerName}&STYLES=&FORMAT=image/png&TRANSPARENT=true&SRS=EPSG:3857&BBOX={bbox-epsg-3857}&WIDTH=256&HEIGHT=256`],
+          tileSize: 256
+        });
+      }
+      if (!map.getLayer(layerId)) {
+        map.addLayer(
+          {
+            id: layerId,
+            type: "raster",
+            source: sourceId,
+            paint: { "raster-opacity": wmsOpacity },
+            layout: { visibility: activeLayers.includes(layerName) ? "visible" : "none" }
+          },
+          PARCEL_FILL_LAYER
+        );
+      }
       map.setPaintProperty(layerId, "raster-opacity", wmsOpacity);
       map.setLayoutProperty(layerId, "visibility", activeLayers.includes(layerName) ? "visible" : "none");
     });
-  }, [activeLayers, wmsLayers, wmsOpacity]);
+  }, [activeLayers, loaded, wmsLayers, wmsOpacity, wmsUrl]);
+
+  useEffect(() => {
+    if (wmsLayers.length === 0) return;
+    setActiveLayers((prev) => (prev.length > 0 ? prev : [wmsLayers[0]]));
+  }, [wmsLayers]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -421,48 +456,59 @@ export function MapViewer({
 
   const validationSummaryClass =
     validatedGeo.confidenceScore >= 90
-      ? "text-emerald-300 border-emerald-600/50 bg-emerald-900/30"
+      ? "text-emerald-800 border-emerald-200 bg-emerald-50/95"
       : validatedGeo.confidenceScore >= 70
-        ? "text-amber-300 border-amber-600/50 bg-amber-900/30"
-        : "text-red-200 border-red-700/70 bg-red-900/35";
+        ? "text-amber-800 border-amber-200 bg-amber-50/95"
+        : "text-red-800 border-red-200 bg-red-50/95";
 
   return (
-    <div className="relative w-full h-full rounded-xl overflow-hidden border border-red-950/40 shadow-[0_20px_80px_rgba(127,29,29,0.38)]">
-      <div ref={containerRef} className="w-full h-full" />
-      {!loaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-card)]">
-          <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+    <div className="relative w-full h-full rounded-[1.6rem] overflow-hidden border border-[#d7d0bc]/85 shadow-[0_20px_70px_rgba(37,48,42,0.12)] bg-[#f6f1e6]">
+      {mapError ? (
+        <MapFallback message={mapError} statusMessage={statusMessage} />
+      ) : (
+        <div ref={containerRef} className="w-full h-full" />
+      )}
+      {!loaded && !mapError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[#f6f1e6]">
+          <div className="w-8 h-8 border-2 border-[#087d7f] border-t-transparent rounded-full animate-spin" />
         </div>
       )}
+      {mapError ? null : (
+        <>
       <div className="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-2">
-        <button className="px-3 py-2 text-xs rounded-lg border border-red-700/70 bg-black/60 hover:bg-red-950/70" onClick={() => setDrawMode((v) => (v === "measure-distance" ? "none" : "measure-distance"))}>
+        <button className="px-3 py-2 text-xs rounded-full border border-[#d7d0bc]/85 bg-[#fffaf0]/92 text-[#17231f] shadow-sm backdrop-blur-md hover:bg-white" onClick={() => setDrawMode((v) => (v === "measure-distance" ? "none" : "measure-distance"))}>
           <Ruler className="inline h-3.5 w-3.5 mr-1" /> Mesafe
         </button>
-        <button className="px-3 py-2 text-xs rounded-lg border border-red-700/70 bg-black/60 hover:bg-red-950/70" onClick={() => setDrawMode((v) => (v === "radius" ? "none" : "radius"))}>
+        <button className="px-3 py-2 text-xs rounded-full border border-[#d7d0bc]/85 bg-[#fffaf0]/92 text-[#17231f] shadow-sm backdrop-blur-md hover:bg-white" onClick={() => setDrawMode((v) => (v === "radius" ? "none" : "radius"))}>
           <ScanLine className="inline h-3.5 w-3.5 mr-1" /> Radius
         </button>
-        <button className="px-3 py-2 text-xs rounded-lg border border-red-700/70 bg-black/60 hover:bg-red-950/70" onClick={() => setDrawMode((v) => (v === "polygon" ? "none" : "polygon"))}>
+        <button className="px-3 py-2 text-xs rounded-full border border-[#d7d0bc]/85 bg-[#fffaf0]/92 text-[#17231f] shadow-sm backdrop-blur-md hover:bg-white" onClick={() => setDrawMode((v) => (v === "polygon" ? "none" : "polygon"))}>
           <Sparkles className="inline h-3.5 w-3.5 mr-1" /> Polygon
         </button>
+        {onLocate ? (
+          <button className="px-3 py-2 text-xs rounded-full border border-[#d7d0bc]/85 bg-[#17231f] text-[#fffaf0] shadow-sm backdrop-blur-md disabled:opacity-55" onClick={onLocate} disabled={locateBusy}>
+            <LocateFixed className={`inline h-3.5 w-3.5 mr-1 ${locateBusy ? "animate-pulse" : ""}`} /> Konum
+          </button>
+        ) : null}
       </div>
-      <div className="absolute top-3 right-3 z-10 w-72 rounded-xl border border-red-900/80 bg-black/70 p-3 backdrop-blur-md">
-        <div className="flex items-center justify-between text-xs text-red-100 mb-2">
+      <div className="absolute top-3 right-3 z-10 hidden w-72 rounded-[1.2rem] border border-[#d7d0bc]/85 bg-[#fffaf0]/92 p-3 text-[#17231f] shadow-[0_16px_42px_rgba(37,48,42,0.16)] backdrop-blur-md md:block">
+        <div className="flex items-center justify-between text-xs text-[#17231f] mb-2">
           <span><Layers className="inline h-3.5 w-3.5 mr-1" /> Katman Kontrol</span>
           <span className="opacity-80">{selectedIds.size} seçili</span>
         </div>
-        <label className="block text-[11px] text-red-200/80 mb-1">Parsel Opacity</label>
-        <input type="range" min={0.1} max={0.9} step={0.05} value={parcelOpacity} onChange={(e) => setParcelOpacity(Number(e.target.value))} className="w-full accent-red-500" />
-        <label className="block text-[11px] text-red-200/80 mt-2 mb-1">WMS Opacity</label>
-        <input type="range" min={0.1} max={1} step={0.05} value={wmsOpacity} onChange={(e) => setWmsOpacity(Number(e.target.value))} className="w-full accent-red-500" />
+        <label className="block text-[11px] text-[#65726b] mb-1">Parsel opaklığı</label>
+        <input type="range" min={0.1} max={0.9} step={0.05} value={parcelOpacity} onChange={(e) => setParcelOpacity(Number(e.target.value))} className="w-full accent-[#087d7f]" />
+        <label className="block text-[11px] text-[#65726b] mt-2 mb-1">WMS opaklığı</label>
+        <input type="range" min={0.1} max={1} step={0.05} value={wmsOpacity} onChange={(e) => setWmsOpacity(Number(e.target.value))} className="w-full accent-[#087d7f]" />
         {wmsLayers.length > 0 && (
           <div className="mt-2 max-h-32 overflow-auto space-y-1 pr-1">
             {wmsLayers.map((layer) => (
-              <label key={layer} className="flex items-center gap-2 text-[11px] text-red-100/90">
+              <label key={layer} className="flex items-center gap-2 text-[11px] text-[#17231f]">
                 <input
                   type="checkbox"
                   checked={activeLayers.includes(layer)}
                   onChange={(e) => setActiveLayers((prev) => (e.target.checked ? [...prev, layer] : prev.filter((v) => v !== layer)))}
-                  className="accent-red-500"
+                  className="accent-[#087d7f]"
                 />
                 <span className="truncate">{layer}</span>
               </label>
@@ -470,19 +516,24 @@ export function MapViewer({
           </div>
         )}
       </div>
-      <button type="button" className={`absolute bottom-3 left-3 z-10 rounded-lg border px-3 py-2 text-xs ${validationSummaryClass}`} onClick={() => setValidationPanelOpen((s) => !s)}>
+      {statusMessage ? (
+        <div className="absolute bottom-3 right-3 z-10 max-w-[min(26rem,calc(100%-1.5rem))] rounded-full border border-[#d7d0bc]/85 bg-[#fffaf0]/92 px-3 py-2 text-xs font-semibold text-[#5f5847] shadow-sm">
+          {statusMessage}
+        </div>
+      ) : null}
+      <button type="button" className={`absolute bottom-3 left-3 z-10 rounded-full border px-3 py-2 text-xs ${validationSummaryClass}`} onClick={() => setValidationPanelOpen((s) => !s)}>
         <ShieldAlert className="inline h-3.5 w-3.5 mr-1" />
         Veri güven skoru: {validatedGeo.confidenceScore}/100
       </button>
       {validationPanelOpen && (
-        <div className="absolute bottom-14 left-3 z-10 w-[min(34rem,calc(100%-1.5rem))] rounded-xl border border-red-900/80 bg-black/80 p-3 text-xs">
-          <p className="text-red-100 font-medium mb-2">Integrity Scan Sonuçları</p>
+        <div className="absolute bottom-14 left-3 z-10 w-[min(34rem,calc(100%-1.5rem))] rounded-xl border border-[#d7d0bc]/85 bg-[#fffaf0]/95 p-3 text-xs text-[#17231f] shadow-[0_16px_42px_rgba(37,48,42,0.16)]">
+          <p className="mb-2 font-medium text-[#17231f]">Veri güven taraması</p>
           <div className="space-y-1 max-h-40 overflow-auto pr-1">
             {validatedGeo.issues.length === 0 ? (
-              <p className="text-emerald-200">Kritik validation hatası tespit edilmedi.</p>
+              <p className="text-emerald-700">Kritik doğrulama hatası tespit edilmedi.</p>
             ) : (
               validatedGeo.issues.map((issue, index) => (
-                <p key={`${issue.code}-${index}`} className="text-red-100/90">
+                <p key={`${issue.code}-${index}`} className="text-red-700">
                   <span className="font-semibold">{issue.code}:</span> {issue.message}
                 </p>
               ))
@@ -491,16 +542,16 @@ export function MapViewer({
         </div>
       )}
       {tooltip && (
-        <div className="absolute z-10 pointer-events-none rounded-lg border border-red-900/80 bg-black/85 px-3 py-2 text-xs text-red-50" style={{ left: tooltip.x + 12, top: tooltip.y + 12 }}>
+        <div className="pointer-events-none absolute z-10 rounded-lg border border-[#d7d0bc]/85 bg-[#fffaf0]/95 px-3 py-2 text-xs text-[#17231f] shadow-sm" style={{ left: tooltip.x + 12, top: tooltip.y + 12 }}>
           <p className="font-semibold">{tooltip.title}</p>
           <p className="opacity-80">{tooltip.subtitle}</p>
         </div>
       )}
       {popup && (
-        <div className="absolute z-10 w-72 rounded-xl border border-red-900/90 bg-black/90 p-3 text-xs" style={{ left: Math.min(popup.x + 12, 620), top: Math.min(popup.y + 12, 420) }}>
-          <p className="text-red-100 text-sm font-semibold mb-1">{popup.title}</p>
-          <div className="animate-pulse h-1.5 w-20 rounded bg-red-500/40 mb-2" />
-          <div className="grid grid-cols-2 gap-1 text-red-100/90">
+        <div className="absolute z-10 w-72 rounded-xl border border-[#d7d0bc]/85 bg-[#fffaf0]/95 p-3 text-xs text-[#17231f] shadow-[0_16px_42px_rgba(37,48,42,0.16)]" style={{ left: Math.min(popup.x + 12, 620), top: Math.min(popup.y + 12, 420) }}>
+          <p className="mb-1 text-sm font-semibold text-[#17231f]">{popup.title}</p>
+          <div className="mb-2 h-1.5 w-20 animate-pulse rounded bg-[#087d7f]/40" />
+          <div className="grid grid-cols-2 gap-1 text-[#5f5847]">
             <StatRow label="TAKS" value={popup.properties.taks} />
             <StatRow label="KAKS" value={popup.properties.kaks} />
             <StatRow label="Kat" value={popup.properties.kat_siniri} />
@@ -511,12 +562,43 @@ export function MapViewer({
         </div>
       )}
       {(drawMode !== "none" || distanceValue > 0 || radiusValue > 0) && (
-        <div className="absolute bottom-3 right-3 z-10 rounded-lg border border-red-900/80 bg-black/75 px-3 py-2 text-xs text-red-100">
+        <div className="absolute bottom-3 right-3 z-10 rounded-lg border border-[#d7d0bc]/85 bg-[#fffaf0]/95 px-3 py-2 text-xs text-[#17231f] shadow-sm">
           <p>Mod: {drawMode}</p>
           {distanceValue > 0 && <p>Ölçüm: {distanceValue.toFixed(1)} {drawMode === "polygon" ? "m²" : "m"}</p>}
           {radiusValue > 0 && <p>Yarıçap: {radiusValue.toFixed(1)} m</p>}
         </div>
       )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function supportsWebGL() {
+  if (typeof document === "undefined") return false;
+  const canvas = document.createElement("canvas");
+  try {
+    return Boolean(canvas.getContext("webgl2") ?? canvas.getContext("webgl") ?? canvas.getContext("experimental-webgl"));
+  } catch {
+    return false;
+  }
+}
+
+function MapFallback({ message, statusMessage }: { message: string; statusMessage?: string }) {
+  return (
+    <div className="relative h-full min-h-[520px] overflow-hidden bg-[linear-gradient(135deg,#d7dfd3_0%,#cfd9cf_46%,#e7e1d4_100%)]">
+      <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(90deg,rgba(63,82,72,0.14)_1px,transparent_1px),linear-gradient(rgba(63,82,72,0.14)_1px,transparent_1px)] [background-size:64px_64px]" />
+      <div className="absolute left-[43%] top-[-12%] h-[130%] w-16 rotate-[18deg] rounded-full bg-[#fffaf0]/70" />
+      <div className="absolute left-[7%] top-[18%] h-[20%] w-[35%] -rotate-[7deg] rounded-[2rem] border border-[#4f735d]/30 bg-[#edf0e7]/20" />
+      <div className="absolute right-[8%] top-[19%] h-[24%] w-[38%] rotate-[6deg] rounded-[2.4rem] border border-[#4f735d]/30 bg-[#edf0e7]/20" />
+      <div className="absolute bottom-[18%] left-[9%] h-[28%] w-[36%] rotate-[12deg] rounded-[1.8rem] border border-[#4f735d]/30 bg-[#edf0e7]/20" />
+      <div className="absolute left-[42%] top-[39%] h-[24%] w-[30%] -rotate-[13deg] border-2 border-[#c5463c] bg-[#c5463c]/10 shadow-[0_16px_38px_rgba(42,52,45,0.12)] [clip-path:polygon(9%_16%,88%_5%,98%_28%,84%_89%,12%_96%,0_41%)]" />
+      <div className="absolute bottom-4 left-4 right-4 rounded-[1.45rem] border border-[#d7d0bc]/85 bg-[#fffaf0]/92 p-4 shadow-[0_-12px_42px_rgba(37,48,42,0.16)] backdrop-blur-2xl md:left-auto md:w-[380px]">
+        <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#087d7f]">Harita önizleme</p>
+        <h2 className="mt-1 text-2xl font-extrabold tracking-[-0.05em] text-[#17231f]">Kadıköy 1254 / 18</h2>
+        <p className="mt-3 text-sm font-semibold text-[#5f5847]">{message}</p>
+        {statusMessage ? <p className="mt-2 text-xs leading-5 text-[#65726b]">{statusMessage}</p> : null}
+      </div>
     </div>
   );
 }

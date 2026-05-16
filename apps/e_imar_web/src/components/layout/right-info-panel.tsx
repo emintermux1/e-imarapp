@@ -41,7 +41,8 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip";
 import { SourceBadge } from "@/components/gis/source-badge";
-import type { DataSourceStatus, ParcelContextResponse, ParcelSummaryResponse, RelatedPlanItem } from "@/types/api";
+import { SourceHealthTrend } from "@/components/source/source-health-trend";
+import type { DataSourceStatus, ParcelContextResponse, ParcelSummaryResponse, RelatedPlanItem, SourceQualityRecord } from "@/types/api";
 import {
   createBackendWatchlistItem,
   generateBackendReport,
@@ -57,6 +58,7 @@ import { getParcelById } from "@/data/parcels";
 import { useWatchlistStore } from "@/stores/watchlist-store";
 import { useBackendParcelStore } from "@/stores/backend-parcel-store";
 import { useAskiStore } from "@/stores/aski-store";
+import { useSourceStore } from "@/stores/source-store";
 import { useLatestRegionsStore } from "@/stores/latest-regions-store";
 import { adaParselText, formatArea, formatDate } from "@/lib/format";
 import {
@@ -113,6 +115,9 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   const askiStatus = useAskiStore((s) => s.status);
   const askiPlans = useAskiStore((s) => s.plans);
   const askiLastCheckedAt = useAskiStore((s) => s.lastCheckedAt);
+  const qualityBySourceId = useSourceStore((s) => s.qualityBySourceId);
+  const sourceQualityHistoryAvailable = useSourceStore((s) => s.quality?.history_available);
+  const refreshQuality = useSourceStore((s) => s.refreshQuality);
   const latestRegionsItems = useLatestRegionsStore((s) => s.items);
   const latestRegionsStatus = useLatestRegionsStore((s) => s.status);
   const latestRegionsMessage = useLatestRegionsStore((s) => s.message);
@@ -185,7 +190,8 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
 
   React.useEffect(() => {
     void hydrateWatchlist();
-  }, [hydrateWatchlist]);
+    void refreshQuality({ limit: 12 });
+  }, [hydrateWatchlist, refreshQuality]);
 
   React.useEffect(() => {
     if (!parcel?.backendId) {
@@ -227,6 +233,17 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   if (!parcel && !showLatestRegions && !pointAnalysis) return null;
 
   const parcelData = parcel ?? undefined;
+  const parcelSourceQuality = Object.values(qualityBySourceId).find((record) => {
+    if (!parcelData) return false;
+    const district = parcelData.ilce?.toLocaleLowerCase("tr-TR");
+    const province = parcelData.il?.toLocaleLowerCase("tr-TR");
+    return [record.district, record.municipality_name, record.province, record.name]
+      .filter(Boolean)
+      .some((value) => {
+        const normalized = String(value).toLocaleLowerCase("tr-TR");
+        return Boolean(district && normalized.includes(district)) || Boolean(province && normalized.includes(province));
+      });
+  });
 
   function close() {
     setOpen(false);
@@ -638,7 +655,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                 <AccordionItem value="ai-analiz">
                   <AccordionTrigger>Yer analizi</AccordionTrigger>
                   <AccordionContent>
-                    <SelectedPointAnalysisContent analysis={pointAnalysis} compact />
+                    <SelectedPointAnalysisContent analysis={pointAnalysis} compact padded={false} />
                   </AccordionContent>
                 </AccordionItem>
               )}
@@ -652,6 +669,8 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                     askiStatus={askiStatus}
                     liveAskiCount={askiPlans.length}
                     lastCheckedAt={askiLastCheckedAt}
+                    sourceQuality={parcelSourceQuality}
+                    historyAvailable={sourceQualityHistoryAvailable}
                   />
                 </AccordionContent>
               </AccordionItem>
@@ -865,37 +884,37 @@ function SelectedPointAnalysisPanel({
           exit={{ x: "100%", opacity: 0.92 }}
           transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
           className={cn(
-            "fixed bottom-20 right-4 top-24 z-30 flex flex-col overflow-hidden rounded-[1.7rem] border border-white/55 bg-surface-2/96 shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(var(--accent-navy)/0.46)]",
-            floating ? "w-[380px] lg:w-[340px] xl:w-[380px]" : "w-[380px]"
+            "fixed bottom-20 right-4 top-24 z-30 flex max-h-[min(calc(100dvh-9rem),680px)] flex-col overflow-hidden rounded-[1.7rem] border border-white/55 bg-surface-2 shadow-[0_1px_0_rgb(255_255_255/0.82)_inset,0_28px_70px_-42px_rgb(var(--accent-navy)/0.68)] ring-1 ring-white/45 backdrop-blur-md",
+            floating ? "w-[min(360px,calc(100vw-1.5rem))] xl:w-[380px]" : "w-[min(380px,calc(100vw-1.5rem))]"
           )}
           aria-label="Seçili nokta analizi paneli"
         >
-          <header className="relative overflow-hidden border-b border-border-subtle/80 bg-surface-3/65 px-4 py-4">
+          <header className="relative overflow-hidden border-b border-border-subtle/80 bg-surface-3 px-3.5 py-3">
             <div className="relative flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-brand-blue/25 bg-[rgb(var(--accent-blue)/0.09)] text-[rgb(var(--accent-blue))] shadow-[inset_0_1px_0_rgb(255_255_255/0.7)]">
-                    <Crosshair className="h-5 w-5" />
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-brand-blue/25 bg-[rgb(var(--accent-blue)/0.10)] text-[rgb(var(--accent-blue))] shadow-[inset_0_1px_0_rgb(255_255_255/0.78)]">
+                    <Crosshair className="h-4 w-4" />
                   </span>
                   <div>
                     <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-fg-muted">Yer analizi</div>
-                    <h2 className="text-lg font-semibold tracking-[-0.02em] text-fg-primary">{analysis.title}</h2>
+                    <h2 className="text-base font-semibold tracking-[-0.02em] text-fg-primary">{analysis.title}</h2>
                   </div>
                 </div>
-                <p className="mt-3 text-xs leading-relaxed text-fg-secondary">{analysis.subtitle}</p>
+                <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-fg-secondary">{analysis.subtitle}</p>
               </div>
               <IconButton label="Kapat" variant="ghost" onClick={onClose}>
                 <X className="h-4 w-4" />
               </IconButton>
             </div>
-            <div className="relative mt-4 grid grid-cols-2 gap-2">
+            <div className="relative mt-3 grid grid-cols-2 gap-2">
               <GlassMetric icon={<Crosshair className="h-3.5 w-3.5" />} label="Koordinat" value={analysis.coordinateLabel} />
               <GlassMetric icon={<Navigation className="h-3.5 w-3.5" />} label="Seçim" value={analysis.sourceLabel} />
             </div>
           </header>
 
           <ScrollArea className="flex-1">
-            <SelectedPointAnalysisContent analysis={analysis} onSelectNearest={onSelectNearest} />
+            <SelectedPointAnalysisContent analysis={analysis} compact onSelectNearest={onSelectNearest} />
           </ScrollArea>
         </motion.aside>
       )}
@@ -906,15 +925,21 @@ function SelectedPointAnalysisPanel({
 function SelectedPointAnalysisContent({
   analysis,
   compact = false,
+  padded = true,
   onSelectNearest
 }: {
   analysis: SelectedPlaceAnalysis;
   compact?: boolean;
+  padded?: boolean;
   onSelectNearest?: () => void;
 }) {
+  const bulletLimit = compact ? 2 : 3;
   return (
-    <div className={cn("space-y-3", compact ? "p-0" : "p-3")}>
-            <div className="rounded-xl border border-[rgb(var(--status-warning)/0.35)] bg-[rgb(var(--status-warning)/0.08)] px-3 py-2 text-[11px] leading-relaxed text-fg-secondary">
+    <div className={cn(compact ? (padded ? "space-y-2.5 p-3" : "space-y-2.5 p-0") : "space-y-3 p-3")}>
+      <div className={cn(
+        "rounded-xl border border-[rgb(var(--status-warning)/0.35)] bg-[rgb(var(--status-warning)/0.10)] text-fg-secondary",
+        compact ? "px-2.5 py-2 text-[10.5px] leading-snug" : "px-3 py-2 text-[11px] leading-relaxed"
+      )}>
         <div className="flex items-start gap-2">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>{analysis.disclaimer}</span>
@@ -925,7 +950,10 @@ function SelectedPointAnalysisContent({
         <button
           type="button"
           onClick={onSelectNearest}
-          className="group flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border border-brand-blue/25 bg-[rgb(var(--accent-blue)/0.08)] px-3 py-3 text-left transition hover:border-brand-blue/45 hover:bg-[rgb(var(--accent-blue)/0.12)]"
+          className={cn(
+            "group flex w-full items-center justify-between gap-3 rounded-xl border border-brand-blue/25 bg-[rgb(var(--accent-blue)/0.09)] text-left transition hover:border-brand-blue/45 hover:bg-[rgb(var(--accent-blue)/0.13)]",
+            compact ? "min-h-10 px-2.5 py-2" : "min-h-11 px-3 py-3"
+          )}
         >
           <span>
             <span className="block text-xs font-semibold text-fg-primary">
@@ -941,21 +969,32 @@ function SelectedPointAnalysisContent({
 
       <div className="grid gap-2">
         {analysis.insights.map((card, index) => (
-          <InsightCard key={card.id} card={card} index={index} />
+          <InsightCard key={card.id} card={card} index={index} compact={compact} bulletLimit={bulletLimit} />
         ))}
       </div>
     </div>
   );
 }
 
-function InsightCard({ card, index }: { card: PlaceInsightCard; index: number }) {
+function InsightCard({
+  card,
+  index,
+  compact = false,
+  bulletLimit = 3
+}: {
+  card: PlaceInsightCard;
+  index: number;
+  compact?: boolean;
+  bulletLimit?: number;
+}) {
   return (
     <motion.article
       initial={{ y: 8, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.18, delay: Math.min(index * 0.035, 0.18) }}
       className={cn(
-        "rounded-xl border bg-surface-2 p-3 shadow-[inset_0_1px_0_rgb(255_255_255/0.72)]",
+        "rounded-xl border bg-surface-2 shadow-[inset_0_1px_0_rgb(255_255_255/0.72)]",
+        compact ? "p-2.5" : "p-3",
         insightToneClass(card.tone)
       )}
     >
@@ -965,13 +1004,13 @@ function InsightCard({ card, index }: { card: PlaceInsightCard; index: number })
             {insightIcon(card.kind)}
             <span>{card.title}</span>
           </div>
-          <div className="mt-1 text-base font-semibold text-fg-primary">{card.value}</div>
-          <p className="mt-1 text-xs leading-relaxed text-fg-secondary">{card.detail}</p>
+          <div className={cn("mt-1 font-semibold text-fg-primary", compact ? "text-sm" : "text-base")}>{card.value}</div>
+          <p className={cn("mt-1 text-xs text-fg-secondary", compact ? "line-clamp-2 leading-snug" : "leading-relaxed")}>{card.detail}</p>
         </div>
         <SourceBadge status={card.provenance === "derived" ? "computed" : card.provenance} className="shrink-0" />
       </div>
-      <ul className="mt-3 space-y-1.5 text-[11px] leading-relaxed text-fg-secondary">
-        {card.bullets.slice(0, 3).map((bullet) => (
+      <ul className={cn("text-[11px] text-fg-secondary", compact ? "mt-2 space-y-1 leading-snug" : "mt-3 space-y-1.5 leading-relaxed")}>
+        {card.bullets.slice(0, bulletLimit).map((bullet) => (
           <li key={bullet} className="flex gap-2">
             <CheckCircle2 className="mt-0.5 h-3 w-3 shrink-0 text-[rgb(var(--accent-blue))]" />
             <span>{bullet}</span>
@@ -1390,7 +1429,9 @@ function TrustSection({
   imarSource,
   askiStatus,
   liveAskiCount,
-  lastCheckedAt
+  lastCheckedAt,
+  sourceQuality,
+  historyAvailable
 }: {
   parcel: NonNullable<ReturnType<typeof useParcel>>["properties"];
   geometrySource: "live" | "demo" | "unavailable";
@@ -1398,6 +1439,8 @@ function TrustSection({
   askiStatus: "idle" | "loading" | "live" | "fallback" | "unavailable";
   liveAskiCount: number;
   lastCheckedAt?: string;
+  sourceQuality?: SourceQualityRecord;
+  historyAvailable?: boolean;
 }) {
   const lastChecked = lastCheckedAt ? new Date(lastCheckedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "Bu oturumda yok";
   return (
@@ -1412,10 +1455,17 @@ function TrustSection({
           <span className="text-fg-muted tabular-nums">{lastChecked}</span>
         </div>
       </div>
+      <SourceHealthTrend
+        record={sourceQuality}
+        compact
+        className="bg-surface-2"
+      />
       <div className="flex items-start gap-2 rounded-md border border-border-subtle bg-surface-1/50 px-3 py-2 text-[11px] text-fg-muted">
         <Database className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         <span>
           Askı API: {askiStatus === "live" ? `${liveAskiCount} canlı kayıt` : askiStatus === "loading" ? "yenileniyor" : askiStatus === "unavailable" ? "erişilemiyor" : "yerel/demo katman"}.
+          {historyAvailable === false && " Kaynak sağlık geçmişi yok; incident/uptime uydurulmadı."}
+          {!sourceQuality && " Bu parselin kaynak adı kalite kaydıyla eşleşmedi; trend alanı bilinçli olarak boş."}
         </span>
       </div>
     </div>

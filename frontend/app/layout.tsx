@@ -17,8 +17,8 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "e imar — Türkiye Ulusal e-İmar Platformu",
-  description: "Harita öncelikli parsel, imar planı, 3D simülasyon, uydu analizi ve raporlama",
+  title: "eimar — Parsel zekası ve imar haritası",
+  description: "Resmi veri güvenini modern harita deneyimiyle birleştiren parsel, imar planı, 3D simülasyon ve raporlama platformu",
 };
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className={`${outfit.variable} ${spaceMono.variable}`}>
-      <body className={`${outfit.className} min-h-[100dvh] bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased`}>
+      <body className={`${outfit.className} brand-grain min-h-[100dvh] bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased`}>
         <AppFrame>{children}</AppFrame>
       </body>
     </html>
