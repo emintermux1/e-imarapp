@@ -215,25 +215,27 @@ function MapCanvas({ mode }: { mode: ShellMode }) {
   const isParcel = mode === "parcel";
 
   return (
-    <main className="absolute inset-0 overflow-hidden bg-[#d8e0d2]" aria-label="Parsel haritası">
-      <div className="absolute inset-0 bg-[linear-gradient(145deg,#d8e0d2_0%,#ccd9cb_48%,#e7e2d4_100%)]" />
-      <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(90deg,rgba(57,78,67,0.12)_1px,transparent_1px),linear-gradient(rgba(57,78,67,0.12)_1px,transparent_1px)] [background-size:64px_64px]" />
-      <div className="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-[#fffaf0]/55 to-transparent" />
+    <main className="absolute inset-0 overflow-hidden bg-[#d7dfd3]" aria-label="Parsel haritası">
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,#d7dfd3_0%,#cfd9cf_46%,#e7e1d4_100%)]" />
+      <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(90deg,rgba(63,82,72,0.14)_1px,transparent_1px),linear-gradient(rgba(63,82,72,0.14)_1px,transparent_1px)] [background-size:64px_64px]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_62%_54%,rgba(255,250,240,0.42),transparent_27%),radial-gradient(circle_at_24%_24%,rgba(132,164,143,0.22),transparent_24%)]" />
+      <div className="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-[#fffaf0]/50 to-transparent" />
 
-      <MapRoad className="left-[42%] top-[-10%] h-[122%] w-16 rotate-[19deg]" primary />
-      <MapRoad className="left-[9%] top-[7%] h-[112%] w-12 rotate-[-28deg]" />
-      <MapRoad className="right-[-4%] top-[12%] h-[90%] w-10 rotate-[64deg]" />
-      <div className="absolute right-[11%] top-[14%] h-14 w-52 rotate-[-14deg] rounded-full bg-[#8fb2c0]/52" />
+      <MapRoad className="left-[44%] top-[-16%] h-[136%] w-14 rotate-[18deg]" primary label="Fikirtepe Cd." />
+      <MapRoad className="left-[10%] top-[5%] h-[120%] w-11 rotate-[-29deg]" label="Bağdat Sk." />
+      <MapRoad className="right-[-7%] top-[10%] h-[96%] w-10 rotate-[63deg]" label="Plan yolu" />
+      <MapRoad className="left-[52%] top-[30%] h-[70%] w-8 rotate-[84deg]" muted />
+      <div className="absolute right-[11%] top-[14%] h-12 w-56 rotate-[-14deg] rounded-full border border-[#7aa6b7]/30 bg-[#8fb2c0]/38" />
 
-      <ParcelOutline className="left-[5%] top-[17%] h-[17%] w-[31%] rotate-[-7deg]" label="312/8" />
-      <ParcelOutline className="right-[8%] top-[19%] h-[22%] w-[33%] rotate-[7deg]" label="1094/2" />
-      <ParcelOutline className="bottom-[18%] left-[8%] h-[25%] w-[33%] rotate-[12deg]" label="721/4" />
-      <ParcelOutline className="bottom-[17%] right-[19%] h-[17%] w-[27%] rotate-[-8deg]" label="889/11" />
-      <ParcelOutline className="left-[38%] top-[23%] h-[15%] w-[20%] rotate-[17deg]" label="480/3" muted />
+      <CadastralParcel className="left-[4%] top-[16%] h-[18%] w-[30%] -rotate-[7deg]" label="312/8" />
+      <CadastralParcel className="right-[8%] top-[18%] h-[22%] w-[34%] rotate-[6deg]" label="1094/2" wide />
+      <CadastralParcel className="bottom-[16%] left-[7%] h-[26%] w-[34%] rotate-[12deg]" label="721/4" />
+      <CadastralParcel className="bottom-[16%] right-[18%] h-[17%] w-[27%] -rotate-[8deg]" label="889/11" />
+      <CadastralParcel className="left-[38%] top-[22%] h-[15%] w-[20%] rotate-[17deg]" label="480/3" muted />
+      <CadastralParcel className="left-[18%] top-[55%] h-[19%] w-[25%] rotate-[11deg]" label="1253/9" muted />
+      <CadastralParcel className="right-[29%] top-[57%] h-[15%] w-[20%] -rotate-[10deg]" label="1255/2" muted />
 
-      <div className={`absolute left-[42%] top-[39%] h-[24%] w-[30%] rotate-[-13deg] rounded-[1.65rem] border-2 ${isParcel ? "border-[#c5463c] bg-[#c5463c]/9" : "border-[#087d7f] bg-[#087d7f]/8"} shadow-[0_16px_38px_rgba(42,52,45,0.12)]`}>
-        <div className="absolute inset-2 rounded-[1.2rem] border border-white/60" />
-      </div>
+      <SelectedParcel isParcel={isParcel} />
       <div className="absolute left-[56.5%] top-[48.5%] h-4 w-4 rounded-full border-2 border-white bg-[#c5463c] shadow-[0_0_0_7px_rgba(197,70,60,0.14)]" />
       <div className="absolute left-[59%] top-[47.5%] rounded-full border border-[#c5463c]/55 bg-[#fffaf0]/94 px-3 py-1 text-xs font-extrabold text-[#c5463c] shadow-[0_10px_24px_rgba(37,48,42,0.12)]">{isParcel ? "1254 / 18" : "123 / 7"}</div>
     </main>
@@ -320,14 +322,30 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function MapRoad({ className, primary = false }: { className: string; primary?: boolean }) {
-  return <div className={`absolute ${className} rounded-full bg-[#fffaf0]/72 shadow-[0_0_0_1px_rgba(123,136,119,0.12)] ${primary ? "opacity-95" : "opacity-70"}`} />;
+function SelectedParcel({ isParcel }: { isParcel: boolean }) {
+  return (
+    <div className={`absolute left-[42%] top-[39%] h-[24%] w-[30%] -rotate-[13deg] border-2 ${isParcel ? "border-[#c5463c] bg-[#c5463c]/8" : "border-[#087d7f] bg-[#087d7f]/8"} shadow-[0_16px_38px_rgba(42,52,45,0.12)] [clip-path:polygon(9%_16%,88%_5%,98%_28%,84%_89%,12%_96%,0_41%)]`}>
+      <div className="absolute inset-[8%] border border-white/55 [clip-path:polygon(10%_17%,86%_6%,96%_28%,82%_88%,12%_94%,1%_42%)]" />
+      <div className="absolute left-[15%] top-[18%] h-px w-[76%] rotate-[8deg] bg-[#c5463c]/25" />
+      <div className="absolute bottom-[22%] left-[8%] h-px w-[80%] -rotate-[7deg] bg-[#c5463c]/18" />
+    </div>
+  );
 }
 
-function ParcelOutline({ className, label, muted = false }: { className: string; label: string; muted?: boolean }) {
+function MapRoad({ className, label, primary = false, muted = false }: { className: string; label?: string; primary?: boolean; muted?: boolean }) {
   return (
-    <div className={`absolute rounded-[2rem] border bg-transparent ${muted ? "border-[#809a86]/22" : "border-[#5f8068]/28"} ${className}`}>
+    <div className={`absolute ${className} rounded-full bg-[#fffaf0]/70 shadow-[inset_0_0_0_1px_rgba(123,136,119,0.14),0_0_0_1px_rgba(255,250,240,0.42)] ${primary ? "opacity-95" : muted ? "opacity-42" : "opacity-68"}`}>
+      {label ? <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-90 whitespace-nowrap font-mono text-[10px] font-bold text-[#6d786f]/45">{label}</span> : null}
+    </div>
+  );
+}
+
+function CadastralParcel({ className, label, muted = false, wide = false }: { className: string; label: string; muted?: boolean; wide?: boolean }) {
+  return (
+    <div className={`absolute border bg-[#edf0e7]/10 ${muted ? "border-[#5f8068]/18" : "border-[#4f735d]/26"} ${wide ? "rounded-[2.4rem]" : "rounded-[1.7rem]"} ${className}`}>
       <span className="absolute left-4 top-3 rotate-[2deg] font-mono text-[10px] font-bold text-[#4e6559]/70">{label}</span>
+      <span className="absolute left-[16%] top-1/2 h-px w-[68%] rotate-[12deg] bg-white/35" />
+      <span className="absolute left-[28%] top-[20%] h-[62%] w-px -rotate-[18deg] bg-[#5f8068]/12" />
     </div>
   );
 }
