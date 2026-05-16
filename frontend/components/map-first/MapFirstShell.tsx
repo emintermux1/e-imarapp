@@ -69,7 +69,7 @@ function MapTopBar({ mode }: { mode: ShellMode }) {
 
         <div className="pointer-events-auto hidden items-center gap-2 rounded-full border border-[#d7d0bc]/80 bg-[#fffaf0]/86 px-4 py-2 shadow-[0_10px_32px_rgba(37,48,42,0.1)] backdrop-blur-2xl sm:flex">
           <span className="h-2 w-2 rounded-full bg-[#087d7f]" />
-          <span className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#65726b]">{isParcel ? "seçili parsel" : "canlı harita"}</span>
+          <span className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#65726b]">{isParcel ? "parsel detayı" : "parsel haritası"}</span>
         </div>
 
         <div className="pointer-events-auto hidden items-center gap-2 rounded-full border border-[#d7d0bc]/80 bg-[#fffaf0]/90 p-1.5 shadow-[0_10px_32px_rgba(37,48,42,0.12)] backdrop-blur-2xl min-[520px]:flex">
@@ -96,7 +96,7 @@ function MobileSearchPill({ mode }: { mode: ShellMode }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#087d7f]">Ada / parsel ara</span>
-        <span className="block truncate text-sm font-extrabold tracking-[-0.01em] text-[#17231f]">{isParcel ? "Kadıköy · 1254 / 18" : "İstanbul içinde parsel bul"}</span>
+        <span className="block truncate text-sm font-extrabold tracking-[-0.01em] text-[#17231f]">{isParcel ? "Kadıköy · 1254 / 18" : "İlçe, ada ve parsel no ile sorgula"}</span>
       </span>
       <ChevronRight className="h-4 w-4 text-[#65726b]" />
     </Link>
@@ -110,8 +110,8 @@ function DesktopSearchDrawer({ mode, sources, generatedAt }: { mode: ShellMode; 
     <aside className="absolute bottom-6 left-6 top-[5.5rem] z-30 hidden w-[372px] flex-col rounded-[1.8rem] border border-[#d7d0bc]/85 bg-[#fffaf0]/92 p-4 shadow-[0_24px_72px_rgba(37,48,42,0.16)] backdrop-blur-2xl md:flex xl:w-[392px]">
       <div>
         <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[#087d7f]">Parsel arama</p>
-        <h1 className="mt-2 text-[2rem] font-extrabold leading-[0.94] tracking-[-0.06em]">Haritayı bozma, sonucu aç.</h1>
-        <p className="mt-3 text-sm leading-6 text-[#65726b]">Form sadece drawer’da kalır; seçili parsel harita üzerinde netleşir, detaylar bottom-sheet’e iner.</p>
+        <h1 className="mt-2 text-[2rem] font-extrabold leading-[0.94] tracking-[-0.06em]">Parseli haritada görüntüle.</h1>
+        <p className="mt-3 text-sm leading-6 text-[#65726b]">İlçe, ada ve parsel bilgisiyle arama yap; parsel sınırı, plan ölçeği ve kaynak durumu aynı ekranda görünsün.</p>
       </div>
 
       <div className="mt-5 grid gap-3">
@@ -136,8 +136,8 @@ function DesktopSearchDrawer({ mode, sources, generatedAt }: { mode: ShellMode; 
 
       <div className="mt-4 flex-1 overflow-hidden rounded-[1.35rem] border border-[#d7d0bc]/85 bg-[#f6f1e6]/70">
         <div className="flex items-center justify-between border-b border-[#d7d0bc]/80 px-3 py-2.5">
-          <span className="text-xs font-extrabold text-[#65726b]">Kaynak kanıtı</span>
-          <span className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#087d7f]">resmî değil</span>
+          <span className="text-xs font-extrabold text-[#65726b]">Veri kaynakları</span>
+          <span className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#087d7f]">durum</span>
         </div>
         <div className="divide-y divide-[#d7d0bc]/80">
           {sources.map((source) => (
@@ -147,7 +147,7 @@ function DesktopSearchDrawer({ mode, sources, generatedAt }: { mode: ShellMode; 
       </div>
 
       <div className="mt-4 rounded-[1.25rem] border border-amber-300/65 bg-amber-50/80 p-3 text-xs leading-5 text-amber-950">
-        Resmî sonuç etiketi doğrulanmış public contract olmadan kullanılmaz.
+        Parsel ve plan bilgileri ilgili kurum kayıtlarından kontrol edilmelidir.
         {generatedAt ? <span className="block font-bold">Güncelleme: {formatGeneratedAt(generatedAt)}</span> : null}
       </div>
     </aside>
@@ -166,12 +166,12 @@ function ParcelBottomSheet({ mode, sources, blockedCount }: { mode: ShellMode; s
         <div className="p-4 md:p-5">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#087d7f]">{isParcel ? "Seçili parsel" : "Parsel seçimi"}</p>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#087d7f]">{isParcel ? "Parsel detayı" : "Parsel arama"}</p>
               <h2 className="mt-1 text-2xl font-extrabold leading-none tracking-[-0.055em] text-[#17231f] md:text-[2rem]">{isParcel ? "Kadıköy 1254 / 18" : "Haritadan seç"}</h2>
               <p className="mt-2 text-sm leading-6 text-[#65726b] max-[420px]:line-clamp-2">
                 {isParcel
-                  ? "Geometri vurgulandı. İmar/mülkiyet iddiası, kaynak doğrulaması tamamlanmadan ön izleme olarak kalır."
-                  : "Arama veya harita dokunuşu sonrası geometri, kaynak durumu ve rapor aksiyonları burada açılır."}
+                  ? "Parsel sınırı haritada işaretlendi. Alan, plan ölçeği ve kaynak durumu aşağıda özetlenir."
+                  : "Ada ve parsel bilgisi girildiğinde sınır, alan ve plan bilgileri burada özetlenir."}
               </p>
             </div>
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#c5463c]/10 text-[#c5463c]">
@@ -190,7 +190,7 @@ function ParcelBottomSheet({ mode, sources, blockedCount }: { mode: ShellMode; s
               <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[#b57b1e]" />
               <p className="text-xs leading-5 text-[#5f5847]">
                 {firstCopy && firstSource ? `${firstSource.sourceName}: ${firstCopy.label}. ` : null}
-                Canlı kaynak erişimi eksikse sonuç resmî veri gibi sunulmaz.
+                Parsel ve plan bilgileri ilgili kurum kayıtlarından kontrol edilmelidir.
               </p>
             </div>
           </div>
