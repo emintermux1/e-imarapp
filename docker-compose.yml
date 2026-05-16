@@ -47,6 +47,22 @@ services:
     ports:
       - "6379:6379"
 
+  geo_integrity_worker:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm ci && npm run worker:geo-integrity"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://eimar:eimar@postgres:5432/eimar
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
   minio:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
