@@ -39,9 +39,9 @@ describe('SOURCE_REGISTRY', () => {
     expect(ids.has('gelibolu-keos-imar')).toBe(true);
     expect(ids.has('caycuma-keos')).toBe(true);
     expect(ids.has('kecioren-kbs')).toBe(true);
-    expect(ids.has('adana-netcad-coverage-candidate')).toBe(true);
-    expect(ids.has('ankara-netcad-coverage-candidate')).toBe(true);
-    expect(ids.has('istanbul-municipal-coverage-candidate')).toBe(true);
+    expect(ids.has('adana-netcad-coverage')).toBe(true);
+    expect(ids.has('ankara-netcad-coverage')).toBe(true);
+    expect(ids.has('istanbul-municipal-coverage')).toBe(true);
   });
 
   it('includes multiple municipal vendor patterns across the country-scale coverage set', () => {

@@ -46,13 +46,13 @@ export function formatConfidenceLabel(confidence?: number | null) {
 
 export function noDataReasonLabel(status?: string | null, source?: { accessStatus?: string; protected?: boolean } | null) {
   const normalized = (status ?? "").toLowerCase();
-  if (normalized.includes("method_contract_required")) return "Kaynak bulundu ama method contract çözülmedi";
+  if (normalized.includes("public_discovery") || normalized.includes("active_public_source")) return "Public kaynak bulundu; servis alanları provenance ile çözülüyor";
   if (normalized.includes("captcha") || normalized.includes("protected")) return "Kaynak captcha/login gerektiriyor";
   if (normalized.includes("source_not_found")) return "Belediye kaynağı registry içinde bulunamadı";
   if (source?.protected || source?.accessStatus === "requires_credentials" || source?.accessStatus === "requires_legal_agreement") {
     return "Kaynak captcha/login veya onaylı erişim gerektiriyor";
   }
-  return "Canlı imar sorgusu henüz doğrulanmadı";
+  return "Public kaynak keşfi henüz tamamlanmadı";
 }
 
 export function summarizeMunicipalityCoverage(entries: MunicipalityCoverageEntry[]) {
@@ -60,7 +60,7 @@ export function summarizeMunicipalityCoverage(entries: MunicipalityCoverageEntry
     registered: entries.filter((entry) => Boolean(entry.capability?.registered ?? true)).length,
     publicCandidate: entries.filter((entry) => Boolean(entry.capability?.publicCandidate)).length,
     protected: entries.filter((entry) => Boolean(entry.capability?.protected)).length,
-    methodContract: entries.filter((entry) => entry.capability?.imarQuerySupport === "method_contract_required").length
+    publicSupported: entries.filter((entry) => entry.capability?.imarQuerySupport === "supported").length
   };
   return counts;
 }

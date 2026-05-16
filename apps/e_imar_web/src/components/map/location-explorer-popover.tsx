@@ -80,7 +80,7 @@ export function LocationExplorerPopover() {
         <div className="flex items-center justify-between border-b border-border-subtle bg-surface-1/50 px-3 py-2">
           <div className="min-w-0">
             <p className="text-[11px] uppercase tracking-[0.18em] text-fg-muted">Belediye / Mahalle</p>
-            <p className="text-sm font-medium text-fg-primary">Demo kapsamdaki yerlerde süratli gezinme</p>
+            <p className="text-sm font-medium text-fg-primary">Örnek kapsamdaki yerlerde süratli gezinme</p>
           </div>
           <div className="flex items-center gap-1 text-[11px] text-fg-muted">
             <MapPin className="h-3.5 w-3.5" />

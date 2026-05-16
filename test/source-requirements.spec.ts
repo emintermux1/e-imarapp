@@ -2,24 +2,25 @@ import { evaluateSourceRequirement, requirementForSource } from '../src/sources/
 import { SOURCE_REGISTRY } from '../src/sources/source-registry';
 
 describe('source requirement readiness', () => {
-  it('keeps TKGM blocked until legal/session references are configured', () => {
+  it('keeps TKGM public but gated on query contract/provenance discovery', () => {
     const tkgm = SOURCE_REGISTRY.find((source) => source.id === 'tkgm-parsel-sorgu')!;
     const requirement = evaluateSourceRequirement(tkgm, () => undefined);
 
-    expect(requirement.preflightStatus).toBe('requires_legal_agreement');
-    expect(requirement.requiredEnv).toEqual(['TKGM_LEGAL_AGREEMENT_REF', 'TKGM_SESSION_REF']);
-    expect(requirement.missingEnv).toEqual(requirement.requiredEnv);
+    expect(requirement.preflightStatus).toBe('needs_method_contract');
+    expect(requirement.requiredEnv).toEqual([]);
+    expect(requirement.missingEnv).toEqual([]);
+    expect(requirement.canAttemptLiveProbe).toBe(true);
     expect(requirement.canStartIngestion).toBe(false);
     expect(JSON.stringify(requirement)).not.toMatch(/actual-token|session-value/i);
   });
 
-  it('allows protected sources to probe only after refs are present', () => {
+  it('does not require TKGM legal/session refs for public portal probing', () => {
     const tkgm = SOURCE_REGISTRY.find((source) => source.id === 'tkgm-parsel-sorgu')!;
     const requirement = evaluateSourceRequirement(tkgm, (envName) => `${envName}-configured`);
 
-    expect(requirement.preflightStatus).toBe('ready_for_probe');
+    expect(requirement.preflightStatus).toBe('needs_method_contract');
     expect(requirement.missingEnv).toEqual([]);
-    expect(requirement.configuredEnv).toEqual(['TKGM_LEGAL_AGREEMENT_REF', 'TKGM_SESSION_REF']);
+    expect(requirement.configuredEnv).toEqual([]);
     expect(requirement.canAttemptLiveProbe).toBe(true);
     expect(requirement.canStartIngestion).toBe(false);
     expect(JSON.stringify(requirement)).not.toContain('TKGM_SESSION_REF-configured');

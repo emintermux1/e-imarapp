@@ -4,7 +4,7 @@ import type { ParcelFeatureCollection } from "@/types/parcel";
 
 export type ParcelDataMode = "demo" | "api" | "vector-tile" | "unavailable";
 export type RequestedParcelDataMode = Exclude<ParcelDataMode, "unavailable">;
-export type ParcelSourceAvailability = "ready" | "development_demo_fallback" | "production_unavailable";
+export type ParcelSourceAvailability = "ready" | "development_sample_fallback" | "production_unavailable";
 
 export interface ParcelSourceMetadata {
   mode: ParcelDataMode;
@@ -78,21 +78,21 @@ export function getParcelSourceSnapshot(): ParcelSourceSnapshot {
       : undefined;
   const demoBlockedReason =
     requestedMode === "demo" && !allowDemoFallback
-      ? "Production ortamında demo parsel verisi yalnızca NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=true ile açılabilir."
+      ? "Production ortamında örnek parsel verisi yalnızca NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=true ile açılabilir."
       : undefined;
   const unavailableReason =
     missingConfigReason && !allowDemoFallback
-      ? `${missingConfigReason} Production ortamında demo fallback kapalı olduğu için parsel katmanı unavailable.`
+      ? `${missingConfigReason} Production ortamında örnek veri fallback kapalı olduğu için parsel katmanı unavailable.`
       : demoBlockedReason;
   const fallbackReason =
     missingConfigReason && allowDemoFallback
-      ? `${missingConfigReason} Development/demo fallback açık; haritada resmi olmayan örnek parsel katmanı gösteriliyor.`
+      ? `${missingConfigReason} Development örnek veri fallback açık; haritada resmi olmayan örnek parsel katmanı gösteriliyor.`
       : undefined;
   const activeMode: ParcelDataMode = unavailableReason ? "unavailable" : fallbackReason ? "demo" : requestedMode;
   const availability: ParcelSourceAvailability = unavailableReason
     ? "production_unavailable"
     : fallbackReason
-    ? "development_demo_fallback"
+    ? "development_sample_fallback"
     : "ready";
 
   const collection = activeMode === "unavailable" ? EMPTY_COLLECTION : generateDemoParcels();
@@ -106,9 +106,9 @@ export function getParcelSourceSnapshot(): ParcelSourceSnapshot {
       label: unavailableReason
         ? "Production unavailable · canlı parsel kaynağı yapılandırılmadı"
         : fallbackReason
-        ? "Development demo fallback · canlı kaynak bekleniyor"
+        ? "Development örnek veri fallback · canlı kaynak bekleniyor"
         : requestedMode === "demo"
-        ? "Sentetik demo veri"
+        ? "Resmi olmayan örnek veri"
         : requestedMode === "api"
         ? "API parsel kaynağı"
         : "Vector tile parsel kaynağı",
@@ -119,7 +119,7 @@ export function getParcelSourceSnapshot(): ParcelSourceSnapshot {
       coverageCities: coverageCities(),
       notes: [
         activeMode === "unavailable"
-          ? "Production build resmi API veya vector tile yapılandırması olmadan demo parsele düşmez."
+          ? "Production build resmi API veya vector tile yapılandırması olmadan örnek parsele düşmez."
           : "Bu veri resmi TKGM/belediye kadastro kaydı değildir.",
         "Backend hazır olduğunda API, PostGIS veya vector tile katmanları bu adaptör üzerinden devreye alınır.",
         ...(fallbackReason ? [fallbackReason] : []),

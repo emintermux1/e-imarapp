@@ -57,7 +57,7 @@ const SAVED: SavedQuery[] = [
   {
     id: "q-donusum-rezerv",
     name: "Kentsel dönüşüm / rezerv alanlar",
-    filterDescription: "Marmara deprem riski · rezerv yapı alanı demo izlemesi",
+    filterDescription: "Marmara deprem riski · rezerv yapı alanı örnek izlemesi",
     zoningHints: ["Konut", "Karma"],
     count: 480,
     location: { il: "İstanbul", ilce: "Başakşehir", mahalle: "Başak" },
@@ -82,7 +82,7 @@ export function SavedQueriesSection() {
     <div className="flex flex-col gap-2">
       <div className="rounded-md border border-border-subtle bg-surface-1 px-3 py-2 text-[11px] text-fg-secondary">
         <span className="font-medium text-fg-primary tabular-nums">{metadata.featureCount.toLocaleString("tr-TR")}</span>{" "}
-        sentetik Türkiye demo parseli · resmi TKGM/belediye kaydı değildir
+        resmi olmayan örnek Türkiye parseli · TKGM/belediye kaydı değildir
       </div>
       {SAVED.map((q) => (
         <button

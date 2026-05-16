@@ -12,6 +12,7 @@ const homeShellSnippets = [
   "Harita üzerinde başla",
   "Haritaya tıkla, ada/parsel ara veya belediye seç",
   "Kaynak merkezi",
+  "Sorgu",
   "Katman",
 ];
 

@@ -773,9 +773,8 @@ export const buildMunicipalityCoverageCircleLayer = (
     "circle-color": [
       "match",
       ["get", "coverageStatus"],
-      "public_candidate", "#0EA5E9",
+      "public_source", "#0EA5E9",
       "protected", "#F59E0B",
-      "method_contract_required", "#8B5CF6",
       "registered", "#0F766E",
       "#64748B"
     ] as never,
@@ -845,7 +844,7 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     defaultOpacity: 0.55,
     group: "İmar",
     status: "demo",
-    emptyReason: "Canlı belediye/TKGM parsel akışı bağlı değil; yerel demo parsel geometrisi gösteriliyor."
+    emptyReason: "Canlı belediye/TKGM parsel akışı bağlı değilse yerel örnek parsel geometrisi ayrı etiketle gösterilir."
   },
   {
     id: "parcels-line",
@@ -900,7 +899,7 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     defaultOpacity: 0.85,
     group: "Belediye",
     status: "demo",
-    emptyReason: "Canlı askı servisi yoksa yalnızca demo/derived askı kapsamları görünür."
+    emptyReason: "Canlı askı servisi yoksa yalnızca public kayıt/türetilmiş askı kapsamları görünür."
   },
   {
     id: "plan-constraint-line",
@@ -923,7 +922,7 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
   {
     id: "deprem-risk-grid",
     label: "Deprem Risk Haritası",
-    description: "AFAD referanslı, demo grid üzerinden türetilmiş deprem risk dağılımı",
+    description: "AFAD referanslı örnek grid üzerinden türetilmiş deprem risk dağılımı",
     defaultVisible: false,
     defaultOpacity: 0.55,
     group: "Risk",
@@ -968,7 +967,7 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
   {
     id: "flood-risk",
     label: "Sel / Taşkın Riski",
-    description: "DSİ taşkın veri servisi bağlanmadı; parsel detayında demo risk alanı ayrı etiketlenir.",
+    description: "DSİ taşkın veri servisi bağlanmadı; parsel detayında örnek risk alanı ayrı etiketlenir.",
     defaultVisible: false,
     defaultOpacity: 0.5,
     group: "Risk",
@@ -998,12 +997,12 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
   {
     id: "historical-plan-snapshots",
     label: "Tarihsel Plan Snapshot",
-    description: "Timeline yılına göre demo snapshot renkleri; resmi arşiv katmanı değildir.",
+    description: "Timeline yılına göre örnek snapshot renkleri; resmi arşiv katmanı değildir.",
     defaultVisible: false,
     defaultOpacity: 0.75,
     group: "Tarihsel",
     status: "demo",
-    emptyReason: "Timeline açıldığında demo snapshot renklendirmesi parsel dolgusuna uygulanır."
+    emptyReason: "Timeline açıldığında örnek snapshot renklendirmesi parsel dolgusuna uygulanır."
   },
   {
     id: "municipal-projects",
@@ -1032,7 +1031,7 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     defaultOpacity: 0.7,
     group: "Altyapı",
     status: "not_ready",
-    emptyReason: "Resmi altyapı servisleri bağlı değil; güvenlik açısından demo çizgi üretilmedi."
+    emptyReason: "Resmi altyapı servisleri bağlı değil; güvenlik açısından uydurma çizgi üretilmedi."
   },
   {
     id: "road-width",
@@ -1052,7 +1051,7 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     defaultOpacity: 0.55,
     group: "Çevre",
     status: "not_ready",
-    emptyReason: "Gürültü/trafik servisi yok; parselde demo skor varsa ayrıca demo etiketiyle gösterilir."
+    emptyReason: "Gürültü/trafik servisi yok; parselde örnek skor varsa ayrıca örnek veri etiketiyle gösterilir."
   },
   {
     id: "solar-shadow",
@@ -1067,11 +1066,11 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
   {
     id: "green-space",
     label: "Yeşil Alan",
-    description: "Plan kullanım sınıfı ve çevre mesafelerinden demo/derived yeşil alan görünümü.",
+    description: "Plan kullanım sınıfı ve çevre mesafelerinden örnek/türetilmiş yeşil alan görünümü.",
     defaultVisible: false,
     defaultOpacity: 0.65,
     group: "Çevre",
     status: "derived",
-    emptyReason: "Resmi park/yeşil alan katmanı bağlı değil; yalnızca parsel sınıfı ve demo mesafe alanları mevcut."
+    emptyReason: "Resmi park/yeşil alan katmanı bağlı değil; yalnızca parsel sınıfı ve örnek mesafe alanları mevcut."
   }
 ];

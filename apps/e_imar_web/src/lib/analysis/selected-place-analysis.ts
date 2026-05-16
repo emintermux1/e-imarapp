@@ -78,7 +78,7 @@ export function buildSelectedPlaceAnalysis({
     disclaimer:
       metadata.official || parcel?.sourceStatus === "live"
         ? "Bu ekran seçili konum için türetilmiş karar destek özetidir; resmi imar durumu veya tapu kaydı yerine geçmez."
-        : "Demo/türetilmiş analizdir; resmi kayıt değildir. Belediye/TKGM/e-Plan kaydı gibi sunulmamalıdır.",
+        : "Örnek/türetilmiş analizdir; resmi kayıt değildir. Belediye/TKGM/e-Plan kaydı gibi sunulmamalıdır.",
     selectedParcel: parcel ?? undefined,
     nearestParcel: nearest,
     insights: [
@@ -117,7 +117,7 @@ function zoningInsight(parcel: ParcelProps | null): PlaceInsightCard {
       kind: "zoning",
       title: "Plan kullanımı",
       value: "Yakın parsel yok",
-      detail: "Bu nokta demo parsel kapsamasının dışında kalıyor.",
+      detail: "Bu nokta örnek parsel kapsamasının dışında kalıyor.",
       tone: "muted",
       provenance: "unavailable",
       bullets: ["Yakındaki imar parametreleri için parsel seçimi veya canlı kaynak gerekir."]
@@ -128,7 +128,7 @@ function zoningInsight(parcel: ParcelProps | null): PlaceInsightCard {
     kind: "zoning",
     title: "Plan kullanımı",
     value: parcel.detailedUse ?? parcel.zoningType,
-    detail: `${parcel.planScale ?? "1/1000"} · ${parcel.planStatus ?? "demo plan"}`,
+    detail: `${parcel.planScale ?? "1/1000"} · ${parcel.planStatus ?? "örnek plan"}`,
     tone: parcel.zoningType === "Konut" || parcel.zoningType === "Karma" ? "good" : parcel.zoningType === "Kamu" || parcel.zoningType === "Yesil" ? "warning" : "info",
     provenance: parcel.sourceStatus === "live" ? "live" : "demo",
     bullets: [
@@ -187,7 +187,7 @@ function riskInsight(
     provenance: parcelRisk ? "demo" : risk ? "derived" : "unavailable",
     bullets: [
       parcelRisk ? `Parsel riskleri: deprem ${parcelRisk.deprem}, sel ${parcelRisk.sel}, heyelan ${parcelRisk.heyelan}` : "Parsel bazlı risk kaydı yok.",
-      risk ? "AFAD benzeri demo gridinden türetilmiş bölgesel sinyal." : "Risk grid kapsaması dışında."
+      risk ? "AFAD benzeri örnek gridinden türetilmiş bölgesel sinyal." : "Risk grid kapsaması dışında."
     ]
   };
 }
@@ -202,12 +202,12 @@ function mobilityInsight(
     kind: "mobility",
     title: "Erişilebilirlik",
     value: score != null ? `${Math.round(score)}/100` : transport ? formatDistance(transport.distanceM) : "Bilinmiyor",
-    detail: transport ? `${transport.name} · ${transport.kind}` : "Yakın raylı sistem demo hattı bulunamadı",
+    detail: transport ? `${transport.name} · ${transport.kind}` : "Yakın raylı sistem örnek hattı bulunamadı",
     tone: (score ?? 0) >= 75 || (transport?.distanceM ?? Infinity) < 700 ? "good" : (score ?? 0) >= 50 || (transport?.distanceM ?? Infinity) < 1500 ? "info" : "warning",
     provenance: parcel ? "demo" : transport ? "derived" : "unavailable",
     bullets: [
       parcel ? `Metro ${Math.round(parcel.cevre.metroM).toLocaleString("tr-TR")} m · park ${Math.round(parcel.cevre.parkM).toLocaleString("tr-TR")} m` : "Parsel çevre metrikleri yok.",
-      transport ? `En yakın demo koridor: ${formatDistance(transport.distanceM)}` : "Ulaşım koridoru eşleşmedi."
+      transport ? `En yakın örnek koridor: ${formatDistance(transport.distanceM)}` : "Ulaşım koridoru eşleşmedi."
     ]
   };
 }
@@ -223,13 +223,13 @@ function opportunityInsight(
     id: "opportunity",
     kind: "opportunity",
     title: "Fırsat / kısıt",
-    value: parcel ? `${Math.round(opportunity)}/100` : nearest ? "Yakın aday var" : "Sınırlı veri",
-    detail: constraints.length ? constraints.slice(0, 2).join(" · ") : "Belirgin demo kısıt sinyali yok",
+    value: parcel ? `${Math.round(opportunity)}/100` : nearest ? "Yakın parsel var" : "Sınırlı veri",
+    detail: constraints.length ? constraints.slice(0, 2).join(" · ") : "Belirgin örnek kısıt sinyali yok",
     tone: constraints.length >= 2 ? "warning" : opportunity >= 70 ? "good" : "info",
     provenance: parcel ? "demo" : nearest ? "derived" : "unavailable",
     bullets: [
       nearest ? `En yakın parsel ${formatDistance(nearest.distanceM)} mesafede.` : "Parsel önerisi yok.",
-      parcel?.planNotlari[0] ?? "Nokta bazlı fırsat okuması yalnızca yerel/demo katmanlardan türetildi."
+      parcel?.planNotlari[0] ?? "Nokta bazlı fırsat okuması yalnızca yerel/örnek katmanlardan türetildi."
     ]
   };
 }
@@ -244,13 +244,13 @@ function confidenceInsight(
     id: "confidence",
     kind: "confidence",
     title: "Veri güveni",
-    value: hasLive ? "Canlı + türetilmiş" : "Demo/türetilmiş",
+    value: hasLive ? "Canlı + türetilmiş" : "Örnek/türetilmiş",
     detail: metadata.label,
     tone: hasLive ? "good" : "warning",
     provenance: hasLive ? "live" : "demo",
     bullets: [
       `Seçim kaynağı: ${sourceLabel(point.source)}`,
-      metadata.official ? "Kaynak resmi akış olarak işaretli." : "Sentetik/demo veriler ve yerel registry yüzeyleri kullanıldı.",
+      metadata.official ? "Kaynak resmi akış olarak işaretli." : "Resmi olmayan örnek veriler ve yerel registry yüzeyleri kullanıldı.",
       ...(metadata.fallbackReason ? [metadata.fallbackReason] : metadata.notes.slice(0, 1))
     ]
   };
