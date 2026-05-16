@@ -22,9 +22,10 @@
     "web:build": "npm --prefix apps/e_imar_web run build",
     "web:preview": "npm --prefix apps/e_imar_web run start",
     "web:typecheck": "npm --prefix apps/e_imar_web run typecheck",
-    "web:lint": "npm --prefix apps/e_imar_web run lint",
     "legacy:web-vite:dev": "npm --prefix apps/web run dev",
-    "legacy:web-vite:build": "npm --prefix apps/web run build"
+    "legacy:web-vite:build": "npm --prefix apps/web run build",
+    "web:lint": "npm --prefix apps/e_imar_web run lint",
+    "web:smoke": "node scripts/web-smoke.mjs"
   },
   "dependencies": {
     "@fastify/static": "^9.1.3",

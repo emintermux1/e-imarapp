@@ -1,8 +1,8 @@
 # eImarTR Frontend
 
-Canonical product frontend for eImarTR. This is a Next.js 14 App Router app under `frontend/`.
+Legacy/reference frontend for eImarTR. The canonical product frontend is `apps/e_imar_web`.
 
-Do not run the deprecated Vite prototype under `apps/web` for product work. If `apps/web` is started by mistake, its scripts now delegate back to this app.
+Do not use this app for product work unless explicitly migrating functionality into `apps/e_imar_web`.
 
 ## Development
 

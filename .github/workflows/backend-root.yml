@@ -1,0 +1,60 @@
+name: Backend Root
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "test/**"
+      - "apps/e_imar_web/src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig*.json"
+      - "jest.config.js"
+      - "scripts/**"
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - ".env.example"
+      - ".github/workflows/backend-root.yml"
+      - ".github/workflows/web.yml"
+      - ".github/workflows/repo-health.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "test/**"
+      - "apps/e_imar_web/src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig*.json"
+      - "jest.config.js"
+      - "scripts/**"
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - ".env.example"
+      - ".github/workflows/backend-root.yml"
+      - ".github/workflows/web.yml"
+      - ".github/workflows/repo-health.yml"
+
+jobs:
+  backend-root:
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      MAPTILER_API_KEY: ""
+      MAPBOX_ACCESS_TOKEN: ""
+      CESIUM_ION_TOKEN: ""
+      HERE_API_KEY: ""
+      OPENAI_API_KEY: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install legacy web dependencies for root Jest imports
+        run: npm ci --prefix apps/e_imar_web
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
