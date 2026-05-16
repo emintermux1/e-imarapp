@@ -7,8 +7,8 @@ Terminal are the references; we deliberately avoid the marketing-landing,
 neon, glassmorphism, toy-rounded vocabulary.
 
 This is the canonical polished GIS product frontend for the repository at
-`apps/e_imar_web`. The older `frontend/` and `apps/web/` apps are
-deprecated/simple prototypes.
+`apps/e_imar_web`. The older `frontend/`, `apps/web/`, `apps/web-next/`, and
+`apps/e_imar_next/` apps are legacy/reference workspaces unless explicitly migrated.
 
 > This package replaces the previous Vite shell. The Flutter mobile app at
 > `apps/e_imar_mobile/` is **not** modified by this work.
@@ -22,19 +22,15 @@ deprecated/simple prototypes.
 npm install --prefix apps/e_imar_web
 npm run web:dev   # http://localhost:3000
 
-# typecheck / build / start
+# typecheck / build / start / smoke
 npm run web:typecheck
+npm run web:lint
 npm run web:build
 npm run web:preview
+npm run web:smoke
 ```
 
-The repo-root scripts also wrap these:
-
-```bash
-npm run web:dev
-npm run web:typecheck
-npm run web:build
-```
+The repo-root `web:*` scripts intentionally point to this canonical app.
 
 The first install runs `scripts/copy-cesium-assets.mjs` (also wired to
 `predev` and `prebuild`). It copies Cesium's runtime workers, widgets,
