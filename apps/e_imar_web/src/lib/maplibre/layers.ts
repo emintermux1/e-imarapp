@@ -69,14 +69,42 @@ export const buildParcelFillLayer = (id = "parcels-fill"): FillLayerSpecificatio
   paint: {
     "fill-color": zoningFillExpression,
     "fill-opacity": [
-      "case",
-      ["boolean", ["feature-state", "selected"], false],
-      0.78,
-      ["boolean", ["feature-state", "multiSelected"], false],
-      0.64,
-      ["boolean", ["feature-state", "hover"], false],
-      0.62,
-      ["interpolate", ["linear"], ["zoom"], 11.4, 0.12, 13.5, 0.34, 16, 0.45] as unknown as never
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      11.4,
+      [
+        "case",
+        ["boolean", ["feature-state", "selected"], false],
+        0.78,
+        ["boolean", ["feature-state", "multiSelected"], false],
+        0.64,
+        ["boolean", ["feature-state", "hover"], false],
+        0.62,
+        0.12
+      ],
+      13.5,
+      [
+        "case",
+        ["boolean", ["feature-state", "selected"], false],
+        0.78,
+        ["boolean", ["feature-state", "multiSelected"], false],
+        0.64,
+        ["boolean", ["feature-state", "hover"], false],
+        0.62,
+        0.34
+      ],
+      16,
+      [
+        "case",
+        ["boolean", ["feature-state", "selected"], false],
+        0.78,
+        ["boolean", ["feature-state", "multiSelected"], false],
+        0.64,
+        ["boolean", ["feature-state", "hover"], false],
+        0.62,
+        0.45
+      ]
     ]
   }
 });
@@ -112,10 +140,15 @@ export const buildParcelHoverHaloLayer = (
   paint: {
     "line-color": "#C8102E",
     "line-width": [
-      "case",
-      ["boolean", ["feature-state", "hover"], false],
-      ["interpolate", ["linear"], ["zoom"], 12, 2.4, 16, 5.2, 19, 7.4],
-      0
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      12,
+      ["case", ["boolean", ["feature-state", "hover"], false], 2.4, 0],
+      16,
+      ["case", ["boolean", ["feature-state", "hover"], false], 5.2, 0],
+      19,
+      ["case", ["boolean", ["feature-state", "hover"], false], 7.4, 0]
     ] as never,
     "line-blur": 1.4,
     "line-opacity": [
@@ -228,8 +261,10 @@ export const buildParcelLabelLayer = (
   minzoom: 14.6,
   layout: {
     "text-field": [
-      "case",
-      [">=", ["zoom"], 16.7],
+      "step",
+      ["zoom"],
+      ["concat", ["get", "ada"], "/", ["get", "parsel"]],
+      16.7,
       [
         "concat",
         ["get", "ada"],
@@ -248,8 +283,7 @@ export const buildParcelLabelLayer = (
           "Park",
           ["get", "zoningType"]
         ]
-      ],
-      ["concat", ["get", "ada"], "/", ["get", "parsel"]]
+      ]
     ],
     "text-font": ["Noto Sans Regular"],
     "text-size": [
@@ -382,12 +416,7 @@ export const buildPlanConstraintLineLayer = (
     ] as never,
     "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.2, 16, 2.4] as never,
     "line-opacity": 0.9,
-    "line-dasharray": [
-      "case",
-      ["any", ["in", "Dönüşüm", ["coalesce", ["get", "detailedUse"], ""]], ["in", "Rezerv", ["coalesce", ["get", "detailedUse"], ""]]],
-      ["literal", [2, 1.4]] as unknown as never,
-      ["literal", [1, 0]] as unknown as never
-    ] as never
+    "line-dasharray": [2, 1.4] as never
   }
 });
 
@@ -591,12 +620,7 @@ export const buildAskiLineLayer = (
     ] as never,
     "line-width": 2.2,
     "line-opacity": 0.95,
-    "line-dasharray": [
-      "match",
-      ["get", "askiStatus"],
-      "askida", ["literal", [3, 2]] as unknown as never,
-      ["literal", [1, 0]] as unknown as never
-    ] as never
+    "line-dasharray": [3, 2] as never
   }
 });
 

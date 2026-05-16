@@ -18,7 +18,7 @@ import type {
 } from "@/types/api";
 
 export const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
 
 export class ApiFetchError extends Error {
   status?: number;
@@ -35,14 +35,14 @@ export class ApiFetchError extends Error {
 export function humanizeApiError(error: unknown, fallback?: string) {
   if (error instanceof ApiFetchError) {
     if (error.status == null) {
-      return "Backend erişilemiyor. FastAPI servisinin http://localhost:8000 üzerinde çalıştığını kontrol edin.";
+      return `Backend erişilemiyor. NestJS API servisinin ${API_BASE} üzerinde çalıştığını kontrol edin.`;
     }
     if (error.status === 404) return fallback ?? "İstenen kayıt canlı API üzerinde bulunamadı.";
     if (error.status >= 500) return "Backend geçici olarak yanıt veremiyor. Servis loglarını kontrol edin.";
     return fallback ?? "API isteği tamamlanamadı; gönderilen parametreleri kontrol edin.";
   }
   if (error instanceof TypeError && /failed to fetch/i.test(error.message)) {
-    return "Backend erişilemiyor. FastAPI servisinin http://localhost:8000 üzerinde çalıştığını kontrol edin.";
+    return `Backend erişilemiyor. NestJS API servisinin ${API_BASE} üzerinde çalıştığını kontrol edin.`;
   }
   return fallback ?? "İşlem tamamlanamadı; lütfen tekrar deneyin.";
 }
