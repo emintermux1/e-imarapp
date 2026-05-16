@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandMark } from "@/components/BrandMark";
 import {
   ArrowUpRight,
   ChevronRight,
@@ -58,13 +59,11 @@ function MapTopBar({ mode }: { mode: ShellMode }) {
   return (
     <header className="pointer-events-none absolute inset-x-0 top-0 z-40 px-4 pt-4 md:px-6 md:pt-5">
       <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-3">
-        <div className="pointer-events-auto flex h-12 items-center gap-2 rounded-full border border-[#d7d0bc]/80 bg-[#fffaf0]/90 px-1.5 pr-4 shadow-[0_10px_32px_rgba(37,48,42,0.14)] backdrop-blur-2xl">
+        <div className="pointer-events-auto flex h-14 items-center gap-2 rounded-full border border-[#d7d0bc]/80 bg-[#fffaf0]/92 px-1.5 pr-4 shadow-[0_10px_32px_rgba(37,48,42,0.14)] backdrop-blur-2xl">
           <button className="grid h-9 w-9 place-items-center rounded-full bg-[#17231f] text-[#fffaf0] transition-transform active:scale-[0.96]" aria-label="Menüyü aç">
             <Menu className="h-4 w-4" />
           </button>
-          <Link href="/" className="text-lg font-extrabold tracking-[-0.05em]">
-            <span className="text-[#087d7f]">e</span> imar
-          </Link>
+          <BrandMark className="scale-[0.86] origin-left" />
         </div>
 
         <div className="pointer-events-auto hidden items-center gap-2 rounded-full border border-[#d7d0bc]/80 bg-[#fffaf0]/86 px-4 py-2 shadow-[0_10px_32px_rgba(37,48,42,0.1)] backdrop-blur-2xl sm:flex">
