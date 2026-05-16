@@ -8,7 +8,6 @@ import {
   MapPin,
   Crosshair,
   Box,
-  Locate,
   Map as MapIcon,
   Info,
   Ruler,
@@ -42,6 +41,7 @@ export function MapHud({
 }) {
   const basemap = useMapStore((s) => s.basemap);
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
+  const selectedPoint = useMapStore((s) => s.selectedPoint);
   const bearing = useMapStore((s) => s.bearing);
   const selectedLatestRegion = useLatestRegionsStore((s) => s.selectedRegion);
   const multiSelectedParcelIds = useMapStore((s) => s.multiSelectedParcelIds);
@@ -148,8 +148,8 @@ export function MapHud({
 
   return (
     <>
-      {/* Top-left: mode + basemap chip */}
-      <div className="pointer-events-none absolute left-4 top-4 z-10 flex flex-col gap-2">
+      {/* Top-left: compact map context, secondary to the canvas */}
+      <div className="pointer-events-none absolute left-24 top-24 z-10 hidden max-w-[292px] flex-col gap-2 xl:flex">
         <ChipPill>
           <span className="text-fg-muted">Mod</span>
           <span
@@ -178,8 +178,11 @@ export function MapHud({
       </div>
 
       {/* Top-right: zoom controls + compass + 3D toggle */}
-      <div className="pointer-events-auto absolute right-4 top-4 z-10 flex flex-col items-end gap-2">
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border-strong/80 bg-surface-2/94 shadow-pop">
+      <div className={cn(
+        "pointer-events-auto absolute right-4 top-24 z-10 flex flex-col items-end gap-2 transition-transform duration-200 ease-out",
+        selectedPoint && !selectedParcelId && "hidden 2xl:flex"
+      )}>
+        <div className="flex flex-col overflow-hidden rounded-[1.2rem] border border-white/55 bg-surface-2/92 shadow-[inset_0_1px_0_rgb(255_255_255/0.82),0_16px_44px_-34px_rgb(var(--accent-navy)/0.72)]">
           <IconButton
             label="Yakınlaştır"
             variant="ghost"
@@ -206,7 +209,7 @@ export function MapHud({
               type="button"
               aria-label="Kuzeye çevir"
               onClick={() => emitMapControl("north")}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border-strong/80 bg-surface-2/94 text-fg-secondary shadow-pop transition-colors hover:bg-surface-3"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-[1.1rem] border border-white/55 bg-surface-2/92 text-fg-secondary shadow-[inset_0_1px_0_rgb(255_255_255/0.82),0_16px_44px_-34px_rgb(var(--accent-navy)/0.72)] transition-colors hover:bg-surface-3"
             >
               <span
                 className="inline-block"
@@ -230,7 +233,7 @@ export function MapHud({
               aria-pressed={mapMode === "3d"}
               onClick={() => setMapMode(mapMode === "3d" ? "2d" : "3d")}
               className={cn(
-                "inline-flex h-9 w-9 items-center justify-center rounded-xl border bg-surface-2/94 shadow-pop transition-colors",
+                "inline-flex h-9 w-9 items-center justify-center rounded-[1.1rem] border bg-surface-2/92 shadow-[inset_0_1px_0_rgb(255_255_255/0.82),0_16px_44px_-34px_rgb(var(--accent-navy)/0.72)] transition-colors",
                 mapMode === "3d"
                   ? "border-brand-blue/60 text-fg-primary"
                   : "border-border-strong text-fg-secondary hover:bg-surface-3"
@@ -257,20 +260,7 @@ export function MapHud({
       </div>
 
       {/* Bottom-right floating cluster */}
-      <div className="pointer-events-auto absolute bottom-4 right-4 z-10 hidden flex-col items-end gap-2 md:flex">
-        <Tooltip delayDuration={300}>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              aria-label="Konumum"
-              onClick={() => emitMapControl("locate")}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border-strong/80 bg-surface-2/94 text-fg-secondary shadow-pop transition-colors hover:bg-surface-3"
-            >
-              <Locate className="h-4 w-4" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="left">{locationStatus ?? "Mevcut konumu göster"}</TooltipContent>
-        </Tooltip>
+      <div className="pointer-events-auto absolute bottom-24 right-4 z-10 hidden flex-col items-end gap-2 md:flex">
         {locationStatus && (
           <span
             role="status"
@@ -280,7 +270,7 @@ export function MapHud({
           </span>
         )}
         <LocationExplorerPopover />
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border-strong/80 bg-surface-2/94 shadow-pop">
+        <div className="flex flex-col overflow-hidden rounded-[1.2rem] border border-white/55 bg-surface-2/92 shadow-[inset_0_1px_0_rgb(255_255_255/0.82),0_16px_44px_-34px_rgb(var(--accent-navy)/0.72)]">
           {toolButton("distance", "Mesafe ölç", <Ruler className="h-4 w-4" />)}
           {toolButton("area", "Alan poligonu ölç", <Pentagon className="h-4 w-4" />)}
           {toolButton("radius", "Yarıçap çiz", <CircleDot className="h-4 w-4" />)}
@@ -302,7 +292,7 @@ export function MapHud({
             <TooltipContent side="left">Çizimleri temizle</TooltipContent>
           </Tooltip>
         </div>
-        <div className="flex flex-col overflow-hidden rounded-xl border border-border-strong/80 bg-surface-2/94 shadow-pop">
+        <div className="flex flex-col overflow-hidden rounded-[1.2rem] border border-white/55 bg-surface-2/92 shadow-[inset_0_1px_0_rgb(255_255_255/0.82),0_16px_44px_-34px_rgb(var(--accent-navy)/0.72)]">
           <Tooltip delayDuration={250}>
             <TooltipTrigger asChild>
               <button type="button" aria-label="Ekran görüntüsü indir" onClick={captureScreenshot} className="h-11 w-11 inline-flex items-center justify-center border-b border-border-subtle bg-surface-2 text-fg-secondary hover:bg-surface-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent-blue))]">
@@ -349,7 +339,7 @@ export function MapHud({
               type="button"
               aria-label="Türkiye genel görünümü"
               onClick={() => emitMapControl("reset")}
-              className="h-9 w-9 inline-flex items-center justify-center rounded-md border border-border-strong bg-surface-2 shadow-card text-fg-secondary hover:bg-surface-3"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-[1.1rem] border border-white/55 bg-surface-2/92 text-fg-secondary shadow-[inset_0_1px_0_rgb(255_255_255/0.82),0_16px_44px_-34px_rgb(var(--accent-navy)/0.72)] hover:bg-surface-3"
             >
               <Crosshair className="h-4 w-4" />
             </button>
@@ -359,7 +349,7 @@ export function MapHud({
       </div>
 
       {/* Bottom-left: scale + coords + crs */}
-      <div className="pointer-events-none absolute bottom-4 left-4 z-10 flex items-end gap-2 text-[11px] tabular-nums text-fg-secondary">
+      <div className="pointer-events-none absolute bottom-4 left-24 z-10 hidden max-w-[360px] items-end gap-2 text-[11px] tabular-nums text-fg-secondary xl:flex">
         <ScaleBar />
         <ChipPill>
           <span className="text-fg-muted">İmleç</span>
@@ -423,7 +413,7 @@ function MapContextHint({
     ? "Askı modu açık; aktif askı poligonları tıklanabilir."
     : "Arama yapın, askı modunu açın veya tek bir yeni imar bölgesi seçin.";
   return (
-    <div className="pointer-events-none hidden max-w-[360px] items-start gap-2 rounded-xl border border-border-strong/70 bg-surface-2/95 px-3 py-2.5 text-[11px] leading-snug text-fg-secondary shadow-pop backdrop-blur-[2px] md:flex">
+    <div className="pointer-events-none hidden max-w-[360px] items-start gap-2 rounded-[1.1rem] border border-white/55 bg-surface-2/92 px-3 py-2.5 text-[11px] leading-snug text-fg-secondary shadow-[inset_0_1px_0_rgb(255_255_255/0.82),0_16px_44px_-34px_rgb(var(--accent-navy)/0.72)] md:flex">
       <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[rgb(var(--accent-blue))]" />
       <span className="line-clamp-2">{copy}</span>
     </div>

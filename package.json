@@ -13,6 +13,8 @@
     "map:check-keys": "bash scripts/validate-map-provider-env.sh",
     "start": "node dist/main.js",
     "start:dev": "ts-node src/main.ts",
+    "worker:geo-integrity": "ts-node src/jobs/geo-integrity.worker.ts",
+    "worker:geo-integrity:prod": "node dist/jobs/geo-integrity.worker.js",
     "test": "jest --runInBand",
     "repo:health": "bash scripts/repo-health.sh",
     "typecheck": "tsc --noEmit -p tsconfig.json",
@@ -21,7 +23,9 @@
     "web:preview": "npm --prefix apps/e_imar_web run start",
     "web:typecheck": "npm --prefix apps/e_imar_web run typecheck",
     "legacy:web-vite:dev": "npm --prefix apps/web run dev",
-    "legacy:web-vite:build": "npm --prefix apps/web run build"
+    "legacy:web-vite:build": "npm --prefix apps/web run build",
+    "web:lint": "npm --prefix apps/e_imar_web run lint",
+    "web:smoke": "node scripts/web-smoke.mjs"
   },
   "dependencies": {
     "@fastify/static": "^9.1.3",

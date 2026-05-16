@@ -165,10 +165,14 @@ describe('government source activation', () => {
 
     expect(tkgm?.activationStatus).toBe('blocked');
     expect(tkgm?.blockedReason).toBe('requires_legal_agreement');
+    expect(tkgm?.requirement.preflightStatus).toBe('requires_legal_agreement');
+    expect(tkgm?.requirement.missingEnv).toEqual(['TKGM_LEGAL_AGREEMENT_REF', 'TKGM_SESSION_REF']);
     expect(tkgm?.usableEndpoints).toHaveLength(0);
     expect(edevlet?.activationStatus).toBe('blocked');
     expect(edevlet?.blockedReason).toBe('requires_credentials');
+    expect(edevlet?.requirement.requiredEnv).toEqual(['EDEVLET_TUCBS_CREDENTIALS_REF', 'EDEVLET_TUCBS_OAUTH_REF']);
     expect(result.summary.blocked).toBeGreaterThanOrEqual(2);
+    expect(JSON.stringify(result.sources)).not.toMatch(/sk\.live|pk\.live|actual-token|session-value/i);
   });
 
   it('promotes public probe availability into active activation state', () => {
@@ -184,6 +188,7 @@ describe('government source activation', () => {
 
     expect(record.activationStatus).toBe('active');
     expect(record.runtimeStatus).toBe('public');
+    expect(record.requirement.preflightStatus).toBe('needs_method_contract');
     expect(record.usableEndpoints[0]).toContain('MapService');
     expect(record.nextAction).toContain('Public endpoint aktif');
   });

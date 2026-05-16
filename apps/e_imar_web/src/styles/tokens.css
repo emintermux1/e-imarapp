@@ -10,24 +10,26 @@
 
 :root {
   /* Surfaces & background */
-  --bg: 244 246 248;
-  --surface-1: 238 242 246;
-  --surface-2: 252 253 253;
-  --surface-3: 247 249 251;
+  --bg: 239 245 238;
+  --surface-1: 230 239 229;
+  --surface-2: 255 255 250;
+  --surface-3: 246 250 244;
 
   /* Borders */
-  --border-subtle: 217 224 232;
-  --border-strong: 188 199 211;
+  --border-subtle: 208 222 207;
+  --border-strong: 170 193 169;
 
   /* Text */
-  --text-primary: 18 30 44;
-  --text-secondary: 72 86 102;
-  --text-muted: 113 126 140;
+  --text-primary: 13 31 24;
+  --text-secondary: 63 84 73;
+  --text-muted: 118 132 124;
 
   /* Accents */
-  --accent-red: 166 37 48;       /* ciddi uyarı / askı vurgusu */
-  --accent-navy: 18 52 82;       /* kurumsal lacivert */
-  --accent-blue: 57 103 143;     /* muted cadastral blue */
+  --accent-red: 172 53 43;       /* ciddi uyarı / askı vurgusu */
+  --accent-navy: 10 51 35;       /* koyu civic green */
+  --accent-blue: 20 126 166;     /* muted cadastral blue */
+  --accent-green: 30 128 62;     /* primary action green */
+  --accent-amber: 207 147 33;    /* rota / rapor emphasis */
 
   /* Status */
   --status-success: 21 128 61;
@@ -61,25 +63,27 @@
   --risk-5: 153 27 27;
 
   /* Focus ring */
-  --ring: 59 110 165;
+  --ring: 30 128 62;
 }
 
 .dark {
-  --bg: 14 20 27;
-  --surface-1: 20 28 37;
-  --surface-2: 25 34 45;
-  --surface-3: 31 42 55;
+  --bg: 6 20 14;
+  --surface-1: 10 32 22;
+  --surface-2: 15 42 29;
+  --surface-3: 21 55 38;
 
-  --border-subtle: 30 37 48;     /* #1E2530 */
-  --border-strong: 42 51 64;     /* #2A3340 */
+  --border-subtle: 27 67 47;
+  --border-strong: 42 91 64;
 
-  --text-primary: 230 234 241;   /* #E6EAF1 */
-  --text-secondary: 152 162 179; /* #98A2B3 */
-  --text-muted: 107 114 128;
+  --text-primary: 235 242 235;
+  --text-secondary: 174 193 180;
+  --text-muted: 126 149 135;
 
-  --accent-red: 230 49 75;
-  --accent-navy: 86 124 175;
-  --accent-blue: 110 165 220;
+  --accent-red: 232 87 76;
+  --accent-navy: 52 169 91;
+  --accent-blue: 66 172 211;
+  --accent-green: 68 185 98;
+  --accent-amber: 238 174 59;
 
   --status-success: 34 197 94;
   --status-warning: 234 179 8;
@@ -110,5 +114,5 @@
   --risk-4: 239 68 68;
   --risk-5: 220 38 38;
 
-  --ring: 110 165 220;
+  --ring: 68 185 98;
 }

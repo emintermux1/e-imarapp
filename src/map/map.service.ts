@@ -96,8 +96,10 @@ export class MapService {
         name: 'MapTiler Cloud',
         configured: diagnostics.MAPTILER_API_KEY.configured,
         requiredEnv: 'MAPTILER_API_KEY',
+        clientEnv: 'NEXT_PUBLIC_MAPTILER_KEY',
         envStatus: diagnostics.MAPTILER_API_KEY.status,
         issue: diagnostics.MAPTILER_API_KEY.configured ? undefined : diagnostics.MAPTILER_API_KEY.message,
+        activationMode: 'server diagnostics + browser MapLibre style when NEXT_PUBLIC_MAPTILER_KEY is set',
         capabilities: ['vector_tiles', 'raster_tiles', 'basemap'],
         docsUrl: 'https://docs.maptiler.com/cloud/api/'
       },
@@ -106,8 +108,10 @@ export class MapService {
         name: 'Mapbox Maps API',
         configured: diagnostics.MAPBOX_ACCESS_TOKEN.configured,
         requiredEnv: 'MAPBOX_ACCESS_TOKEN',
+        clientEnv: 'NEXT_PUBLIC_MAPBOX_TOKEN',
         envStatus: diagnostics.MAPBOX_ACCESS_TOKEN.status,
         issue: diagnostics.MAPBOX_ACCESS_TOKEN.configured ? undefined : diagnostics.MAPBOX_ACCESS_TOKEN.message,
+        activationMode: 'server diagnostics; browser styles require a separate pk.* public token',
         capabilities: ['vector_tiles', 'raster_tiles', 'basemap'],
         docsUrl: 'https://docs.mapbox.com/api/maps/'
       },
@@ -116,8 +120,10 @@ export class MapService {
         name: 'Cesium ion',
         configured: diagnostics.CESIUM_ION_TOKEN.configured,
         requiredEnv: 'CESIUM_ION_TOKEN',
+        clientEnv: 'NEXT_PUBLIC_CESIUM_ION_TOKEN',
         envStatus: diagnostics.CESIUM_ION_TOKEN.status,
         issue: diagnostics.CESIUM_ION_TOKEN.configured ? undefined : diagnostics.CESIUM_ION_TOKEN.message,
+        activationMode: 'server diagnostics + browser 3D terrain when NEXT_PUBLIC_CESIUM_ION_TOKEN is set',
         capabilities: ['terrain_tiles', '3d_tiles', 'citygml_pipeline'],
         docsUrl: 'https://cesium.com/platform/cesium-ion/'
       },
@@ -128,6 +134,7 @@ export class MapService {
         requiredEnv: 'HERE_API_KEY',
         envStatus: diagnostics.HERE_API_KEY.status,
         issue: diagnostics.HERE_API_KEY.configured ? undefined : diagnostics.HERE_API_KEY.message,
+        activationMode: 'server diagnostics; browser tile usage should go through a scoped public key or proxy',
         capabilities: ['raster_tiles', 'vector_tiles', 'routing_context'],
         docsUrl: 'https://developer.here.com/documentation'
       }

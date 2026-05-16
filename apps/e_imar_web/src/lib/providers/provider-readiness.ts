@@ -12,6 +12,7 @@ export type ReadinessLabel =
   | "yapılandırma bekliyor"
   | "korumalı erişim"
   | "demo fallback"
+  | "production unavailable"
   | "planlandı";
 
 export type ReadinessTone = "success" | "warning" | "danger" | "muted" | "info";
@@ -63,8 +64,9 @@ export function buildProviderExplorerModel({
   const sourceRows = sources.length > 0 ? sources.map((source) => buildSourceRow(source, healthById.get(source.id))) : buildFallbackRows(metadata);
   const metrics = buildMetrics(metadata, coverage.summary, sources.length, health?.total ?? null);
   return {
-    headerLabel: metadata.mode === "demo" ? "Demo fallback" : metadata.mode === "api" ? "API hedefi" : "Vector tile hedefi",
+    headerLabel: metadata.mode === "unavailable" ? "Production unavailable" : metadata.mode === "demo" ? "Demo fallback" : metadata.mode === "api" ? "API hedefi" : "Vector tile hedefi",
     headerDetail:
+      metadata.unavailableReason ??
       metadata.fallbackReason ??
       (metadata.endpoint ? "Uç nokta okunuyor." : "Uç nokta şu anda görünmüyor; connector katmanı beklemede."),
     metrics,
@@ -77,6 +79,7 @@ export function buildProviderExplorerModel({
 export function modeLabel(mode: ParcelDataMode) {
   if (mode === "api") return "API";
   if (mode === "vector-tile") return "Vector tile";
+  if (mode === "unavailable") return "Unavailable";
   return "Demo";
 }
 
@@ -87,6 +90,8 @@ export function readinessTone(label: ReadinessLabel): ReadinessTone {
     case "korumalı erişim":
     case "yapılandırma bekliyor":
       return "warning";
+    case "production unavailable":
+      return "danger";
     case "demo fallback":
       return "info";
     case "planlandı":
@@ -121,13 +126,13 @@ function buildMetrics(
       label: "İstenen mod",
       value: modeLabel(metadata.requestedMode),
       detail: "Kullanıcı isteği",
-      tone: metadata.requestedMode === metadata.mode && !metadata.fallbackReason ? "success" : "warning"
+      tone: metadata.unavailableReason ? "danger" : metadata.requestedMode === metadata.mode && !metadata.fallbackReason ? "success" : "warning"
     },
     {
       label: "Aktif mod",
       value: modeLabel(metadata.mode),
-      detail: metadata.fallbackReason ? "Demo fallback aktif" : metadata.mode === "demo" ? "Demo veri" : "Canlı hedef",
-      tone: metadata.mode === "demo" ? "info" : "success"
+      detail: metadata.unavailableReason ? "Production unavailable" : metadata.fallbackReason ? "Demo fallback aktif" : metadata.mode === "demo" ? "Demo veri" : "Canlı hedef",
+      tone: metadata.mode === "unavailable" ? "danger" : metadata.mode === "demo" ? "info" : "success"
     },
     {
       label: "Endpoint",
@@ -187,11 +192,11 @@ function buildFallbackRows(metadata: ParcelSourceMetadata): ReadinessRow[] {
       id: "parcel-mode",
       title: "Parsel kaynağı",
       subtitle: metadata.label,
-      label: metadata.fallbackReason ? "demo fallback" : metadata.mode === "demo" ? "demo fallback" : "yapılandırma bekliyor",
-      tone: metadata.fallbackReason || metadata.mode === "demo" ? "info" : "warning",
+      label: metadata.unavailableReason ? "production unavailable" : metadata.fallbackReason ? "demo fallback" : metadata.mode === "demo" ? "demo fallback" : "yapılandırma bekliyor",
+      tone: metadata.unavailableReason ? "danger" : metadata.fallbackReason || metadata.mode === "demo" ? "info" : "warning",
       endpoint: metadata.endpoint ? sanitizeEndpointUrl(metadata.endpoint) : undefined,
       endpointLabel: metadata.endpoint ? "uç nokta var" : "uç nokta yok",
-      detail: metadata.fallbackReason ?? "Canlı veri katmanı henüz bağlanmadı",
+      detail: metadata.unavailableReason ?? metadata.fallbackReason ?? "Canlı veri katmanı henüz bağlanmadı",
       notes: [...metadata.notes]
     }
   ];
@@ -223,7 +228,10 @@ function buildNextActions(
   cityTargets: LocationExplorerTarget[]
 ) {
   const actions: string[] = [];
-  if (metadata.fallbackReason) {
+  if (metadata.unavailableReason) {
+    actions.push(metadata.unavailableReason);
+    actions.push("Production için NEXT_PUBLIC_EIMAR_API_BASE_URL veya NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL yapılandır.");
+  } else if (metadata.fallbackReason) {
     actions.push(metadata.fallbackReason);
   } else if (metadata.mode === "demo") {
     actions.push("Canlı parsel yükleme yerine demo veri katmanı çiziliyor.");

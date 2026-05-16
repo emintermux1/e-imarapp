@@ -46,7 +46,9 @@ const config: Config = {
         brand: {
           red: "rgb(var(--accent-red) / <alpha-value>)",
           navy: "rgb(var(--accent-navy) / <alpha-value>)",
-          blue: "rgb(var(--accent-blue) / <alpha-value>)"
+          blue: "rgb(var(--accent-blue) / <alpha-value>)",
+          green: "rgb(var(--accent-green) / <alpha-value>)",
+          amber: "rgb(var(--accent-amber) / <alpha-value>)"
         },
         status: {
           success: "rgb(var(--status-success) / <alpha-value>)",
@@ -81,9 +83,9 @@ const config: Config = {
         xl: "12px"
       },
       boxShadow: {
-        card: "0 1px 0 0 rgba(0,0,0,0.04), 0 1px 2px 0 rgba(0,0,0,0.06)",
-        pop: "0 4px 8px -2px rgba(15,23,42,0.10), 0 2px 4px -2px rgba(15,23,42,0.06), 0 0 0 1px rgba(15,23,42,0.04)",
-        sheet: "0 -8px 24px -6px rgba(0,0,0,0.18), 0 -2px 8px -2px rgba(0,0,0,0.10)",
+        card: "0 1px 0 0 rgba(255,255,255,0.72) inset, 0 18px 42px -30px rgba(10,51,35,0.42)",
+        pop: "0 24px 70px -38px rgba(10,51,35,0.56), 0 0 0 1px rgba(30,128,62,0.10)",
+        sheet: "0 -18px 70px -34px rgba(10,51,35,0.58), 0 -2px 12px -8px rgba(10,51,35,0.35)",
         "card-dark": "0 1px 0 0 rgba(0,0,0,0.55), 0 1px 2px 0 rgba(0,0,0,0.45)",
         "pop-dark": "0 8px 24px -6px rgba(0,0,0,0.65), 0 2px 6px -1px rgba(0,0,0,0.45)"
       },

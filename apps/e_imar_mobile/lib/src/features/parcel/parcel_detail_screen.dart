@@ -26,11 +26,13 @@ class ParcelDetailScreen extends ConsumerWidget {
           return item.id == expected;
         });
     return Scaffold(
+      backgroundColor: scheme.surface,
       appBar: AppBar(
         title: const Text('Parsel Detayı'),
         actions: [
           IconButton(
-            tooltip: isWatchlisted ? 'Parsel Alarm’dan çıkar' : 'Parsel Alarm kur',
+            tooltip:
+                isWatchlisted ? 'Parsel Alarm’dan çıkar' : 'Parsel Alarm kur',
             onPressed: data == null
                 ? null
                 : () {
@@ -69,10 +71,33 @@ class ParcelDetailScreen extends ConsumerWidget {
             : ListView(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
                 children: [
-                  PremiumCard(
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(34),
+                      boxShadow: [
+                        BoxShadow(
+                          color: scheme.primary.withValues(alpha: 0.18),
+                          blurRadius: 38,
+                          offset: const Offset(0, 22),
+                        ),
+                      ],
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Center(
+                          child: Container(
+                            height: 5,
+                            width: 48,
+                            decoration: BoxDecoration(
+                              color: scheme.outlineVariant,
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
                         Row(
                           children: [
                             Expanded(
@@ -117,6 +142,68 @@ class ParcelDetailScreen extends ConsumerWidget {
                                 label: data.provenanceLabel,
                                 color: scheme.tertiary,
                                 icon: Icons.verified_rounded),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            _DetailAction(
+                              icon: isWatchlisted
+                                  ? Icons.bookmark_added_rounded
+                                  : Icons.bookmark_border_rounded,
+                              label: isWatchlisted
+                                  ? 'Favoriden Çıkar'
+                                  : 'Favoriye Ekle',
+                              color: scheme.primary,
+                              onPressed: () {
+                                ref
+                                    .read(watchlistProvider.notifier)
+                                    .toggleParcel(data);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(isWatchlisted
+                                        ? 'Parsel Alarm’dan çıkarıldı'
+                                        : 'Parsel yerel alarm profiline eklendi'),
+                                  ),
+                                );
+                              },
+                            ),
+                            _DetailAction(
+                              icon: Icons.analytics_rounded,
+                              label: 'Analizi Gör',
+                              color: scheme.primary,
+                              onPressed: () =>
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Analiz özeti aşağıda açık'),
+                                ),
+                              ),
+                            ),
+                            _DetailAction(
+                              icon: Icons.picture_as_pdf_rounded,
+                              label: 'PDF',
+                              color: scheme.error,
+                              onPressed: () =>
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content:
+                                      Text('PDF çıktısı kaynak veriye bağlı'),
+                                ),
+                              ),
+                            ),
+                            _DetailAction(
+                              icon: Icons.public_rounded,
+                              label: 'Google Earth',
+                              color: scheme.secondary,
+                              onPressed: () =>
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('KML bağlantısı hazırlanıyor'),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -286,6 +373,39 @@ class ParcelDetailScreen extends ConsumerWidget {
                     ],
                 ],
               ),
+      ),
+    );
+  }
+}
+
+class _DetailAction extends StatelessWidget {
+  const _DetailAction({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: (MediaQuery.of(context).size.width - 58) / 2,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, color: color),
+        label: Text(label),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: color,
+          side: BorderSide(color: color.withValues(alpha: 0.42)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        ),
       ),
     );
   }

@@ -15,6 +15,13 @@ export interface AppEnvironment {
   MAPBOX_ACCESS_TOKEN?: string;
   CESIUM_ION_TOKEN?: string;
   HERE_API_KEY?: string;
+  TKGM_LEGAL_AGREEMENT_REF?: string;
+  TKGM_SESSION_REF?: string;
+  MAKS_LEGAL_AGREEMENT_REF?: string;
+  MAKS_CREDENTIALS_REF?: string;
+  EDEVLET_TUCBS_CREDENTIALS_REF?: string;
+  EDEVLET_TUCBS_OAUTH_REF?: string;
+  COPERNICUS_OAUTH_REF?: string;
   OPENAI_API_KEY?: string;
   OPENAI_MODEL?: string;
   RATE_LIMIT_WINDOW_MS: number;

@@ -183,9 +183,9 @@ export function GlobalSearch() {
             type="button"
             onClick={() => setSearchOpen(true)}
             className={cn(
-              "group flex h-9 w-full items-center gap-2 rounded-lg px-3",
-              "border border-border-strong/70 bg-bg/72 text-sm text-fg-secondary shadow-[inset_0_1px_0_rgb(255_255_255/0.78)]",
-              "transition-colors hover:border-brand-blue/45 hover:bg-surface-2",
+              "group flex h-11 w-full items-center gap-2 rounded-full px-4",
+              "border border-white/60 bg-white/82 text-sm text-fg-secondary shadow-[inset_0_1px_0_rgb(255_255_255/0.9),0_14px_36px_-28px_rgb(var(--accent-navy)/0.7)]",
+              "transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-brand-green/45 hover:bg-white active:scale-[0.99]",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
             )}
             aria-label="Ara"

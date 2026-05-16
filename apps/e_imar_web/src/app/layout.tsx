@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Source_Sans_3 } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const sourceSans = Source_Sans_3({
+const sourceSans = Plus_Jakarta_Sans({
   subsets: ["latin", "latin-ext"],
   display: "swap",
   variable: "--font-sans"
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: "%s · E-İmar"
   },
   description:
-    "Türkiye genelinde parsel, imar planı ve cadastral verilere modern bir arayüz.",
+    "Türkiye genelinde parsel, imar planı, kaynak durumu ve harita analizleri için map-first arayüz.",
   applicationName: "E-İmar",
   authors: [{ name: "E-İmar Platform" }],
   formatDetection: { telephone: false },
@@ -24,8 +24,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
-    { media: "(prefers-color-scheme: dark)", color: "#0B0F14" }
+    { media: "(prefers-color-scheme: light)", color: "#EFF5EE" },
+    { media: "(prefers-color-scheme: dark)", color: "#06140E" }
   ],
   width: "device-width",
   initialScale: 1,

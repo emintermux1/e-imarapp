@@ -21,16 +21,16 @@ export function GISLegend({ collapsed: collapsedProp, onCollapsedChange }: {
     else setInternal(v);
   };
   return (
-    <div className="bg-surface-2 border border-border-strong rounded-md shadow-card overflow-hidden text-xs">
+    <div className="overflow-hidden rounded-[1.35rem] border border-white/55 bg-surface-2/92 text-xs shadow-[inset_0_1px_0_rgb(255_255_255/0.82),0_18px_52px_-38px_rgb(var(--accent-navy)/0.72)] backdrop-blur-md">
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2 hover:bg-surface-1 transition-colors"
+        className="flex w-full items-center justify-between gap-2 px-3 py-2.5 transition-colors hover:bg-surface-1"
         aria-expanded={!collapsed}
       >
-        <span className="inline-flex items-center gap-1.5 font-medium text-fg-primary">
-          <Layers className="h-3.5 w-3.5 text-fg-muted" />
-          Katman Açıklamaları
+        <span className="inline-flex items-center gap-1.5 font-black text-fg-primary">
+          <Layers className="h-3.5 w-3.5 text-brand-green" />
+          Harita katmanları
         </span>
         <ChevronDown
           className={cn(

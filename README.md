@@ -35,18 +35,39 @@ Swagger UI is available at `http://localhost:3000/docs`.
 ### Web frontend startup (canonical Next.js app)
 
 ```bash
-cd frontend
-npm install
-npm run dev
+npm install --prefix apps/e_imar_web
+npm run web:dev
 ```
 
-Web app runs at `http://localhost:3000` and connects to FastAPI via `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000/api/v1`).
+Web app runs at `http://localhost:3000`. The canonical product frontend is the
+map-first Next.js workspace in `apps/e_imar_web`, matching the root `web:*`
+scripts.
 
-`apps/web` is a deprecated Vite prototype. Its npm scripts are shims that start/build `frontend/` so agents and humans do not accidentally open the stale `localhost:5173` app.
+Production parcel rendering must be configured explicitly:
+
+```bash
+NEXT_PUBLIC_EIMAR_DATA_MODE=api
+NEXT_PUBLIC_EIMAR_API_BASE_URL=http://localhost:3000
+# or
+NEXT_PUBLIC_EIMAR_DATA_MODE=vector-tile
+NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL=http://localhost:7800/public.parcels/{z}/{x}/{y}.pbf
+# only for non-production previews that intentionally show synthetic parcels
+NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=true
+```
+
+Development defaults to labelled demo parcels. Production does not silently fall
+back to demo when a live API/vector tile endpoint is missing; the map stays
+visible and reports an unavailable parcel source state.
+
+`apps/web`, `web-next`, `apps/e_imar_next`, and `frontend/` are deprecated or
+reference prototypes. Root scripts target `apps/e_imar_web` so agents and
+humans do not accidentally open a stale shell.
 
 ### Legacy prototype frontends
 
-Older experiments remain under `apps/` for historical reference only. Do not use `apps/web`, `apps/web-next`, `apps/e_imar_next`, or `apps/e_imar_web` as the product frontend unless explicitly working on legacy migration.
+Older experiments remain for historical reference only. Do not use `apps/web`,
+`web-next`, `apps/e_imar_next`, or `frontend/` as the product frontend unless
+explicitly working on legacy migration.
 
 Docker Compose now includes the API service as well as PostGIS, Redis, MinIO, OpenSearch, pg_tileserv, Prometheus, and Grafana.
 
@@ -171,11 +192,13 @@ npm run build
 
 ### Full repository verification
 
-Runs root TypeScript + Jest, Python `compileall` on `app/`, the canonical `frontend/` typecheck and lint, and (non-blocking) legacy `apps/e_imar_web` typecheck when present:
+Runs root TypeScript/build/Jest, Python `compileall` on `app/`, canonical `apps/e_imar_web` typecheck/lint/build/smoke, and Docker Compose config validation when Docker is available:
 
 ```bash
 npm run repo:health
 ```
+
+For an already-installed checkout, skip dependency installation with `REPO_HEALTH_SKIP_INSTALL=1 npm run repo:health`. To avoid starting the web smoke server locally, set `REPO_HEALTH_WEB_SMOKE=0`.
 
 ## Architecture decisions
 
@@ -183,9 +206,9 @@ See `docs/adr/0001-backend-first-geospatial-foundation.md`.
 
 ## Website app and integration
 
-The canonical product frontend is `frontend/` (Next.js 14 App Router). It consumes the FastAPI `/api/v1/*` endpoints and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data.
+The canonical product frontend is `apps/e_imar_web` (Next.js 14 App Router). It consumes the FastAPI `/api/v1/*` endpoints and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data. `frontend/`, `apps/web`, `apps/web-next`, and `apps/e_imar_next` are legacy/reference apps unless explicitly migrated.
 
-- App README: `frontend/README.md`
+- App README: `apps/e_imar_web/README.md`
 - Architecture and runbook: `docs/website-architecture.md`
 - Bootstrap/capabilities endpoint: `GET /website/bootstrap`
 - Aggregated website workflow endpoint: `POST /website/bff/parcel-workflow`
@@ -197,12 +220,16 @@ The canonical product frontend is `frontend/` (Next.js 14 App Router). It consum
 Run the website locally:
 
 ```bash
-npm install --prefix frontend
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1 npm run web:dev
+npm install --prefix apps/e_imar_web
+NEXT_PUBLIC_EIMAR_DATA_MODE=api NEXT_PUBLIC_EIMAR_API_BASE_URL=http://localhost:3000 npm run web:dev
 npm run web:build
 ```
 
-The root `npm run build` remains the backend build. Website-specific scripts are `web:dev`, `web:build`, `web:preview`, and `web:typecheck`, all pointing at `frontend/`.
+The root `npm run build` remains the backend build. Website-specific scripts are
+`web:dev`, `web:build`, `web:preview`, `web:typecheck`, `web:lint`, and
+`web:smoke`, all pointing at `apps/e_imar_web`. `web:smoke` starts the Next.js
+app on a temporary local port and verifies the home map-first shell renders with
+no provider credentials.
 
 Required website integration env:
 
@@ -210,8 +237,14 @@ Required website integration env:
 WEBSITE_SESSION_SECRET=...
 OPENAI_API_KEY=...          # for plan-note explain
 PUSH_GATEWAY_URL=...        # for push channel delivery
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+NEXT_PUBLIC_EIMAR_DATA_MODE=api
+NEXT_PUBLIC_EIMAR_API_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL=...      # required for vector-tile mode
+NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=0   # production should stay unavailable instead of demo
+NEXT_PUBLIC_MAPBOX_TOKEN=... # optional; empty uses token-free basemaps
 ```
+
+CI and smoke tests do not require real provider secrets. Configure production/staging values in the deploy target or GitHub environment secrets; never commit them.
 
 Design references for website-first rollout:
 

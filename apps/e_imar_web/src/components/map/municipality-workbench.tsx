@@ -169,15 +169,15 @@ export function MunicipalityWorkbench() {
   }
 
   return (
-    <section className="pointer-events-auto rounded-xl border border-border-subtle bg-surface-2/95 shadow-card backdrop-blur-sm">
-      <div className="flex items-center justify-between gap-2 border-b border-border-subtle px-3 py-2">
+    <section className="map-glass-shell pointer-events-auto overflow-hidden rounded-[1.75rem]">
+      <div className="flex items-center justify-between gap-2 border-b border-border-subtle/80 bg-surface-2/80 px-4 py-3">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.24em] text-fg-muted">Belediye / veri durumu</div>
-          <div className="text-sm font-medium text-fg-primary">Kaynak seç, sorgula, neden yok gör</div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-brand-green">Belediye / veri durumu</div>
+          <div className="text-sm font-black text-fg-primary">Kaynak seç, sorgula, neden yok gör</div>
         </div>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <button className="inline-flex h-9 items-center gap-2 rounded-md border border-border-subtle bg-surface-1 px-3 text-sm text-fg-primary hover:bg-surface-2">
+            <button className="soft-press inline-flex h-10 items-center gap-2 rounded-full border border-border-subtle bg-surface-1 px-3 text-sm font-semibold text-fg-primary hover:bg-white">
               <Building2 className="h-4 w-4 text-fg-muted" />
               <span className="max-w-[160px] truncate">{selectedMunicipality?.name ?? "Belediye seç"}</span>
               <ChevronDown className="h-3.5 w-3.5 text-fg-muted" />
@@ -240,7 +240,7 @@ export function MunicipalityWorkbench() {
         </Popover>
       </div>
 
-      <div className="grid gap-3 p-3 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid gap-3 p-4 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="space-y-3">
           <MunicipalityStatusCard entry={selectedMunicipality} />
           <div className="grid gap-2 sm:grid-cols-2">
