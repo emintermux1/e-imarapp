@@ -45,6 +45,7 @@ export function DataCoverageBadge() {
   const healthQuery = useSourceHealth();
   const flyTo = useMapStore((s) => s.flyTo);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const selectedPoint = useMapStore((s) => s.selectedPoint);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
   const cityTargets = React.useMemo(() => getCoveredCities(), []);
 
@@ -96,7 +97,8 @@ export function DataCoverageBadge() {
           aria-label="Sağlayıcı ve veri kapsamı"
           className={cn(
             "pointer-events-auto inline-flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface-2/95 px-2.5 py-1.5 shadow-card backdrop-blur-sm",
-            "text-[11px] text-fg-secondary transition-colors hover:bg-surface-3 hover:text-fg-primary"
+            "text-[11px] text-fg-secondary transition-colors hover:bg-surface-3 hover:text-fg-primary",
+            selectedPoint && "hidden 2xl:inline-flex"
           )}
         >
           <span
