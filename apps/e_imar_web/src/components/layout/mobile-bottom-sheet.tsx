@@ -15,6 +15,7 @@ import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
 import { useParcel } from "@/hooks/use-parcel";
 import { useWatchlistStore } from "@/stores/watchlist-store";
+import { useSourceStore } from "@/stores/source-store";
 import { adaParselText, formatArea, formatDate } from "@/lib/format";
 import { SectionKonum } from "@/components/info/section-konum";
 import { SectionImar } from "@/components/info/section-imar";
@@ -26,6 +27,7 @@ import { SectionGecmis } from "@/components/info/section-gecmis";
 import { SectionYatirimSkoru } from "@/components/info/section-yatirim-skoru";
 import { SectionParcelSummary } from "@/components/info/section-parcel-summary";
 import { SourceBadge } from "@/components/gis/source-badge";
+import { SourceHealthTrend } from "@/components/source/source-health-trend";
 import { EmsalCalculatorPanel } from "@/components/emsal/emsal-calculator-panel";
 import { useBackendParcelStore } from "@/stores/backend-parcel-store";
 import { useLatestRegionsStore } from "@/stores/latest-regions-store";
@@ -59,6 +61,9 @@ export function MobileBottomSheet() {
   const dragControls = useDragControls();
   const parcelSource = getParcelSourceMetadata();
   const backendGeometry = useBackendParcelStore((s) => s.getGeometry(selectedId));
+  const qualityBySourceId = useSourceStore((s) => s.qualityBySourceId);
+  const sourceQualityHistoryAvailable = useSourceStore((s) => s.quality?.history_available);
+  const refreshQuality = useSourceStore((s) => s.refreshQuality);
   const latestRegionsItems = useLatestRegionsStore((s) => s.items);
   const latestRegionsStatus = useLatestRegionsStore((s) => s.status);
   const latestRegionsTotal = useLatestRegionsStore((s) => s.total);
@@ -104,6 +109,10 @@ export function MobileBottomSheet() {
       cancelled = true;
     };
   }, [parcel?.backendId]);
+
+  React.useEffect(() => {
+    void refreshQuality({ limit: 12 });
+  }, [refreshQuality]);
 
   React.useEffect(() => {
     let alive = true;
@@ -179,6 +188,16 @@ export function MobileBottomSheet() {
   }
 
   const isWatchlisted = watchlistHas(parcel.id);
+  const parcelSourceQuality = Object.values(qualityBySourceId).find((record) => {
+    const district = parcel.ilce?.toLocaleLowerCase("tr-TR");
+    const province = parcel.il?.toLocaleLowerCase("tr-TR");
+    return [record.district, record.municipality_name, record.province, record.name]
+      .filter(Boolean)
+      .some((value) => {
+        const normalized = String(value).toLocaleLowerCase("tr-TR");
+        return Boolean(district && normalized.includes(district)) || Boolean(province && normalized.includes(province));
+      });
+  });
 
   return (
     <motion.div
@@ -223,6 +242,7 @@ export function MobileBottomSheet() {
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <SourceBadge status={parcel.sourceStatus ?? "demo"} className="h-4 px-1.5 text-[8px]" />
             <SourceBadge status={backendGeometry ? "live" : parcel.centroid ? "demo" : "unavailable"} label={backendGeometry ? "canlı geometri" : parcel.centroid ? "yaklaşık konum" : "geometri yok"} className="h-4 px-1.5 text-[8px]" />
+            <SourceBadge status={parcelSourceQuality?.history_available ? "computed" : "unavailable"} label={parcelSourceQuality?.history_available ? "trend" : "trend yok"} className="h-4 px-1.5 text-[8px]" />
           </div>
         </div>
         <button
@@ -254,6 +274,19 @@ export function MobileBottomSheet() {
                 <AccordionTrigger>Paylaşılabilir özet</AccordionTrigger>
                 <AccordionContent>
                   <MobileShareSummary parcel={parcel} summary={parcelSummary} context={parcelContext} message={summaryMessage} hasGeometry={Boolean(backendGeometry || parcel.centroid)} />
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="kaynak-sagligi">
+                <AccordionTrigger>Kaynak sağlığı</AccordionTrigger>
+                <AccordionContent>
+                  <SourceHealthTrend record={parcelSourceQuality} compact />
+                  <p className="mt-2 text-[11px] leading-snug text-fg-muted">
+                    {sourceQualityHistoryAvailable === false
+                      ? "Backend kaynak geçmişi döndürmedi; incident veya uptime uydurulmadı."
+                      : parcelSourceQuality
+                        ? "Mobil görünüm son başarı/hata ve kısa incident izini gösterir."
+                        : "Bu parselin kaynak adı kalite kaydıyla eşleşmedi; trend bilinçli olarak boş."}
+                  </p>
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="son-bolgeler">

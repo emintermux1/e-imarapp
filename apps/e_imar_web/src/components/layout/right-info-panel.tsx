@@ -41,7 +41,8 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip";
 import { SourceBadge } from "@/components/gis/source-badge";
-import type { DataSourceStatus, ParcelContextResponse, ParcelSummaryResponse, RelatedPlanItem } from "@/types/api";
+import { SourceHealthTrend } from "@/components/source/source-health-trend";
+import type { DataSourceStatus, ParcelContextResponse, ParcelSummaryResponse, RelatedPlanItem, SourceQualityRecord } from "@/types/api";
 import {
   createBackendWatchlistItem,
   generateBackendReport,
@@ -57,6 +58,7 @@ import { getParcelById } from "@/data/parcels";
 import { useWatchlistStore } from "@/stores/watchlist-store";
 import { useBackendParcelStore } from "@/stores/backend-parcel-store";
 import { useAskiStore } from "@/stores/aski-store";
+import { useSourceStore } from "@/stores/source-store";
 import { useLatestRegionsStore } from "@/stores/latest-regions-store";
 import { adaParselText, formatArea, formatDate } from "@/lib/format";
 import {
@@ -113,6 +115,9 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   const askiStatus = useAskiStore((s) => s.status);
   const askiPlans = useAskiStore((s) => s.plans);
   const askiLastCheckedAt = useAskiStore((s) => s.lastCheckedAt);
+  const qualityBySourceId = useSourceStore((s) => s.qualityBySourceId);
+  const sourceQualityHistoryAvailable = useSourceStore((s) => s.quality?.history_available);
+  const refreshQuality = useSourceStore((s) => s.refreshQuality);
   const latestRegionsItems = useLatestRegionsStore((s) => s.items);
   const latestRegionsStatus = useLatestRegionsStore((s) => s.status);
   const latestRegionsMessage = useLatestRegionsStore((s) => s.message);
@@ -185,7 +190,8 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
 
   React.useEffect(() => {
     void hydrateWatchlist();
-  }, [hydrateWatchlist]);
+    void refreshQuality({ limit: 12 });
+  }, [hydrateWatchlist, refreshQuality]);
 
   React.useEffect(() => {
     if (!parcel?.backendId) {
@@ -227,6 +233,17 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
   if (!parcel && !showLatestRegions && !pointAnalysis) return null;
 
   const parcelData = parcel ?? undefined;
+  const parcelSourceQuality = Object.values(qualityBySourceId).find((record) => {
+    if (!parcelData) return false;
+    const district = parcelData.ilce?.toLocaleLowerCase("tr-TR");
+    const province = parcelData.il?.toLocaleLowerCase("tr-TR");
+    return [record.district, record.municipality_name, record.province, record.name]
+      .filter(Boolean)
+      .some((value) => {
+        const normalized = String(value).toLocaleLowerCase("tr-TR");
+        return Boolean(district && normalized.includes(district)) || Boolean(province && normalized.includes(province));
+      });
+  });
 
   function close() {
     setOpen(false);
@@ -652,6 +669,8 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
                     askiStatus={askiStatus}
                     liveAskiCount={askiPlans.length}
                     lastCheckedAt={askiLastCheckedAt}
+                    sourceQuality={parcelSourceQuality}
+                    historyAvailable={sourceQualityHistoryAvailable}
                   />
                 </AccordionContent>
               </AccordionItem>
@@ -1390,7 +1409,9 @@ function TrustSection({
   imarSource,
   askiStatus,
   liveAskiCount,
-  lastCheckedAt
+  lastCheckedAt,
+  sourceQuality,
+  historyAvailable
 }: {
   parcel: NonNullable<ReturnType<typeof useParcel>>["properties"];
   geometrySource: "live" | "demo" | "unavailable";
@@ -1398,6 +1419,8 @@ function TrustSection({
   askiStatus: "idle" | "loading" | "live" | "fallback" | "unavailable";
   liveAskiCount: number;
   lastCheckedAt?: string;
+  sourceQuality?: SourceQualityRecord;
+  historyAvailable?: boolean;
 }) {
   const lastChecked = lastCheckedAt ? new Date(lastCheckedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "Bu oturumda yok";
   return (
@@ -1412,10 +1435,17 @@ function TrustSection({
           <span className="text-fg-muted tabular-nums">{lastChecked}</span>
         </div>
       </div>
+      <SourceHealthTrend
+        record={sourceQuality}
+        compact
+        className="bg-surface-2"
+      />
       <div className="flex items-start gap-2 rounded-md border border-border-subtle bg-surface-1/50 px-3 py-2 text-[11px] text-fg-muted">
         <Database className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         <span>
           Askı API: {askiStatus === "live" ? `${liveAskiCount} canlı kayıt` : askiStatus === "loading" ? "yenileniyor" : askiStatus === "unavailable" ? "erişilemiyor" : "yerel/demo katman"}.
+          {historyAvailable === false && " Kaynak sağlık geçmişi yok; incident/uptime uydurulmadı."}
+          {!sourceQuality && " Bu parselin kaynak adı kalite kaydıyla eşleşmedi; trend alanı bilinçli olarak boş."}
         </span>
       </div>
     </div>
