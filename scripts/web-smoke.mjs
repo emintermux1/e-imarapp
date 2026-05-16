@@ -9,9 +9,9 @@ const BASE_URL = `http://${HOST}:${PORT}`;
 const TIMEOUT_MS = Number(process.env.WEB_SMOKE_TIMEOUT_MS || 90_000);
 
 const homeShellSnippets = [
-  "Parsel ve imar sorgulama",
-  "Parsel sorgulamak için",
-  "Haritada bir noktaya dokun",
+  "Çalışma Paneli",
+  "Harita üzerinde başla",
+  "Haritaya tıkla, ada/parsel ara veya belediye seç",
   "Katman",
 ];
 
