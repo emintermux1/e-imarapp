@@ -57,7 +57,7 @@ export function TimelineFloating() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.18, ease: "easeOut" }}
-        className="pointer-events-auto absolute bottom-3 left-1/2 -translate-x-1/2 z-10"
+        className="pointer-events-auto absolute bottom-20 left-1/2 z-10 -translate-x-1/2"
       >
         <button
           type="button"
@@ -84,7 +84,7 @@ export function TimelineFloating() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 12 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className="pointer-events-auto absolute bottom-3 left-1/2 -translate-x-1/2 z-10 w-[min(720px,calc(100%-32px))]"
+        className="pointer-events-auto absolute bottom-20 left-1/2 z-10 w-[min(720px,calc(100%-32px))] -translate-x-1/2"
       >
         <div className="flex flex-col gap-2 rounded-md border border-border-strong bg-surface-2/95 shadow-card backdrop-blur-[2px]">
           <header className="flex items-center justify-between gap-2 px-3 pt-2 pb-1.5">

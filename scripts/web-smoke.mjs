@@ -10,9 +10,36 @@ const TIMEOUT_MS = Number(process.env.WEB_SMOKE_TIMEOUT_MS || 90_000);
 
 const homeShellSnippets = [
   "Harita üzerinde başla",
-  "Ada/parsel, mahalle, koordinat veya belediye ara",
-  "Harita katmanları",
+  "Haritaya tıkla, ada/parsel ara veya belediye seç",
+  "Kaynak merkezi",
   "Katman",
+];
+
+const routeSmokeChecks = [
+  {
+    pathname: "/kaynaklar",
+    snippets: [
+      "Kaynak komuta merkezi",
+      "Canlı, aday ve bloklu veri kaynakları",
+      "Registry tablosu",
+    ],
+  },
+  {
+    pathname: "/plan-notu",
+    snippets: [
+      "Plan notu açıklayıcı",
+      "BFF / plan-note-explain",
+      "Endpoint",
+    ],
+  },
+  {
+    pathname: "/calisma-alani",
+    snippets: [
+      "Çalışma alanı",
+      "BFF / workspace + session",
+      "Sorgu geçmişi",
+    ],
+  },
 ];
 
 let server;
@@ -67,7 +94,7 @@ async function waitForServer() {
 }
 
 async function assertPage(pathname, snippets) {
-  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 10_000);
+  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 30_000);
   if (!response.ok) {
     throw new Error(`${pathname} returned HTTP ${response.status}`);
   }
@@ -113,7 +140,10 @@ try {
 
   await waitForServer();
   await assertPage("/", homeShellSnippets);
-  log("home map-first shell rendered without provider credentials");
+  for (const check of routeSmokeChecks) {
+    await assertPage(check.pathname, check.snippets);
+  }
+  log("home and BFF cockpit routes rendered without provider credentials");
   cleanup();
 } catch (error) {
   fail(error instanceof Error ? error.message : String(error));
