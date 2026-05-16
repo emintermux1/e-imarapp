@@ -210,9 +210,13 @@ export async function fetchSourceDetail(sourceId: string): Promise<Result<Source
 export function reprobeSource(sourceId: string) {
   return fetch(`/api/v1/sources/${encodeURIComponent(sourceId)}/probe`, { method: "POST" })
     .then(async (response) => {
-      const json = (await response.json()) as SourceDetailResponse;
+      const json = (await response.json()) as unknown;
       if (!response.ok) return { ok: false as const, error: `HTTP ${response.status}` };
-      return { ok: true as const, data: json };
+      const normalized = normalizeDetailResponse(json);
+      if (normalized) return { ok: true as const, data: normalized };
+      const fallback = getFallbackSourceDetail(sourceId);
+      if (fallback) return { ok: true as const, data: fallback };
+      return { ok: false as const, error: "Unexpected source response" };
     })
     .catch((error) => ({ ok: false as const, error: error instanceof Error ? error.message : "Unknown error" }));
 }
