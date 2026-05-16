@@ -214,15 +214,46 @@ export function MapCanvas({
       const fillOpacity = layerOpacity["parcels-fill"];
       if (fillOpacity != null && map.getLayer("parcels-fill")) {
         try {
+          const selectedOpacity = Math.min(1, fillOpacity + 0.3);
+          const multiSelectedOpacity = Math.min(1, fillOpacity + 0.2);
+          const hoverOpacity = Math.min(1, fillOpacity + 0.18);
           map.setPaintProperty("parcels-fill", "fill-opacity", [
-            "case",
-            ["boolean", ["feature-state", "selected"], false],
-            Math.min(1, fillOpacity + 0.3),
-            ["boolean", ["feature-state", "multiSelected"], false],
-            Math.min(1, fillOpacity + 0.2),
-            ["boolean", ["feature-state", "hover"], false],
-            Math.min(1, fillOpacity + 0.18),
-            ["interpolate", ["linear"], ["zoom"], 11.4, Math.min(0.18, fillOpacity), 13.5, Math.min(0.38, fillOpacity), 16, fillOpacity]
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            11.4,
+            [
+              "case",
+              ["boolean", ["feature-state", "selected"], false],
+              selectedOpacity,
+              ["boolean", ["feature-state", "multiSelected"], false],
+              multiSelectedOpacity,
+              ["boolean", ["feature-state", "hover"], false],
+              hoverOpacity,
+              Math.min(0.18, fillOpacity)
+            ],
+            13.5,
+            [
+              "case",
+              ["boolean", ["feature-state", "selected"], false],
+              selectedOpacity,
+              ["boolean", ["feature-state", "multiSelected"], false],
+              multiSelectedOpacity,
+              ["boolean", ["feature-state", "hover"], false],
+              hoverOpacity,
+              Math.min(0.38, fillOpacity)
+            ],
+            16,
+            [
+              "case",
+              ["boolean", ["feature-state", "selected"], false],
+              selectedOpacity,
+              ["boolean", ["feature-state", "multiSelected"], false],
+              multiSelectedOpacity,
+              ["boolean", ["feature-state", "hover"], false],
+              hoverOpacity,
+              fillOpacity
+            ]
           ] as never);
         } catch {
           /* swallow */

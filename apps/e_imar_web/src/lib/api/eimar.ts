@@ -17,6 +17,8 @@ import {
   getFallbackSourceDetail
 } from "@/data/generated/source-fixtures";
 
+const API_PROXY_BASE = "/api/v1";
+
 async function request<T>(path: string): Promise<Result<T>> {
   try {
     const response = await fetch(path, { cache: "no-store" });
@@ -208,7 +210,7 @@ export async function fetchSourceDetail(sourceId: string): Promise<Result<Source
 }
 
 export function reprobeSource(sourceId: string) {
-  return fetch(`/api/v1/sources/${encodeURIComponent(sourceId)}/probe`, { method: "POST" })
+  return fetch(`${API_PROXY_BASE}/sources/${encodeURIComponent(sourceId)}/probe`, { method: "POST" })
     .then(async (response) => {
       const json = (await response.json()) as SourceDetailResponse;
       if (!response.ok) return { ok: false as const, error: `HTTP ${response.status}` };
@@ -218,11 +220,11 @@ export function reprobeSource(sourceId: string) {
 }
 
 export function fetchActiveAski() {
-  return request<AskiActiveResponse>("/api/v1/aski/active");
+  return request<AskiActiveResponse>(`${API_PROXY_BASE}/aski/active`);
 }
 
 export function fetchActiveAskiGeoJSON() {
-  return request<AskiGeoJsonResponse>("/api/v1/aski/active/geojson");
+  return request<AskiGeoJsonResponse>(`${API_PROXY_BASE}/aski/active/geojson`);
 }
 
 export function fetchMunicipalityCoverage(params?: { province?: string; district?: string; vendor?: string; accessStatus?: string }) {
@@ -232,7 +234,7 @@ export function fetchMunicipalityCoverage(params?: { province?: string; district
   if (params?.vendor) search.set("vendor", params.vendor);
   if (params?.accessStatus) search.set("accessStatus", params.accessStatus);
   const query = search.toString();
-  return request<MunicipalityCoverageResponse>(`/api/v1/sources/municipality-coverage${query ? `?${query}` : ""}`);
+  return request<MunicipalityCoverageResponse>(`${API_PROXY_BASE}/sources/municipality-coverage${query ? `?${query}` : ""}`);
 }
 
 export function fetchMunicipalParcelWorkflow(payload: {

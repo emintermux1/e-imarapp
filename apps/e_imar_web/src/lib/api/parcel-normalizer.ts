@@ -16,7 +16,8 @@ export function backendParcelId(id: number) {
 
 export function parseBackendParcelId(id: string | null | undefined) {
   if (!id?.startsWith("backend:")) return null;
-  const numeric = Number(id.slice("backend:".length));
+  const value = id.slice("backend:".length);
+  const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : null;
 }
 

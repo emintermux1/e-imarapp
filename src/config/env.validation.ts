@@ -27,9 +27,11 @@ export interface AppEnvironment {
   RATE_LIMIT_WINDOW_MS: number;
   RATE_LIMIT_MAX: number;
   CORS_ORIGIN?: string;
+  PUBLIC_API_BASE_URL?: string;
+  NEXT_PUBLIC_API_BASE_URL?: string;
 }
 
-const HTTP_URL_ENV_NAMES = ['MINIO_ENDPOINT', 'OPENSEARCH_URL', 'PG_TILESERV_URL', 'PUSH_GATEWAY_URL'] as const;
+const HTTP_URL_ENV_NAMES = ['MINIO_ENDPOINT', 'OPENSEARCH_URL', 'PG_TILESERV_URL', 'PUSH_GATEWAY_URL', 'PUBLIC_API_BASE_URL', 'NEXT_PUBLIC_API_BASE_URL'] as const;
 const CONNECTION_URL_RULES = {
   DATABASE_URL: ['postgres:', 'postgresql:'],
   REDIS_URL: ['redis:', 'rediss:']
