@@ -15,7 +15,7 @@ export function SectionKonum({ parcel }: SectionProps) {
       <DataRow
         label="Kaynak"
         value={<SourceBadge status={parcel.sourceStatus ?? "demo"} />}
-        hint={parcel.sourceStatus === "live" ? "Tapu/parsel öznitelikleri canlı API'den gelir" : "Yerel demo parsel seti"}
+        hint={parcel.sourceStatus === "live" ? "Tapu/parsel öznitelikleri canlı API'den gelir" : "Yerel örnek parsel seti"}
       />
       <DataRow label="Ada" value={parcel.ada} />
       <DataRow label="Parsel" value={parcel.parsel} />

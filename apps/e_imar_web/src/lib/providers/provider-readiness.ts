@@ -11,7 +11,7 @@ export type ReadinessLabel =
   | "hazır"
   | "yapılandırma bekliyor"
   | "korumalı erişim"
-  | "demo fallback"
+  | "örnek veri"
   | "production unavailable"
   | "planlandı";
 
@@ -64,7 +64,7 @@ export function buildProviderExplorerModel({
   const sourceRows = sources.length > 0 ? sources.map((source) => buildSourceRow(source, healthById.get(source.id))) : buildFallbackRows(metadata);
   const metrics = buildMetrics(metadata, coverage.summary, sources.length, health?.total ?? null);
   return {
-    headerLabel: metadata.mode === "unavailable" ? "Production unavailable" : metadata.mode === "demo" ? "Demo fallback" : metadata.mode === "api" ? "API hedefi" : "Vector tile hedefi",
+    headerLabel: metadata.mode === "unavailable" ? "Production unavailable" : metadata.mode === "demo" ? "Örnek veri" : metadata.mode === "api" ? "API hedefi" : "Vector tile hedefi",
     headerDetail:
       metadata.unavailableReason ??
       metadata.fallbackReason ??
@@ -80,7 +80,7 @@ export function modeLabel(mode: ParcelDataMode) {
   if (mode === "api") return "API";
   if (mode === "vector-tile") return "Vector tile";
   if (mode === "unavailable") return "Unavailable";
-  return "Demo";
+  return "Örnek veri";
 }
 
 export function readinessTone(label: ReadinessLabel): ReadinessTone {
@@ -92,7 +92,7 @@ export function readinessTone(label: ReadinessLabel): ReadinessTone {
       return "warning";
     case "production unavailable":
       return "danger";
-    case "demo fallback":
+    case "örnek veri":
       return "info";
     case "planlandı":
       return "muted";
@@ -131,7 +131,7 @@ function buildMetrics(
     {
       label: "Aktif mod",
       value: modeLabel(metadata.mode),
-      detail: metadata.unavailableReason ? "Production unavailable" : metadata.fallbackReason ? "Demo fallback aktif" : metadata.mode === "demo" ? "Demo veri" : "Canlı hedef",
+      detail: metadata.unavailableReason ? "Production unavailable" : metadata.fallbackReason ? "Örnek veri aktif" : metadata.mode === "demo" ? "Örnek veri" : "Canlı hedef",
       tone: metadata.mode === "unavailable" ? "danger" : metadata.mode === "demo" ? "info" : "success"
     },
     {
@@ -143,7 +143,7 @@ function buildMetrics(
     {
       label: "Resmî veri",
       value: metadata.official ? "evet" : "hayır",
-      detail: metadata.official ? "Kaynak resmi akışa bağlı" : "Sentetik/demo katman",
+      detail: metadata.official ? "Kaynak resmi akışa bağlı" : "Resmi olmayan örnek katman",
       tone: metadata.official ? "success" : "muted"
     },
     {
@@ -179,8 +179,8 @@ function buildSourceRow(source: SourceEntry, health: SourceProbe | undefined): R
         ? "Canlı bağlantı doğrulandı"
         : label === "korumalı erişim"
         ? "Giriş / legal izin / koruma akışı gerekiyor"
-        : label === "demo fallback"
-        ? "Bu katman sentetik demo veriye düşüyor"
+        : label === "örnek veri"
+        ? "Bu katman resmi olmayan örnek veriye düşüyor"
         : "Bağlayıcı yapılandırması bekliyor"),
     notes: compactNotes(source, health)
   };
@@ -192,7 +192,7 @@ function buildFallbackRows(metadata: ParcelSourceMetadata): ReadinessRow[] {
       id: "parcel-mode",
       title: "Parsel kaynağı",
       subtitle: metadata.label,
-      label: metadata.unavailableReason ? "production unavailable" : metadata.fallbackReason ? "demo fallback" : metadata.mode === "demo" ? "demo fallback" : "yapılandırma bekliyor",
+      label: metadata.unavailableReason ? "production unavailable" : metadata.fallbackReason ? "örnek veri" : metadata.mode === "demo" ? "örnek veri" : "yapılandırma bekliyor",
       tone: metadata.unavailableReason ? "danger" : metadata.fallbackReason || metadata.mode === "demo" ? "info" : "warning",
       endpoint: metadata.endpoint ? sanitizeEndpointUrl(metadata.endpoint) : undefined,
       endpointLabel: metadata.endpoint ? "uç nokta var" : "uç nokta yok",
@@ -211,7 +211,7 @@ function classifySourceLabel(source: SourceEntry, health?: SourceProbe): Readine
   }
   if (status.includes("planned") || source.discovery_strategy.toLowerCase().includes("plan")) return "planlandı";
   if (!health) return "yapılandırma bekliyor";
-  if (status.includes("demo")) return "demo fallback";
+  if (status.includes("demo")) return "örnek veri";
   return "yapılandırma bekliyor";
 }
 
@@ -234,7 +234,7 @@ function buildNextActions(
   } else if (metadata.fallbackReason) {
     actions.push(metadata.fallbackReason);
   } else if (metadata.mode === "demo") {
-    actions.push("Canlı parsel yükleme yerine demo veri katmanı çiziliyor.");
+    actions.push("Canlı parsel yükleme yerine resmi olmayan örnek veri katmanı çiziliyor.");
   }
   if (!metadata.endpoint) {
     actions.push("Canlı endpoint tanımla: API_BASE_URL veya vector tile URL.");
@@ -249,7 +249,7 @@ function buildNextActions(
     actions.push("/api/v1/sources registry yanıtını doğrula.");
   }
   if (cityTargets.length > 0) {
-    actions.push(`${cityTargets.length.toLocaleString("tr-TR")} demo kapsama şehri üzerinden harita gezinmesi yapılabilir.`);
+    actions.push(`${cityTargets.length.toLocaleString("tr-TR")} örnek kapsama şehri üzerinden harita gezinmesi yapılabilir.`);
   }
   return actions;
 }

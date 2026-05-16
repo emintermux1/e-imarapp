@@ -161,7 +161,7 @@ If you want to use local `.env`, copy `.env.example` to `.env` and fill the opti
 
 ## API behavior
 
-If PostGIS or Redis is not configured, API endpoints return a `not_ready` or `unavailable` status with a concrete next action. They do not invent parcel or plan results. Municipal parcel workflows return `method_contract_required`, `protected`, `source_not_found`, or `not_ready` when registry, TKGM geometry, or Netcad/KEOS contracts are not verified; demo/derived/public metadata is never labeled as official data.
+If PostGIS or Redis is not configured, API endpoints return a `not_ready`, `public_discovery`, or `unavailable` status with a concrete next action. They do not invent parcel or plan results. Municipal parcel workflows treat public KEOS/Netcad/WebGIS portals as live public sources, then expose `active`, `public_discovery`, `protected`, `source_not_found`, or `not_ready` states while TKGM geometry and endpoint field contracts are resolved; örnek/türetilmiş/public metadata is never labeled as official data.
 
 ## Geometry validation, integrity, and platform hardening
 

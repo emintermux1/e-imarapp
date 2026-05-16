@@ -61,17 +61,17 @@ describe('WebsiteService', () => {
     expect(result.status).toBe('invalid_token');
   });
 
-  it('returns honest municipal parcel workflow when method contract is unresolved', async () => {
+  it('returns public municipal parcel workflow without fabricating parcel data', async () => {
     const service = makeService({ sources: new SourcesService() });
 
     const result = await service.municipalParcelWorkflow({ province: 'İstanbul', district: 'Pendik', ada: '1', parsel: '2' }) as any;
 
-    expect(result.status).toBe('needs_contract');
+    expect(result.status).toBe('active');
     expect(result.query.municipalityId).toBe('pendik-keos-imar');
-    expect(result.parcelGeometryAttempt.status).toBe('not_ready');
-    expect(result.zoningAttempt.status).toBe('method_contract_required');
-    expect(result.noDataReason).toContain('Public discovery');
-    expect(result.sourceActivation.activationStatus).toBe('needs_contract');
+    expect(result.parcelGeometryAttempt.status).toBe('public_discovery');
+    expect(result.zoningAttempt.status).toBe('active_public_source');
+    expect(result.noDataReason).toContain('Public portal');
+    expect(result.sourceActivation.activationStatus).toBe('active');
     expect(result.provenance[0]).toEqual(expect.objectContaining({ sourceId: 'pendik-keos-imar', dataType: 'public_metadata', confidence: expect.any(Number) }));
     expect(result.provenance[0]).not.toHaveProperty('responseHash');
   });
@@ -94,9 +94,9 @@ describe('WebsiteService', () => {
     expect(result.status).toBe('ok');
     expect(result.deployment.httpsReady).toBe(true);
     expect(result.sources).toEqual(expect.arrayContaining([
-      expect.objectContaining({ sourceId: 'tkgm-parsel-sorgu', status: 'not_ready', dataType: 'unavailable' }),
-      expect.objectContaining({ sourceId: 'municipality-registry', status: 'public_metadata', dataType: 'public_metadata' }),
-      expect.objectContaining({ sourceId: 'eplan', status: 'method_contract_required', dataType: 'unavailable' })
+      expect.objectContaining({ sourceId: 'tkgm-parsel-sorgu', status: 'public_discovery', dataType: 'public_metadata' }),
+      expect.objectContaining({ sourceId: 'municipality-registry', status: 'public_discovery', dataType: 'public_metadata' }),
+      expect.objectContaining({ sourceId: 'eplan', status: 'public_discovery', dataType: 'public_metadata' })
     ]));
     expect(result.sources.some((source: { status: string }) => source.status === 'verified_live')).toBe(false);
   });

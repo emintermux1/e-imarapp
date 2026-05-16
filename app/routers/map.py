@@ -72,7 +72,7 @@ async def get_live_layers():
     layers = live_layer_candidates()
     return envelope(
         "ok",
-        message="Official source registry candidates. Candidate endpoints are advertised for discovery/proxy; protected data is not synthesized.",
+        message="Official public source registry. Public endpoints are advertised for discovery/proxy; protected data is not synthesized.",
         layers=layers,
         total=len(layers),
     )
@@ -81,7 +81,7 @@ async def get_live_layers():
 @router.get("/live-layers/probe")
 async def probe_live_layer(
     source_id: str = Query(..., description="Source registry id"),
-    endpoint_url: str | None = Query(None, description="Candidate endpoint URL from live-layers"),
+    endpoint_url: str | None = Query(None, description="Public endpoint URL from live-layers"),
     layer_name: str | None = Query(None, description="Optional WMS layer name to activate"),
 ):
     cache_key = _probe_cache_key(source_id, endpoint_url, layer_name)
@@ -98,7 +98,7 @@ async def probe_live_layer(
     if endpoint_url:
         candidates = [layer for layer in candidates if layer.get("url") == endpoint_url]
     if not candidates:
-        raise HTTPException(status_code=404, detail="Live layer candidate not found")
+        raise HTTPException(status_code=404, detail="Live layer source not found")
 
     layer = candidates[0]
     url = str(layer.get("url") or "")
@@ -150,7 +150,7 @@ async def get_layers(
         if sources_by_capability("layers"):
             layers.append({"id": "source-layers", "name": "Keşfedilen Katmanlar", "type": "catalog", "mode": "registry"})
         layers.extend(live_layer_candidates())
-        return envelope("ok", mode="registry", service_type="REGISTRY", identification={"title": "Seeded live municipal/national source candidates"}, layers=layers, total=len(layers), url=None)
+        return envelope("ok", mode="registry", service_type="REGISTRY", identification={"title": "Seeded live municipal/national public sources"}, layers=layers, total=len(layers), url=None)
 
     try:
         ogc = OGCService(wms_url=wms_url, wfs_url=wfs_url)

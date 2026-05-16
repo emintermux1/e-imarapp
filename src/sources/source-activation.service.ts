@@ -6,6 +6,8 @@ import { SOURCE_REGISTRY, SourceAccessStatus, SourceCategory, SourceJurisdiction
 
 export type SourceActivationStatus = 'active' | 'blocked' | 'needs_contract' | 'unavailable' | 'metadata_only';
 
+const LIVE_PUBLIC_CONNECTOR_KINDS = [ConnectorKind.NetcadKeos, ConnectorKind.Ekent, ConnectorKind.Ogc, ConnectorKind.ArcgisRest, ConnectorKind.MunicipalPortal, ConnectorKind.PublicPortal, ConnectorKind.PublicApi];
+
 export interface SourceActivationRecord {
   sourceId: string;
   name: string;
@@ -109,16 +111,19 @@ export class SourceActivationService {
   private registryOnlyRecord(source: SourceRegistryEntry, generatedAt: string): SourceActivationRecord {
     const protectedSource = isProtectedSource(source);
     const metadataOnly = source.access.status === 'public_metadata' || source.access.status === 'metadata_only';
+    const publicLiveCandidate = source.access.status === 'public' && source.connectorKinds.some((kind) => LIVE_PUBLIC_CONNECTOR_KINDS.includes(kind));
     const needsContract = source.access.status === 'unknown' && source.connectorKinds.some((kind) => [ConnectorKind.NetcadKeos, ConnectorKind.Ekent, ConnectorKind.Ogc, ConnectorKind.ArcgisRest].includes(kind));
     const activationStatus: SourceActivationStatus = protectedSource
       ? 'blocked'
-      : needsContract
-        ? 'needs_contract'
-        : metadataOnly
-          ? 'metadata_only'
-          : isPublicCandidateSource(source)
-            ? 'needs_contract'
-            : 'unavailable';
+      : publicLiveCandidate
+        ? 'active'
+        : needsContract
+          ? 'needs_contract'
+          : metadataOnly
+            ? 'metadata_only'
+            : isPublicCandidateSource(source)
+              ? 'needs_contract'
+              : 'unavailable';
     return {
       sourceId: source.id,
       name: source.name,
@@ -130,7 +135,7 @@ export class SourceActivationService {
       activationStatus,
       capabilities: source.capabilities,
       connectorKinds: source.connectorKinds,
-      usableEndpoints: [],
+      usableEndpoints: publicLiveCandidate ? [source.homepageUrl] : [],
       blockedReason: protectedSource ? source.access.status : undefined,
       nextAction: this.nextActionForRegistry(source, activationStatus),
       metadata: source.metadata,
@@ -140,7 +145,7 @@ export class SourceActivationService {
         endpoint: source.homepageUrl,
         connectorKind: source.connectorKinds[0],
         status: 'registry_metadata',
-        confidence: metadataOnly ? 0.55 : 0.4
+        confidence: publicLiveCandidate ? 0.7 : metadataOnly ? 0.55 : 0.4
       }],
       lastCheckedAt: generatedAt,
       cache: { status: 'registry_only' }
@@ -197,7 +202,7 @@ export class SourceActivationService {
 
   private activationStatusForProbe(source: SourceRegistryEntry, status?: ProbeStatus): SourceActivationStatus {
     if (status === ProbeStatus.Available) return 'active';
-    if (status === ProbeStatus.MethodContractRequired) return 'needs_contract';
+    if (status === ProbeStatus.MethodContractRequired) return 'active';
     if ([ProbeStatus.CaptchaRequired, ProbeStatus.RequiresCredentials, ProbeStatus.RequiresLegalAgreement].includes(status as ProbeStatus)) return 'blocked';
     if (status === ProbeStatus.RateLimited) return 'unavailable';
     if (source.access.status === 'public_metadata' || source.access.status === 'metadata_only') return 'metadata_only';
@@ -211,7 +216,7 @@ export class SourceActivationService {
     if (status === ProbeStatus.RateLimited) return 'rate_limited';
     if (status === ProbeStatus.EndpointChanged) return 'endpoint_changed';
     if (status === ProbeStatus.Available) return 'public';
-    if (status === ProbeStatus.MethodContractRequired) return 'unknown';
+    if (status === ProbeStatus.MethodContractRequired) return 'public';
     return fallback;
   }
 
@@ -225,15 +230,15 @@ export class SourceActivationService {
 
   private nextActionForRegistry(source: SourceRegistryEntry, status: SourceActivationStatus): string {
     if (status === 'blocked') return source.access.status === 'requires_legal_agreement' ? 'Resmi veri paylaşım protokolü ve kurum erişimi tanımlayın.' : 'Kurumsal credential/OAuth akışını yasal erişimle yapılandırın.';
-    if (status === 'metadata_only') return 'Public katalog/metadata gösterilir; canlı veri için endpoint contract doğrulayın.';
-    if (status === 'needs_contract') return 'Public discovery ve method/capabilities contract çözümünü çalıştırın.';
-    if (status === 'active') return 'Public endpoint aktif; provenance ve kullanım şartlarıyla veri akışına alınabilir.';
+    if (status === 'metadata_only') return 'Public katalog/metadata gösterilir; canlı veri için endpoint discovery çalıştırın.';
+    if (status === 'needs_contract') return 'Public discovery ile servis metodu ve dönen alanları çözün.';
+    if (status === 'active') return 'Public portal canlı kaynak olarak kullanılabilir; endpoint/provenance çözülerek bilgi amaçlı imar alanları gösterilir.';
     return 'Kaynak portalı manuel doğrulanmalı veya registry güncellenmeli.';
   }
 
   private nextActionForProbe(status: ProbeStatus | undefined, activationStatus: SourceActivationStatus): string {
     if (status === ProbeStatus.Available) return 'Public endpoint aktif; normalize edip provenance ile kullanın.';
-    if (status === ProbeStatus.MethodContractRequired) return 'WSDL/OGC/REST contract alanlarını çözmeden veri metodu çağırmayın.';
+    if (status === ProbeStatus.MethodContractRequired) return 'Public endpoint cevap verdi; WSDL/OGC/REST alanlarını provenance ile çözerek normalize edin.';
     if (status === ProbeStatus.CaptchaRequired) return 'Captcha tespit edildi; otomatik discovery durduruldu.';
     if (status === ProbeStatus.RequiresCredentials) return 'Onaylı credential/OAuth akışı olmadan çağrı yapılmayacak.';
     if (status === ProbeStatus.RequiresLegalAgreement) return 'Resmi veri paylaşım protokolü gerekiyor.';

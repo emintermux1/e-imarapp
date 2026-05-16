@@ -192,7 +192,7 @@ function planNotlari(zoning: ZoningType, cluster: ParcelClusterSeed, rng: Rng): 
     "Yol kotu üzerinden gabari hesaplanır.",
     "Jeolojik-jeoteknik etüt raporu dikkate alınacaktır.",
     "Toplanma alanı mesafesi 500 m içinde değerlendirilecektir.",
-    "Bu kayıt sentetik demo veridir; resmi kadastro kaydı değildir."
+    "Bu kayıt sentetik örnek veridir; resmi kadastro kaydı değildir."
   ];
   if (zoning === "Ticaret" || zoning === "Karma") notes.push("Zemin katlarda ticari kullanım sürekliliği aranır.");
   if (zoning === "Yesil") notes.push("Açık ve yeşil alan niteliği korunacaktır.");
@@ -356,9 +356,9 @@ function normalizeFeatured(): ParcelFeature[] {
         detailedUse: use,
         constraints,
         planLayer: feature.properties.planLayer ?? planLayer(use, status, scale, zoningType),
-        planNotlari: feature.properties.planNotlari.includes("Bu kayıt sentetik demo veridir; resmi kadastro kaydı değildir.")
+        planNotlari: feature.properties.planNotlari.includes("Bu kayıt sentetik örnek veridir; resmi kadastro kaydı değildir.")
           ? feature.properties.planNotlari
-          : [...feature.properties.planNotlari, "Bu kayıt sentetik demo veridir; resmi kadastro kaydı değildir."]
+          : [...feature.properties.planNotlari, "Bu kayıt sentetik örnek veridir; resmi kadastro kaydı değildir."]
       }
     };
   });

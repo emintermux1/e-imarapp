@@ -1160,7 +1160,7 @@ function ParcelComparisonCard({
             <GitCompareArrows className="h-3.5 w-3.5 text-fg-muted" />
             Parsel karşılaştırma
           </div>
-          <p className="mt-0.5 text-[11px] text-fg-muted">2-4 seçili parsel; demo/derived değerler açık etiketlenir.</p>
+          <p className="mt-0.5 text-[11px] text-fg-muted">2-4 seçili parsel; örnek/türetilmiş değerler açık etiketlenir.</p>
         </div>
         <button type="button" onClick={onClear} className="text-[11px] font-medium text-fg-muted underline underline-offset-2 hover:text-fg-primary">
           Temizle
@@ -1366,9 +1366,9 @@ function ParcelWorkflowStrip({
   const imarKnown = parcel.taks > 0 || parcel.kaks > 0 || parcel.gabariM > 0;
   const ready3d = hasGeometry && (parcel.gabariM > 0 || parcel.kaks > 0);
   const steps = [
-    { label: "Parsel", status: parcel.sourceStatus ?? "demo", text: parcel.sourceStatus === "live" ? "canlı" : parcel.sourceStatus === "fallback" ? "yedek" : "demo" },
+    { label: "Parsel", status: parcel.sourceStatus ?? "demo", text: parcel.sourceStatus === "live" ? "canlı" : parcel.sourceStatus === "fallback" ? "public kayıt" : "örnek" },
     { label: "Geometri", status: geometrySource, text: geometrySource === "live" ? "canlı" : geometrySource === "demo" ? "yerel" : "yok" },
-    { label: "İmar", status: imarKnown ? (parcel.backendId ? "fallback" : "demo") : "unavailable", text: imarKnown ? (parcel.backendId ? "yerel" : "demo") : "bilinmiyor" },
+    { label: "İmar", status: imarKnown ? (parcel.backendId ? "fallback" : "demo") : "unavailable", text: imarKnown ? (parcel.backendId ? "yerel" : "örnek") : "bilinmiyor" },
     { label: "Rapor", status: reportState === "generated" ? "live" : reportState === "error" ? "unavailable" : reportState === "generating" || reportState === "pending" ? "computed" : parcel.backendId ? "computed" : "unavailable", text: reportState === "generated" ? "hazır" : reportState === "generating" ? "üretiliyor" : reportState === "pending" ? "bekliyor" : parcel.backendId ? "hazır" : "API gerek" },
     { label: "3D", status: ready3d ? "computed" : "unavailable", text: ready3d ? "hazır" : "eksik" }
   ] as const;
@@ -1406,7 +1406,7 @@ function TrustSection({
         <TrustRow label="Parsel kaynağı" status={trustStatus(parcel.sourceStatus)} detail={statusDetail(trustStatus(parcel.sourceStatus), "Parsel kimliği")} />
         <TrustRow label="Geometri" status={geometrySource} detail={statusDetail(geometrySource, "Harita çizimi")} />
         <TrustRow label="İmar" status={imarSource} detail={statusDetail(imarSource, "Plan koşulları")} />
-        <TrustRow label="Risk/Çevre" status="demo" labelOverride="Demo/Tahmini" detail="Canlı resmi risk servisi değildir; karar desteği için bağlamsal katman." />
+        <TrustRow label="Risk/Çevre" status="demo" labelOverride="Örnek/Tahmini" detail="Canlı resmi risk servisi değildir; karar desteği için bağlamsal katman." />
         <div className="flex items-center justify-between gap-2 border-t border-border-subtle px-3 py-2 text-xs">
           <span className="inline-flex items-center gap-1.5 text-fg-secondary"><Clock3 className="h-3.5 w-3.5" /> Son kontrol</span>
           <span className="text-fg-muted tabular-nums">{lastChecked}</span>
@@ -1415,7 +1415,7 @@ function TrustSection({
       <div className="flex items-start gap-2 rounded-md border border-border-subtle bg-surface-1/50 px-3 py-2 text-[11px] text-fg-muted">
         <Database className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         <span>
-          Askı API: {askiStatus === "live" ? `${liveAskiCount} canlı kayıt` : askiStatus === "loading" ? "yenileniyor" : askiStatus === "unavailable" ? "erişilemiyor" : "yerel/demo katman"}.
+          Askı API: {askiStatus === "live" ? `${liveAskiCount} canlı kayıt` : askiStatus === "loading" ? "yenileniyor" : askiStatus === "unavailable" ? "erişilemiyor" : "yerel/public katman"}.
         </span>
       </div>
     </div>
@@ -1446,9 +1446,9 @@ function TrustRow({
 
 function statusDetail(status: "live" | "fallback" | "demo" | "unavailable", subject: string) {
   if (status === "live") return `${subject} canlı kaynaktan doğrulandı.`;
-  if (status === "fallback") return `${subject} için yerel yedek/önbellek kullanılıyor.`;
+  if (status === "fallback") return `${subject} için kayıtlı public kaynak/önbellek kullanılıyor.`;
   if (status === "unavailable") return `${subject} şu an kaynak tarafından sağlanmıyor.`;
-  return `${subject} demo veya tahmini veriyle gösteriliyor.`;
+  return `${subject} örnek veya tahmini veriyle gösteriliyor.`;
 }
 
 function trustStatus(status: DataSourceStatus | undefined) {

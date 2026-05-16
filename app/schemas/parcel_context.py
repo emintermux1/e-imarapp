@@ -11,7 +11,7 @@ class ParcelSourceMetadata(BaseModel):
     source_name: Optional[str] = None
     municipality: Optional[str] = None
     provider: Optional[str] = None
-    source_status: str = "fallback"
+    source_status: str = "public_metadata"
     source_message: Optional[str] = None
     last_checked_at: Optional[datetime | str] = None
 
@@ -47,7 +47,7 @@ class RelatedPlanItem(BaseModel):
     gml_url: Optional[str] = None
     has_geometry: bool = False
     geom_geojson: Optional[dict[str, Any]] = None
-    relation: str = "candidate"
+    relation: str = "metadata_match"
 
 
 class ParcelContextResponse(BaseModel):

@@ -134,7 +134,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
           </TooltipTrigger>
           <TooltipContent side="bottom">
             <div className="max-w-xs space-y-2">
-              <p>{askiApiMessage ?? (backendAskiOffline ? "Backend offline; sayaç fallback gösteriyor" : askiMode ? "Askı modunu kapat" : "Askı haritasını aç ve en yakın askıya yakınlaş")}</p>
+              <p>{askiApiMessage ?? (backendAskiOffline ? "Backend offline; sayaç yerel/public kayıt gösteriyor" : askiMode ? "Askı modunu kapat" : "Askı haritasını aç ve en yakın askıya yakınlaş")}</p>
               <button
                 type="button"
                 onClick={(event) => {

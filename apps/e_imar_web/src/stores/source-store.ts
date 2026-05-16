@@ -64,7 +64,7 @@ export const useSourceStore = create<SourceState>()((set, get) => ({
       const sources = await listSources();
       set({ sources: Array.isArray(sources) ? sources : [], loading: false });
     } catch (error) {
-      set({ loading: false, error: humanizeApiError(error, "Veri kaynakları yüklenemedi; yerel/demo katmanlar korunuyor.") });
+      set({ loading: false, error: humanizeApiError(error, "Veri kaynakları yüklenemedi; public portal kayıtları korunuyor.") });
     }
   },
   refreshHealth: async () => {
@@ -83,7 +83,7 @@ export const useSourceStore = create<SourceState>()((set, get) => ({
       const quality = await getSourceQuality({ limit: 12, ...params });
       set({ quality, qualityLoading: false, lastChecked: quality.fetched_at ?? new Date().toISOString() });
     } catch (error) {
-      set({ qualityLoading: false, error: `${humanizeApiError(error, "Canlı veri kalite paneli alınamadı.")} Neden veri yok sorusu için sağlık/portal etiketleri korunuyor.`, lastChecked: new Date().toISOString() });
+      set({ qualityLoading: false, error: `${humanizeApiError(error, "Canlı veri kalite paneli alınamadı.")} Kaynak özeti için sağlık/portal etiketleri korunuyor.`, lastChecked: new Date().toISOString() });
     }
   },
   refreshActivation: async (params = {}) => {
@@ -92,7 +92,7 @@ export const useSourceStore = create<SourceState>()((set, get) => ({
       const activation = await getSourceActivation({ limit: 24, ...params });
       set({ activation, qualityLoading: false, lastChecked: activation.generatedAt ?? new Date().toISOString() });
     } catch (error) {
-      set({ qualityLoading: false, error: `${humanizeApiError(error, "Devlet kaynak aktivasyon paneli alınamadı.")} Mevcut kalite/portal etiketleri korunuyor.`, lastChecked: new Date().toISOString() });
+      set({ qualityLoading: false, error: `${humanizeApiError(error, "Public kaynak aktivasyon paneli alınamadı.")} Mevcut kalite/portal etiketleri korunuyor.`, lastChecked: new Date().toISOString() });
     }
   },
   discover: async (sourceId: string) => {
