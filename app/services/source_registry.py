@@ -116,7 +116,7 @@ def _generated_turkey_province_sources() -> list[SourceRecord]:
             homepage = f'https://cbs.{slug}.bel.tr/'
         rows.append(SourceRecord(
             id=f'prov.{slug}.coverage',
-            name=f'{name} Belediye İmar Adayı',
+            name=f'{name} Belediye İmar Portalı',
             kind=kind,
             province=name,
             district=name,
@@ -124,7 +124,7 @@ def _generated_turkey_province_sources() -> list[SourceRecord]:
             homepage_url=homepage,
             base_url=homepage.rstrip('/'),
             candidate_endpoints=_endpoints(homepage.rstrip('/')),
-            notes=f'{name} için metadata_only aday kayıt; canlı endpoint ve izin durumu doğrulanmadı.',
+            notes=f'{name} public belediye imar portal paterni; endpoint ve dönen alanlar discovery ile doğrulanır.',
         ))
     return rows
 
@@ -142,6 +142,10 @@ SOURCE_REGISTRY: List[SourceRecord] = [
     _m("altinordu-ekent-imar", "Altınordu Ekent İmar Durumu", "municipal_webgis", "Ordu", "Altınordu", "altinordu", "https://ekent.altinordu.bel.tr/imardurumu/", "https://ekent.altinordu.bel.tr", [37.879, 40.984]),
     _m("aksaray-ebelediye-imar", "Aksaray E-Belediye İmar Durumu", "municipal_webgis", "Aksaray", "Merkez", "aksaray", "https://ebelediye.aksaray.bel.tr:444/imardurumu/", "https://ebelediye.aksaray.bel.tr:444", [34.025, 38.368]),
     _m("sehitkamil-keos-imar", "Şehitkamil KEOS İmar Durumu", "municipal_keos", "Gaziantep", "Şehitkamil", "sehitkamil", "https://keos.sehitkamil.bel.tr/imardurumu/", "https://keos.sehitkamil.bel.tr", [37.383, 37.075]),
+    _m("uskudar-cbs-eharita", "Üsküdar Belediyesi Kent Rehberi", "municipal_webgis", "İstanbul", "Üsküdar", "uskudar", "https://cbs.uskudar.bel.tr/eharita/", "https://cbs.uskudar.bel.tr", [29.054, 41.024]),
+    _m("fatih-kentrehberi-webgis", "Fatih Belediyesi Kent Rehberi", "municipal_webgis", "İstanbul", "Fatih", "fatih", "https://kentrehberi.fatih.bel.tr/webgis/", "https://kentrehberi.fatih.bel.tr", [28.949, 41.018]),
+    _m("batman-keos-imar", "Batman Belediyesi E-İmar", "municipal_keos", "Batman", "Merkez", "batman", "https://keos.batman.bel.tr/imardurumu/", "https://keos.batman.bel.tr", [41.129, 37.887]),
+    _m("avcilar-imar", "Avcılar Belediyesi İmar Durumu", "municipal_webgis", "İstanbul", "Avcılar", "avcilar", "https://www.avcilar.bel.tr/sayfalar/imar-durumu", "https://www.avcilar.bel.tr", [28.721, 40.979]),
     _m("ibb-sehir-haritasi", "İBB Şehir Haritası", "municipal_webgis", "İstanbul", None, "ibb", "https://sehirharitasi.ibb.gov.tr/", "https://sehirharitasi.ibb.gov.tr", [28.978, 41.008]),
     _m("ankara-imar", "Ankara İmar", "municipal_webgis", "Ankara", None, "ankara", "https://imar.ankara.bel.tr/", "https://imar.ankara.bel.tr", [32.854, 39.920]),
     _m("izmir-cbs", "İzmir CBS", "municipal_webgis", "İzmir", None, "izmir", "https://cbs.izmir.bel.tr/", "https://cbs.izmir.bel.tr", [27.142, 38.423]),
@@ -169,10 +173,10 @@ SOURCE_REGISTRY: List[SourceRecord] = [
     _m("inegol-imar", "İnegöl İmar Durumu", "municipal_webgis", "Bursa", "İnegöl", "inegol", "https://imar.inegol.bel.tr/", "https://imar.inegol.bel.tr", [29.513, 40.080]),
     _m("odemis-imar", "Ödemiş İmar Uygulaması", "municipal_webgis", "İzmir", "Ödemiş", "odemis", "https://imar.odemis.bel.tr/", "https://imar.odemis.bel.tr", [27.970, 38.228]),
     _m("orhangazi-imar", "Orhangazi İmar Uygulaması", "municipal_webgis", "Bursa", "Orhangazi", "orhangazi", "https://imar.orhangazi.bel.tr/", "https://imar.orhangazi.bel.tr", [29.308, 40.489]),
-    SourceRecord("tkgm-parsel-sorgu", "TKGM Parsel Sorgu", "national_parcel", None, None, "tkgm", "https://parselsorgu.tkgm.gov.tr/", "https://parselsorgu.tkgm.gov.tr", notes="Resmi parsel sorgu portalı; servis kullanımı yasal/kurumsal izinlere tabi olabilir.", requires_approval=True, center=[35.243, 38.963]),
+    SourceRecord("tkgm-parsel-sorgu", "TKGM Parsel Sorgu", "national_parcel", None, None, "tkgm", "https://parselsorgu.tkgm.gov.tr/", "https://parselsorgu.tkgm.gov.tr", notes="Public parsel sorgu portalı; çıktı bilgi amaçlı gösterilir, resmi belge gibi sunulmaz.", center=[35.243, 38.963]),
     SourceRecord("tkgm-data-sharing-docs", "TKGM Veri Paylaşımı Usul ve Esasları", "registry", None, None, "tkgm-veri-paylasimi", "https://www.tkgm.gov.tr/mevzuat/tapu-ve-kadastro-verilerinin-paylasilmasina-iliskin-usul-ve-esaslar", "https://www.tkgm.gov.tr", requires_approval=True, center=[35.243, 38.963]),
-    SourceRecord("eplan-csb", "e-Plan ÇŞB", "national_plan", None, None, "eplan-csb", "https://eplan.csb.gov.tr/", "https://eplan.csb.gov.tr", requires_approval=True, center=[35.243, 38.963]),
-    SourceRecord("e-plan", "e-Plan Portalı", "national_plan", None, None, "e-plan", "https://e-plan.gov.tr/", "https://e-plan.gov.tr", requires_approval=True, center=[35.243, 38.963]),
+    SourceRecord("eplan-csb", "e-Plan ÇŞB", "national_plan", None, None, "eplan-csb", "https://eplan.csb.gov.tr/", "https://eplan.csb.gov.tr", notes="Public e-Plan askı/yürürlük/imar durumu portalı; endpoint discovery ile kullanılır.", center=[35.243, 38.963]),
+    SourceRecord("e-plan", "e-Plan Portalı", "national_plan", None, None, "e-plan", "https://e-plan.gov.tr/", "https://e-plan.gov.tr", notes="Public e-Plan alternatif host; endpoint discovery ile kullanılır.", center=[35.243, 38.963]),
     SourceRecord("tucbs-public-api", "TUCBS Public API", "national_geodata", None, None, "tucbs-public-api", "https://tucbs-public-api.csb.gov.tr/", "https://tucbs-public-api.csb.gov.tr", notes="Bazı uç noktalar kota/anahtar gerektirebilir.", center=[35.243, 38.963]),
     SourceRecord("tucbs", "TUCBS", "national_geodata", None, None, "tucbs", "https://tucbs.gov.tr/", "https://tucbs.gov.tr", center=[35.243, 38.963]),
     SourceRecord("atlas", "Atlas", "national_geodata", None, None, "atlas", "https://www.atlas.gov.tr/", "https://www.atlas.gov.tr", center=[35.243, 38.963]),
@@ -217,7 +221,7 @@ def live_layer_candidates(discovery_by_source: Optional[Dict[str, Dict[str, Any]
         endpoints = discovery.get("endpoints") or discovery.get("live_endpoints") or []
         selected = [e for e in endpoints if isinstance(e, dict) and e.get("url")]
         if not selected and source.candidate_endpoints:
-            selected = [{"url": url, "status": "candidate", "type": endpoint_type(url, source.kind)} for url in source.candidate_endpoints[:6]]
+            selected = [{"url": url, "status": "public_discovery", "type": endpoint_type(url, source.kind)} for url in source.candidate_endpoints[:6]]
         if not selected:
             selected = [{"url": source.homepage_url, "status": "external_only", "type": "external_link"}]
         for index, endpoint in enumerate(selected[:6]):

@@ -347,7 +347,7 @@ export function useSearch(opts: SearchOptions): SearchState {
             backendUnavailable: false,
             usedFallback: fallback.some((r) => r.type === "parcel"),
             message: fallback.length > 0
-              ? "Canlı API sonucu yok — yerel demo veri gösteriliyor"
+              ? "Canlı API sonucu yok — yerel örnek veri gösteriliyor"
               : "Bu sorguda parsel bulunamadı. Sol panelden belediye kaynağını keşfedin veya Canlı Veri Kaynakları durumunu kontrol edin."
           });
         })
@@ -361,7 +361,7 @@ export function useSearch(opts: SearchOptions): SearchState {
             loading: false,
             backendUnavailable: true,
             usedFallback: fallback.some((r) => r.type === "parcel"),
-            message: `${humanizeApiError(error)} Yerel demo veri gösteriliyor.`
+            message: `${humanizeApiError(error)} Yerel örnek veri gösteriliyor.`
           });
         });
     }, 220);

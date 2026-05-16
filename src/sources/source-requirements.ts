@@ -30,11 +30,11 @@ export interface SourceRequirementEvaluation extends SourceRequirementDefinition
 
 const SOURCE_REQUIREMENTS: Record<string, SourceRequirementDefinition> = {
   'tkgm-parsel-sorgu': {
-    requiredEnv: ['TKGM_LEGAL_AGREEMENT_REF', 'TKGM_SESSION_REF'],
-    legalRequirement: 'legal_agreement',
-    credentialRequirement: 'approved_session',
-    productionUse: 'Official parcel geometry and parcel identity lookups only after TKGM-approved legal access is recorded outside the repository.',
-    operatorAction: 'Store the TKGM protocol/session references in the deployment secret manager, then run live discovery with provenance enabled.'
+    requiredEnv: [],
+    legalRequirement: 'terms_review',
+    credentialRequirement: 'none',
+    productionUse: 'Public parcel portal lookup with provenance and bilgi amaçlı/resmi belge disclaimer; do not represent results as a signed TKGM document.',
+    operatorAction: 'Resolve the public portal query contract, returned geometry fields, and provenance before normalized parcel output is shown.'
   },
   maks: {
     requiredEnv: ['MAKS_LEGAL_AGREEMENT_REF', 'MAKS_CREDENTIALS_REF'],
@@ -181,12 +181,12 @@ function resolvePreflightStatus(
     return 'metadata_only';
   }
 
-  if (source.access.status === 'public') {
-    return 'ready_for_ingestion';
-  }
-
   if (source.connectorKinds.some((kind) => CONTRACT_CONNECTORS.has(kind))) {
     return 'needs_method_contract';
+  }
+
+  if (source.access.status === 'public') {
+    return 'ready_for_ingestion';
   }
 
   return 'ready_for_probe';

@@ -69,7 +69,7 @@ export function SourceStatusPanel() {
             Canlı veri kalite paneli
           </div>
           <p className="mt-1 text-[10.5px] leading-snug text-fg-secondary">
-            Neden veri yok sorusunu kaynak, geometri ve son kontrol seviyesinde açıklar; fallback/demo durumları saklanmaz.
+            Public kaynak, geometri ve son kontrol seviyesini gösterir; uydurma imar sonucu üretilmez.
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -94,9 +94,9 @@ export function SourceStatusPanel() {
 
       <div className="mt-2 grid grid-cols-4 gap-1 text-center text-[10px]">
         <Metric label="aktif" value={activation?.summary.active ?? (quality ? Number(rollup.live ?? 0) : summary.live)} tone="live" />
-        <Metric label="yedek" value={Number(rollup.fallback ?? 0)} tone="fallback" />
+        <Metric label="public kayıt" value={Number(rollup.public_metadata ?? rollup.fallback ?? 0)} tone="metadata" />
         <Metric label="bloklu" value={activation?.summary.blocked ?? (quality ? Number(rollup.unavailable ?? 0) : summary.blocked + summary.timeout)} tone="blocked" />
-        <Metric label="kontrat" value={activation?.summary.needsContract ?? qualitySources.filter((item) => item.geometry_available).length} tone="external" />
+        <Metric label="keşif" value={activation?.summary.needsContract ?? qualitySources.filter((item) => item.geometry_available).length} tone="external" />
       </div>
 
       <div className="mt-2 rounded-lg border border-border-subtle bg-bg/55 px-2.5 py-2 text-[10.5px] leading-relaxed text-fg-secondary">
@@ -219,7 +219,7 @@ export function SourceStatusPanel() {
       {qualitySources.length === 0 && !loading && (
         <div className="mt-2 flex items-start gap-2 rounded-md border border-status-warning/35 bg-status-warning/10 px-2 py-1.5 text-[10.5px] leading-snug text-status-warning">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          <span>Kalite satırı yok. Backend kalite endpoint'i kapalıysa kaynak yokluğu uydurulmaz; demo/yedek etiketleri görünür kalır.</span>
+          <span>Kalite satırı yok. Backend kalite endpoint'i kapalıysa kaynak yokluğu uydurulmaz; public portal kayıtları görünür kalır.</span>
         </div>
       )}
 
@@ -270,7 +270,7 @@ function QualityRow({ record }: { record: SourceQualityRecord }) {
       <SourceHealthTrend record={record} className="mt-2" />
       <div className="mt-2 flex flex-wrap gap-1.5">
         {slow && <Pill tone="warning">slow</Pill>}
-        {record.status === "fallback" && <Pill tone="warning">fallback</Pill>}
+        {record.status === "fallback" && <Pill tone="warning">public kayıt</Pill>}
         {record.status === "unavailable" && <Pill tone="error">unavailable</Pill>}
         {noGeometry && <Pill tone="warning"><MapPinOff className="h-3 w-3" /> no geometry</Pill>}
         {record.imar_available && <Pill tone="info">imar</Pill>}
@@ -314,9 +314,9 @@ function Pill({ children, tone }: { children: React.ReactNode; tone: "warning" |
   );
 }
 
-function Metric({ label, value, tone }: { label: string; value: number; tone: "live" | "blocked" | "fallback" | "external" }) {
+function Metric({ label, value, tone }: { label: string; value: number; tone: "live" | "blocked" | "metadata" | "external" }) {
   return (
-    <div className={cn("rounded-md border px-1 py-1", tone === "live" && "border-emerald-300/60 bg-emerald-50 text-emerald-800", tone === "blocked" && "border-rose-300/60 bg-rose-50 text-rose-800", tone === "fallback" && "border-amber-300/60 bg-amber-50 text-amber-800", tone === "external" && "border-sky-300/60 bg-sky-50 text-sky-800")}>
+    <div className={cn("rounded-md border px-1 py-1", tone === "live" && "border-emerald-300/60 bg-emerald-50 text-emerald-800", tone === "blocked" && "border-rose-300/60 bg-rose-50 text-rose-800", tone === "metadata" && "border-amber-300/60 bg-amber-50 text-amber-800", tone === "external" && "border-sky-300/60 bg-sky-50 text-sky-800")}>
       <div className="font-semibold tabular-nums">{value}</div>
       <div className="uppercase tracking-wide opacity-75">{label}</div>
     </div>
@@ -355,8 +355,8 @@ function activationLabel(status: string) {
   const labels: Record<string, string> = {
     active: "public endpoint aktif",
     blocked: "credential/protokol gerekli",
-    needs_contract: "method contract gerekli",
-    metadata_only: "metadata aktif",
+    needs_contract: "public keşif bekliyor",
+    metadata_only: "katalog aktif",
     unavailable: "erişilemiyor"
   };
   return labels[status] ?? status;

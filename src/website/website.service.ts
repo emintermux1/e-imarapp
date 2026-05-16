@@ -36,7 +36,7 @@ interface MunicipalParcelWorkflowInput {
 
 type WebsiteProbeStatus =
   | 'verified_live'
-  | 'method_contract_required'
+  | 'public_discovery'
   | 'protected'
   | 'requires_credentials'
   | 'captcha_required'
@@ -161,26 +161,26 @@ export class WebsiteService {
           sourceId: 'tkgm-parsel-sorgu',
           sourceName: 'TKGM Parsel Sorgu',
           category: 'tkgm',
-          status: 'not_ready',
+          status: 'public_discovery',
           endpoint: 'https://parselsorgu.tkgm.gov.tr/',
-          message: 'Resmî TKGM geometri sonucu için doğrulanmış public contract henüz etkin değil.',
-          nextAction: 'Yasal erişim ve public method contract doğrulanınca verified_live açılabilir.'
+          message: 'TKGM Parsel Sorgu public portal olarak kullanılır; sonuç bilgi amaçlı/provenance ile gösterilir.',
+          nextAction: 'Public query contract ve dönen parsel geometri alanlarını çöz.'
         }),
         this.readinessSource({
           sourceId: 'municipality-registry',
           sourceName: 'Belediye kaynak registry',
           category: 'municipality',
-          status: 'public_metadata',
-          message: 'Belediye kaynakları registry ve discovery metadata seviyesinde gösteriliyor.',
-          nextAction: 'Belediye bazında KEOS/Netcad/WMS method contract doğrulanmalı.'
+          status: 'public_discovery',
+          message: 'Belediye KEOS/Netcad/WebGIS portalları public canlı kaynak olarak açılır.',
+          nextAction: 'Belediye bazında servis uçları, katmanlar ve dönen alanlar discovery ile çözülür.'
         }),
         this.readinessSource({
           sourceId: 'eplan',
           sourceName: 'e-Plan',
           category: 'eplan',
-          status: 'method_contract_required',
-          message: 'e-Plan entegrasyonu için canlı sorgu contract doğrulaması gerekiyor.',
-          nextAction: 'Plan sorgu contract ve rate/access koşulları sabitlenmeli.'
+          status: 'public_discovery',
+          message: 'e-Plan public askı/yürürlük/imar durumu akışları discovery ile kullanılır.',
+          nextAction: 'Plan sorgu contract ve döküman link alanları provenance ile normalize edilir.'
         })
       ]
     };
@@ -206,7 +206,7 @@ export class WebsiteService {
       status: input.status,
       endpoint: input.endpoint,
       checkedAt: new Date().toISOString(),
-      dataType: input.status === 'verified_live' ? 'official' : input.status === 'public_metadata' ? 'public_metadata' : 'unavailable',
+      dataType: input.status === 'verified_live' ? 'official' : input.status === 'public_discovery' || input.status === 'public_metadata' ? 'public_metadata' : 'unavailable',
       message: input.message,
       nextAction: input.nextAction
     };
@@ -307,19 +307,19 @@ export class WebsiteService {
     const activation = this.sourceActivation.activationForSource(source);
     const protectedSource = capability.protected;
     const endpointCandidate = source.homepageUrl;
-    const provenance = [provenanceRecord({ sourceId: source.id, sourceName: source.name, endpoint: endpointCandidate, dataType: 'public_metadata', connectorKind: source.connectorKinds[0], status: 'registry_metadata', confidence: 0.45 })];
+    const provenance = [provenanceRecord({ sourceId: source.id, sourceName: source.name, endpoint: endpointCandidate, dataType: 'public_metadata', connectorKind: source.connectorKinds[0], status: 'public_discovery', confidence: activation.activationStatus === 'active' ? 0.7 : 0.45 })];
     const parcelGeometryAttempt = {
-      status: protectedSource ? 'protected' : 'not_ready',
+      status: protectedSource ? 'protected' : 'public_discovery',
       source: 'tkgm-parsel-sorgu',
       endpoint: 'https://parselsorgu.tkgm.gov.tr/',
-      message: protectedSource ? 'Kaynak korumalı olduğu için parsel geometri akışı durduruldu.' : activation.activationStatus === 'active' ? 'Public kaynak aktif; TKGM eşleştirmesi resmi endpoint/protokol doğrulaması bekliyor.' : 'TKGM/parsel geometri entegrasyonu aday durumda; doğrulanmış public geometri endpointi henüz hazır değil.'
+      message: protectedSource ? 'Kaynak korumalı olduğu için parsel geometri akışı durduruldu.' : 'TKGM public parsel portalı bilgi amaçlı geometri eşleştirmesi için kullanılır; sonuç resmi belge olarak sunulmaz.'
     };
     const zoningAttempt = {
-      status: protectedSource ? 'protected' : activation.activationStatus === 'active' ? 'active_public_source' : 'method_contract_required',
+      status: protectedSource ? 'protected' : activation.activationStatus === 'active' ? 'active_public_source' : 'public_discovery',
       source: source.id,
       endpoint: activation.usableEndpoints[0] ?? endpointCandidate,
       method: undefined as string | undefined,
-      message: protectedSource ? 'Kaynak captcha/login gerektiriyor.' : activation.activationStatus === 'active' ? 'Public kaynak aktif; veri metodu provenance ile kullanılabilir.' : 'Kaynak bulundu ama method contract çözülmedi.'
+      message: protectedSource ? 'Kaynak captcha/login gerektiriyor.' : activation.activationStatus === 'active' ? 'Public kaynak aktif; veri metodu provenance ile kullanılabilir.' : 'Public kaynak kayıtlı; servis metodu discovery ile çözülür.'
     };
     const status = protectedSource ? 'protected' : activation.activationStatus;
     const noDataReason = protectedSource ? 'Kaynak captcha/login gerektiriyor' : activation.nextAction;

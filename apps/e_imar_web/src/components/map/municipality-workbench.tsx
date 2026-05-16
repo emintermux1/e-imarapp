@@ -52,8 +52,8 @@ const FALLBACK_MUNICIPALITIES = BELEDIYE_LIST.slice(0, 10).map((record) => ({
     lastHealth: null,
     imarQuerySupport: "unknown",
     parcelGeometrySupport: "unknown",
-    reasonNoData: "Kaynak registry fallback içinde",
-    nextAction: "Backend bağlantısı geldiğinde canlı coverage yüklenir."
+    reasonNoData: "Kaynak public registry önbelleğinde",
+    nextAction: "Backend bağlantısı geldiğinde public coverage yenilenir."
   }
 }));
 
@@ -173,7 +173,7 @@ export function MunicipalityWorkbench() {
       <div className="flex items-center justify-between gap-2 border-b border-border-subtle/80 bg-surface-2/80 px-4 py-3">
         <div>
           <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-brand-green">Belediye / veri durumu</div>
-          <div className="text-sm font-black text-fg-primary">Kaynak seç, sorgula, neden yok gör</div>
+          <div className="text-sm font-black text-fg-primary">Kaynak seç, sorgula, alan kontratını gör</div>
         </div>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
@@ -323,14 +323,14 @@ function MunicipalityStatusCard({ entry }: { entry: MunicipalityCoverageEntry | 
       </div>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         <MetaStat label="Kayıtlı kaynak" value={capability?.registered ? "var" : "yok"} />
-        <MetaStat label="Canlı endpoint" value={capability?.publicCandidate ? "aday" : "yok"} />
+        <MetaStat label="Public kaynak" value={capability?.publicCandidate ? "var" : "yok"} />
         <MetaStat label="İmar sorgusu" value={capability?.imarQuerySupport ?? "unknown"} />
-        <MetaStat label="TKGM geometri" value={capability?.parcelGeometrySupport ?? "unknown"} />
+        <MetaStat label="Parsel geometri" value={capability?.parcelGeometrySupport ?? "unknown"} />
       </div>
       <div className="mt-3 rounded-md border border-border-subtle bg-bg p-2.5 text-[11px] leading-relaxed text-fg-secondary">
-        <div className="font-medium text-fg-primary">Neden veri yok?</div>
+        <div className="font-medium text-fg-primary">Kaynak / veri kontratı</div>
         <p className="mt-1">{reason}</p>
-        <p className="mt-1 text-fg-muted">{capability?.nextAction ?? "Önce registry doğrulaması gerekir."}</p>
+        <p className="mt-1 text-fg-muted">{capability?.nextAction ?? "Önce public registry doğrulaması gerekir."}</p>
       </div>
     </div>
   );
@@ -338,17 +338,17 @@ function MunicipalityStatusCard({ entry }: { entry: MunicipalityCoverageEntry | 
 
 function NoDataSummary({ workflow, selectedMunicipality }: { workflow: MunicipalParcelWorkflowResponse | null; selectedMunicipality: MunicipalityCoverageEntry | null }) {
   const capability = workflow?.municipalityCapability ?? selectedMunicipality?.capability;
-  const noData = workflow?.noDataReason ?? capability?.reasonNoData ?? "Bu bölgede veri yok";
+  const noData = workflow?.noDataReason ?? capability?.reasonNoData ?? "Sorgu için public kaynak durumu bekleniyor";
   const sourceCount = selectedMunicipality ? 1 : 0;
   return (
     <div className="rounded-lg border border-border-subtle bg-surface-1 p-3 text-sm">
       <div className="flex items-center gap-2 text-fg-primary">
         <AlertCircle className="h-4 w-4 text-status-warning" />
-        <span className="font-medium">Veri yok özeti</span>
+        <span className="font-medium">Kaynak özeti</span>
       </div>
       <ul className="mt-2 space-y-1 text-[12px] text-fg-secondary">
         <li>Bu bölgede {sourceCount || 1} kayıtlı belediye kaynağı var.</li>
-        <li>{capability?.publicCandidate ? "1 public endpoint adayı var." : "Public endpoint adayı görünmüyor."}</li>
+        <li>{capability?.publicCandidate ? "Public endpoint kaydı var." : "Public endpoint kaydı görünmüyor."}</li>
         <li>{capability?.protected ? "Kaynak login/captcha/legal gerektiriyor." : "Login/captcha gerektiren kaynak görünmüyor."}</li>
         <li>{noData}</li>
       </ul>

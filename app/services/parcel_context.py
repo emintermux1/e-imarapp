@@ -24,12 +24,12 @@ def _norm(value: str | None) -> str:
 
 def source_status_from_auth(auth: str | None) -> str:
     if auth == "public":
-        return "fallback"
+        return "public_metadata"
     if auth in {"public_partial", "rate_limited"}:
-        return "fallback"
+        return "public_metadata"
     if auth in {"requires_credentials", "requires_legal_agreement", "captcha_required"}:
         return "unavailable"
-    return "fallback"
+    return "public_metadata"
 
 
 def source_message_from_auth(auth: str | None) -> str:
@@ -107,9 +107,9 @@ def build_quality_metadata(
     else:
         hints.append("Parsel geometrisi veritabanında yok; haritada çizim için ayrı canlı kaynak gerekir.")
     if related_count:
-        hints.append("Belediye/ilçe eşleşmesiyle ilişkili plan adayı bulundu.")
+        hints.append("Belediye/ilçe eşleşmesiyle ilişkili plan kaydı bulundu.")
     if aski_count:
-        hints.append("Aktif veya kayıtlı askı planı adayı bulundu.")
+        hints.append("Aktif veya kayıtlı askı planı kaydı bulundu.")
     if source_meta.source_status != "live":
         hints.append("Kaynak durumu canlı sorgudan değil registry/veritabanı metadatasından türetildi.")
 

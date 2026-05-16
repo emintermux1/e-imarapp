@@ -36,10 +36,10 @@ def _ui_status(raw_status: str | None, auth: str | None = None, live_checked: bo
     if raw_status in {"requires_credentials", "requires_legal_agreement", "captcha_required"}:
         return "unavailable"
     if raw_status == "public_partial" or auth == "public_partial":
-        return "fallback" if not live_checked else "unavailable"
+        return "public_metadata" if not live_checked else "unavailable"
     if auth == "public":
-        return "fallback"
-    return "fallback"
+        return "public_metadata"
+    return "public_metadata"
 
 
 def _coverage(capabilities: list[str]) -> SourceCoverageHints:
@@ -60,7 +60,7 @@ def _message_for(status: str, raw_status: str | None, coverage: SourceCoverageHi
     if raw_status in {"provider_error", "unavailable"}:
         return "Kaynak son kontrolde yanıt vermedi veya hata döndürdü.", "Daha sonra yeniden probe et veya alternatif belediye/ulusal kaynağa düş."
     if coverage.has_geometry or coverage.has_imar or coverage.has_aski:
-        return "Registry metadatası bu kaynağın ilgili kabiliyete sahip olabileceğini söylüyor; canlı kontrol geçmişi yok.", "Canlı probe/discovery çalıştırarak endpoint ve katman durumunu doğrula."
+        return "Public registry bu kaynağın ilgili kabiliyeti yayınladığını söylüyor; canlı kontrol geçmişi yok.", "Public probe/discovery çalıştırarak endpoint, katman ve dönen alan kontratını doğrula."
     return "Bu kaynak yalnızca katalog/doküman metadatası sağlıyor olabilir.", "UI'da canlı imar/geometri kaynağı gibi göstermeyin."
 
 
@@ -128,13 +128,13 @@ def _quality_record(
 
 
 def _quality_response(records: list[SourceQualityRecord], live_checked: bool) -> SourceQualityResponse:
-    rollup = {"live": 0, "fallback": 0, "unavailable": 0, "computed": 0, "demo": 0}
+    rollup = {"live": 0, "public_metadata": 0, "unavailable": 0, "computed": 0, "demo": 0}
     for record in records:
         rollup[record.status] = rollup.get(record.status, 0) + 1
-    status = "live" if rollup.get("live") else "fallback"
-    if rollup.get("unavailable") and (rollup.get("live") or rollup.get("fallback")):
-        status = "fallback"
-    elif rollup.get("unavailable") and not (rollup.get("live") or rollup.get("fallback")):
+    status = "live" if rollup.get("live") else "public_metadata"
+    if rollup.get("unavailable") and (rollup.get("live") or rollup.get("public_metadata")):
+        status = "public_metadata"
+    elif rollup.get("unavailable") and not (rollup.get("live") or rollup.get("public_metadata")):
         status = "unavailable"
     history_available = any(record.history_available for record in records)
     message = (

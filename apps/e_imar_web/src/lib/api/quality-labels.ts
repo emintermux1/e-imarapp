@@ -2,26 +2,26 @@ import type { DataSourceStatus, ParcelQualityMetadata, ParcelSummaryResponse, So
 
 export const SOURCE_STATUS_LABELS: Record<DataSourceStatus, string> = {
   live: "Canlı",
-  fallback: "Yedek",
+  fallback: "Kayıtlı kaynak",
   unavailable: "Erişilemiyor",
   computed: "Hesaplandı",
-  demo: "Demo",
+  demo: "Örnek veri",
   official: "Resmî",
   public_metadata: "Açık kayıt",
   derived: "Türetilmiş",
-  not_ready: "Hazır değil"
+  not_ready: "Keşif bekliyor"
 };
 
 export const SOURCE_STATUS_TITLES: Record<DataSourceStatus, string> = {
   live: "Kaynak canlı yanıt verdi; veri doğrudan servis/API üzerinden geldi.",
-  fallback: "Canlı kaynak yerine yerel yedek, cache veya son bilinen kayıt kullanılıyor.",
+  fallback: "Canlı endpoint yerine kayıtlı public kaynak metadatası kullanılıyor.",
   unavailable: "Kaynak şu an yanıt vermiyor veya bu veri türünü yayınlamıyor.",
   computed: "Uygulama tarafından hesaplandı; resmî kaynak yerine geçmez.",
-  demo: "Demo/tahmini veri; resmî kayıt gibi yorumlanmamalı.",
+  demo: "Örnek veri; resmî kayıt gibi yorumlanmamalı.",
   official: "Resmî veya doğrulanmış kaynaktan gelen kayıt.",
   public_metadata: "Açık metadata/registry üzerinden gösterilen kayıt.",
   derived: "Birincil veriden türetilmiş değer.",
-  not_ready: "Bağlantı veya kapsam henüz hazır değil."
+  not_ready: "Public kaynak bağlantısı veya kapsamı keşif bekliyor."
 };
 
 export function sourceStatusLabel(status: DataSourceStatus | string | undefined) {
@@ -80,7 +80,7 @@ export function explainMissingData(record?: SourceQualityRecord | null) {
   if (record.failure_reason) return record.failure_reason;
   if (!record.geometry_available) return "Kaynak kayıt döndürüyor; geometri katmanı yayınlanmadığı için haritada çizim yok.";
   if (record.status === "unavailable") return "Kaynak son kontrolde yanıt vermedi; portal veya endpoint geçici kapalı olabilir.";
-  if (record.status === "fallback") return "Canlı endpoint yavaş/eksik olduğu için yerel yedek kullanılıyor.";
+  if (record.status === "fallback") return "Canlı endpoint yavaş/eksik olduğu için kayıtlı public kaynak metadatası kullanılıyor.";
   return "Kaynak kullanılabilir; kapsam belediye, katman tipi veya ada/parsel eşleşmesine göre değişebilir.";
 }
 
