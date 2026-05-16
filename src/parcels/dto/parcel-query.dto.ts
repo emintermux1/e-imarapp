@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsIn, IsInt, IsNumber, IsObject, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class ParcelQueryDto {
   @ApiProperty({ enum: ['ada_parsel', 'coordinate', 'address', 'geojson', 'kml'] })
@@ -50,4 +50,22 @@ export class ParcelQueryDto {
   @IsOptional()
   @IsString()
   municipalityId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  sourceId?: string;
+
+  @ApiPropertyOptional({ description: 'WGS84 bbox as [minLon, minLat, maxLon, maxLat]' })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  bbox?: number[];
+
+  @ApiPropertyOptional({ default: 20, maximum: 100 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number;
 }
