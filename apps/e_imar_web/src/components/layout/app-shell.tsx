@@ -5,6 +5,7 @@ import { TopBar } from "./top-bar";
 import { LeftSidebar } from "./left-sidebar";
 import { RightInfoPanel } from "./right-info-panel";
 import { MapCanvas } from "@/components/map/map-canvas";
+import { SatelliteCompareOverlay } from "@/components/map/satellite-compare-overlay";
 import { MapHud } from "@/components/map/map-hud";
 import { GISLegend } from "@/components/gis/gis-legend";
 import { MobileBottomSheet } from "./mobile-bottom-sheet";
@@ -13,21 +14,17 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarSections } from "@/components/sidebar/sidebar-sections";
 import { useUIStore } from "@/stores/ui-store";
 import { BrandMark } from "./brand-mark";
+import { GlobalSearch } from "@/components/search/global-search";
 import {
-  BarChart3,
-  Bookmark,
-  FileDown,
   Layers3,
-  Map as MapIcon,
   Maximize2,
   Minimize2,
   Navigation,
-  Route,
   Search,
+  SlidersHorizontal,
+  LocateFixed,
   X
 } from "lucide-react";
-import { DataCoverageBadge } from "@/components/map/data-coverage-badge";
-import { MunicipalityWorkbench } from "@/components/map/municipality-workbench";
 import { cn } from "@/lib/utils";
 
 export function AppShell({ children }: { children?: React.ReactNode }) {
@@ -38,22 +35,21 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
   const setLegendCollapsed = useUIStore((s) => s.setLegendCollapsed);
   const fullscreenMap = useUIStore((s) => s.fullscreenMap);
   const setFullscreenMap = useUIStore((s) => s.setFullscreenMap);
+  const searchOpen = useUIStore((s) => s.searchOpen);
+  const setSearchOpen = useUIStore((s) => s.setSearchOpen);
+  const compareMode = useUIStore((s) => s.compareMode);
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
+  const [legendDockOpen, setLegendDockOpen] = React.useState(false);
 
-  const sidebarWidth =
-    sidebarMode === "expanded"
-      ? "lg:pl-[296px]"
-    : sidebarMode === "collapsed"
-      ? "lg:pl-[80px]"
-      : "lg:pl-0";
+  const showSidebar = !fullscreenMap && sidebarMode !== "hidden";
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-bg text-fg-primary">
-      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_8%_8%,rgb(var(--accent-green)/0.18),transparent_26rem),radial-gradient(circle_at_92%_0%,rgb(var(--accent-blue)/0.10),transparent_28rem)]" />
-      <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-0 h-52 border-b border-white/40 bg-[linear-gradient(180deg,rgb(var(--surface-2)/0.78),rgb(var(--bg)/0))]" />
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_8%_8%,rgb(var(--accent-green)/0.10),transparent_24rem),radial-gradient(circle_at_92%_0%,rgb(var(--accent-blue)/0.06),transparent_26rem)]" />
+      <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-0 h-28 border-b border-white/30 bg-[linear-gradient(180deg,rgb(var(--surface-2)/0.45),rgb(var(--bg)/0))]" />
       {!fullscreenMap && <TopBar onOpenMobileMenu={() => setMobileNavOpen(true)} />}
 
-      {!fullscreenMap && <LeftSidebar />}
+      {showSidebar && <LeftSidebar />}
 
       <Sheet
         open={mobileNavOpen}
@@ -83,32 +79,49 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
       </Sheet>
 
       <main
-        className={`${fullscreenMap ? "pt-0 lg:pl-0" : `pt-16 ${sidebarWidth}`} relative z-10 h-dvh overflow-hidden transition-[padding] duration-200`}
+        className="relative z-10 h-dvh overflow-hidden"
       >
         {children ? (
           <div className="h-full w-full">{children}</div>
         ) : (
           <div className="relative h-full w-full">
-            <div aria-hidden className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_50%_18%,transparent_0,transparent_38%,rgb(6_20_14/0.08)_100%)]" />
+            <div aria-hidden className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_50%_18%,transparent_0,transparent_62%,rgb(6_20_14/0.05)_100%)]" />
             <MapCanvas
               cursorReadoutRef={cursorReadoutRef}
               zoomReadoutRef={zoomReadoutRef}
               className="absolute inset-0"
             />
+            {compareMode === "satellite" && <SatelliteCompareOverlay />}
+            <MapInstructionIsland />
             <MapHud
               cursorReadoutRef={cursorReadoutRef}
               zoomReadoutRef={zoomReadoutRef}
             />
-            <DataCoverageBadge />
-            <ReferenceCommandPanel />
             <MobileMapHint />
-            <div className="pointer-events-none absolute left-5 top-[22.5rem] z-10 hidden w-[min(760px,calc(100vw-2rem))] xl:block">
-              <MunicipalityWorkbench />
-            </div>
-            <div className="pointer-events-auto absolute right-4 bottom-16 z-10 hidden md:block max-w-[280px]">
+            <MapActionDock
+              searchOpen={searchOpen}
+              onOpenSearch={() => setSearchOpen(true)}
+              legendOpen={!legendCollapsed}
+              onToggleLegend={() => {
+                const next = !legendCollapsed;
+                setLegendCollapsed(next);
+                setLegendDockOpen(!next);
+              }}
+              fullscreenMap={fullscreenMap}
+              onToggleFullscreen={() => setFullscreenMap(!fullscreenMap)}
+            />
+            <div
+              className={cn(
+                "pointer-events-auto absolute right-4 z-10 hidden max-w-[280px] transition-[bottom] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:block",
+                legendDockOpen ? "bottom-20" : "bottom-4"
+              )}
+            >
               <GISLegend
                 collapsed={legendCollapsed}
-                onCollapsedChange={setLegendCollapsed}
+                onCollapsedChange={(next) => {
+                  setLegendCollapsed(next);
+                  setLegendDockOpen(!next);
+                }}
               />
             </div>
             <button
@@ -126,7 +139,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
       {!children && (
         <>
           <div className={fullscreenMap ? "hidden" : "hidden lg:block"}>
-            <RightInfoPanel />
+            <RightInfoPanel floating />
           </div>
           {!fullscreenMap && <MobileBottomSheet />}
         </>
@@ -135,68 +148,102 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
   );
 }
 
-function ReferenceCommandPanel() {
+function MapInstructionIsland() {
   return (
-    <section className="pointer-events-auto absolute left-5 top-5 z-10 hidden w-[min(520px,calc(100vw-2rem))] xl:block">
-      <div className="rounded-[2.2rem] border border-white/45 bg-white/20 p-1.5 shadow-[0_30px_90px_-50px_rgb(var(--accent-navy)/0.82)]">
-        <div className="civic-panel overflow-hidden rounded-[1.85rem] border border-white/10 p-5 shadow-[inset_0_1px_0_rgb(255_255_255/0.16)]">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="inline-flex rounded-full bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/70">
-                Türkiye geneli
-              </div>
-              <h1 className="mt-3 max-w-[14ch] text-4xl font-black leading-[0.95] tracking-[-0.06em] text-white text-balance">
-                Parsel ve imar sorgulama
-              </h1>
+    <section className="pointer-events-auto absolute left-1/2 top-24 z-20 hidden w-[min(640px,calc(100vw-20rem))] -translate-x-1/2 rounded-[2rem] border border-white/55 bg-white/42 p-1.5 shadow-[0_26px_90px_-58px_rgb(var(--accent-navy)/0.8)] md:block xl:top-[5.75rem]">
+      <div className="rounded-[1.55rem] border border-white/60 bg-surface-2/92 px-4 py-3 shadow-[inset_0_1px_0_rgb(255_255_255/0.88)]">
+        <div className="mb-3 flex items-center gap-4">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[rgb(var(--accent-navy))] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.18)]">
+            <Search className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] font-black uppercase tracking-[0.22em] text-brand-green">
+              Harita üzerinde başla
             </div>
-            <div className="grid h-20 w-20 place-items-center rounded-[1.6rem] border border-white/12 bg-white/10 text-white">
-              <MapIcon className="h-9 w-9" />
-            </div>
-          </div>
-
-          <div className="mt-5 rounded-[1.35rem] border border-white/14 bg-white/[0.08] p-3 shadow-[inset_0_1px_0_rgb(255_255_255/0.10)]">
-            <div className="flex items-start gap-3 rounded-2xl bg-white px-3 py-3 text-[rgb(var(--text-primary))] shadow-[0_18px_42px_-30px_rgb(0_0_0/0.5)]">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-green/10 text-brand-green">
-                <Search className="h-4 w-4" />
-              </span>
-              <div>
-                <div className="text-sm font-extrabold">Parsel sorgulamak için</div>
-                <div className="mt-1 space-y-1 text-xs text-fg-secondary">
-                  <div>Haritada bir noktaya dokun</div>
-                  <div>Ya da üstten il / ada / parsel ile ara</div>
-                </div>
-              </div>
-            </div>
-            <div className="mt-3 grid grid-cols-4 gap-2">
-              <CommandChip icon={<Layers3 className="h-3.5 w-3.5" />} label="Katman" />
-              <CommandChip icon={<BarChart3 className="h-3.5 w-3.5" />} label="Analiz" />
-              <CommandChip icon={<Bookmark className="h-3.5 w-3.5" />} label="Favori" />
-              <CommandChip icon={<FileDown className="h-3.5 w-3.5" />} label="PDF" />
-            </div>
-          </div>
-
-          <div className="mt-4 grid grid-cols-[1fr_auto] items-center gap-3 rounded-[1.3rem] border border-white/12 bg-black/10 p-3">
-            <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">Canlı işlem</div>
-              <div className="mt-1 text-sm font-semibold text-white">Çoklu parsel, rota ve kaynak ayrımı tek panelde.</div>
-            </div>
-            <div className="inline-flex h-10 items-center gap-2 rounded-full bg-brand-amber px-4 text-sm font-black text-[rgb(10_31_24)] soft-press">
-              <Route className="h-4 w-4" />
-              Rota
+            <div className="mt-0.5 truncate text-sm font-black tracking-tight text-fg-primary">
+              Haritaya tıkla, ada/parsel ara veya belediye seç
             </div>
           </div>
         </div>
+        <GlobalSearch />
       </div>
     </section>
   );
 }
 
-function CommandChip({ icon, label }: { icon: React.ReactNode; label: string }) {
+function MapActionDock({
+  searchOpen,
+  onOpenSearch,
+  legendOpen,
+  onToggleLegend,
+  fullscreenMap,
+  onToggleFullscreen
+}: {
+  searchOpen: boolean;
+  onOpenSearch: () => void;
+  legendOpen: boolean;
+  onToggleLegend: () => void;
+  fullscreenMap: boolean;
+  onToggleFullscreen: () => void;
+}) {
   return (
-    <div className="flex h-14 flex-col items-center justify-center gap-1 rounded-2xl border border-white/10 bg-white/10 text-[11px] font-semibold text-white/84">
-      {icon}
-      {label}
+    <div className="pointer-events-auto absolute bottom-4 left-1/2 z-20 hidden -translate-x-1/2 md:block">
+      <div className="rounded-full border border-white/50 bg-white/38 p-1.5 shadow-[0_26px_80px_-48px_rgb(var(--accent-navy)/0.72)] backdrop-blur-md">
+        <div className="flex items-center gap-1 rounded-full border border-white/50 bg-surface-2/92 px-1.5 py-1.5 shadow-[inset_0_1px_0_rgb(255_255_255/0.78)]">
+          <DockButton
+            icon={<LocateFixed className="h-4 w-4" />}
+            label="Konum"
+            onClick={() => window.dispatchEvent(new CustomEvent("eimar:map:control", { detail: { action: "locate" } }))}
+          />
+          <DockButton
+            active={searchOpen}
+            icon={<Search className="h-4 w-4" />}
+            label="Sorgu"
+            onClick={onOpenSearch}
+          />
+          <DockButton
+            active={legendOpen}
+            icon={<Layers3 className="h-4 w-4" />}
+            label="Katman"
+            onClick={onToggleLegend}
+          />
+          <DockButton
+            icon={<SlidersHorizontal className="h-4 w-4" />}
+            label={fullscreenMap ? "Normal" : "Tam ekran"}
+            onClick={onToggleFullscreen}
+          />
+        </div>
+      </div>
     </div>
+  );
+}
+
+function DockButton({
+  icon,
+  label,
+  active,
+  onClick
+}: {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(
+        "soft-press inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-extrabold transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
+        active
+          ? "bg-[rgb(var(--accent-navy))] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.16)]"
+          : "text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
+      )}
+    >
+      <span className={active ? "text-white" : "text-brand-green"}>{icon}</span>
+      {label}
+    </button>
   );
 }
 

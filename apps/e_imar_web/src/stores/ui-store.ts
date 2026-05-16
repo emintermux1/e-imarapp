@@ -105,13 +105,13 @@ function isRecord(value: unknown): value is Record<string, never> {
 export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
-      sidebarMode: "expanded",
+      sidebarMode: "collapsed",
       rightPanelOpen: false,
       searchOpen: false,
       mobileSheetSnap: "peek",
       layerOpacity: initialOpacity,
       layerVisibility: initialVisibility,
-      legendCollapsed: false,
+      legendCollapsed: true,
       fullscreenMap: false,
 
       mapMode: "2d",
@@ -177,12 +177,14 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: "eimar:ui",
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => localStorage),
       migrate: (persistedState) => {
         if (!isRecord(persistedState)) return persistedState;
         return {
           ...persistedState,
+          sidebarMode: "collapsed",
+          legendCollapsed: true,
           layerOpacity: reconcileLayerOpacity(persistedState.layerOpacity),
           layerVisibility: reconcileLayerVisibility(persistedState.layerVisibility)
         };
@@ -192,6 +194,8 @@ export const useUIStore = create<UIState>()(
         return {
           ...currentState,
           ...persisted,
+          sidebarMode: currentState.sidebarMode,
+          legendCollapsed: currentState.legendCollapsed,
           layerOpacity: reconcileLayerOpacity(persisted.layerOpacity),
           layerVisibility: reconcileLayerVisibility(persisted.layerVisibility)
         };

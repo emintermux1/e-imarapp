@@ -77,7 +77,9 @@ export function DataCoverageBadge() {
   );
 
   const stateChip =
-    metadata.fallbackReason || metadata.mode === "demo"
+    metadata.mode === "unavailable"
+      ? "unavailable"
+      : metadata.fallbackReason || metadata.mode === "demo"
       ? "demo fallback"
       : metadata.endpoint
       ? "hazır"
@@ -104,7 +106,11 @@ export function DataCoverageBadge() {
           <span
             className={cn(
               "inline-flex h-4 w-4 items-center justify-center rounded-full border",
-              metadata.fallbackReason ? "border-amber-500/30 bg-amber-500/10 text-amber-700" : "border-sky-500/30 bg-sky-500/10 text-sky-700"
+              metadata.mode === "unavailable"
+                ? "border-rose-500/30 bg-rose-500/10 text-rose-700"
+                : metadata.fallbackReason
+                ? "border-amber-500/30 bg-amber-500/10 text-amber-700"
+                : "border-sky-500/30 bg-sky-500/10 text-sky-700"
             )}
           >
             <Database className="h-2.5 w-2.5" />
@@ -139,7 +145,9 @@ export function DataCoverageBadge() {
                 <span
                   className={cn(
                     "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px]",
-                    metadata.fallbackReason
+                    metadata.mode === "unavailable"
+                      ? "border-rose-500/25 bg-rose-500/8 text-rose-700"
+                      : metadata.fallbackReason
                       ? "border-amber-500/25 bg-amber-500/8 text-amber-700"
                       : "border-border-subtle bg-surface-1 text-fg-secondary"
                   )}
@@ -152,7 +160,9 @@ export function DataCoverageBadge() {
                 </span>
               </div>
               <DialogDescription className="mt-1 max-w-3xl text-xs sm:text-sm">
-                {metadata.fallbackReason
+                {metadata.unavailableReason
+                  ? metadata.unavailableReason
+                  : metadata.fallbackReason
                   ? metadata.fallbackReason
                   : metadata.mode === "demo"
                   ? "Parsel katmanı demo veriye düşüyor; sağlayıcı ve bağlayıcı hazırlığı yine de görünür tutuluyor."
@@ -180,10 +190,10 @@ export function DataCoverageBadge() {
                 <div className="mt-4 grid gap-3">
                   <StateRow
                     label="Gerçek durum"
-                    value={metadata.mode === "demo" ? "Demo fallback" : "Canlı hedef"}
-                    detail={metadata.fallbackReason ?? "Canlı veri henüz doğrulanmadı"}
+                    value={metadata.mode === "unavailable" ? "Production unavailable" : metadata.mode === "demo" ? "Demo fallback" : "Canlı hedef"}
+                    detail={metadata.unavailableReason ?? metadata.fallbackReason ?? "Canlı veri henüz doğrulanmadı"}
                     icon={<AlertTriangle className="h-4 w-4" />}
-                    tone={metadata.fallbackReason ? "warning" : metadata.mode === "demo" ? "info" : "success"}
+                    tone={metadata.mode === "unavailable" ? "danger" : metadata.fallbackReason ? "warning" : metadata.mode === "demo" ? "info" : "success"}
                   />
                   <StateRow
                     label="Endpoint"
@@ -195,7 +205,7 @@ export function DataCoverageBadge() {
                   <StateRow
                     label="Resmî veri"
                     value={metadata.official ? "evet" : "hayır"}
-                    detail={metadata.official ? "Resmî akışa bağlı" : "Sentetik/demoda kalıyor"}
+                    detail={metadata.official ? "Resmî akışa bağlı" : metadata.mode === "unavailable" ? "Production demo fallback kapalı" : "Sentetik/demoda kalıyor"}
                     icon={<CheckCircle2 className="h-4 w-4" />}
                     tone={metadata.official ? "success" : "muted"}
                   />

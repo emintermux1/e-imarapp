@@ -1,6 +1,6 @@
 # @e-imar/next
 
-Production-grade Next.js 14 frontend for the Türkiye e-İmar / GIS platform.
+Legacy/reference Next.js 14 frontend for the Türkiye e-İmar / GIS platform. The canonical product frontend is `apps/e_imar_web`.
 
 This is **Sprint 1** of 3: shell, design system, map workspace, parcel search,
 parcel detail accordion, readiness states, and stubs for Sprint 2/3 modules

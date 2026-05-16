@@ -1,6 +1,8 @@
 # e-IMAR Web Next Frontend
 
-Production-oriented frontend foundation with:
+Legacy/reference frontend foundation. The canonical product frontend is `apps/e_imar_web`.
+
+Includes:
 
 - Next.js App Router
 - Tailwind CSS

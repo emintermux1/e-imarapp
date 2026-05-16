@@ -1,0 +1,57 @@
+name: Web
+
+on:
+  pull_request:
+    paths:
+      - "apps/e_imar_web/**"
+      - "package.json"
+      - "package-lock.json"
+      - "scripts/web-smoke.mjs"
+      - "scripts/repo-health.sh"
+      - "vercel.json"
+      - ".env.example"
+      - ".github/workflows/web.yml"
+      - ".github/workflows/backend-root.yml"
+      - ".github/workflows/repo-health.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/e_imar_web/**"
+      - "package.json"
+      - "package-lock.json"
+      - "scripts/web-smoke.mjs"
+      - "scripts/repo-health.sh"
+      - "vercel.json"
+      - ".env.example"
+      - ".github/workflows/web.yml"
+      - ".github/workflows/backend-root.yml"
+      - ".github/workflows/repo-health.yml"
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_EIMAR_API_BASE_URL: http://127.0.0.1:9
+      NEXT_PUBLIC_EIMAR_DATA_MODE: fixture
+      NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL: ""
+      NEXT_PUBLIC_MAPBOX_TOKEN: ""
+      # Production/staging deploys should configure real values in the hosting platform, not GitHub Actions logs:
+      # NEXT_PUBLIC_EIMAR_API_BASE_URL, optional NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL, optional NEXT_PUBLIC_MAPBOX_TOKEN.
+    defaults:
+      run:
+        working-directory: apps/e_imar_web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/e_imar_web/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint -- --max-warnings 999
+      - run: npm run build
+      - name: Smoke home map shell
+        run: npm run smoke
