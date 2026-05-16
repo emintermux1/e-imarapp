@@ -1,75 +1,82 @@
 import { BrandMark, BrandSymbol } from "@/components/BrandMark";
 
 const colors = [
-  ["Tapu Mürekkebi", "#17231f", "Kurumsal güven, veri ve rapor zemini"],
-  ["Harita Kremi", "#fffaf0", "Vatandaş arayüzü ve okunaklı paneller"],
-  ["Kadastro Teal", "#087d7f", "Ana aksiyon, konum ve harita odağı"],
-  ["Plan Altını", "#d9a441", "Resmi belge, plan notu ve vurgu"],
-  ["Uyarı Kili", "#c5463c", "Risk, uyarı ve kritik durum"],
-  ["Pafta Yeşili", "#d8e0d2", "Harita dokusu ve sakin arka plan"]
+  ["Ink", "#14211d"],
+  ["Paper", "#fffaf0"],
+  ["Cadastre", "#0b8f8f"],
+  ["Permit", "#d6a23b"],
+  ["Signal", "#c5463c"],
+  ["Map", "#d8e0d2"]
 ];
 
-const principles = [
-  ["Resmi", "Tapu/belediye güveni; veri iddiası abartılmaz."],
-  ["Premium", "Sade harita yüzeyi, yüksek boşluk, net tipografi."],
-  ["Erişilebilir", "Vatandaşın anlayacağı kısa etiketler ve açık kontrast."]
+const rules = [
+  ["Resmi", "Veri iddiası sakin; belediye/tapu güveni var."],
+  ["Premium", "Az renk, güçlü boşluk, net monogram."],
+  ["Kolay", "Vatandaşın anlayacağı kısa ürün dili."]
 ];
 
 export default function BrandPage() {
   return (
-    <main className="min-h-[100dvh] bg-[#f6f1e6] px-4 py-10 text-[#17231f] md:px-10 md:py-16">
-      <section className="mx-auto max-w-6xl">
-        <div className="rounded-[2.6rem] border border-[#d7d0bc]/85 bg-[#fffaf0] p-2 shadow-[0_30px_90px_rgba(37,48,42,0.12)]">
-          <div className="overflow-hidden rounded-[2.15rem] border border-[#d7d0bc]/70 bg-[radial-gradient(circle_at_82%_12%,rgba(8,125,127,0.16),transparent_30%),linear-gradient(135deg,#fffaf0,#f6f1e6)] p-6 md:p-10">
-            <div className="grid gap-10 lg:grid-cols-[0.92fr_1.08fr]">
-              <div>
-                <p className="inline-flex rounded-full border border-[#d7d0bc] bg-white/55 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.22em] text-[#087d7f]">Marka sistemi</p>
-                <h1 className="mt-5 text-5xl font-black leading-[0.9] tracking-[-0.08em] md:text-7xl">Resmi güven, modern harita, kolay kullanım.</h1>
-                <p className="mt-5 max-w-xl text-base leading-7 text-[#65726b]">eimar kimliği A/B/C ortasıdır: belediye/tapu güvenini, premium harita ürünlerinin sakinliğini ve vatandaşın hızlı anlayacağı dili aynı sistemde toplar.</p>
-                <div className="mt-7 grid gap-2 sm:grid-cols-3">
-                  {principles.map(([title, text]) => (
-                    <div key={title} className="rounded-[1.35rem] border border-[#d7d0bc]/85 bg-white/52 p-3">
-                      <p className="text-sm font-black tracking-[-0.04em]">{title}</p>
-                      <p className="mt-1 text-xs leading-5 text-[#65726b]">{text}</p>
-                    </div>
-                  ))}
+    <main className="min-h-[100dvh] overflow-hidden bg-[#0f1714] px-4 py-5 text-[#14211d] md:px-8 md:py-8">
+      <section className="mx-auto grid max-w-7xl gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="relative overflow-hidden rounded-[2.8rem] bg-[#fffaf0] p-7 shadow-[0_42px_140px_rgba(0,0,0,0.36)] ring-1 ring-white/10 md:p-12 lg:min-h-[calc(100dvh-4rem)]">
+          <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#0b8f8f]/14 blur-3xl" />
+          <div className="absolute bottom-0 right-0 h-[58%] w-[58%] rounded-tl-[8rem] bg-[#d8e0d2]/50" />
+          <div className="relative">
+            <BrandMark tagline="parsel atlası" />
+            <p className="mt-16 inline-flex rounded-full border border-[#d7d0bc] bg-white/60 px-3 py-1 text-[10px] font-black uppercase tracking-[0.26em] text-[#0b8f8f]">kimlik yönü</p>
+            <h1 className="mt-6 max-w-3xl text-[4.6rem] font-black leading-[0.8] tracking-[-0.1em] md:text-[7.4rem]">
+              İmar için sakin otorite.
+            </h1>
+            <p className="mt-8 max-w-xl text-lg leading-8 text-[#59675f]">
+              Ne devlet sitesi kadar soğuk, ne SaaS kadar jenerik. eimar; parsel, plan ve rapor işini tek bakışta güven veren bir atlas markasına çevirir.
+            </p>
+            <div className="mt-10 grid gap-3 sm:grid-cols-3">
+              {rules.map(([title, copy]) => (
+                <div key={title} className="rounded-[1.6rem] border border-[#d7d0bc]/85 bg-white/55 p-4 shadow-[0_18px_42px_rgba(37,48,42,0.07)]">
+                  <p className="text-lg font-black tracking-[-0.06em]">{title}</p>
+                  <p className="mt-2 text-xs leading-5 text-[#65726b]">{copy}</p>
                 </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-[2rem] bg-[#17231f] p-6 text-[#fffaf0] shadow-[0_24px_60px_rgba(23,35,31,0.22)]">
-                  <BrandMark inverted tagline="resmi veri" />
-                  <p className="mt-12 text-sm leading-6 text-[#c6d4cb]">Koyu zemin: yönetim paneli, sidebar, rapor ve veri yoğun ekranlar.</p>
-                </div>
-                <div className="rounded-[2rem] border border-[#d7d0bc] bg-[#f6f1e6] p-6">
-                  <BrandMark tagline="imar haritası" />
-                  <p className="mt-12 text-sm leading-6 text-[#65726b]">Açık zemin: parsel arama, mobil ürün ve vatandaş odaklı akışlar.</p>
-                </div>
-                <div className="rounded-[2rem] border border-[#d7d0bc] bg-white p-6 sm:col-span-2">
-                  <div className="flex flex-wrap items-center gap-6">
-                    <BrandSymbol className="h-24 w-24" />
-                    <BrandSymbol className="h-16 w-16" />
-                    <BrandSymbol className="h-11 w-11" />
-                    <BrandSymbol className="h-9 w-9" inverted />
-                    <div className="min-w-[220px] flex-1">
-                      <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-[#087d7f]">Sembol mantığı</p>
-                      <p className="mt-2 text-sm leading-6 text-[#65726b]">Üçgen pafta/konum formu, yatay kadastro çizgisi ve altın plan katmanı. Harita ürünü gibi modern, resmi evrak gibi güvenilir.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-6">
-          {colors.map(([name, value, note]) => (
-            <div key={name} className="rounded-[1.5rem] border border-[#d7d0bc]/85 bg-[#fffaf0] p-3 shadow-[0_14px_36px_rgba(37,48,42,0.08)]">
-              <div className="h-20 rounded-[1.1rem]" style={{ backgroundColor: value }} />
-              <p className="mt-3 text-xs font-extrabold text-[#17231f]">{name}</p>
-              <p className="mt-1 font-mono text-[11px] text-[#65726b]">{value}</p>
-              <p className="mt-2 text-[11px] leading-4 text-[#65726b]">{note}</p>
+        <div className="grid gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-[2.4rem] bg-[#14211d] p-7 text-[#fffaf0] shadow-[0_32px_90px_rgba(0,0,0,0.3)]">
+              <BrandMark inverted tagline="resmi atlas" />
+              <p className="mt-24 max-w-xs text-sm leading-6 text-[#cbd8d1]">Kurum ve dashboard yüzeyi: koyu, kontrollü, veri ağırlıklı.</p>
             </div>
-          ))}
+            <div className="rounded-[2.4rem] border border-[#d7d0bc] bg-[#fffaf0] p-7 shadow-[0_32px_90px_rgba(37,48,42,0.14)]">
+              <BrandMark tagline="parsel atlası" />
+              <p className="mt-24 max-w-xs text-sm leading-6 text-[#65726b]">Vatandaş yüzeyi: açık, okunaklı, harita odaklı.</p>
+            </div>
+          </div>
+
+          <div className="rounded-[2.4rem] border border-[#d7d0bc] bg-[#fffaf0] p-7 shadow-[0_32px_90px_rgba(37,48,42,0.14)]">
+            <div className="flex flex-wrap items-end gap-6">
+              <BrandSymbol className="h-36 w-36" />
+              <BrandSymbol className="h-24 w-24" inverted />
+              <BrandSymbol className="h-16 w-16" />
+              <BrandSymbol className="h-10 w-10" inverted />
+              <div className="min-w-[260px] flex-1 pb-2">
+                <p className="text-xs font-black uppercase tracking-[0.26em] text-[#0b8f8f]">logo fikri</p>
+                <h2 className="mt-2 max-w-sm text-3xl font-black leading-[0.92] tracking-[-0.075em] md:text-[2.65rem]">Pafta içinde rota.</h2>
+                <p className="mt-3 text-sm leading-6 text-[#65726b]">Dış form parsel paftası; teal rota sorgu akışını; altın çizgi imar planını; kırmızı nokta resmi uyarı/ruhsat izini anlatır.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {colors.map(([name, value]) => (
+              <div key={name} className="rounded-[1.45rem] border border-white/10 bg-[#fffaf0] p-3 shadow-[0_20px_48px_rgba(0,0,0,0.16)]">
+                <div className="h-16 rounded-[1rem]" style={{ backgroundColor: value }} />
+                <p className="mt-3 text-[11px] font-black uppercase tracking-[0.1em]">{name}</p>
+                <p className="mt-1 font-mono text-[10px] text-[#65726b]">{value}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </main>

@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/Sidebar";
 
 export function AppFrame({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const mapFirst = pathname === "/" || pathname === "/parsel";
+  const mapFirst = pathname === "/" || pathname === "/parsel" || pathname === "/brand";
 
   if (mapFirst) {
     return <main className="min-w-0 flex-1">{children}</main>;

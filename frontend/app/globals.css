@@ -3,20 +3,20 @@
 @tailwind utilities;
 
 :root {
-  --brand-ink: #17231f;
+  --brand-ink: #14211d;
   --brand-paper: #fffaf0;
   --brand-mist: #f6f1e6;
   --brand-line: #d7d0bc;
   --brand-map: #d8e0d2;
-  --brand-teal: #087d7f;
+  --brand-teal: #0b8f8f;
   --brand-gold: #d9a441;
   --brand-clay: #c5463c;
   --bg-primary: #0b0d12;
   --bg-card: #11141a;
-  --bg-elevated: #17231f;
+  --bg-elevated: #14211d;
   --text-primary: #fffaf0;
   --text-secondary: #a7b2ad;
-  --accent-cyan: #087d7f;
+  --accent-cyan: #0b8f8f;
   --accent-magenta: #c5463c;
   --border-subtle: rgba(255,250,240,0.11);
   --glass-bg: rgba(17,20,26,0.72);
