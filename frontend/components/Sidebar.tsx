@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BrandMark } from "@/components/BrandMark";
 import {
   Map,
   Search,
@@ -45,10 +46,10 @@ export function Sidebar() {
 
   return (
     <>
-      <header className="fixed left-0 right-0 top-0 z-50 flex h-14 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-card)]/95 px-4 backdrop-blur md:hidden">
-        <Link href="/" className="text-lg font-bold tracking-tight" onClick={() => setMobileOpen(false)}>
-          <span className="text-[var(--accent-cyan)]">e</span> imar
-        </Link>
+      <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-card)]/95 px-4 backdrop-blur md:hidden">
+        <span onClick={() => setMobileOpen(false)}>
+          <BrandMark inverted />
+        </span>
         <button
           onClick={() => setMobileOpen((open) => !open)}
           className="rounded-xl border border-[var(--border-subtle)] p-2 text-[var(--text-primary)]"
@@ -71,7 +72,7 @@ export function Sidebar() {
                   onClick={() => setMobileOpen(false)}
                   className={`flex min-h-12 items-center gap-3 rounded-2xl px-4 text-sm transition-colors ${
                     isActive
-                      ? "bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)]"
+                      ? "bg-[#fffaf0] text-[#17231f]"
                       : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5"
                   }`}
                 >
@@ -84,11 +85,13 @@ export function Sidebar() {
         </div>
       ) : null}
 
-      <aside className="fixed left-0 top-0 z-50 hidden h-[100dvh] w-64 flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-card)] md:flex">
-        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] p-4">
-          <Link href="/" className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
-            <span className="text-[var(--accent-cyan)]">e</span> imar
-          </Link>
+      <aside className="fixed left-0 top-0 z-50 hidden h-[100dvh] w-72 flex-col border-r border-[var(--border-subtle)] bg-[radial-gradient(circle_at_20%_0%,rgba(8,125,127,0.18),transparent_34%),var(--bg-card)] md:flex">
+        <div className="border-b border-[var(--border-subtle)] p-4">
+          <BrandMark inverted />
+          <div className="mt-4 rounded-[1.35rem] border border-white/10 bg-white/[0.035] p-3">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-[#d9a441]">Resmi · Premium · Kolay</p>
+            <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">Tapu güveni, sakin harita hissi ve vatandaş dostu kullanım.</p>
+          </div>
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto py-4">
@@ -99,9 +102,9 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`mx-2 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-colors ${
+                className={`mx-3 flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                   isActive
-                    ? "bg-[var(--accent-cyan)]/10 text-[var(--accent-cyan)]"
+                    ? "bg-[#fffaf0] text-[#17231f] shadow-[0_16px_34px_rgba(0,0,0,0.18)]"
                     : "text-[var(--text-secondary)] hover:bg-white/5 hover:text-[var(--text-primary)]"
                 }`}
               >
@@ -113,7 +116,8 @@ export function Sidebar() {
         </nav>
 
         <div className="border-t border-[var(--border-subtle)] p-4 text-xs text-[var(--text-secondary)]">
-          <p>v0.1.0 — Beta</p>
+          <p className="font-bold text-[#fffaf0]">eimar Beta</p>
+          <p className="mt-1">Kadastro • Plan • Rapor</p>
         </div>
       </aside>
     </>

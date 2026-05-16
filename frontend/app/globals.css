@@ -3,17 +3,25 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #0a0a0f;
-  --bg-card: #111118;
-  --bg-elevated: #1a1a24;
-  --text-primary: #f0f0f5;
-  --text-secondary: #8a8a9a;
-  --accent-cyan: #00e5ff;
-  --accent-magenta: #ff0080;
-  --border-subtle: rgba(255,255,255,0.08);
-  --glass-bg: rgba(17,17,24,0.7);
-  --background: #0a0a0f;
-  --foreground: #f0f0f5;
+  --brand-ink: #17231f;
+  --brand-paper: #fffaf0;
+  --brand-mist: #f6f1e6;
+  --brand-line: #d7d0bc;
+  --brand-map: #d8e0d2;
+  --brand-teal: #087d7f;
+  --brand-gold: #d9a441;
+  --brand-clay: #c5463c;
+  --bg-primary: #0b0d12;
+  --bg-card: #11141a;
+  --bg-elevated: #17231f;
+  --text-primary: #fffaf0;
+  --text-secondary: #a7b2ad;
+  --accent-cyan: #087d7f;
+  --accent-magenta: #c5463c;
+  --border-subtle: rgba(255,250,240,0.11);
+  --glass-bg: rgba(17,20,26,0.72);
+  --background: #0b0d12;
+  --foreground: #fffaf0;
 }
 
 html {
@@ -51,3 +59,17 @@ body {
 .animate-delay-3 { animation-delay: 0.3s; }
 .animate-delay-4 { animation-delay: 0.4s; }
 .animate-delay-5 { animation-delay: 0.5s; }
+
+.brand-grain::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  opacity: 0.035;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.9) 0 1px, transparent 1px),
+    radial-gradient(circle at 80% 30%, rgba(23,35,31,0.65) 0 1px, transparent 1px);
+  background-size: 18px 18px, 23px 23px;
+  mix-blend-mode: soft-light;
+}
