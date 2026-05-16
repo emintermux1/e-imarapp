@@ -1,17 +1,23 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { TopBar } from "./top-bar";
 import { LeftSidebar } from "./left-sidebar";
 import { RightInfoPanel } from "./right-info-panel";
-import { MapCanvas } from "@/components/map/map-canvas";
-import { SatelliteCompareOverlay } from "@/components/map/satellite-compare-overlay";
+import { MapShell } from "@/components/map/map-shell";
 import { MapHud } from "@/components/map/map-hud";
 import { GISLegend } from "@/components/gis/gis-legend";
 import { MobileBottomSheet } from "./mobile-bottom-sheet";
 import { Sheet } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarSections } from "@/components/sidebar/sidebar-sections";
+import { DataCoverageBadge } from "@/components/map/data-coverage-badge";
+import { MunicipalityWorkbench } from "@/components/map/municipality-workbench";
+import { AskiPopover } from "@/components/map/aski-popover";
+import { TimelineFloating } from "@/components/gis/timeline-floating";
+import { Section3DAnalizleri } from "@/components/gis/section-3d-analizleri";
+import { LiveReadinessStrip } from "@/components/product/live-readiness-strip";
 import { useUIStore } from "@/stores/ui-store";
 import { BrandMark } from "./brand-mark";
 import { GlobalSearch } from "@/components/search/global-search";
@@ -26,6 +32,7 @@ import {
   X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { AskiPolygonFeature } from "@/data/aski-polygons";
 
 export function AppShell({ children }: { children?: React.ReactNode }) {
   const cursorReadoutRef = React.useRef<HTMLSpanElement>(null);
@@ -37,11 +44,20 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
   const setFullscreenMap = useUIStore((s) => s.setFullscreenMap);
   const searchOpen = useUIStore((s) => s.searchOpen);
   const setSearchOpen = useUIStore((s) => s.setSearchOpen);
-  const compareMode = useUIStore((s) => s.compareMode);
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
   const [legendDockOpen, setLegendDockOpen] = React.useState(false);
+  const [askiPopover, setAskiPopover] = React.useState<{
+    feature: AskiPolygonFeature;
+    position: { x: number; y: number };
+  } | null>(null);
 
   const showSidebar = !fullscreenMap && sidebarMode !== "hidden";
+  const leftDockClass =
+    sidebarMode === "expanded"
+      ? "left-[320px]"
+      : sidebarMode === "collapsed"
+      ? "left-[88px]"
+      : "left-4";
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-bg text-fg-primary">
@@ -86,17 +102,33 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
         ) : (
           <div className="relative h-full w-full">
             <div aria-hidden className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_50%_18%,transparent_0,transparent_62%,rgb(6_20_14/0.05)_100%)]" />
-            <MapCanvas
+            <MapShell
               cursorReadoutRef={cursorReadoutRef}
               zoomReadoutRef={zoomReadoutRef}
-              className="absolute inset-0"
+              onAskiClick={(feature, position) => setAskiPopover({ feature, position })}
             />
-            {compareMode === "satellite" && <SatelliteCompareOverlay />}
+            {askiPopover && (
+              <AskiPopover
+                feature={askiPopover.feature}
+                position={askiPopover.position}
+                onClose={() => setAskiPopover(null)}
+              />
+            )}
             <MapInstructionIsland />
+            <div className={cn("pointer-events-auto absolute top-24 z-20 hidden transition-[left] duration-300 xl:flex", leftDockClass)}>
+              <MapSourceDock />
+            </div>
+            <div className="pointer-events-auto absolute right-[420px] top-24 z-20 hidden xl:block">
+              <LiveReadinessStrip />
+            </div>
+            <div className={cn("pointer-events-auto absolute bottom-24 z-20 hidden w-[min(760px,calc(100vw-34rem))] transition-[left] duration-300 2xl:block", leftDockClass)}>
+              <MunicipalityWorkbench />
+            </div>
             <MapHud
               cursorReadoutRef={cursorReadoutRef}
               zoomReadoutRef={zoomReadoutRef}
             />
+            <TimelineFloating />
             <MobileMapHint />
             <MapActionDock
               searchOpen={searchOpen}
@@ -141,9 +173,24 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
           <div className={fullscreenMap ? "hidden" : "hidden lg:block"}>
             <RightInfoPanel floating />
           </div>
+          <Section3DAnalizleri />
           {!fullscreenMap && <MobileBottomSheet />}
         </>
       )}
+    </div>
+  );
+}
+
+function MapSourceDock() {
+  return (
+    <div className="map-glass-shell flex items-center gap-2 rounded-2xl px-2 py-2">
+      <DataCoverageBadge />
+      <Link
+        href="/kaynaklar"
+        className="soft-press inline-flex h-8 items-center rounded-full border border-border-subtle bg-surface-1 px-3 text-[11px] font-bold text-fg-secondary transition-colors hover:bg-white hover:text-fg-primary"
+      >
+        Kaynak merkezi
+      </Link>
     </div>
   );
 }

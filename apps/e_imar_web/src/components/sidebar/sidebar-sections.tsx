@@ -9,7 +9,9 @@ import {
   SlidersHorizontal,
   ChevronDown,
   DatabaseZap,
-  Database
+  Database,
+  FileText,
+  UserCircle2
 } from "lucide-react";
 import Link from "next/link";
 import { LayerToggleList } from "@/components/map/layer-toggle-list";
@@ -71,6 +73,30 @@ export function SidebarSections({ collapsed = false }: { collapsed?: boolean }) 
       title: "Filtreler",
       icon: <SlidersHorizontal className="h-4 w-4" />,
       body: <FiltersSection />,
+      defaultOpen: false
+    },
+    {
+      id: "plan-note",
+      title: "Plan Notu Açıklayıcı",
+      icon: <FileText className="h-4 w-4" />,
+      body: (
+        <div className="rounded-lg border border-border-subtle bg-surface-2 p-3 text-sm text-fg-secondary shadow-[inset_0_1px_0_rgb(255_255_255/0.03)]">
+          <p>BFF plan notu açıklama endpoint&apos;ini doğrudan dener; sağlayıcı hazır değilse durum kartını gösterir.</p>
+          <Link href="/plan-notu" className="mt-2 inline-flex text-xs font-semibold text-[rgb(var(--accent-blue))] hover:underline">Plan notu ekranını aç</Link>
+        </div>
+      ),
+      defaultOpen: false
+    },
+    {
+      id: "workspace",
+      title: "Çalışma Alanı",
+      icon: <UserCircle2 className="h-4 w-4" />,
+      body: (
+        <div className="rounded-lg border border-border-subtle bg-surface-2 p-3 text-sm text-fg-secondary shadow-[inset_0_1px_0_rgb(255_255_255/0.03)]">
+          <p>Backend workspace, session ve bildirim aboneliği durumlarını tek ekranda toplar.</p>
+          <Link href="/calisma-alani" className="mt-2 inline-flex text-xs font-semibold text-[rgb(var(--accent-blue))] hover:underline">Çalışma alanını aç</Link>
+        </div>
+      ),
       defaultOpen: false
     },
     {
