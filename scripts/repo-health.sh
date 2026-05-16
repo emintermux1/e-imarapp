@@ -40,28 +40,17 @@ else
 fi
 
 echo ""
-echo "== Canonical frontend (frontend/) =="
-if [[ -f "$ROOT_DIR/frontend/package.json" ]]; then
-  (
-    cd "$ROOT_DIR/frontend"
-    npm install --no-audit --no-fund >/dev/null
-    npm run typecheck
-    npm run lint -- --max-warnings 999
-  ) || fail "frontend typecheck/lint"
-else
-  warn "frontend/package.json missing"
-fi
-
-echo ""
-echo "== Legacy apps/e_imar_web (optional) =="
+echo "== Canonical frontend (apps/e_imar_web) =="
 if [[ -f "$ROOT_DIR/apps/e_imar_web/package.json" ]]; then
   (
     cd "$ROOT_DIR/apps/e_imar_web"
     npm install --no-audit --no-fund >/dev/null
     npm run typecheck
-  ) || warn "e_imar_web typecheck failed (non-blocking legacy)"
+    npm run lint -- --max-warnings 999
+    npm run build
+  ) || fail "apps/e_imar_web typecheck/lint/build"
 else
-  warn "apps/e_imar_web not present"
+  fail "apps/e_imar_web/package.json missing"
 fi
 
 echo ""
