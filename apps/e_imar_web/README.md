@@ -75,6 +75,20 @@ When the variable is omitted, `http://localhost:8000/api/v1` is the default.
 Live API, local fallback, computed, and demo data are visibly labelled in the
 search results, map selection, right panel workflow strip, and trust section.
 
+Parcel geometry source mode is explicit:
+
+```
+NEXT_PUBLIC_EIMAR_DATA_MODE=demo|api|vector-tile
+NEXT_PUBLIC_EIMAR_API_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL=http://localhost:7800/public.parcels/{z}/{x}/{y}.pbf
+NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=true
+```
+
+Development may fall back to labelled synthetic parcels. Production does not
+silently draw demo parcels when `api` or `vector-tile` is requested without a
+configured endpoint; the map remains visible and the parcel layer reports a
+production unavailable state.
+
 ---
 
 ## Stack

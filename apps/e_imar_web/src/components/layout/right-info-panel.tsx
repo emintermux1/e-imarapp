@@ -387,10 +387,10 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             exit={{ x: "100%" }}
             transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
             className={cn(
-            "fixed inset-x-0 bottom-0 top-auto z-30 flex max-h-[78dvh] flex-col rounded-t-xl md:inset-x-auto md:bottom-4 md:right-3 md:top-20 md:max-h-none md:rounded-xl",
+            "fixed inset-x-0 bottom-0 top-auto z-30 flex max-h-[78dvh] flex-col rounded-t-[1.7rem] md:inset-x-auto md:bottom-20 md:right-4 md:top-24 md:max-h-none md:rounded-[1.7rem]",
               floating
-                ? "w-full border border-border-strong/80 bg-surface-2/98 shadow-sheet md:w-[400px] md:shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(18_52_82/0.56)] lg:w-[360px] xl:w-[400px]"
-                : "w-full border border-border-strong/80 bg-surface-2/98 shadow-sheet md:w-[400px] md:shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(18_52_82/0.56)]"
+              ? "w-full border border-white/55 bg-surface-2/96 shadow-sheet md:w-[380px] md:shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(var(--accent-navy)/0.46)] lg:w-[340px] xl:w-[380px]"
+                : "w-full border border-white/55 bg-surface-2/96 shadow-sheet md:w-[380px] md:shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(var(--accent-navy)/0.46)]"
             )}
             aria-label="En yeni imar bölgeleri paneli"
           >
@@ -516,10 +516,10 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
           exit={{ x: "100%" }}
           transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
           className={cn(
-            "fixed bottom-4 right-3 top-20 z-30 flex flex-col overflow-hidden rounded-xl",
+            "fixed bottom-20 right-4 top-24 z-30 flex flex-col overflow-hidden rounded-[1.7rem]",
             floating
-              ? "w-[400px] border border-border-strong/80 bg-surface-2/98 shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(18_52_82/0.56)] lg:w-[360px] xl:w-[400px]"
-              : "w-[400px] border border-border-strong/80 bg-surface-2/98 shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(18_52_82/0.56)]"
+              ? "w-[380px] border border-white/55 bg-surface-2/96 shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(var(--accent-navy)/0.46)] lg:w-[340px] xl:w-[380px]"
+              : "w-[380px] border border-white/55 bg-surface-2/96 shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(var(--accent-navy)/0.46)]"
           )}
           aria-label="Parsel detay paneli"
         >
@@ -865,8 +865,8 @@ function SelectedPointAnalysisPanel({
           exit={{ x: "100%", opacity: 0.92 }}
           transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
           className={cn(
-            "fixed bottom-4 right-3 top-20 z-30 flex flex-col overflow-hidden rounded-xl border border-border-strong/80 bg-surface-2/98 shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(18_52_82/0.56)]",
-            floating ? "w-[400px] xl:w-[400px] lg:w-[360px]" : "w-[400px]"
+            "fixed bottom-20 right-4 top-24 z-30 flex flex-col overflow-hidden rounded-[1.7rem] border border-white/55 bg-surface-2/96 shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(var(--accent-navy)/0.46)]",
+            floating ? "w-[380px] lg:w-[340px] xl:w-[380px]" : "w-[380px]"
           )}
           aria-label="Seçili nokta analizi paneli"
         >

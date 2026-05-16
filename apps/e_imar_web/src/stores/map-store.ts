@@ -64,7 +64,7 @@ let seqCounter = 0;
 export const useMapStore = create<MapState>()(
   persist(
     (set) => ({
-      basemap: "voyager",
+      basemap: "satellite",
       hoveredParcelId: null,
       selectedParcelId: null,
       selectedArea: null,
@@ -111,7 +111,17 @@ export const useMapStore = create<MapState>()(
     }),
     {
       name: "eimar:map",
+      version: 2,
       storage: createJSONStorage(() => localStorage),
+      migrate: (persistedState) => {
+        if (!persistedState || typeof persistedState !== "object" || Array.isArray(persistedState)) {
+          return persistedState;
+        }
+        return {
+          ...persistedState,
+          basemap: "satellite"
+        };
+      },
       partialize: (s) => ({
         basemap: s.basemap,
         zoom: s.zoom

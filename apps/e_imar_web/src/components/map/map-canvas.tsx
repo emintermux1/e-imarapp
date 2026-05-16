@@ -3,7 +3,7 @@
 import * as React from "react";
 import maplibregl from "maplibre-gl";
 import type { Map, MapMouseEvent } from "maplibre-gl";
-import { Layers } from "lucide-react";
+import { AlertOctagon, Layers } from "lucide-react";
 import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
 import {
@@ -75,6 +75,7 @@ import { findNearestParcel } from "@/lib/analysis/selected-place-analysis";
 import { drawingFeatureCollection, useDrawingStore } from "@/stores/drawing-store";
 import { getParcelSourceMetadata } from "@/data/parcels";
 import { emptySelectedAreaCollection, getLocationBoundary } from "@/data/location-boundaries";
+import { modeLabel } from "@/lib/providers/provider-readiness";
 
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
@@ -156,6 +157,8 @@ export function MapCanvas({
   const addDrawingPoint = useDrawingStore((s) => s.addPoint);
   const setDraftCursor = useDrawingStore((s) => s.setDraftCursor);
   const finishDrawing = useDrawingStore((s) => s.finishDraft);
+  const parcelSourceMetadata = React.useMemo(() => getParcelSourceMetadata(), []);
+  const parcelSourceUnavailable = parcelSourceMetadata.mode === "unavailable";
 
   React.useEffect(() => {
     activeDrawingToolRef.current = activeDrawingTool;
@@ -325,6 +328,38 @@ export function MapCanvas({
             duration: 700
           });
           break;
+        case "locate":
+          if (!navigator.geolocation) {
+            window.dispatchEvent(new CustomEvent("eimar:map:location-status", { detail: { message: "Konum izni bu tarayıcıda yok." } }));
+            break;
+          }
+          window.dispatchEvent(new CustomEvent("eimar:map:location-status", { detail: { message: "Konum aranıyor…" } }));
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const center: [number, number] = [position.coords.longitude, position.coords.latitude];
+              setSelectedArea(null);
+              setSelectedPoint({
+                lng: center[0],
+                lat: center[1],
+                source: "system",
+                nearestParcelId: findNearestParcel(center[0], center[1], 2500)?.parcel.id
+              });
+              setRightPanelOpen(true);
+              map.flyTo({
+                center,
+                zoom: Math.max(map.getZoom(), 15),
+                duration: 700,
+                padding: window.innerWidth >= 1280 ? { top: 104, bottom: 96, left: 112, right: 360 } : { top: 86, bottom: 92, left: 24, right: 24 },
+                essential: true
+              });
+              window.dispatchEvent(new CustomEvent("eimar:map:location-status", { detail: { message: "Konum haritaya taşındı." } }));
+            },
+            () => {
+              window.dispatchEvent(new CustomEvent("eimar:map:location-status", { detail: { message: "Konum izni alınamadı." } }));
+            },
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+          );
+          break;
       }
     };
     window.addEventListener("eimar:map:control", onControl);
@@ -424,7 +459,6 @@ export function MapCanvas({
       const parcel = id == null ? null : getParcelByMapId(id);
       if (parcel && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
         const p = parcel.properties;
-        const sourceMeta = getParcelSourceMetadata();
         pendingHoverCard = {
           x: e.point.x,
           y: e.point.y,
@@ -432,7 +466,7 @@ export function MapCanvas({
           location: `${p.mahalle} · ${p.ilce}`,
           zoning: p.detailedUse ?? p.zoningType,
           area: `${Math.round(p.yuzolcumuM2).toLocaleString("tr-TR")} m²`,
-          provenance: p.sourceStatus ?? (sourceMeta.official ? "official" : sourceMeta.mode === "demo" ? "demo" : "derived")
+          provenance: p.sourceStatus ?? (parcelSourceMetadata.official ? "official" : parcelSourceMetadata.mode === "demo" ? "demo" : "derived")
         };
         if (hoverRafId == null) hoverRafId = requestAnimationFrame(commitHoverCard);
       }
@@ -480,7 +514,7 @@ export function MapCanvas({
       setRightPanelOpen(true);
       if (parcel.properties.centroid) {
         const [lng, lat] = parcel.properties.centroid;
-        const padding = window.innerWidth >= 1280 ? { top: 40, bottom: 40, left: 320, right: 440 } : { top: 40, bottom: 40, left: 24, right: 24 };
+        const padding = window.innerWidth >= 1280 ? { top: 104, bottom: 96, left: 112, right: 360 } : { top: 86, bottom: 92, left: 24, right: 24 };
         map.flyTo({
           center: [lng, lat],
           zoom: Math.max(map.getZoom(), 16),
@@ -527,8 +561,8 @@ export function MapCanvas({
       } : null);
       const { center, zoom, bearing, pitch, bounds } = buildFlyTargetFromLocationTarget(target, { zoom: props.zoom });
       const padding = window.innerWidth >= 1280
-        ? { top: 40, bottom: 40, left: 320, right: 440 }
-        : { top: 40, bottom: 40, left: 24, right: 24 };
+        ? { top: 104, bottom: 96, left: 112, right: 360 }
+        : { top: 86, bottom: 92, left: 24, right: 24 };
       if (bounds) {
         map.fitBounds([[bounds.west, bounds.south], [bounds.east, bounds.north]], {
           padding,
@@ -868,7 +902,7 @@ export function MapCanvas({
       source?.setData(toFeatureCollection(feature as unknown as GeoJSON.Feature | null));
       if (feature) {
         const bounds = geometryBounds(feature.geometry);
-        const padding = window.innerWidth >= 1280 ? { top: 72, bottom: 72, left: 320, right: 440 } : { top: 56, bottom: 56, left: 24, right: 24 };
+        const padding = window.innerWidth >= 1280 ? { top: 112, bottom: 96, left: 112, right: 360 } : { top: 86, bottom: 92, left: 24, right: 24 };
         if (bounds) {
           map.fitBounds(bounds, { padding, duration: 700, maxZoom: 17 });
         } else if (feature.properties.centroid) {
@@ -888,7 +922,7 @@ export function MapCanvas({
       const source = map.getSource(LIVE_PLAN_REGIONS_SOURCE) as maplibregl.GeoJSONSource | undefined;
       source?.setData(toFeatureCollection(selectedLatestRegion?.has_geometry ? selectedLatestRegion.geom_geojson ?? null : null));
       if (selectedLatestRegion?.has_geometry) {
-        const padding = window.innerWidth >= 1280 ? { top: 72, bottom: 72, left: 320, right: 440 } : { top: 56, bottom: 56, left: 24, right: 24 };
+        const padding = window.innerWidth >= 1280 ? { top: 112, bottom: 96, left: 112, right: 360 } : { top: 86, bottom: 92, left: 24, right: 24 };
         const bounds = geometryBounds(selectedLatestRegion.geom_geojson ?? null);
         if (bounds) {
           map.fitBounds(bounds, { padding, duration: 700, maxZoom: 15 });
@@ -982,7 +1016,7 @@ export function MapCanvas({
   React.useEffect(() => {
     const map = mapRef.current;
     if (!map || !flyTarget) return;
-    const padding = window.innerWidth >= 1280 ? { top: 40, bottom: 40, left: 320, right: 440 } : { top: 40, bottom: 40, left: 24, right: 24 };
+    const padding = window.innerWidth >= 1280 ? { top: 104, bottom: 96, left: 112, right: 360 } : { top: 86, bottom: 92, left: 24, right: 24 };
     const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700;
     if (flyTarget.bounds) {
       map.fitBounds([[flyTarget.bounds.west, flyTarget.bounds.south], [flyTarget.bounds.east, flyTarget.bounds.north]], {
@@ -1130,6 +1164,33 @@ export function MapCanvas({
             <p className="mt-2 text-[11px] text-fg-muted tabular-nums">
               {initError}
             </p>
+          </div>
+        </div>
+      )}
+      {!initError && parcelSourceUnavailable && (
+        <div className="pointer-events-none absolute left-3 right-3 top-[5.25rem] z-20 flex justify-center md:left-24 md:right-24 md:top-24">
+          <div className="pointer-events-auto w-full max-w-[560px] rounded-[1.35rem] border border-rose-500/30 bg-surface-2/96 p-3 shadow-[0_24px_70px_-44px_rgb(127_29_29/0.72)] backdrop-blur-sm">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300">
+                <AlertOctagon className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-sm font-semibold text-fg-primary">
+                    Production parsel katmanı unavailable
+                  </h2>
+                  <span className="rounded-full border border-border-subtle bg-surface-1 px-2 py-0.5 text-[10px] uppercase tracking-wider text-fg-muted">
+                    istenen: {modeLabel(parcelSourceMetadata.requestedMode)}
+                  </span>
+                </div>
+                <p className="mt-1 text-[12px] leading-relaxed text-fg-secondary">
+                  {parcelSourceMetadata.unavailableReason}
+                </p>
+                <p className="mt-2 text-[11px] leading-relaxed text-fg-muted">
+                  Harita ve taban katmanları açık kalır; demo parseller production ortamında sessizce çizilmez. Canlı API için <code className="rounded bg-surface-1 px-1 py-0.5">NEXT_PUBLIC_EIMAR_API_BASE_URL</code> veya vector tile için <code className="rounded bg-surface-1 px-1 py-0.5">NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL</code> ayarlayın.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}
