@@ -17,6 +17,7 @@ import type {
   MunicipalGISDiscoveryResponse,
   ProbedLiveMapLayer,
   SourceHealthRecord,
+  SourceQualityRecord,
   SourceQualityResponse,
   SourceActivationResponse,
   SourceRegistryRecord
@@ -28,6 +29,7 @@ interface SourceState {
   liveLayers: BackendMapLayerResponse[];
   quality?: SourceQualityResponse;
   activation?: SourceActivationResponse;
+  qualityBySourceId: Record<string, SourceQualityRecord>;
   activeMapLayers: ProbedLiveMapLayer[];
   probedLayers: Record<string, ProbedLiveMapLayer>;
   discoveries: Record<string, MunicipalGISDiscoveryResponse | Record<string, unknown>>;
@@ -53,6 +55,7 @@ export const useSourceStore = create<SourceState>()((set, get) => ({
   health: {},
   liveLayers: [],
   activeMapLayers: [],
+  qualityBySourceId: {},
   probedLayers: {},
   discoveries: {},
   loading: false,
@@ -81,7 +84,8 @@ export const useSourceStore = create<SourceState>()((set, get) => ({
     set({ qualityLoading: true, error: undefined });
     try {
       const quality = await getSourceQuality({ limit: 12, ...params });
-      set({ quality, qualityLoading: false, lastChecked: quality.fetched_at ?? new Date().toISOString() });
+      const qualityBySourceId = Object.fromEntries((quality.sources ?? []).map((record) => [record.source_id, record]));
+      set({ quality, qualityBySourceId, qualityLoading: false, lastChecked: quality.fetched_at ?? new Date().toISOString() });
     } catch (error) {
       set({ qualityLoading: false, error: `${humanizeApiError(error, "Canlı veri kalite paneli alınamadı.")} Neden veri yok sorusu için sağlık/portal etiketleri korunuyor.`, lastChecked: new Date().toISOString() });
     }

@@ -7,3 +7,4 @@ from app.models.watchlist import WatchlistItem
 from app.models.report import Report
 from app.models.query_log import QueryLog
 from app.models.municipal_gis_endpoint import MunicipalGISEndpoint
+from app.models.source_health_event import SourceHealthEvent

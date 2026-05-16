@@ -12,6 +12,7 @@ import type {
   ReportResponse,
   LiveMapLayerProbeResponse,
   SourceHealthRecord,
+  SourceQualityRecord,
   SourceQualityResponse,
   SourceActivationResponse,
   SourceRegistryRecord
@@ -186,17 +187,55 @@ export function getSourceHealth() {
   return apiFetch<SourceHealthRecord[] | { sources?: SourceHealthRecord[]; [key: string]: unknown }>("/sources/health");
 }
 
-export function getSourceQuality(params: {
+function normalizeSourceQualityRecord(record: SourceQualityRecord): SourceQualityRecord {
+  return {
+    ...record,
+    coverage: record.coverage ?? {
+      has_geometry: false,
+      has_imar: false,
+      has_aski: false,
+      has_documents: false,
+      capabilities: []
+    },
+    geometry_available: record.geometry_available === true,
+    imar_available: record.imar_available === true,
+    aski_available: record.aski_available === true,
+    history_available: record.history_available === true,
+    endpoint_count: record.endpoint_count ?? 0,
+    discovered_endpoints: Array.isArray(record.discovered_endpoints) ? record.discovered_endpoints : [],
+    recent_probe_events: Array.isArray(record.recent_probe_events) ? record.recent_probe_events : undefined,
+    probe_events: Array.isArray(record.probe_events) ? record.probe_events : undefined,
+    consecutive_failures: record.consecutive_failures ?? 0
+  };
+}
+
+function normalizeSourceQualityResponse(payload: SourceQualityResponse): SourceQualityResponse {
+  const sources = Array.isArray(payload.sources) ? payload.sources.map(normalizeSourceQualityRecord) : [];
+  return {
+    ...payload,
+    status: payload.status ?? "unavailable",
+    fetched_at: payload.fetched_at ?? new Date().toISOString(),
+    history_available: payload.history_available === true,
+    total: typeof payload.total === "number" ? payload.total : sources.length,
+    live_checked: payload.live_checked === true,
+    rollup: payload.rollup ?? {},
+    sources
+  };
+}
+
+export async function getSourceQuality(params: {
   limit?: number;
   live_check?: boolean;
   category?: string;
   capability?: string;
 } = {}) {
-  return apiFetch<SourceQualityResponse>(`/sources/quality${queryString(params)}`);
+  const payload = await apiFetch<SourceQualityResponse>(`/sources/quality${queryString(params)}`);
+  return normalizeSourceQualityResponse(payload);
 }
 
-export function getSourceQualityDetail(sourceId: string, liveCheck = false) {
-  return apiFetch<SourceQualityResponse>(`/sources/quality/${sourceId}${queryString({ live_check: liveCheck })}`);
+export async function getSourceQualityDetail(sourceId: string, liveCheck = false) {
+  const payload = await apiFetch<SourceQualityResponse>(`/sources/quality/${sourceId}${queryString({ live_check: liveCheck })}`);
+  return normalizeSourceQualityResponse(payload);
 }
 
 export function getSourceActivation(params: { limit?: number; live_check?: boolean; force?: boolean } = {}) {

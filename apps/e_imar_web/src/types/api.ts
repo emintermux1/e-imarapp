@@ -202,6 +202,20 @@ export interface SourceCoverageHints {
   capabilities: string[];
 }
 
+export interface SourceProbeEvent {
+  checked_at?: string | null;
+  timestamp?: string | null;
+  started_at?: string | null;
+  finished_at?: string | null;
+  status?: string | null;
+  success?: boolean | null;
+  latency_ms?: number | null;
+  http_status?: number | null;
+  error?: string | null;
+  message?: string | null;
+  [key: string]: unknown;
+}
+
 export interface SourceQualityRecord {
   source_id: string;
   key: string;
@@ -216,6 +230,14 @@ export interface SourceQualityRecord {
   raw_status?: string | null;
   last_checked_at?: string | null;
   last_success_at?: string | null;
+  last_failed_at?: string | null;
+  next_scheduled_check_at?: string | null;
+  next_check_at?: string | null;
+  consecutive_failures?: number | null;
+  recent_probe_events?: SourceProbeEvent[];
+  probe_events?: SourceProbeEvent[];
+  history_unavailable_reason?: string | null;
+  suggested_action?: string | null;
   latency_ms?: number | null;
   http_status?: number | null;
   endpoint_url?: string | null;
