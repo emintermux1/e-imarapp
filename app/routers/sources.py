@@ -3,13 +3,16 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.http import get_client
 from app.connectors.probe import probe_source
 from app.core.responses import envelope, now_iso
-from app.schemas.source import SourceCoverageHints, SourceQualityRecord, SourceQualityResponse
+from app.database import get_db
+from app.schemas.source import SourceCoverageHints, SourceQualityHistoryResponse, SourceQualityRecord, SourceQualityResponse
 from app.services.netcad_keos_service import NetcadKeosService
+from app.services.source_health import get_source_health_histories, get_source_health_history, record_source_probe
 from app.services.source_registry import get_source as get_legacy_source
 from app.services.source_registry import list_sources as list_legacy_sources
 from app.sources.registry import SourceEntry, get_source, list_sources
@@ -71,7 +74,12 @@ def _endpoint_dicts(endpoints: list[Any]) -> list[dict[str, Any]]:
     return out
 
 
-def _quality_record(src: SourceEntry, probe: dict[str, Any] | None = None, live_checked: bool = False) -> SourceQualityRecord:
+def _quality_record(
+    src: SourceEntry,
+    probe: dict[str, Any] | None = None,
+    live_checked: bool = False,
+    history: SourceQualityHistoryResponse | None = None,
+) -> SourceQualityRecord:
     probe = probe or {}
     raw_status = str(probe.get("status") or src.auth.value)
     status = _ui_status(raw_status, src.auth.value, live_checked)
@@ -94,6 +102,14 @@ def _quality_record(src: SourceEntry, probe: dict[str, Any] | None = None, live_
         raw_status=raw_status,
         last_checked_at=checked_at,
         last_success_at=checked_at if status == "live" else None,
+        last_failed_at=history.last_failed_at if history else None,
+        next_scheduled_check_at=history.next_scheduled_check_at if history else None,
+        next_check_at=history.next_scheduled_check_at if history else None,
+        consecutive_failures=history.consecutive_failures if history else 0,
+        recent_probe_events=history.recent_probe_events if history else [],
+        probe_events=history.recent_probe_events if history else [],
+        history_unavailable_reason=history.history_unavailable_reason if history else "Kalıcı probe geçmişi henüz bu kaynak için oluşmadı.",
+        suggested_action=history.suggested_action if history else None,
         latency_ms=probe.get("latency_ms"),
         http_status=probe.get("http_status"),
         endpoint_url=endpoint_url,
@@ -103,7 +119,7 @@ def _quality_record(src: SourceEntry, probe: dict[str, Any] | None = None, live_
         geometry_available=coverage.has_geometry,
         imar_available=coverage.has_imar,
         aski_available=coverage.has_aski,
-        history_available=False,
+        history_available=history.history_available if history else False,
         endpoint_count=len(endpoints),
         discovered_endpoints=endpoints,
         next_action=next_action,
@@ -120,15 +136,21 @@ def _quality_response(records: list[SourceQualityRecord], live_checked: bool) ->
         status = "fallback"
     elif rollup.get("unavailable") and not (rollup.get("live") or rollup.get("fallback")):
         status = "unavailable"
+    history_available = any(record.history_available for record in records)
+    message = (
+        "Kalıcı sağlık geçmişi kaynak bazında gösteriliyor; boş kaynaklarda history_available=false kalır."
+        if history_available
+        else "Kalıcı sağlık geçmişi henüz tutulmuyor; last_success_at yalnızca bu istek sırasında canlı probe başarılıysa doludur."
+    )
     return SourceQualityResponse(
         status=status,
         fetched_at=now_iso(),
-        history_available=False,
+        history_available=history_available,
         total=len(records),
         live_checked=live_checked,
         rollup=rollup,
         sources=records,
-        message="Kalıcı sağlık geçmişi henüz tutulmuyor; last_success_at yalnızca bu istek sırasında canlı probe başarılıysa doludur.",
+        message=message,
     )
 
 
@@ -158,6 +180,7 @@ async def get_sources_quality(
     live_check: bool = Query(False),
     category: str | None = Query(None),
     capability: str | None = Query(None),
+    db: AsyncSession = Depends(get_db),
 ):
     registry_sources = list_sources()
     if category:
@@ -170,16 +193,21 @@ async def get_sources_quality(
         async with await get_client() as client:
             tasks = [asyncio.wait_for(probe_source(client, src), timeout=4.0) for src in registry_sources]
             probes = await asyncio.gather(*tasks, return_exceptions=True)
+            for src, probe in zip(registry_sources, probes, strict=False):
+                if isinstance(probe, dict):
+                    await record_source_probe(db, src, probe)
+            await db.commit()
+    histories = await get_source_health_histories(db, [src.id for src in registry_sources])
     records = []
     for src, probe in zip(registry_sources, probes, strict=False):
         if isinstance(probe, BaseException):
             probe = {"status": "unavailable", "message": str(probe), "discovered_endpoints": [], "latency_ms": None, "http_status": None}
-        records.append(_quality_record(src, probe if isinstance(probe, dict) else None, live_check))
+        records.append(_quality_record(src, probe if isinstance(probe, dict) else None, live_check, histories.get(src.id)))
     return _quality_response(records, live_check)
 
 
 @router.get("/sources/quality/{source_id}", response_model=SourceQualityResponse)
-async def get_source_quality(source_id: str, live_check: bool = Query(False)):
+async def get_source_quality(source_id: str, live_check: bool = Query(False), db: AsyncSession = Depends(get_db)):
     src = get_source(source_id)
     if not src:
         legacy = get_legacy_source(source_id)
@@ -190,7 +218,17 @@ async def get_source_quality(source_id: str, live_check: bool = Query(False)):
     if live_check:
         async with await get_client() as client:
             probe = await probe_source(client, src)
-    return _quality_response([_quality_record(src, probe, live_check)], live_check)
+        await record_source_probe(db, src, probe)
+        await db.commit()
+    history = await get_source_health_history(db, source_id)
+    return _quality_response([_quality_record(src, probe, live_check, history)], live_check)
+
+
+@router.get("/sources/quality/{source_id}/history", response_model=SourceQualityHistoryResponse)
+async def get_source_quality_history(source_id: str, limit: int = Query(14, ge=1, le=60), db: AsyncSession = Depends(get_db)):
+    if not get_source(source_id) and not get_legacy_source(source_id):
+        raise HTTPException(status_code=404, detail="Kaynak bulunamadı")
+    return await get_source_health_history(db, source_id, limit)
 
 
 @router.get("/sources/health")
