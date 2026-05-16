@@ -41,6 +41,7 @@ export function MapHud({
 }) {
   const basemap = useMapStore((s) => s.basemap);
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
+  const selectedPoint = useMapStore((s) => s.selectedPoint);
   const bearing = useMapStore((s) => s.bearing);
   const selectedLatestRegion = useLatestRegionsStore((s) => s.selectedRegion);
   const multiSelectedParcelIds = useMapStore((s) => s.multiSelectedParcelIds);
@@ -177,7 +178,10 @@ export function MapHud({
       </div>
 
       {/* Top-right: zoom controls + compass + 3D toggle */}
-      <div className="pointer-events-auto absolute right-4 top-24 z-10 flex flex-col items-end gap-2">
+      <div className={cn(
+        "pointer-events-auto absolute right-4 top-24 z-10 flex flex-col items-end gap-2 transition-transform duration-200 ease-out",
+        selectedPoint && !selectedParcelId && "hidden 2xl:flex"
+      )}>
         <div className="flex flex-col overflow-hidden rounded-[1.2rem] border border-white/55 bg-surface-2/92 shadow-[inset_0_1px_0_rgb(255_255_255/0.82),0_16px_44px_-34px_rgb(var(--accent-navy)/0.72)]">
           <IconButton
             label="Yakınlaştır"

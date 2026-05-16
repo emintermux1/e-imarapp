@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConnectorKind, ProbeResult, ProbeStatus } from '../connectors/connector.types';
+import { ConfigService } from '@nestjs/config';
 import { DiscoveryService } from '../connectors/discovery.service';
 import { isProtectedSource, isPublicCandidateSource, summarizeSources } from './source-coverage';
+import { evaluateSourceRequirement, SourceRequirementEvaluation } from './source-requirements';
 import { SOURCE_REGISTRY, SourceAccessStatus, SourceCategory, SourceJurisdiction, SourceRegistryEntry } from './source-registry';
 
 export type SourceActivationStatus = 'active' | 'blocked' | 'needs_contract' | 'unavailable' | 'metadata_only';
@@ -20,6 +22,7 @@ export interface SourceActivationRecord {
   usableEndpoints: string[];
   blockedReason?: string;
   nextAction: string;
+  requirement: SourceRequirementEvaluation;
   metadata?: SourceRegistryEntry['metadata'];
   provenance: Array<{
     sourceId: string;
@@ -41,7 +44,7 @@ export class SourceActivationService {
   private readonly liveCache = new Map<string, { expiresAt: number; record: SourceActivationRecord }>();
   private readonly liveCacheTtlMs = 15 * 60 * 1000;
 
-  constructor(private readonly discovery?: DiscoveryService) {}
+  constructor(private readonly discovery?: DiscoveryService, private readonly config?: ConfigService) {}
 
   activationSummary(records: SourceActivationRecord[] = this.activation({ liveCheck: false }).sources) {
     const byActivationStatus = this.countBy(records, (record) => record.activationStatus);
@@ -108,6 +111,7 @@ export class SourceActivationService {
 
   private registryOnlyRecord(source: SourceRegistryEntry, generatedAt: string): SourceActivationRecord {
     const protectedSource = isProtectedSource(source);
+    const requirement = evaluateSourceRequirement(source, (envName) => this.config?.get<string>(envName) ?? process.env[envName]);
     const metadataOnly = source.access.status === 'public_metadata' || source.access.status === 'metadata_only';
     const needsContract = source.access.status === 'unknown' && source.connectorKinds.some((kind) => [ConnectorKind.NetcadKeos, ConnectorKind.Ekent, ConnectorKind.Ogc, ConnectorKind.ArcgisRest].includes(kind));
     const activationStatus: SourceActivationStatus = protectedSource
@@ -133,6 +137,7 @@ export class SourceActivationService {
       usableEndpoints: [],
       blockedReason: protectedSource ? source.access.status : undefined,
       nextAction: this.nextActionForRegistry(source, activationStatus),
+      requirement,
       metadata: source.metadata,
       provenance: [{
         sourceId: source.id,
