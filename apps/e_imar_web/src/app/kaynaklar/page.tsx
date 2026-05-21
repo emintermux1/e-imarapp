@@ -38,7 +38,7 @@ export default function KaynaklarPage() {
   return (
     <AppShell>
       <div className="h-full overflow-hidden">
-        <div className="mx-auto flex h-full max-w-[1600px] gap-4 p-4">
+        <div className="mx-auto flex h-full max-w-[1600px] gap-4 px-4 pb-4 pt-20 lg:pl-24 lg:pt-24">
           <section className="flex min-w-0 flex-1 flex-col rounded-xl border border-border-subtle bg-surface-2">
             <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border-subtle px-4 py-3">
               <div>
@@ -72,6 +72,20 @@ export default function KaynaklarPage() {
                   </tr>
                 </thead>
                 <tbody>
+                  {sourcesQuery.isLoading && (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-10 text-center text-sm text-fg-secondary">
+                        Kaynak registry yükleniyor…
+                      </td>
+                    </tr>
+                  )}
+                  {!sourcesQuery.isLoading && visibleSources.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-10 text-center text-sm text-fg-secondary">
+                        Bu filtrede gösterilecek kaynak yok.
+                      </td>
+                    </tr>
+                  )}
                   {visibleSources.map((src) => {
                     const probe = healthMap.get(src.id) as Record<string, unknown> | undefined;
                     const endpointCount = Array.isArray(probe?.discovered_endpoints) ? probe?.discovered_endpoints.length : 0;
