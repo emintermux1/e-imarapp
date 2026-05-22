@@ -41,6 +41,14 @@ const routeSmokeChecks = [
       "Sorgu geçmişi",
     ],
   },
+  {
+    pathname: "/emsal",
+    snippets: [
+      "Emsal Hesabı",
+      "Parametreler",
+      "Parsel Seç",
+    ],
+  },
 ];
 
 let server;
@@ -107,6 +115,19 @@ async function assertPage(pathname, snippets) {
   }
 }
 
+async function assertStatusPage(pathname, expectedStatus, snippets) {
+  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 30_000);
+  if (response.status !== expectedStatus) {
+    throw new Error(`${pathname} expected HTTP ${expectedStatus}, received ${response.status}`);
+  }
+
+  const html = (await response.text()).replaceAll("<!-- -->", "");
+  const missing = snippets.filter((snippet) => !html.includes(snippet));
+  if (missing.length > 0) {
+    throw new Error(`${pathname} missing expected shell text: ${missing.join(", ")}`);
+  }
+}
+
 async function assertText(pathname, snippets) {
   const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 30_000);
   if (!response.ok) {
@@ -142,6 +163,18 @@ async function assertImage(pathname) {
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.startsWith("image/")) {
     throw new Error(`${pathname} returned non-image content-type ${contentType}`);
+  }
+}
+
+async function assertHeader(pathname, headerName, expectedValue) {
+  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 30_000);
+  if (!response.ok) {
+    throw new Error(`${pathname} returned HTTP ${response.status}`);
+  }
+
+  const actualValue = response.headers.get(headerName);
+  if (actualValue !== expectedValue) {
+    throw new Error(`${pathname} expected ${headerName}: ${expectedValue}, received ${actualValue}`);
   }
 }
 
@@ -189,9 +222,21 @@ try {
     (payload) => payload?.name === "E-İmar · Türkiye Parsel Sorgu",
     (payload) => Array.isArray(payload?.icons) && payload.icons.some((icon) => icon.src === "/icon.svg")
   ]);
+  await assertJson("/healthz", [
+    (payload) => payload?.status === "ok",
+    (payload) => payload?.app === "e-imar-web"
+  ]);
+  await assertJson("/readyz", [
+    (payload) => payload?.status === "ok",
+    (payload) => payload?.apiBaseUrl === "http://127.0.0.1:9",
+    (payload) => Array.isArray(payload?.checks) && payload.checks.every((check) => check.status === "ok")
+  ]);
+  await assertStatusPage("/does-not-exist", 404, ["404 · Sayfa bulunamadı", "Kaynak merkezi"]);
+  await assertHeader("/", "x-content-type-options", "nosniff");
+  await assertHeader("/", "referrer-policy", "strict-origin-when-cross-origin");
   await assertImage("/icon.svg");
   await assertImage("/opengraph-image");
-  log("home, BFF cockpit routes, and publish artifacts rendered without provider credentials");
+  log("home, BFF cockpit routes, publish artifacts, health checks, 404, and security headers rendered without provider credentials");
   cleanup();
 } catch (error) {
   fail(error instanceof Error ? error.message : String(error));
