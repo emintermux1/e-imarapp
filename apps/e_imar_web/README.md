@@ -88,6 +88,17 @@ synthetic parcels. Production does not silently draw demo parcels when `api` or
 `vector-tile` is requested without a configured endpoint; the map remains
 visible and the parcel layer reports a production unavailable state.
 
+Deployment probes:
+
+```
+GET /healthz
+GET /readyz
+```
+
+`/healthz` is a no-store uptime probe. `/readyz` is stricter and returns 503 in
+production if the app cannot resolve a live API/vector tile parcel source or if
+demo fallback is enabled.
+
 ---
 
 ## Stack

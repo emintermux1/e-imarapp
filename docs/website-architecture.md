@@ -33,6 +33,7 @@ The website module orchestrates existing services; it does not duplicate geospat
 
 - `GET /website/architecture`
 - `GET /website/bootstrap?userReference=<id>`
+- Web app deployment probes: `GET /healthz` and `GET /readyz`
 
 ### Session
 
@@ -70,6 +71,7 @@ Session tokens are HMAC-signed with `WEBSITE_SESSION_SECRET`.
 - Use HTTPS and terminate TLS at Cloudflare/NGINX/Ingress.
 - Keep secrets in secret manager (never in git).
 - Add API gateway rate limiting for website BFF endpoints.
+- The canonical web app sends browser hardening headers from `next.config.mjs` and exposes `/readyz` as a deploy gate for live source configuration.
 - If OAuth/login is introduced later, keep website tokens short-lived and rotate secrets.
 
 ## Production deployment pattern

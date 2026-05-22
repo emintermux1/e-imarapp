@@ -251,6 +251,9 @@ NEXT_PUBLIC_MAPBOX_TOKEN=... # optional; empty uses token-free basemaps
 `NEXT_PUBLIC_API_BASE_URL` is still accepted for API-v1-specific clients. The
 website app also publishes robots, sitemap, manifest, icon and OpenGraph
 metadata from `NEXT_PUBLIC_EIMAR_SITE_URL` (or `VERCEL_URL` in previews).
+It exposes `GET /healthz` for uptime checks and `GET /readyz` for production
+readiness gates; `readyz` returns 503 if production lacks a live API/vector tile
+source or if demo fallback is enabled.
 
 CI and smoke tests do not require real provider secrets. Configure production/staging values in the deploy target or GitHub environment secrets; never commit them.
 
