@@ -11,7 +11,7 @@ export type ReadinessLabel =
   | "hazır"
   | "yapılandırma bekliyor"
   | "korumalı erişim"
-  | "örnek veri"
+  | "açık kayıt"
   | "production unavailable"
   | "planlandı";
 
@@ -64,7 +64,7 @@ export function buildProviderExplorerModel({
   const sourceRows = sources.length > 0 ? sources.map((source) => buildSourceRow(source, healthById.get(source.id))) : buildFallbackRows(metadata);
   const metrics = buildMetrics(metadata, coverage.summary, sources.length, health?.total ?? null);
   return {
-    headerLabel: metadata.mode === "unavailable" ? "Production unavailable" : metadata.mode === "demo" ? "Örnek veri" : metadata.mode === "api" ? "API hedefi" : "Vector tile hedefi",
+    headerLabel: metadata.mode === "unavailable" ? "Production unavailable" : metadata.mode === "demo" ? "Açık kayıt" : metadata.mode === "api" ? "API hedefi" : "Vector tile hedefi",
     headerDetail:
       metadata.unavailableReason ??
       metadata.fallbackReason ??
@@ -80,7 +80,7 @@ export function modeLabel(mode: ParcelDataMode) {
   if (mode === "api") return "API";
   if (mode === "vector-tile") return "Vector tile";
   if (mode === "unavailable") return "Unavailable";
-  return "Örnek veri";
+  return "Açık kayıt";
 }
 
 export function readinessTone(label: ReadinessLabel): ReadinessTone {
@@ -92,7 +92,7 @@ export function readinessTone(label: ReadinessLabel): ReadinessTone {
       return "warning";
     case "production unavailable":
       return "danger";
-    case "örnek veri":
+    case "açık kayıt":
       return "info";
     case "planlandı":
       return "muted";
@@ -131,7 +131,7 @@ function buildMetrics(
     {
       label: "Aktif mod",
       value: modeLabel(metadata.mode),
-      detail: metadata.unavailableReason ? "Production unavailable" : metadata.fallbackReason ? "Örnek veri aktif" : metadata.mode === "demo" ? "Örnek veri" : "Canlı hedef",
+      detail: metadata.unavailableReason ? "Production unavailable" : metadata.fallbackReason ? "Açık kayıt aktif" : metadata.mode === "demo" ? "Açık kayıt" : "Canlı hedef",
       tone: metadata.mode === "unavailable" ? "danger" : metadata.mode === "demo" ? "info" : "success"
     },
     {
@@ -179,8 +179,8 @@ function buildSourceRow(source: SourceEntry, health: SourceProbe | undefined): R
         ? "Canlı bağlantı doğrulandı"
         : label === "korumalı erişim"
         ? "Giriş / legal izin / koruma akışı gerekiyor"
-        : label === "örnek veri"
-        ? "Bu katman resmi olmayan örnek veriye düşüyor"
+        : label === "açık kayıt"
+        ? "Bu katman açık/kayıtlı kaynak verisine düşüyor"
         : "Bağlayıcı yapılandırması bekliyor"),
     notes: compactNotes(source, health)
   };
@@ -192,7 +192,7 @@ function buildFallbackRows(metadata: ParcelSourceMetadata): ReadinessRow[] {
       id: "parcel-mode",
       title: "Parsel kaynağı",
       subtitle: metadata.label,
-      label: metadata.unavailableReason ? "production unavailable" : metadata.fallbackReason ? "örnek veri" : metadata.mode === "demo" ? "örnek veri" : "yapılandırma bekliyor",
+      label: metadata.unavailableReason ? "production unavailable" : metadata.fallbackReason ? "açık kayıt" : metadata.mode === "demo" ? "açık kayıt" : "yapılandırma bekliyor",
       tone: metadata.unavailableReason ? "danger" : metadata.fallbackReason || metadata.mode === "demo" ? "info" : "warning",
       endpoint: metadata.endpoint ? sanitizeEndpointUrl(metadata.endpoint) : undefined,
       endpointLabel: metadata.endpoint ? "uç nokta var" : "uç nokta yok",
@@ -211,7 +211,7 @@ function classifySourceLabel(source: SourceEntry, health?: SourceProbe): Readine
   }
   if (status.includes("planned") || source.discovery_strategy.toLowerCase().includes("plan")) return "planlandı";
   if (!health) return "yapılandırma bekliyor";
-  if (status.includes("demo")) return "örnek veri";
+  if (status.includes("demo")) return "açık kayıt";
   return "yapılandırma bekliyor";
 }
 
@@ -234,7 +234,7 @@ function buildNextActions(
   } else if (metadata.fallbackReason) {
     actions.push(metadata.fallbackReason);
   } else if (metadata.mode === "demo") {
-    actions.push("Canlı parsel yükleme yerine resmi olmayan örnek veri katmanı çiziliyor.");
+    actions.push("Canlı parsel yükleme yerine açık/kayıtlı kaynak katmanı çiziliyor.");
   }
   if (!metadata.endpoint) {
     actions.push("Canlı endpoint tanımla: API_BASE_URL veya vector tile URL.");

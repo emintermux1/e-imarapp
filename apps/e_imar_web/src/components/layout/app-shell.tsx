@@ -29,6 +29,7 @@ import {
   Search,
   SlidersHorizontal,
   LocateFixed,
+  Box,
   X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,8 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
   const setFullscreenMap = useUIStore((s) => s.setFullscreenMap);
   const searchOpen = useUIStore((s) => s.searchOpen);
   const setSearchOpen = useUIStore((s) => s.setSearchOpen);
+  const mapMode = useUIStore((s) => s.mapMode);
+  const setMapMode = useUIStore((s) => s.setMapMode);
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
   const [legendDockOpen, setLegendDockOpen] = React.useState(false);
   const [askiPopover, setAskiPopover] = React.useState<{
@@ -141,6 +144,8 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
               }}
               fullscreenMap={fullscreenMap}
               onToggleFullscreen={() => setFullscreenMap(!fullscreenMap)}
+              mapMode={mapMode}
+              onToggle3D={() => setMapMode(mapMode === "3d" ? "2d" : "3d")}
             />
             <div
               className={cn(
@@ -205,10 +210,10 @@ function MapInstructionIsland() {
           </span>
           <div className="min-w-0 flex-1">
             <div className="text-[10px] font-black uppercase tracking-[0.22em] text-brand-green">
-              Harita üzerinde başla
+              Tek yerden sorgula
             </div>
             <div className="mt-0.5 truncate text-sm font-black tracking-tight text-fg-primary">
-              Haritaya tıkla, ada/parsel ara veya belediye seç
+              Ada/parsel, adres, koordinat veya belediye seç
             </div>
           </div>
         </div>
@@ -224,7 +229,9 @@ function MapActionDock({
   legendOpen,
   onToggleLegend,
   fullscreenMap,
-  onToggleFullscreen
+  onToggleFullscreen,
+  mapMode,
+  onToggle3D
 }: {
   searchOpen: boolean;
   onOpenSearch: () => void;
@@ -232,11 +239,13 @@ function MapActionDock({
   onToggleLegend: () => void;
   fullscreenMap: boolean;
   onToggleFullscreen: () => void;
+  mapMode: "2d" | "3d";
+  onToggle3D: () => void;
 }) {
   return (
-    <div className="pointer-events-auto absolute bottom-4 left-1/2 z-20 hidden -translate-x-1/2 md:block">
-      <div className="rounded-full border border-white/50 bg-white/38 p-1.5 shadow-[0_26px_80px_-48px_rgb(var(--accent-navy)/0.72)] backdrop-blur-md">
-        <div className="flex items-center gap-1 rounded-full border border-white/50 bg-surface-2/92 px-1.5 py-1.5 shadow-[inset_0_1px_0_rgb(255_255_255/0.78)]">
+    <div className="pointer-events-auto absolute bottom-3 left-1/2 z-20 -translate-x-1/2 md:bottom-4">
+      <div className="rounded-[1.65rem] border border-white/50 bg-white/38 p-1.5 shadow-[0_26px_80px_-48px_rgb(var(--accent-navy)/0.72)] backdrop-blur-md">
+        <div className="flex items-center gap-1 rounded-[1.35rem] border border-white/50 bg-surface-2/92 px-1.5 py-1.5 shadow-[inset_0_1px_0_rgb(255_255_255/0.78)]">
           <DockButton
             icon={<LocateFixed className="h-4 w-4" />}
             label="Konum"
@@ -253,6 +262,12 @@ function MapActionDock({
             icon={<Layers3 className="h-4 w-4" />}
             label="Katman"
             onClick={onToggleLegend}
+          />
+          <DockButton
+            active={mapMode === "3d"}
+            icon={<Box className="h-4 w-4" />}
+            label={mapMode === "3d" ? "2D" : "3D"}
+            onClick={onToggle3D}
           />
           <DockButton
             icon={<SlidersHorizontal className="h-4 w-4" />}
@@ -285,7 +300,8 @@ function DockButton({
         "soft-press inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-extrabold transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
         active
           ? "bg-[rgb(var(--accent-navy))] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.16)]"
-          : "text-fg-secondary hover:bg-surface-1 hover:text-fg-primary"
+          : "text-fg-secondary hover:bg-surface-1 hover:text-fg-primary",
+        "max-sm:h-10 max-sm:px-3 max-sm:text-xs"
       )}
     >
       <span className={active ? "text-white" : "text-brand-green"}>{icon}</span>
@@ -295,33 +311,46 @@ function DockButton({
 }
 
 function MobileMapHint() {
-  const items = [
-    { icon: <Layers3 className="h-4 w-4" />, label: "Katman" },
-    { icon: <Navigation className="h-4 w-4" />, label: "Konum" },
-    { icon: <Search className="h-4 w-4" />, label: "Ara" }
-  ];
+  const setSearchOpen = useUIStore((s) => s.setSearchOpen);
+  const setLegendCollapsed = useUIStore((s) => s.setLegendCollapsed);
+  const setMapMode = useUIStore((s) => s.setMapMode);
 
   return (
     <div className="pointer-events-auto absolute left-3 top-4 z-10 flex flex-col gap-2 xl:hidden">
       <div className="map-glass-shell max-w-[calc(100vw-5.5rem)] rounded-[1.5rem] px-4 py-3 md:hidden">
-        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-green">Parsel & İmar</div>
-        <div className="mt-1 text-sm font-black leading-tight text-fg-primary">Haritada dokun, bilgileri al</div>
+        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-green">Harita komutu</div>
+        <div className="mt-1 text-sm font-black leading-tight text-fg-primary">Ara, katman aç veya 3D&apos;ye geç</div>
       </div>
       <div className="hidden gap-2 md:flex xl:hidden">
-        {items.map((item) => (
-          <button
-            key={item.label}
-            type="button"
-            className={cn(
-              "map-glass-shell inline-flex h-12 items-center gap-2 rounded-2xl px-3 text-sm font-bold text-fg-primary",
-              "soft-press hover:bg-white"
-            )}
-          >
-            <span className="text-brand-green">{item.icon}</span>
-            {item.label}
-          </button>
-        ))}
+        <HintButton icon={<Search className="h-4 w-4" />} label="Ara" onClick={() => setSearchOpen(true)} />
+        <HintButton icon={<Layers3 className="h-4 w-4" />} label="Katman" onClick={() => setLegendCollapsed(false)} />
+        <HintButton icon={<Navigation className="h-4 w-4" />} label="Konum" onClick={() => window.dispatchEvent(new CustomEvent("eimar:map:control", { detail: { action: "locate" } }))} />
+        <HintButton icon={<Box className="h-4 w-4" />} label="3D" onClick={() => setMapMode("3d")} />
       </div>
     </div>
+  );
+}
+
+function HintButton({
+  icon,
+  label,
+  onClick
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "map-glass-shell inline-flex h-12 items-center gap-2 rounded-2xl px-3 text-sm font-bold text-fg-primary",
+        "soft-press hover:bg-white"
+      )}
+    >
+      <span className="text-brand-green">{icon}</span>
+      {label}
+    </button>
   );
 }

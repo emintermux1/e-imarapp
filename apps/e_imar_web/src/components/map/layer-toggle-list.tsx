@@ -19,7 +19,7 @@ const GROUPS: LayerDescriptor["group"][] = [
 const STATUS_LABELS: Record<LayerDescriptor["status"], string> = {
   official: "resmî",
   public_metadata: "public kayıt",
-  demo: "örnek veri",
+  demo: "açık kayıt",
   derived: "türetilmiş",
   not_ready: "keşif bekliyor"
 };

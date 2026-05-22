@@ -103,7 +103,7 @@ live_sync: {liveStatus} · overlay provenance: örnek/türetilmiş
       </div>
 
       <div className="grid gap-2 rounded-md border border-border-subtle bg-surface-2 p-3 text-[11px] sm:grid-cols-4">
-        <MiniStat label="örnek" value={provenanceSummary.demo.toString()} />
+        <MiniStat label="açık kayıt" value={provenanceSummary.demo.toString()} />
         <MiniStat label="public_metadata" value={provenanceSummary.public_metadata.toString()} />
         <MiniStat label="official" value={provenanceSummary.official.toString()} />
         <MiniStat label="derived" value={provenanceSummary.derived.toString()} />

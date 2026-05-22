@@ -1051,7 +1051,7 @@ export const LAYER_DESCRIPTORS: LayerDescriptor[] = [
     defaultOpacity: 0.55,
     group: "Çevre",
     status: "not_ready",
-    emptyReason: "Gürültü/trafik servisi yok; parselde örnek skor varsa ayrıca örnek veri etiketiyle gösterilir."
+    emptyReason: "Gürültü/trafik servisi yok; parselde açık kayıt skoru varsa ayrıca kaynak etiketiyle gösterilir."
   },
   {
     id: "solar-shadow",

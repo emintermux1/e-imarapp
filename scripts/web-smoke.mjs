@@ -9,8 +9,8 @@ const BASE_URL = `http://${HOST}:${PORT}`;
 const TIMEOUT_MS = Number(process.env.WEB_SMOKE_TIMEOUT_MS || 90_000);
 
 const homeShellSnippets = [
-  "Harita üzerinde başla",
-  "Haritaya tıkla, ada/parsel ara veya belediye seç",
+  "Tek yerden sorgula",
+  "Ada/parsel, adres, koordinat veya belediye seç",
   "Kaynak merkezi",
   "Sorgu",
   "Katman",
@@ -21,7 +21,7 @@ const routeSmokeChecks = [
     pathname: "/kaynaklar",
     snippets: [
       "Kaynak komuta merkezi",
-      "Canlı, aday ve bloklu veri kaynakları",
+      "Canlı, public ve korumalı veri kaynakları",
       "Registry tablosu",
     ],
   },

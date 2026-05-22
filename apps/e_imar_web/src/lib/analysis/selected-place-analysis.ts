@@ -78,7 +78,7 @@ export function buildSelectedPlaceAnalysis({
     disclaimer:
       metadata.official || parcel?.sourceStatus === "live"
         ? "Bu ekran seçili konum için türetilmiş karar destek özetidir; resmi imar durumu veya tapu kaydı yerine geçmez."
-        : "Örnek/türetilmiş analizdir; resmi kayıt değildir. Belediye/TKGM/e-Plan kaydı gibi sunulmamalıdır.",
+        : "Açık/kayıtlı kaynaklardan türetilmiş analizdir; resmi kayıt değildir. Belediye/TKGM/e-Plan kaydı gibi sunulmamalıdır.",
     selectedParcel: parcel ?? undefined,
     nearestParcel: nearest,
     insights: [
@@ -244,13 +244,13 @@ function confidenceInsight(
     id: "confidence",
     kind: "confidence",
     title: "Veri güveni",
-    value: hasLive ? "Canlı + türetilmiş" : "Örnek/türetilmiş",
+    value: hasLive ? "Canlı + türetilmiş" : "Açık kayıt + türetilmiş",
     detail: metadata.label,
     tone: hasLive ? "good" : "warning",
     provenance: hasLive ? "live" : "demo",
     bullets: [
       `Seçim kaynağı: ${sourceLabel(point.source)}`,
-      metadata.official ? "Kaynak resmi akış olarak işaretli." : "Resmi olmayan örnek veriler ve yerel registry yüzeyleri kullanıldı.",
+      metadata.official ? "Kaynak resmi akış olarak işaretli." : "Açık/kayıtlı kaynak verileri ve yerel registry yüzeyleri kullanıldı.",
       ...(metadata.fallbackReason ? [metadata.fallbackReason] : metadata.notes.slice(0, 1))
     ]
   };

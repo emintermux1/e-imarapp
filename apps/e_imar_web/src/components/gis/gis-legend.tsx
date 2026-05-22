@@ -184,7 +184,7 @@ const LEGEND_STATUS_ROWS: Array<{
 }> = [
   { status: "official", label: "official · resmî kaynak", className: "border-status-success/40 bg-status-success/30" },
   { status: "public_metadata", label: "public metadata · açık kayıt", className: "border-[rgb(var(--accent-blue))]/40 bg-[rgb(var(--accent-blue))]/25" },
-  { status: "demo", label: "örnek veri · resmi değil", className: "border-border-strong bg-surface-3" },
+  { status: "demo", label: "açık/kayıtlı · resmi değil", className: "border-border-strong bg-surface-3" },
   { status: "derived", label: "derived · hesap/türetim", className: "border-brand-blue/40 bg-brand-blue/20" },
   { status: "not_ready", label: "keşif bekliyor · veri bağlı değil", className: "border-status-warning/45 bg-status-warning/25" }
 ];
