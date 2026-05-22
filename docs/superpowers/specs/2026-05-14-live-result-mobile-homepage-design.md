@@ -1,5 +1,7 @@
 # Phase 1 Design: Live Result Homepage and Mobile Flow
 
+> Historical phase design. The current canonical web app is `apps/e_imar_web`; `frontend/` references below describe the prototype-era app that has since been moved under `_archive/legacy-frontends/`.
+
 ## Goal
 
 Make the product feel usable before full official connector coverage exists. A first-time user should immediately understand what to do, run an ada/parsel or municipality-driven lookup on mobile, see which live sources were checked, and understand why a verified result is available or unavailable.
