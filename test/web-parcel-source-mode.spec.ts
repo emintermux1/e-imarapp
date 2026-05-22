@@ -61,7 +61,7 @@ describe('web parcel source mode gate', () => {
     expect(snapshot.metadata.mode).toBe('unavailable');
     expect(snapshot.metadata.availability).toBe('production_unavailable');
     expect(snapshot.metadata.demoFallbackAllowed).toBe(false);
-    expect(snapshot.metadata.unavailableReason).toContain('örnek veri fallback kapalı');
+    expect(snapshot.metadata.unavailableReason).toContain('açık/kayıtlı veri fallback kapalı');
     expect(snapshot.metadata.featureCount).toBe(0);
     expect(snapshot.collection.features).toHaveLength(0);
   });
