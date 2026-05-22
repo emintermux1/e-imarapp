@@ -110,4 +110,20 @@ describe('web parcel source mode gate', () => {
     expect(snapshot.metadata.endpoint).toBeUndefined();
     expect(snapshot.metadata.unavailableReason).toContain('NEXT_PUBLIC_EIMAR_API_BASE_URL veya NEXT_PUBLIC_API_BASE_URL');
   });
+
+  it('falls through to the canonical API URL when the API-v1 alias is malformed', () => {
+    resetParcelEnv({
+      NODE_ENV: 'production',
+      NEXT_PUBLIC_EIMAR_DATA_MODE: 'api',
+      NEXT_PUBLIC_API_BASE_URL: 'not a url',
+      NEXT_PUBLIC_EIMAR_API_BASE_URL: 'https://api.example.test'
+    });
+
+    const snapshot = getParcelSourceSnapshot();
+
+    expect(snapshot.metadata.mode).toBe('api');
+    expect(snapshot.metadata.availability).toBe('ready');
+    expect(snapshot.metadata.endpoint).toBe('https://api.example.test');
+    expect(snapshot.metadata.unavailableReason).toBeUndefined();
+  });
 });

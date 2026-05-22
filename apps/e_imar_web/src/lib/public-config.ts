@@ -9,6 +9,7 @@ export type PublicUrlResolution = {
   source: "env" | "fallback";
   envName?: string;
   reason?: string;
+  ignoredInvalid?: Array<{ envName: string; reason: string }>;
 };
 
 function stripTrailingSlash(value: string) {
@@ -31,6 +32,7 @@ function resolvePublicUrl(
   candidates: Array<{ name: string; value: string | undefined }>,
   fallback: string
 ): PublicUrlResolution {
+  const ignoredInvalid: Array<{ envName: string; reason: string }> = [];
   for (const candidate of candidates) {
     const rawValue = candidate.value?.trim();
     if (!rawValue) continue;
@@ -41,24 +43,25 @@ function resolvePublicUrl(
         configured: true,
         valid: true,
         source: "env",
-        envName: candidate.name
+        envName: candidate.name,
+        ignoredInvalid: ignoredInvalid.length ? ignoredInvalid : undefined
       };
     }
-    return {
-      value: fallback,
-      configured: true,
-      valid: false,
-      source: "fallback",
+    ignoredInvalid.push({
       envName: candidate.name,
       reason: `${candidate.name} must be a valid http(s) URL.`
-    };
+    });
   }
 
+  const firstInvalid = ignoredInvalid[0];
   return {
     value: fallback,
-    configured: false,
-    valid: true,
-    source: "fallback"
+    configured: ignoredInvalid.length > 0,
+    valid: ignoredInvalid.length === 0,
+    source: "fallback",
+    envName: firstInvalid?.envName,
+    reason: firstInvalid?.reason,
+    ignoredInvalid: ignoredInvalid.length ? ignoredInvalid : undefined
   };
 }
 
