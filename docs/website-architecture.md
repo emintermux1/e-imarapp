@@ -68,7 +68,7 @@ Session tokens are HMAC-signed with `WEBSITE_SESSION_SECRET`.
 
 ## Production deployment pattern
 
-- Web app server -> API gateway -> NestJS API
+- Web app server -> API gateway -> FastAPI API
 - Redis + BullMQ for async tasks
 - PostgreSQL/PostGIS for geospatial state
 - MinIO/S3 for artifacts

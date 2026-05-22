@@ -1,9 +1,9 @@
 # OpenAPI
 
-The running NestJS service exposes Swagger UI and JSON at:
+The running FastAPI service exposes OpenAPI docs and JSON at:
 
 - `GET /docs`
-- `GET /docs-json`
+- `GET /openapi.json`
 
 ## Endpoints
 
