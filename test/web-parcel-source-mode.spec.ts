@@ -95,4 +95,19 @@ describe('web parcel source mode gate', () => {
     expect(snapshot.metadata.endpoint).toBe('https://api.example.test/api/v1');
     expect(snapshot.metadata.unavailableReason).toBeUndefined();
   });
+
+  it('treats malformed production API URLs as unavailable instead of localhost fallback', () => {
+    resetParcelEnv({
+      NODE_ENV: 'production',
+      NEXT_PUBLIC_EIMAR_DATA_MODE: 'api',
+      NEXT_PUBLIC_API_BASE_URL: 'not a url'
+    });
+
+    const snapshot = getParcelSourceSnapshot();
+
+    expect(snapshot.metadata.mode).toBe('unavailable');
+    expect(snapshot.metadata.availability).toBe('production_unavailable');
+    expect(snapshot.metadata.endpoint).toBeUndefined();
+    expect(snapshot.metadata.unavailableReason).toContain('NEXT_PUBLIC_EIMAR_API_BASE_URL veya NEXT_PUBLIC_API_BASE_URL');
+  });
 });

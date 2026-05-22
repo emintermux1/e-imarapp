@@ -83,10 +83,22 @@ NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=0
 
 `NEXT_PUBLIC_EIMAR_API_BASE_URL` is the canonical backend origin for website
 BFF, connector and `/api/v1/*` rewrite traffic. `NEXT_PUBLIC_API_BASE_URL`
-remains accepted for `/api/v1` clients. Development may fall back to labelled
+remains accepted for `/api/v1` clients and is used first when both variables are
+present to preserve older deployments. Development may fall back to labelled
 synthetic parcels. Production does not silently draw demo parcels when `api` or
 `vector-tile` is requested without a configured endpoint; the map remains
 visible and the parcel layer reports a production unavailable state.
+
+Deployment probes:
+
+```
+GET /healthz
+GET /readyz
+```
+
+`/healthz` is a no-store uptime probe. `/readyz` is stricter and returns 503 in
+production if the app cannot resolve a live API/vector tile parcel source or if
+demo fallback is enabled.
 
 ---
 

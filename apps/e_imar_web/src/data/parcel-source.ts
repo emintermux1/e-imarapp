@@ -1,6 +1,6 @@
 import { DEMO_PARCEL_CLUSTERS } from "./parcel-seeds";
 import { generateDemoParcels, getDemoParcelMetadata } from "./parcel-generator";
-import { readPublicBackendBase } from "@/lib/public-config";
+import { resolvePublicBackendBase } from "@/lib/public-config";
 import type { ParcelFeatureCollection } from "@/types/parcel";
 
 export type ParcelDataMode = "demo" | "api" | "vector-tile" | "unavailable";
@@ -50,8 +50,8 @@ function readMode(): RequestedParcelDataMode {
 }
 
 function readApiEndpoint() {
-  const explicitEndpoint = process.env.NEXT_PUBLIC_EIMAR_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
-  return explicitEndpoint ? readPublicBackendBase() : undefined;
+  const endpoint = resolvePublicBackendBase();
+  return endpoint.configured && endpoint.valid ? endpoint.value : undefined;
 }
 
 function readDemoFallbackAllowed() {
