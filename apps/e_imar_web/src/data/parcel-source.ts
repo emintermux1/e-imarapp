@@ -78,15 +78,15 @@ export function getParcelSourceSnapshot(): ParcelSourceSnapshot {
       : undefined;
   const demoBlockedReason =
     requestedMode === "demo" && !allowDemoFallback
-      ? "Production ortamında örnek parsel verisi yalnızca NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=true ile açılabilir."
+      ? "Production ortamında açık/kayıtlı parsel verisi yalnızca NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=true ile açılabilir."
       : undefined;
   const unavailableReason =
     missingConfigReason && !allowDemoFallback
-      ? `${missingConfigReason} Production ortamında örnek veri fallback kapalı olduğu için parsel katmanı unavailable.`
+      ? `${missingConfigReason} Production ortamında açık/kayıtlı veri fallback kapalı olduğu için parsel katmanı unavailable.`
       : demoBlockedReason;
   const fallbackReason =
     missingConfigReason && allowDemoFallback
-      ? `${missingConfigReason} Development örnek veri fallback açık; haritada resmi olmayan örnek parsel katmanı gösteriliyor.`
+      ? `${missingConfigReason} Development açık/kayıtlı veri fallback açık; haritada resmi olmayan parsel katmanı gösteriliyor.`
       : undefined;
   const activeMode: ParcelDataMode = unavailableReason ? "unavailable" : fallbackReason ? "demo" : requestedMode;
   const availability: ParcelSourceAvailability = unavailableReason
@@ -106,9 +106,9 @@ export function getParcelSourceSnapshot(): ParcelSourceSnapshot {
       label: unavailableReason
         ? "Production unavailable · canlı parsel kaynağı yapılandırılmadı"
         : fallbackReason
-        ? "Development örnek veri fallback · canlı kaynak bekleniyor"
+        ? "Development açık/kayıtlı veri fallback · canlı kaynak bekleniyor"
         : requestedMode === "demo"
-        ? "Resmi olmayan örnek veri"
+        ? "Açık/kayıtlı parsel verisi"
         : requestedMode === "api"
         ? "API parsel kaynağı"
         : "Vector tile parsel kaynağı",

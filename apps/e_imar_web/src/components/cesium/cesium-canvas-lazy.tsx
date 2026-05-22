@@ -25,7 +25,7 @@ export const CesiumCanvasLazy = dynamic(
             />
           </div>
           <span className="text-[11px] uppercase tracking-wider">
-            3D motoru indiriliyor…
+            3D sahne hazırlanıyor…
           </span>
           <style>{`@keyframes cesium-loader {
             0% { transform: translateX(-120%); }

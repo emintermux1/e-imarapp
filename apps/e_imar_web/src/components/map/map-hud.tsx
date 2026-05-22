@@ -18,7 +18,8 @@ import {
   Share2,
   Check,
   MousePointer2,
-  GitCompareArrows
+  GitCompareArrows,
+  Loader2
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { IconButton } from "@/components/ui/icon-button";
@@ -58,10 +59,12 @@ export function MapHud({
   const mapMode = useUIStore((s) => s.mapMode);
   const askiMode = useUIStore((s) => s.askiMode);
   const setMapMode = useUIStore((s) => s.setMapMode);
+  const rightPanelOpen = useUIStore((s) => s.rightPanelOpen);
   const setCompareMode = useUIStore((s) => s.setCompareMode);
   const setTimelineYear = useUIStore((s) => s.setTimelineYear);
   const setTimelineCompareYear = useUIStore((s) => s.setTimelineCompareYear);
   const [locationStatus, setLocationStatus] = React.useState<string | null>(null);
+  const [modeSwitching, setModeSwitching] = React.useState(false);
 
   React.useEffect(() => {
     let timeoutId: number | undefined;
@@ -77,10 +80,20 @@ export function MapHud({
       window.clearTimeout(timeoutId);
     };
   }, []);
+  React.useEffect(() => {
+    if (!modeSwitching) return;
+    const timeoutId = window.setTimeout(() => setModeSwitching(false), 900);
+    return () => window.clearTimeout(timeoutId);
+  }, [mapMode, modeSwitching]);
 
   function emitMapControl(action: "in" | "out" | "reset" | "north" | "locate") {
     const evt = new CustomEvent("eimar:map:control", { detail: { action } });
     window.dispatchEvent(evt);
+  }
+
+  function toggleMapMode() {
+    setModeSwitching(true);
+    setMapMode(mapMode === "3d" ? "2d" : "3d");
   }
 
   async function copyShareLink() {
@@ -149,7 +162,7 @@ export function MapHud({
   return (
     <>
       {/* Top-left: compact map context, secondary to the canvas */}
-      <div className="pointer-events-none absolute left-24 top-24 z-10 hidden max-w-[292px] flex-col gap-2 xl:flex">
+      <div className="pointer-events-none absolute left-24 top-[10.5rem] z-10 hidden max-w-[292px] flex-col gap-2 xl:flex 2xl:top-24">
         <ChipPill>
           <span className="text-fg-muted">Mod</span>
           <span
@@ -179,7 +192,8 @@ export function MapHud({
 
       {/* Top-right: zoom controls + compass + 3D toggle */}
       <div className={cn(
-        "pointer-events-auto absolute right-4 top-24 z-10 flex flex-col items-end gap-2 transition-transform duration-200 ease-out",
+        "pointer-events-auto absolute right-4 top-24 z-10 flex flex-col items-end gap-2 transition-[right,transform] duration-200 ease-out",
+        rightPanelOpen && "xl:right-[420px]",
         selectedPoint && !selectedParcelId && "hidden 2xl:flex"
       )}>
         <div className="flex flex-col overflow-hidden rounded-[1.2rem] border border-white/55 bg-surface-2/92 shadow-[inset_0_1px_0_rgb(255_255_255/0.82),0_16px_44px_-34px_rgb(var(--accent-navy)/0.72)]">
@@ -188,7 +202,7 @@ export function MapHud({
             variant="ghost"
             tooltipSide="left"
             onClick={() => emitMapControl("in")}
-              className="h-9 w-9 rounded-none border-b border-border-subtle"
+            className="h-9 w-9 rounded-none border-b border-border-subtle"
           >
             <Plus className="h-4 w-4" />
           </IconButton>
@@ -197,7 +211,7 @@ export function MapHud({
             variant="ghost"
             tooltipSide="left"
             onClick={() => emitMapControl("out")}
-              className="h-9 w-9 rounded-none"
+            className="h-9 w-9 rounded-none"
           >
             <Minus className="h-4 w-4" />
           </IconButton>
@@ -231,9 +245,9 @@ export function MapHud({
               type="button"
               aria-label={mapMode === "3d" ? "2D moduna geç" : "3D moduna geç"}
               aria-pressed={mapMode === "3d"}
-              onClick={() => setMapMode(mapMode === "3d" ? "2d" : "3d")}
+              onClick={toggleMapMode}
               className={cn(
-                "inline-flex h-9 w-9 items-center justify-center rounded-[1.1rem] border bg-surface-2/92 shadow-[inset_0_1px_0_rgb(255_255_255/0.82),0_16px_44px_-34px_rgb(var(--accent-navy)/0.72)] transition-colors",
+                "inline-flex h-auto min-h-9 min-w-9 items-center gap-2 rounded-[1.1rem] border bg-surface-2/92 px-2.5 py-2 text-left shadow-[inset_0_1px_0_rgb(255_255_255/0.82),0_16px_44px_-34px_rgb(var(--accent-navy)/0.72)] transition-colors",
                 mapMode === "3d"
                   ? "border-brand-blue/60 text-fg-primary"
                   : "border-border-strong text-fg-secondary hover:bg-surface-3"
@@ -245,12 +259,22 @@ export function MapHud({
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.16 }}
               >
-                {mapMode === "3d" ? (
+                {modeSwitching ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : mapMode === "3d" ? (
                   <MapIcon className="h-4 w-4" />
                 ) : (
                   <Box className="h-4 w-4" />
                 )}
               </motion.span>
+              <span className="hidden flex-col leading-none md:flex">
+                <span className="text-[10px] font-black uppercase tracking-[0.16em]">
+                  {mapMode === "3d" ? "3D açık" : "3D"}
+                </span>
+                <span className="mt-1 text-[10px] font-medium text-fg-muted">
+                  {mapMode === "3d" ? "2D haritaya dön" : "Kütle + gölge"}
+                </span>
+              </span>
             </button>
           </TooltipTrigger>
           <TooltipContent side="left">
@@ -260,7 +284,12 @@ export function MapHud({
       </div>
 
       {/* Bottom-right floating cluster */}
-      <div className="pointer-events-auto absolute bottom-24 right-4 z-10 hidden flex-col items-end gap-2 md:flex">
+      <div
+        className={cn(
+          "pointer-events-auto absolute bottom-24 right-4 z-10 hidden flex-col items-end gap-2 transition-[right] duration-200 ease-out md:flex",
+          rightPanelOpen && "xl:right-[420px]"
+        )}
+      >
         {locationStatus && (
           <span
             role="status"

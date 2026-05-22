@@ -78,9 +78,9 @@ export function DataCoverageBadge() {
 
   const stateChip =
     metadata.mode === "unavailable"
-      ? "unavailable"
+      ? "erişilemiyor"
       : metadata.fallbackReason || metadata.mode === "demo"
-      ? "örnek veri"
+      ? "açık kayıt"
       : metadata.endpoint
       ? "hazır"
       : "beklemede";
@@ -165,7 +165,7 @@ export function DataCoverageBadge() {
                   : metadata.fallbackReason
                   ? metadata.fallbackReason
                   : metadata.mode === "demo"
-                  ? "Parsel katmanı resmi olmayan örnek veriye düşüyor; sağlayıcı ve bağlayıcı hazırlığı yine de görünür tutuluyor."
+                  ? "Parsel katmanı açık/kayıtlı kaynak verisine düşüyor; sağlayıcı ve bağlayıcı hazırlığı görünür tutuluyor."
                   : "Parsel katmanı canlı hedefe hazırlanıyor; bağlayıcı durumu ve kapsama özetleri burada toplanır."}
               </DialogDescription>
             </div>
@@ -190,7 +190,7 @@ export function DataCoverageBadge() {
                 <div className="mt-4 grid gap-3">
                   <StateRow
                     label="Gerçek durum"
-                    value={metadata.mode === "unavailable" ? "Production unavailable" : metadata.mode === "demo" ? "Örnek veri" : "Canlı hedef"}
+                    value={metadata.mode === "unavailable" ? "Production unavailable" : metadata.mode === "demo" ? "Açık kayıt" : "Canlı hedef"}
                     detail={metadata.unavailableReason ?? metadata.fallbackReason ?? "Canlı veri henüz doğrulanmadı"}
                     icon={<AlertTriangle className="h-4 w-4" />}
                     tone={metadata.mode === "unavailable" ? "danger" : metadata.fallbackReason ? "warning" : metadata.mode === "demo" ? "info" : "success"}
@@ -205,7 +205,7 @@ export function DataCoverageBadge() {
                   <StateRow
                     label="Resmî veri"
                     value={metadata.official ? "evet" : "hayır"}
-                    detail={metadata.official ? "Resmî akışa bağlı" : metadata.mode === "unavailable" ? "Production örnek veri fallback kapalı" : "Resmi olmayan örnek veri"}
+                    detail={metadata.official ? "Resmî akışa bağlı" : metadata.mode === "unavailable" ? "Production açık kayıt fallback kapalı" : "Açık/kayıtlı kaynak verisi"}
                     icon={<CheckCircle2 className="h-4 w-4" />}
                     tone={metadata.official ? "success" : "muted"}
                   />
@@ -214,7 +214,7 @@ export function DataCoverageBadge() {
                 <div className="mt-5">
                   <PanelTitle
                     icon={<MapPin className="h-4 w-4" />}
-                    title="Örnek kapsama şehirleri"
+                    title="Kapsama şehirleri"
                     subtitle="Haritayı kapsama merkezlerine taşır"
                   />
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -234,7 +234,7 @@ export function DataCoverageBadge() {
                         </button>
                       ))
                     ) : (
-                      <p className="text-sm text-fg-secondary">Örnek kapsama şehri bulunamadı.</p>
+                      <p className="text-sm text-fg-secondary">Kapsama şehri bulunamadı.</p>
                     )}
                   </div>
                 </div>

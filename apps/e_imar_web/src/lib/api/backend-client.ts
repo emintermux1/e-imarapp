@@ -380,12 +380,12 @@ export async function getPremiumModuleStates(parcelId?: string, userReference = 
           ? `${Math.round(value.envelope?.maxConstructionAreaM2 ?? 0).toLocaleString("tr-TR")} m² inşaat alanı`
           : issueMessage(value.issue, value.status)
     }),
-    stateFromSettled("merge-candidates", "Tevhid adayları", merge, {
+    stateFromSettled("merge-candidates", "Tevhid komşuları", merge, {
       href: "/",
       actionLabel: "Haritada seç",
       describe: (value: MergeCandidatesResponse) =>
         value.status === "ok"
-          ? `${value.candidates?.length ?? 0} komşu aday`
+          ? `${value.candidates?.length ?? 0} komşu parsel`
           : value.note ?? issueMessage(value.issue, value.status)
     }),
     stateFromSettled("eplan", "E-plan akışı", eplan, {

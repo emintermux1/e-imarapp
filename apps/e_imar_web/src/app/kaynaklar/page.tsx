@@ -61,6 +61,39 @@ const CATEGORY_LABELS: Record<string, string> = {
   document: "Doküman"
 };
 
+const STATUS_FILTER_OPTIONS = [
+  { value: "active", label: "Aktif / canlı" },
+  { value: "metadata_only", label: "Açık kayıt" },
+  { value: "needs_contract", label: "Public keşif bekliyor" },
+  { value: "blocked", label: "Korumalı / izinli" },
+  { value: "unavailable", label: "Erişilemiyor" },
+  { value: "live", label: "Canlı" },
+  { value: "fallback", label: "Kayıtlı kaynak" }
+];
+
+const STATUS_LABELS: Record<string, string> = {
+  ok: "Hazır",
+  active: "Aktif",
+  live: "Canlı",
+  verified_live: "Canlı doğrulandı",
+  configured: "Yapılandırıldı",
+  metadata_only: "Açık kayıt",
+  public_metadata: "Açık metadata",
+  fallback: "Kayıtlı kaynak",
+  partial: "Kısmi",
+  blocked: "Korumalı",
+  protected: "Korumalı erişim",
+  requires_credentials: "Erişim bilgisi gerekiyor",
+  captcha_required: "Captcha/portal koruması",
+  needs_contract: "Public keşif bekliyor",
+  method_contract_required: "Bağlayıcı uyumu bekliyor",
+  not_configured: "Yapılandırılmadı",
+  unavailable: "Erişilemiyor",
+  not_ready: "Hazır değil",
+  source_not_found: "Kaynak bulunamadı",
+  unknown: "Bilinmiyor"
+};
+
 type CommandPayload = {
   bootstrap: WebsiteBootstrapResponse | null;
   readiness: WebsiteLiveReadinessResponse | null;
@@ -184,9 +217,9 @@ export default function KaynaklarPage() {
                     </span>
                     <div>
                       <p className="text-[11px] font-black uppercase tracking-[0.22em] text-brand-green">Kaynak komuta merkezi</p>
-                      <h1 className="mt-1 text-2xl font-black tracking-[-0.04em] text-fg-primary">Canlı, aday ve bloklu veri kaynakları</h1>
+                      <h1 className="mt-1 text-2xl font-black tracking-[-0.04em] text-fg-primary">Canlı, public ve korumalı veri kaynakları</h1>
                       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-fg-secondary">
-                        Registry, kalite, aktivasyon, canlı hazırlık, provider ve ingestion gereksinimleri tek ekranda. Veri yoksa sebebi gösterilir; tabloyu yeşile boyayıp kandırma yok.
+                        Registry, kalite, aktivasyon, canlı hazırlık, provider ve yükleme gereksinimleri tek ekranda. Veri yoksa sebebi görünür; public erişim, canlı endpoint ve korumalı erişim ayrı tutulur.
                       </p>
                     </div>
                   </div>
@@ -207,11 +240,11 @@ export default function KaynaklarPage() {
             </header>
 
             <div className="grid gap-3 p-5 sm:grid-cols-2 xl:grid-cols-5">
-              <SummaryCard icon={<Database className="h-4 w-4" />} label="Registry" value={coverage?.totalSources ?? sources.length} detail={`${coverage?.municipalSources ?? 0} belediye · ${coverage?.publicCandidateCount ?? 0} açık aday`} />
-              <SummaryCard icon={<CheckCircle2 className="h-4 w-4" />} label="Aktif kaynak" value={summary?.active ?? 0} detail={`${summary?.metadataOnly ?? 0} metadata · ${summary?.needsContract ?? 0} kontrat`} tone="success" />
-              <SummaryCard icon={<LockKeyhole className="h-4 w-4" />} label="Bloklu / korumalı" value={(summary?.blocked ?? 0) + protectedSources} detail={`${summary?.unavailable ?? 0} unavailable · ${protectedSources} credential/legal`} tone="warning" />
-              <SummaryCard icon={<SignalHigh className="h-4 w-4" />} label="Canlı hazırlık" value={readiness ? `${configuredEnv}/${requiredEnv}` : "—"} detail={`${verifiedLive} verified · ${blockedReadiness} bekliyor`} tone={readiness?.status === "ok" ? "success" : "warning"} />
-              <SummaryCard icon={<Globe2 className="h-4 w-4" />} label="Harita provider" value={command.mapProviders.filter((provider) => provider.configured).length} detail={`${command.mapProviders.length} provider · tile ${command.tileStatus?.status ?? "unknown"}`} />
+              <SummaryCard icon={<Database className="h-4 w-4" />} label="Registry" value={coverage?.totalSources ?? sources.length} detail={`${coverage?.municipalSources ?? 0} belediye · ${coverage?.publicCandidateCount ?? 0} açık/public kayıt`} />
+              <SummaryCard icon={<CheckCircle2 className="h-4 w-4" />} label="Aktif kaynak" value={summary?.active ?? 0} detail={`${summary?.metadataOnly ?? 0} açık metadata · ${summary?.needsContract ?? 0} keşif bekliyor`} tone="success" />
+              <SummaryCard icon={<LockKeyhole className="h-4 w-4" />} label="Korumalı / kapalı" value={(summary?.blocked ?? 0) + protectedSources} detail={`${summary?.unavailable ?? 0} erişilemiyor · ${protectedSources} izinli/korumalı`} tone="warning" />
+              <SummaryCard icon={<SignalHigh className="h-4 w-4" />} label="Canlı hazırlık" value={readiness ? `${configuredEnv}/${requiredEnv}` : "—"} detail={`${verifiedLive} canlı doğrulandı · ${blockedReadiness} bekliyor`} tone={readiness?.status === "ok" ? "success" : "warning"} />
+              <SummaryCard icon={<Globe2 className="h-4 w-4" />} label="Harita sağlayıcı" value={command.mapProviders.filter((provider) => provider.configured).length} detail={`${command.mapProviders.length} sağlayıcı · tile ${statusLabel(command.tileStatus?.status ?? "unknown").toLocaleLowerCase("tr-TR")}`} />
             </div>
 
             {command.error && (
@@ -255,13 +288,9 @@ export default function KaynaklarPage() {
                     className="h-10 rounded-full border border-border-subtle bg-bg px-3 text-sm text-fg-primary"
                   >
                     <option value="all">Tüm durumlar</option>
-                    <option value="active">Active</option>
-                    <option value="metadata_only">Metadata only</option>
-                    <option value="needs_contract">Needs contract</option>
-                    <option value="blocked">Blocked</option>
-                    <option value="unavailable">Unavailable</option>
-                    <option value="live">Live</option>
-                    <option value="fallback">Fallback</option>
+                    {STATUS_FILTER_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
                   </select>
                 </div>
               </header>
@@ -604,9 +633,13 @@ function StatusPill({ status }: { status: string }) {
   const normalized = status || "unknown";
   return (
     <span className={cn("inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em]", statusClass(normalized))}>
-      {normalized}
+      {statusLabel(normalized)}
     </span>
   );
+}
+
+function statusLabel(status: string) {
+  return STATUS_LABELS[status] ?? status.replace(/_/g, " ");
 }
 
 function statusClass(status: string) {

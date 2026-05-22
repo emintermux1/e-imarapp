@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sun, Moon, Eye, ChevronDown, Box, Clock } from "lucide-react";
+import { Sun, Moon, Eye, ChevronDown, Box, Clock, MousePointer2 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -27,8 +27,8 @@ const SUN_PRESETS = [
  * 3D-only floating panel that appears next to the right info panel when the
  * map is in 3D mode. Drives shadow analysis and view corridor.
  *
- * Sits at top:14 right:16+panelWidth so it never overlaps the info panel
- * when both are open.
+ * Sits left of the 3D HUD controls and right info panel so it never blocks
+ * mode switching, compass, or zoom actions.
  */
 export function Section3DAnalizleri() {
   const mapMode = useUIStore((s) => s.mapMode);
@@ -53,8 +53,8 @@ export function Section3DAnalizleri() {
 
   const isNight = sunHour < 6 || sunHour > 19;
 
-  // Position: right edge offset accounts for the (open) right info panel.
-  const rightOffset = rightPanelOpen ? 416 : 16;
+  const hudClearance = 168;
+  const rightOffset = (rightPanelOpen ? 420 : 16) + hudClearance;
 
   return (
     <AnimatePresence>
@@ -66,17 +66,22 @@ export function Section3DAnalizleri() {
           exit={{ opacity: 0, x: 12 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
           className={cn(
-            "fixed top-[72px] z-30 hidden lg:flex flex-col gap-2 w-[280px]",
-            "rounded-md border border-border-strong bg-surface-2 shadow-pop"
+            "fixed top-[9.75rem] z-30 hidden max-h-[calc(100dvh-11rem)] w-[286px] flex-col overflow-hidden lg:flex 2xl:top-24",
+            "rounded-[1.45rem] border border-white/55 bg-surface-2/96 shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_22px_54px_-34px_rgb(var(--accent-navy)/0.46)] backdrop-blur-sm"
           )}
           style={{ right: rightOffset }}
           aria-label="3D analiz paneli"
         >
-          <header className="flex items-center justify-between gap-2 px-3 h-9 border-b border-border-subtle">
-            <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-fg-secondary">
-              <Box className="h-3.5 w-3.5 text-fg-muted" />
-              3D Analizleri
-            </span>
+          <header className="flex items-center justify-between gap-2 border-b border-border-subtle/80 bg-surface-1/72 px-3 py-2.5">
+            <div className="min-w-0">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-brand-blue">
+                <Box className="h-3.5 w-3.5" />
+                3D Analiz
+              </span>
+              <p className="mt-0.5 truncate text-[11px] text-fg-muted">
+                Kütle, gölge, emsal ve görüş
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => setCollapsed((c) => !c)}
@@ -93,7 +98,13 @@ export function Section3DAnalizleri() {
           </header>
 
           {!collapsed && (
-            <div className="flex flex-col gap-3 px-3 pb-3 pt-1">
+            <div className="flex flex-col gap-3 overflow-y-auto px-3 pb-3 pt-3">
+              {!parcel && (
+                <div className="flex items-start gap-2 rounded-xl border border-brand-blue/25 bg-[rgb(var(--accent-blue)/0.08)] px-3 py-2 text-[11px] leading-relaxed text-fg-secondary">
+                  <MousePointer2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[rgb(var(--accent-blue))]" />
+                  <span>Haritada bir parsel seçince emsal envelope ve görüş koridoru doğrudan seçili parsele bağlanır.</span>
+                </div>
+              )}
               <Section
                 icon={
                   isNight ? (
@@ -111,7 +122,6 @@ export function Section3DAnalizleri() {
                   />
                 }
               >
-                {/* Quick sun presets */}
                 <div className="flex gap-1.5">
                   {SUN_PRESETS.map((preset) => (
                     <Button
@@ -175,16 +185,18 @@ export function Section3DAnalizleri() {
                 <SwitchRow
                   icon={<Box className="h-3.5 w-3.5 text-fg-muted" />}
                   label="Emsal Envelope"
-                  hint="Maksimum inşaat potansiyelini göster"
+                  hint={parcel ? "Seçili parselin maksimum inşaat potansiyeli" : "Parsel seçimi bekleniyor"}
                   checked={emsalWireframe}
                   onCheckedChange={setEmsalWireframe}
+                  disabled={!parcel}
                 />
                 <SwitchRow
                   icon={<Eye className="h-3.5 w-3.5 text-fg-muted" />}
                   label="Görüş Koridoru"
-                  hint="Komşu yapı engellerini görselleştirir"
+                  hint={parcel ? "Komşu yapı engellerini görselleştirir" : "Parsel seçimi bekleniyor"}
                   checked={viewCorridor}
                   onCheckedChange={setViewCorridor}
+                  disabled={!parcel}
                 />
               </div>
               {parcel && (
@@ -253,16 +265,18 @@ function SwitchRow({
   label,
   hint,
   checked,
-  onCheckedChange
+  onCheckedChange,
+  disabled = false
 }: {
   icon: React.ReactNode;
   label: string;
   hint?: string;
   checked: boolean;
   onCheckedChange: (v: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
-    <label className="flex items-center justify-between gap-3 py-1.5">
+    <label className={cn("flex items-center justify-between gap-3 py-1.5", disabled && "opacity-55")}>
       <span className="flex items-center gap-2 min-w-0">
         {icon}
         <span className="flex flex-col">
@@ -280,6 +294,7 @@ function SwitchRow({
         checked={checked}
         onCheckedChange={onCheckedChange}
         aria-label={label}
+        disabled={disabled}
       />
     </label>
   );
