@@ -7,7 +7,7 @@ type ReadinessStatus = "ok" | "not_ready";
 type SourceMode = "api" | "vector-tile" | "demo";
 
 function isProductionRuntime() {
-  return process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_VERCEL_ENV === "production" || process.env.VERCEL_ENV === "production";
+  return process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_VERCEL_ENV === "production";
 }
 
 function truthy(value: string | undefined) {

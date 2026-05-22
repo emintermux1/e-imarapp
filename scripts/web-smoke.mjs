@@ -190,6 +190,7 @@ try {
       ...process.env,
       NEXT_TELEMETRY_DISABLED: "1",
       NEXT_PUBLIC_EIMAR_SITE_URL: process.env.NEXT_PUBLIC_EIMAR_SITE_URL || BASE_URL,
+      NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:9/api/v1",
       NEXT_PUBLIC_EIMAR_API_BASE_URL: process.env.NEXT_PUBLIC_EIMAR_API_BASE_URL || "http://127.0.0.1:9",
       NEXT_PUBLIC_EIMAR_DATA_MODE: process.env.NEXT_PUBLIC_EIMAR_DATA_MODE || "fixture",
       NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL: process.env.NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL || "",
@@ -228,7 +229,7 @@ try {
   ]);
   await assertJson("/readyz", [
     (payload) => payload?.status === "ok",
-    (payload) => payload?.apiBaseUrl === "http://127.0.0.1:9",
+    (payload) => payload?.apiBaseUrl === "http://127.0.0.1:9/api/v1",
     (payload) => Array.isArray(payload?.checks) && payload.checks.every((check) => check.status === "ok")
   ]);
   await assertStatusPage("/does-not-exist", 404, ["404 · Sayfa bulunamadı", "Kaynak merkezi"]);
