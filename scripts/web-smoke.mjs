@@ -107,6 +107,44 @@ async function assertPage(pathname, snippets) {
   }
 }
 
+async function assertText(pathname, snippets) {
+  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 30_000);
+  if (!response.ok) {
+    throw new Error(`${pathname} returned HTTP ${response.status}`);
+  }
+
+  const text = await response.text();
+  const missing = snippets.filter((snippet) => !text.includes(snippet));
+  if (missing.length > 0) {
+    throw new Error(`${pathname} missing expected publish text: ${missing.join(", ")}`);
+  }
+}
+
+async function assertJson(pathname, checks) {
+  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 30_000);
+  if (!response.ok) {
+    throw new Error(`${pathname} returned HTTP ${response.status}`);
+  }
+
+  const payload = await response.json();
+  for (const check of checks) {
+    if (!check(payload)) {
+      throw new Error(`${pathname} failed JSON publish artifact check`);
+    }
+  }
+}
+
+async function assertImage(pathname) {
+  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 30_000);
+  if (!response.ok) {
+    throw new Error(`${pathname} returned HTTP ${response.status}`);
+  }
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.startsWith("image/")) {
+    throw new Error(`${pathname} returned non-image content-type ${contentType}`);
+  }
+}
+
 process.on("exit", cleanup);
 process.on("SIGINT", () => fail("interrupted"));
 process.on("SIGTERM", () => fail("terminated"));
@@ -118,6 +156,7 @@ try {
     env: {
       ...process.env,
       NEXT_TELEMETRY_DISABLED: "1",
+      NEXT_PUBLIC_EIMAR_SITE_URL: process.env.NEXT_PUBLIC_EIMAR_SITE_URL || BASE_URL,
       NEXT_PUBLIC_EIMAR_API_BASE_URL: process.env.NEXT_PUBLIC_EIMAR_API_BASE_URL || "http://127.0.0.1:9",
       NEXT_PUBLIC_EIMAR_DATA_MODE: process.env.NEXT_PUBLIC_EIMAR_DATA_MODE || "fixture",
       NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL: process.env.NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL || "",
@@ -144,7 +183,15 @@ try {
   for (const check of routeSmokeChecks) {
     await assertPage(check.pathname, check.snippets);
   }
-  log("home and BFF cockpit routes rendered without provider credentials");
+  await assertText("/robots.txt", [`Sitemap: ${BASE_URL}/sitemap.xml`, "Allow: /"]);
+  await assertText("/sitemap.xml", [`<loc>${BASE_URL}/</loc>`, `<loc>${BASE_URL}/kaynaklar</loc>`]);
+  await assertJson("/manifest.webmanifest", [
+    (payload) => payload?.name === "E-İmar · Türkiye Parsel Sorgu",
+    (payload) => Array.isArray(payload?.icons) && payload.icons.some((icon) => icon.src === "/icon.svg")
+  ]);
+  await assertImage("/icon.svg");
+  await assertImage("/opengraph-image");
+  log("home, BFF cockpit routes, and publish artifacts rendered without provider credentials");
   cleanup();
 } catch (error) {
   fail(error instanceof Error ? error.message : String(error));

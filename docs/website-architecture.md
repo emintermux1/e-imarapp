@@ -58,6 +58,12 @@ Session tokens are HMAC-signed with `WEBSITE_SESSION_SECRET`.
 - `WEBSITE_SESSION_SECRET` (required for session token issue/verify)
 - `OPENAI_API_KEY` (required for plan-note explain endpoint)
 - `PUSH_GATEWAY_URL` (required for live push dispatch from notification pipeline)
+- `NEXT_PUBLIC_EIMAR_SITE_URL` (canonical public website URL for metadata, sitemap, robots, manifest and OpenGraph)
+- `NEXT_PUBLIC_EIMAR_API_BASE_URL` (canonical website backend origin for BFF, connector and `/api/v1/*` rewrite traffic)
+- `NEXT_PUBLIC_API_BASE_URL` (accepted API-v1-specific alias, e.g. `https://api.example.com/api/v1`)
+- `NEXT_PUBLIC_EIMAR_DATA_MODE=api|vector-tile`
+- `NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL` (required when `NEXT_PUBLIC_EIMAR_DATA_MODE=vector-tile`)
+- `NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=0` in production
 
 ## Security notes
 

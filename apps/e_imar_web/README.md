@@ -61,29 +61,32 @@ NEXT_PUBLIC_MAPBOX_TOKEN=pk.xxxx
 If the variable is set, a future enhancement can swap in Mapbox styles. This
 work does not install the Mapbox SDK.
 
-The FastAPI adapter uses:
+Production/staging publish metadata uses:
 
 ```
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+NEXT_PUBLIC_EIMAR_SITE_URL=https://www.example.com
 ```
 
-When the variable is omitted, `http://localhost:8000/api/v1` is the default.
-Live API, local fallback, computed, and demo data are visibly labelled in the
-search results, map selection, right panel workflow strip, and trust section.
+This value feeds `metadataBase`, canonical URLs, robots, sitemap, manifest and
+OpenGraph output. Vercel previews fall back to `VERCEL_URL`; local development
+falls back to `http://localhost:3000`.
 
-Parcel geometry source mode is explicit:
+Backend and parcel geometry source mode are explicit:
 
 ```
-NEXT_PUBLIC_EIMAR_DATA_MODE=demo|api|vector-tile
+NEXT_PUBLIC_EIMAR_DATA_MODE=api|vector-tile
 NEXT_PUBLIC_EIMAR_API_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api/v1
 NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL=http://localhost:7800/public.parcels/{z}/{x}/{y}.pbf
-NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=true
+NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=0
 ```
 
-Development may fall back to labelled synthetic parcels. Production does not
-silently draw demo parcels when `api` or `vector-tile` is requested without a
-configured endpoint; the map remains visible and the parcel layer reports a
-production unavailable state.
+`NEXT_PUBLIC_EIMAR_API_BASE_URL` is the canonical backend origin for website
+BFF, connector and `/api/v1/*` rewrite traffic. `NEXT_PUBLIC_API_BASE_URL`
+remains accepted for `/api/v1` clients. Development may fall back to labelled
+synthetic parcels. Production does not silently draw demo parcels when `api` or
+`vector-tile` is requested without a configured endpoint; the map remains
+visible and the parcel layer reports a production unavailable state.
 
 ---
 
