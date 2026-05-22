@@ -1,5 +1,7 @@
 # E-İmar Premium GIS Yükseltme Raporu
 
+> Historical implementation report. The current canonical web app is `apps/e_imar_web`; legacy `frontend/` references below describe the archived prototype-era implementation.
+
 Bu doküman mevcut sistemi baştan yazmadan, profesyonel belediye/GIS platform seviyesine çıkarma çalışmasının analiz + uygulama özetini içerir.
 
 ## 1) Mevcut sistem analizi (tespit edilen boşluklar)
