@@ -46,13 +46,14 @@ scripts.
 Production parcel rendering must be configured explicitly:
 
 ```bash
+NEXT_PUBLIC_EIMAR_SITE_URL=https://www.example.com
 NEXT_PUBLIC_EIMAR_DATA_MODE=api
 NEXT_PUBLIC_EIMAR_API_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api/v1
 # or
 NEXT_PUBLIC_EIMAR_DATA_MODE=vector-tile
 NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL=http://localhost:7800/public.parcels/{z}/{x}/{y}.pbf
-# only for non-production previews that intentionally show synthetic parcels
-NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=true
+NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=0
 ```
 
 Development defaults to labelled demo parcels. Production does not silently fall
@@ -237,12 +238,19 @@ Required website integration env:
 WEBSITE_SESSION_SECRET=...
 OPENAI_API_KEY=...          # for plan-note explain
 PUSH_GATEWAY_URL=...        # for push channel delivery
+NEXT_PUBLIC_EIMAR_SITE_URL=https://www.example.com
 NEXT_PUBLIC_EIMAR_DATA_MODE=api
 NEXT_PUBLIC_EIMAR_API_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api/v1
 NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL=...      # required for vector-tile mode
 NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=0   # production should stay unavailable instead of demo
 NEXT_PUBLIC_MAPBOX_TOKEN=... # optional; empty uses token-free basemaps
 ```
+
+`NEXT_PUBLIC_EIMAR_API_BASE_URL` is the canonical website backend origin.
+`NEXT_PUBLIC_API_BASE_URL` is still accepted for API-v1-specific clients. The
+website app also publishes robots, sitemap, manifest, icon and OpenGraph
+metadata from `NEXT_PUBLIC_EIMAR_SITE_URL` (or `VERCEL_URL` in previews).
 
 CI and smoke tests do not require real provider secrets. Configure production/staging values in the deploy target or GitHub environment secrets; never commit them.
 

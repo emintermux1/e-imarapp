@@ -87,7 +87,7 @@ describe('WebsiteService', () => {
   });
 
   it('reports live readiness without claiming official connector data', () => {
-    const service = makeService({ config: { DATABASE_URL: 'postgres://test', REDIS_URL: 'redis://test', PUBLIC_API_BASE_URL: 'https://api.example.test/api/v1' } });
+    const service = makeService({ config: { DATABASE_URL: 'postgres://test', REDIS_URL: 'redis://test', NEXT_PUBLIC_EIMAR_API_BASE_URL: 'https://api.example.test' } });
 
     const result = service.liveReadiness() as any;
 

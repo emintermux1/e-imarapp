@@ -37,10 +37,10 @@ import type {
   WebsiteSessionVerifyResponse,
   WebsiteWorkspaceResponse
 } from "@/types/api";
+import { readPublicBackendBase, toApiOrigin } from "@/lib/public-config";
 
-export const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_EIMAR_API_BASE_URL || "http://localhost:3000";
-export const API_ORIGIN = API_BASE.replace(/\/api\/v1\/?$/, "");
+export const API_BASE = readPublicBackendBase();
+export const API_ORIGIN = toApiOrigin(API_BASE);
 
 export class ApiFetchError extends Error {
   status?: number;

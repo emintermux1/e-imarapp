@@ -137,7 +137,10 @@ export class WebsiteService {
   }
 
   liveReadiness(): unknown {
-    const apiBaseUrl = this.config.get<string>('PUBLIC_API_BASE_URL') ?? this.config.get<string>('NEXT_PUBLIC_API_BASE_URL');
+    const apiBaseUrl =
+      this.config.get<string>('NEXT_PUBLIC_EIMAR_API_BASE_URL') ??
+      this.config.get<string>('NEXT_PUBLIC_API_BASE_URL') ??
+      this.config.get<string>('PUBLIC_API_BASE_URL');
     const hasDatabase = Boolean(this.config.get<string>('DATABASE_URL'));
     const hasRedis = Boolean(this.config.get<string>('REDIS_URL'));
     const hasSessionSecret = Boolean(this.config.get<string>('WEBSITE_SESSION_SECRET'));
