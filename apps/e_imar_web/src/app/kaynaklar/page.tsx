@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Database, ExternalLink, RefreshCcw } from "lucide-react";
+import { Database, ExternalLink, RefreshCcw, Search } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { useSourceDetail, useSourceHealth, useSources } from "@/lib/api/hooks";
 import { reprobeSource } from "@/lib/api/eimar";
@@ -27,15 +27,20 @@ export default function KaynaklarPage() {
   const healthQuery = useSourceHealth();
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [category, setCategory] = React.useState<string>("all");
+  const [query, setQuery] = React.useState("");
   const detailQuery = useSourceDetail(selectedId);
   const sources = React.useMemo(
     () => (sourcesQuery.data?.ok ? sourcesQuery.data.data.sources : []),
     [sourcesQuery.data]
   );
-  const visibleSources = React.useMemo(
-    () => sources.filter((src) => category === "all" || src.category === category),
-    [category, sources]
-  );
+  const visibleSources = React.useMemo(() => {
+    const normalizedQuery = normalizeSearch(query);
+    return sources.filter((src) => {
+      if (category !== "all" && src.category !== category) return false;
+      if (!normalizedQuery) return true;
+      return normalizeSearch([src.name, src.id, src.provider, src.category, src.auth, src.municipality_name, src.notes, ...src.capabilities].filter(Boolean).join(" ")).includes(normalizedQuery);
+    });
+  }, [category, query, sources]);
   const categories = React.useMemo(
     () => Array.from(new Set(sources.map((src) => src.category).filter(Boolean))).sort((a, b) => categoryLabel(a).localeCompare(categoryLabel(b), "tr")),
     [sources]
@@ -44,6 +49,13 @@ export default function KaynaklarPage() {
     if (!healthQuery.data?.ok) return new Map<string, Record<string, unknown>>();
     return new Map(healthQuery.data.data.sources.map((src) => [src.id, src]));
   }, [healthQuery.data]);
+  const summary = React.useMemo(() => {
+    const withProbe = sources.filter((src) => healthMap.has(src.id)).length;
+    const protectedSources = sources.filter((src) => src.auth.includes("credential") || src.auth.includes("captcha") || src.auth.includes("agreement")).length;
+    const endpointCount = Array.from(healthMap.values() as Iterable<Record<string, unknown>>).reduce((total, probe) => total + (Array.isArray(probe.discovered_endpoints) ? probe.discovered_endpoints.length : 0), 0);
+    const metadataOnly = sources.filter((src) => src.auth.includes("metadata")).length;
+    return { total: sources.length, visible: visibleSources.length, withProbe, protectedSources, endpointCount, metadataOnly };
+  }, [healthMap, sources, visibleSources.length]);
 
   return (
     <AppShell>
@@ -69,6 +81,23 @@ export default function KaynaklarPage() {
                 <Link href="/" className="inline-flex h-9 items-center rounded-md border border-border-subtle px-3 text-sm hover:bg-surface-1">Haritaya dön</Link>
               </div>
             </header>
+            <div className="grid gap-2 border-b border-border-subtle px-4 py-3 lg:grid-cols-[1fr_auto]">
+              <label className="relative block">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-muted" />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Kaynak, sağlayıcı, kabiliyet veya erişim durumunda ara"
+                  className="h-10 w-full rounded-lg border border-border-subtle bg-bg pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-fg-muted focus:border-brand-green/50"
+                />
+              </label>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:w-[520px]">
+                <SummaryPill label="Görünen" value={`${summary.visible}/${summary.total}`} />
+                <SummaryPill label="Probe" value={String(summary.withProbe)} />
+                <SummaryPill label="Korumalı" value={String(summary.protectedSources)} />
+                <SummaryPill label="Endpoint" value={String(summary.endpointCount)} />
+              </div>
+            </div>
             <div className="min-h-0 flex-1 overflow-auto">
               <table className="min-w-full text-left text-sm">
                 <thead className="sticky top-0 bg-surface-2">
@@ -92,7 +121,7 @@ export default function KaynaklarPage() {
                   {!sourcesQuery.isLoading && visibleSources.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-4 py-10 text-center text-sm text-fg-secondary">
-                        Bu filtrede gösterilecek kaynak yok.
+                        Bu filtre/arama için gösterilecek kaynak yok.
                       </td>
                     </tr>
                   )}
@@ -236,6 +265,15 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
+function SummaryPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border-subtle bg-bg px-3 py-2">
+      <div className="text-[9px] font-semibold uppercase tracking-[0.16em] text-fg-muted">{label}</div>
+      <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg-primary">{value}</div>
+    </div>
+  );
+}
+
 function EmptyPanel() {
   return (
     <div className="rounded-lg border border-dashed border-border-subtle bg-bg p-6 text-center">
@@ -251,6 +289,10 @@ function Badge({ children, tone }: { children: React.ReactNode; tone: "neutral" 
 
 function categoryLabel(category: string) {
   return CATEGORY_LABELS[category] ?? category.replaceAll("_", " ").replaceAll("-", " ");
+}
+
+function normalizeSearch(value: string) {
+  return value.toLocaleLowerCase("tr").replaceAll("ı", "i").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function StatusBadge({ status }: { status: string }) {

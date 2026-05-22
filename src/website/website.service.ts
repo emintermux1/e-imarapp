@@ -98,7 +98,7 @@ export class WebsiteService {
         }
       ],
       deployment: {
-        reverseProxy: 'Cloudflare/NGINX -> NestJS API',
+        reverseProxy: 'Cloudflare/NGINX -> API runtime',
         statelessApi: true,
         requiredEnv: ['DATABASE_URL', 'REDIS_URL', 'WEBSITE_SESSION_SECRET']
       }

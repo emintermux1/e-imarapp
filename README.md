@@ -1,6 +1,6 @@
-# Türkiye E-İmar Platform Backend Foundation
+# Türkiye E-İmar MVP
 
-This repository contains the first backend-first foundation for a production-oriented Turkey e-imar, parcel, zoning, and municipal GIS platform.
+This repository is being narrowed toward one sellable MVP: a canonical web app that lets a user search or click a parcel, see honest official-source readiness, and get a sourced zoning summary when verified data exists.
 
 ## Principles
 
@@ -10,14 +10,16 @@ This repository contains the first backend-first foundation for a production-ori
 - PostGIS is the canonical spatial store.
 - New municipal connectors should be added through source metadata and connector plugins, not hard-coded endpoint logic.
 
-## Stack
+## Canonical stack
 
-- Node.js, TypeScript, NestJS, Fastify
+- Product web app: Next.js 14 in `apps/e_imar_web`
+- API/runtime container: FastAPI in `app/`, served on port `8000`
+- TypeScript service modules and tests remain in `src/` while the backend is consolidated, but the Docker/API entrypoint is FastAPI.
 - PostgreSQL/PostGIS
-- Redis + BullMQ-compatible job orchestration
+- Redis-backed job orchestration
 - MinIO for object storage
 - OpenSearch for search indexing
-- Swagger/OpenAPI
+- FastAPI OpenAPI docs
 - pg_tileserv-compatible vector tile serving
 - Prometheus/Grafana observability
 
@@ -27,10 +29,10 @@ This repository contains the first backend-first foundation for a production-ori
 npm install
 docker compose up -d
 cp .env.example .env
-npm run start:dev
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Swagger UI is available at `http://localhost:3000/docs`.
+API docs are available at `http://localhost:8000/docs`.
 
 ### Web frontend startup (canonical Next.js app)
 
@@ -59,14 +61,14 @@ Development defaults to labelled demo parcels. Production does not silently fall
 back to demo when a live API/vector tile endpoint is missing; the map stays
 visible and reports an unavailable parcel source state.
 
-`apps/web`, `web-next`, `apps/e_imar_next`, and `frontend/` are deprecated or
-reference prototypes. Root scripts target `apps/e_imar_web` so agents and
-humans do not accidentally open a stale shell.
+Legacy/reference frontends have been moved under `_archive/legacy-frontends/`.
+Root scripts target `apps/e_imar_web` so agents and humans do not accidentally
+edit a stale shell.
 
 ### Legacy prototype frontends
 
-Older experiments remain for historical reference only. Do not use `apps/web`,
-`web-next`, `apps/e_imar_next`, or `frontend/` as the product frontend unless
+Older experiments remain for historical reference only under
+`_archive/legacy-frontends/`. Do not use them as the product frontend unless
 explicitly working on legacy migration.
 
 Docker Compose now includes the API service as well as PostGIS, Redis, MinIO, OpenSearch, pg_tileserv, Prometheus, and Grafana.
@@ -181,7 +183,7 @@ RATE_LIMIT_MAX=120
 CORS_ORIGIN=https://your-frontend.example
 ```
 
-The Fastify bootstrap enables CORS, common security headers, and strict validation. Public connector probing endpoints apply lightweight in-memory rate limiting, user-agent/IP keyed metadata, and hard limit caps to reduce scraping pressure without blocking legitimate interactive use.
+The API bootstrap enables CORS, common security headers, and strict validation. Public connector probing endpoints apply lightweight in-memory rate limiting, user-agent/IP keyed metadata, and hard limit caps to reduce scraping pressure without blocking legitimate interactive use.
 
 ## Tests
 
@@ -206,7 +208,7 @@ See `docs/adr/0001-backend-first-geospatial-foundation.md`.
 
 ## Website app and integration
 
-The canonical product frontend is `apps/e_imar_web` (Next.js 14 App Router). It consumes the FastAPI `/api/v1/*` endpoints and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data. `frontend/`, `apps/web`, `apps/web-next`, and `apps/e_imar_next` are legacy/reference apps unless explicitly migrated.
+The canonical product frontend is `apps/e_imar_web` (Next.js 14 App Router). It consumes the FastAPI `/api/v1/*` endpoints and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data. Legacy/reference apps live under `_archive/legacy-frontends/` unless explicitly migrated.
 
 - App README: `apps/e_imar_web/README.md`
 - Architecture and runbook: `docs/website-architecture.md`

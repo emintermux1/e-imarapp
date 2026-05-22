@@ -7,8 +7,8 @@ Terminal are the references; we deliberately avoid the marketing-landing,
 neon, glassmorphism, toy-rounded vocabulary.
 
 This is the canonical polished GIS product frontend for the repository at
-`apps/e_imar_web`. The older `frontend/`, `apps/web/`, `apps/web-next/`, and
-`apps/e_imar_next/` apps are legacy/reference workspaces unless explicitly migrated.
+`apps/e_imar_web`. Older frontend experiments live under
+`_archive/legacy-frontends/` as reference-only code unless explicitly migrated.
 
 > This package replaces the previous Vite shell. The Flutter mobile app at
 > `apps/e_imar_mobile/` is **not** modified by this work.
