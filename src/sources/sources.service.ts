@@ -106,11 +106,13 @@ export class SourcesService {
     const vendor = this.guessVendor(normalizedUrl);
     const municipalitySlug = this.guessMunicipalitySlug(normalizedUrl, input.name, input.district);
     const sourceId = `${municipalitySlug || 'unknown'}-${vendor === 'unknown' ? 'municipal' : vendor}`;
-    const connectorKinds = vendor === 'netcad' || vendor === 'webgis'
-      ? [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal]
-      : vendor === 'ekent'
-        ? [ConnectorKind.Ekent, ConnectorKind.MunicipalPortal]
-        : [ConnectorKind.MunicipalPortal];
+    const connectorKinds = vendor === 'netcad'
+      ? [ConnectorKind.NetcadKeos, ConnectorKind.Keos, ConnectorKind.Wms, ConnectorKind.Wfs]
+      : vendor === 'webgis'
+        ? [ConnectorKind.Webgis, ConnectorKind.Ogc, ConnectorKind.Wms, ConnectorKind.Wfs]
+        : vendor === 'ekent'
+          ? [ConnectorKind.Ekent, ConnectorKind.MunicipalPortal]
+          : [ConnectorKind.MunicipalPortal];
     const capabilities = vendor === 'netcad' || vendor === 'webgis'
       ? ['zoning_status', 'municipal_gis', 'netcad_keos', 'parcel_lookup', 'plan_lookup']
       : ['zoning_status', 'municipal_gis', 'parcel_lookup'];
@@ -152,7 +154,7 @@ export class SourcesService {
     const protectedSource = isProtectedSource(source);
     const publicCandidate = isPublicCandidateSource(source);
     const hasZoning = source.capabilities.includes('zoning_status');
-    const hasMunicipalPortal = source.connectorKinds.some((kind) => [ConnectorKind.NetcadKeos, ConnectorKind.Ekent, ConnectorKind.MunicipalPortal, ConnectorKind.PublicPortal, ConnectorKind.Ogc, ConnectorKind.ArcgisRest].includes(kind));
+    const hasMunicipalPortal = source.connectorKinds.some((kind) => [ConnectorKind.NetcadKeos, ConnectorKind.Keos, ConnectorKind.Webgis, ConnectorKind.Ekent, ConnectorKind.MunicipalPortal, ConnectorKind.PublicPortal, ConnectorKind.Ogc, ConnectorKind.Wms, ConnectorKind.Wfs, ConnectorKind.Geoserver, ConnectorKind.ArcgisRest].includes(kind));
     const imarQuerySupport: ImarQuerySupport = protectedSource
       ? 'protected'
       : !publicCandidate

@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AnalysisService } from '../analysis/analysis.service';
 import { ConnectorKind } from '../connectors/connector.types';
+import { dataAttribution } from '../common/data-attribution';
 import { provenanceRecord } from '../common/provenance';
 import { EplanService } from '../eplan/eplan.service';
 import { IngestionService } from '../ingestion/ingestion.service';
@@ -276,11 +277,31 @@ export class WebsiteService {
       });
     }
 
+    const attribution = dataAttribution({
+      provenance: firstParcel
+        ? [provenanceRecord({
+            sourceId: typeof firstParcel.source_id === 'string' ? firstParcel.source_id : 'parcel-query',
+            sourceName: typeof firstParcel.source_name === 'string' ? firstParcel.source_name : 'Parcel workflow',
+            endpoint: typeof firstParcel.source_url === 'string' ? firstParcel.source_url : undefined,
+            dataType: typeof firstParcel.source_status === 'string' && firstParcel.source_status === 'official' ? 'official' : 'public_metadata',
+            connectorKind: ConnectorKind.PublicPortal,
+            status: parcelResult.status ?? 'ok',
+            confidence: typeof firstParcel.confidence === 'number' ? firstParcel.confidence : 0.5,
+            limitations: ['Parcel workflow only returns normalized fields that are backed by source/provenance metadata.']
+          })]
+        : [],
+      sourceUrl: typeof firstParcel?.source_url === 'string' ? firstParcel.source_url : null,
+      limitations: firstParcel
+        ? ['Official/cadastral certainty depends on the upstream source contract and returned provenance.']
+        : ['No parcel row was returned; zoning or plan values are not fabricated.']
+    });
+
     return {
       status: 'ok',
       parcelQuery: parcelResult,
       potentialSummary: potential,
-      emsalShare
+      emsalShare,
+      ...attribution
     };
   }
 
@@ -303,14 +324,29 @@ export class WebsiteService {
         parcelGeometryAttempt: { status: 'not_ready', source: 'tkgm-parsel-sorgu', message: 'Belediye kaynağı bulunmadan TKGM/parsel geometri eşleştirmesi başlatılmadı.' },
         zoningAttempt: { status: 'source_not_found', source: null, message: 'Belediye kaynağı registry içinde bulunamadı.' },
         noDataReason: 'Belediye kaynağı registry içinde bulunamadı',
-        provenance: []
+        ...dataAttribution({
+          provenance: [],
+          limitations: ['Municipality source was not found; parcel/zoning data is intentionally unavailable.']
+        })
       };
     }
     const capability = this.sources.municipalityCapabilityForSource(source);
     const activation = this.sourceActivation.activationForSource(source);
     const protectedSource = capability.protected;
     const endpointCandidate = source.homepageUrl;
-    const provenance = [provenanceRecord({ sourceId: source.id, sourceName: source.name, endpoint: endpointCandidate, dataType: 'public_metadata', connectorKind: source.connectorKinds[0], status: 'public_discovery', confidence: activation.activationStatus === 'active' ? 0.7 : 0.45 })];
+    const provenance = [provenanceRecord({
+      sourceId: source.id,
+      sourceName: source.name,
+      endpoint: endpointCandidate,
+      dataType: 'public_metadata',
+      connectorKind: source.connectorKinds[0],
+      status: 'public_discovery',
+      confidence: activation.activationStatus === 'active' ? 0.7 : 0.45,
+      limitations: [
+        'Public metadata/discovery is not an official signed imar document.',
+        protectedSource ? 'Kaynak captcha/login gerektiriyor; korumalı akış bypass edilmez.' : 'Normalized imar fields wait for endpoint contract resolution.'
+      ]
+    })];
     const parcelGeometryAttempt = {
       status: protectedSource ? 'protected' : 'public_discovery',
       source: 'tkgm-parsel-sorgu',
@@ -326,7 +362,16 @@ export class WebsiteService {
     };
     const status = protectedSource ? 'protected' : activation.activationStatus;
     const noDataReason = protectedSource ? 'Kaynak captcha/login gerektiriyor' : activation.nextAction;
-    return { status, query: normalized, municipalityCapability: capability, sourceActivation: activation, parcelGeometryAttempt, zoningAttempt, noDataReason, provenance };
+    return {
+      status,
+      query: normalized,
+      municipalityCapability: capability,
+      sourceActivation: activation,
+      parcelGeometryAttempt,
+      zoningAttempt,
+      noDataReason,
+      ...dataAttribution({ provenance, limitations: [noDataReason] })
+    };
   }
 
   async parcelReport(input: {
@@ -363,6 +408,11 @@ export class WebsiteService {
       parcelWorkflow: parcelWorkflow as Record<string, unknown> | null,
       municipalWorkflow: municipalWorkflow as Record<string, unknown> | null
     });
+    const attribution = dataAttribution({
+      provenance: report.provenance as any,
+      retrievedAt: report.generatedAt,
+      limitations: [report.disclaimer]
+    });
     return {
       status: report.status,
       reportId: report.reportId,
@@ -371,9 +421,13 @@ export class WebsiteService {
       disclaimer: report.disclaimer,
       query: report.query,
       sections: report.sections,
-      provenance: report.provenance,
+      provenance: attribution.provenance,
       printableHtml: report.printableHtml,
-      downloadFilename: report.downloadFilename
+      downloadFilename: report.downloadFilename,
+      sourceUrl: attribution.sourceUrl,
+      retrievedAt: attribution.retrievedAt,
+      confidence: attribution.confidence,
+      limitations: attribution.limitations
     };
   }
 
@@ -396,7 +450,20 @@ export class WebsiteService {
         resultCount: 1
       });
     }
-    return explanation;
+    const attribution = dataAttribution({
+      provenance: [provenanceRecord({
+        sourceId: 'openai-plan-note-explain',
+        sourceName: 'OpenAI plan note explanation',
+        endpoint: 'https://api.openai.com/v1/chat/completions',
+        dataType: 'derived',
+        connectorKind: ConnectorKind.PublicApi,
+        status: typeof explanation === 'object' && explanation && 'status' in explanation ? String((explanation as { status?: unknown }).status) : 'unknown',
+        confidence: 0.55,
+        limitations: ['AI explanation is derived guidance, not legal imar advice or an official plan note.']
+      })],
+      limitations: ['Use the official source plan note and municipality/TKGM records for binding decisions.']
+    });
+    return { ...(explanation as Record<string, unknown>), ...attribution };
   }
 
   async workspace(userReference: string): Promise<unknown> {

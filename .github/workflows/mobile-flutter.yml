@@ -1,15 +1,15 @@
-name: Mobile Flutter
+name: Mobile Flutter (legacy)
 
 on:
   pull_request:
     paths:
-      - "apps/e_imar_mobile/**"
+      - "legacy/apps/e_imar_mobile/**"
       - ".github/workflows/mobile-flutter.yml"
   push:
     branches:
       - main
     paths:
-      - "apps/e_imar_mobile/**"
+      - "legacy/apps/e_imar_mobile/**"
       - ".github/workflows/mobile-flutter.yml"
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: apps/e_imar_mobile
+        working-directory: legacy/apps/e_imar_mobile
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -29,3 +29,4 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - run: flutter build bundle --debug
+</ぞparameter>
