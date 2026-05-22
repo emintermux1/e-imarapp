@@ -12,6 +12,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   central: "Merkezi",
   metropolitan: "Büyükşehir",
   municipal: "Belediye",
+  "municipal-gis": "Belediye CBS",
+  municipal_gis: "Belediye CBS",
+  parcel: "Parsel",
+  plan: "Plan",
+  open_data: "Açık veri",
+  address: "Adres",
   catalog: "Katalog",
   document: "Doküman",
 };
@@ -29,6 +35,10 @@ export default function KaynaklarPage() {
   const visibleSources = React.useMemo(
     () => sources.filter((src) => category === "all" || src.category === category),
     [category, sources]
+  );
+  const categories = React.useMemo(
+    () => Array.from(new Set(sources.map((src) => src.category).filter(Boolean))).sort((a, b) => categoryLabel(a).localeCompare(categoryLabel(b), "tr")),
+    [sources]
   );
   const healthMap = React.useMemo(() => {
     if (!healthQuery.data?.ok) return new Map<string, Record<string, unknown>>();
@@ -52,8 +62,8 @@ export default function KaynaklarPage() {
                   className="h-9 rounded-md border border-border-subtle bg-bg px-3 text-sm"
                 >
                   <option value="all">Tüm kategoriler</option>
-                  {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
+                  {categories.map((key) => (
+                    <option key={key} value={key}>{categoryLabel(key)}</option>
                   ))}
                 </select>
                 <Link href="/" className="inline-flex h-9 items-center rounded-md border border-border-subtle px-3 text-sm hover:bg-surface-1">Haritaya dön</Link>
@@ -99,7 +109,7 @@ export default function KaynaklarPage() {
                           <div className="font-medium text-fg-primary">{src.name}</div>
                           <div className="text-xs text-fg-muted">{src.id}</div>
                         </td>
-                        <td className="px-4 py-3">{CATEGORY_LABELS[src.category] ?? src.category}</td>
+                        <td className="px-4 py-3">{categoryLabel(src.category)}</td>
                         <td className="px-4 py-3">{src.provider}</td>
                         <td className="px-4 py-3"><Badge tone="neutral">{src.auth}</Badge></td>
                         <td className="px-4 py-3"><StatusBadge status={String(probe?.status ?? "unknown")} /></td>
@@ -179,7 +189,20 @@ function Badge({ children, tone }: { children: React.ReactNode; tone: "neutral" 
   return <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] ${tone === "ok" ? "bg-green-100 text-green-700" : "bg-surface-1 text-fg-secondary"}`}>{children}</span>;
 }
 
+function categoryLabel(category: string) {
+  return CATEGORY_LABELS[category] ?? category.replaceAll("_", " ").replaceAll("-", " ");
+}
+
 function StatusBadge({ status }: { status: string }) {
-  const tone = status === "ok" ? "bg-green-100 text-green-700" : status.includes("credential") || status.includes("captcha") ? "bg-amber-100 text-amber-700" : status === "partial" ? "bg-sky-100 text-sky-700" : "bg-rose-100 text-rose-700";
+  const normalized = status.toLowerCase();
+  const tone = normalized === "ok" || normalized === "live"
+    ? "bg-green-100 text-green-700"
+    : normalized.includes("credential") || normalized.includes("captcha") || normalized.includes("agreement")
+      ? "bg-amber-100 text-amber-700"
+      : normalized === "partial" || normalized === "fallback"
+        ? "bg-sky-100 text-sky-700"
+        : normalized.includes("metadata") || normalized === "unknown"
+          ? "bg-surface-1 text-fg-secondary"
+          : "bg-rose-100 text-rose-700";
   return <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] ${tone}`}>{status}</span>;
 }
