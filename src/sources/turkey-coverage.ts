@@ -421,9 +421,9 @@ function slugify(value: string): string {
 function vendorTemplate(vendor: string, slug: string): { homepageUrl: string; connectorKinds: ConnectorKind[]; capabilities: string[] } {
   switch (vendor) {
     case 'netcad':
-      return { homepageUrl: `https://keos.${slug}.bel.tr/imardurumu/`, connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal], capabilities: ['zoning_status', 'municipal_gis', 'netcad_keos', 'parcel_lookup', 'plan_lookup'] };
+      return { homepageUrl: `https://keos.${slug}.bel.tr/imardurumu/`, connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.Keos, ConnectorKind.Wms, ConnectorKind.Wfs], capabilities: ['zoning_status', 'municipal_gis', 'netcad_keos', 'parcel_lookup', 'plan_lookup'] };
     case 'webgis':
-      return { homepageUrl: `https://webgis.${slug}.bel.tr/imardurumu/`, connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal], capabilities: ['zoning_status', 'municipal_gis', 'netcad_keos', 'parcel_lookup', 'plan_lookup'] };
+      return { homepageUrl: `https://webgis.${slug}.bel.tr/imardurumu/`, connectorKinds: [ConnectorKind.Webgis, ConnectorKind.Ogc, ConnectorKind.Wms, ConnectorKind.Wfs], capabilities: ['zoning_status', 'municipal_gis', 'netcad_keos', 'parcel_lookup', 'plan_lookup'] };
     case 'ekent':
       return { homepageUrl: `https://ekent.${slug}.bel.tr/imardurumu/`, connectorKinds: [ConnectorKind.Ekent, ConnectorKind.MunicipalPortal], capabilities: ['zoning_status', 'municipal_gis', 'ekent', 'parcel_lookup', 'plan_lookup'] };
     case 'kbs':

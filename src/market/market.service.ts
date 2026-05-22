@@ -24,7 +24,8 @@ export class MarketService {
   async inspectParcelMarket(request: ParcelMarketContext): Promise<ParcelMarketResponse> {
     const generatedAt = new Date().toISOString();
     const providers = await Promise.all(this.providers.map((provider) => provider.inspect(request, generatedAt)));
-    const listings = providers.flatMap((provider) => provider.listings);
+    const manualListings = this.manualListings(request, generatedAt);
+    const listings = [...providers.flatMap((provider) => provider.listings), ...manualListings];
     const summary = this.buildSummary(listings, providers);
     const analysis = await this.analysis.analyze({ request, listings, generatedAt });
     const warnings = this.buildWarnings(providers, listings.length);
@@ -73,8 +74,72 @@ export class MarketService {
       zoningType: request.zoningType?.trim() ?? null,
       centroid: Array.isArray(request.centroid) && request.centroid.length === 2
         ? [Number(request.centroid[0]), Number(request.centroid[1])]
+        : null,
+      manualListingLinks: Array.isArray(request.manualListingLinks)
+        ? request.manualListingLinks.filter((url): url is string => typeof url === 'string' && url.trim().length > 0).slice(0, 10)
         : null
     };
+  }
+
+  private manualListings(request: ParcelMarketContext, capturedAt: string): NormalizedMarketListing[] {
+    const normalized = this.normalizeRequest(request);
+    return (normalized.manualListingLinks ?? [])
+      .map((url) => this.manualListing(url, normalized, capturedAt))
+      .filter((listing): listing is NormalizedMarketListing => Boolean(listing));
+  }
+
+  private manualListing(url: string, request: ParcelMarketContext, capturedAt: string): NormalizedMarketListing | null {
+    const provider = this.providerFromUrl(url);
+    if (!provider) return null;
+    const parcelKey = [request.il, request.ilce, request.mahalle, request.ada && request.parsel ? `${request.ada}/${request.parsel}` : null]
+      .filter(Boolean)
+      .join(' · ');
+    return {
+      id: `manual:${provider.id}:${Buffer.from(url).toString('base64url').slice(0, 16)}`,
+      providerId: provider.id,
+      providerName: provider.name,
+      title: `Manuel ilan linki · ${provider.name}`,
+      listingType: 'sale',
+      priceAmount: null,
+      currency: 'TRY',
+      areaM2: null,
+      pricePerM2: null,
+      location: {
+        il: request.il ?? null,
+        ilce: request.ilce ?? null,
+        mahalle: request.mahalle ?? null,
+        address: parcelKey || null,
+        centroid: request.centroid ?? null
+      },
+      url,
+      publishedAt: null,
+      capturedAt,
+      match: {
+        status: parcelKey ? 'partial' : 'weak',
+        score: parcelKey ? 0.5 : 0.25,
+        reason: 'Manual link supplied by user/operator; listing content is not scraped.',
+        parcelKey
+      },
+      provenance: {
+        source: 'manual_link',
+        providerId: provider.id,
+        readinessStatus: 'ok',
+        reason: 'Manual/partner link only; no automated scraping performed.'
+      }
+    };
+  }
+
+  private providerFromUrl(url: string): { id: NormalizedMarketListing['providerId']; name: string } | null {
+    try {
+      const host = new URL(url).hostname.toLowerCase();
+      if (host.includes('sahibinden.com')) return { id: 'sahibinden', name: 'Sahibinden' };
+      if (host.includes('emlakjet.com')) return { id: 'emlakjet', name: 'Emlakjet' };
+      if (host.includes('hepsiemlak.com')) return { id: 'hepsiemlak', name: 'Hepsiemlak' };
+      if (host.includes('zingat.com')) return { id: 'zingat', name: 'Zingat' };
+      return null;
+    } catch {
+      return null;
+    }
   }
 
   private buildSummary(listings: NormalizedMarketListing[], providers: ProviderMarketResult[]): MarketSummary | null {

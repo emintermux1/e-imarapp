@@ -77,6 +77,14 @@ echo "== Root Jest tests =="
 run_required "root jest" npm test
 
 echo ""
+echo "== Production demo-fallback guardrail =="
+run_required "web:production-guardrails" npm run web:production-guardrails
+
+echo ""
+echo "== OpenAPI contract export/generate =="
+run_required "openapi:generate" npm run openapi:generate
+
+echo ""
 echo "== Map provider env (optional) =="
 run_optional "map:check-keys skipped or unset keys" npm run map:check-keys
 

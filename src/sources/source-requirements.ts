@@ -89,8 +89,13 @@ const SOURCE_REQUIREMENTS: Record<string, SourceRequirementDefinition> = {
 
 const CONTRACT_CONNECTORS = new Set<ConnectorKind>([
   ConnectorKind.NetcadKeos,
+  ConnectorKind.Keos,
+  ConnectorKind.Webgis,
   ConnectorKind.Ekent,
   ConnectorKind.Ogc,
+  ConnectorKind.Wms,
+  ConnectorKind.Wfs,
+  ConnectorKind.Geoserver,
   ConnectorKind.ArcgisRest,
   ConnectorKind.PublicApi,
   ConnectorKind.PublicPortal

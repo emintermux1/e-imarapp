@@ -2,6 +2,7 @@ import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Query, R
 import { ApiTags } from '@nestjs/swagger';
 import type { FastifyRequest } from 'fastify';
 import { RateLimitService } from '../common/rate-limit.service';
+import { ConnectorPluginRegistryService } from './connector-plugin-registry.service';
 import { DiscoveryService, PublicHealthFilters } from './discovery.service';
 import { NetcadKeosService } from './netcad-keos.service';
 import { OgcDiscoveryService } from './ogc-discovery.service';
@@ -11,6 +12,7 @@ import { OgcDiscoveryService } from './ogc-discovery.service';
 export class ConnectorsController {
   constructor(
     private readonly discovery: DiscoveryService,
+    private readonly plugins: ConnectorPluginRegistryService,
     private readonly netcad: NetcadKeosService,
     private readonly ogc: OgcDiscoveryService,
     private readonly rateLimit: RateLimitService
@@ -19,6 +21,21 @@ export class ConnectorsController {
   @Get('netcad/strategy')
   netcadStrategy() {
     return this.netcad.strategy();
+  }
+
+  @Get('plugins')
+  connectorPlugins() {
+    return this.plugins.list();
+  }
+
+  @Get('plugins/:kind')
+  connectorPlugin(@Param('kind') kind: string) {
+    return this.plugins.get(kind);
+  }
+
+  @Get(':id/plugins/plan')
+  connectorPlan(@Param('id') id: string) {
+    return this.plugins.planForSource(id);
   }
 
   @Post('discover-public')

@@ -131,7 +131,8 @@ function municipalSources(): SourceRegistryEntry[] {
 
   const connectorKindsForVendor = (vendor?: string) => {
     if (vendor === 'ekent') return [ConnectorKind.Ekent, ConnectorKind.MunicipalPortal];
-    if (vendor === 'netcad' || vendor === 'webgis') return [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal];
+    if (vendor === 'netcad') return [ConnectorKind.NetcadKeos, ConnectorKind.Keos, ConnectorKind.Wms, ConnectorKind.Wfs];
+    if (vendor === 'webgis') return [ConnectorKind.Webgis, ConnectorKind.Ogc, ConnectorKind.Wms, ConnectorKind.Wfs];
     return [ConnectorKind.MunicipalPortal];
   };
 

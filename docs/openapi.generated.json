@@ -1,0 +1,3235 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/connectors/netcad/strategy": {
+      "get": {
+        "operationId": "ConnectorsController_netcadStrategy",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/connectors/plugins": {
+      "get": {
+        "operationId": "ConnectorsController_connectorPlugins",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/connectors/plugins/{kind}": {
+      "get": {
+        "operationId": "ConnectorsController_connectorPlugin",
+        "parameters": [
+          {
+            "name": "kind",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/connectors/{id}/plugins/plan": {
+      "get": {
+        "operationId": "ConnectorsController_connectorPlan",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/connectors/discover-public": {
+      "post": {
+        "operationId": "ConnectorsController_discoverPublic",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/connectors/public-health": {
+      "post": {
+        "operationId": "ConnectorsController_publicHealth",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/connectors/{id}/netcad/discover": {
+      "post": {
+        "operationId": "ConnectorsController_discoverNetcad",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/connectors/{id}/netcad/resolve-methods": {
+      "post": {
+        "operationId": "ConnectorsController_resolveNetcadMethods",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/connectors/{id}/ogc/catalog": {
+      "post": {
+        "operationId": "ConnectorsController_ogcCatalog",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endpoint",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "service",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/connectors/{id}/discover": {
+      "post": {
+        "operationId": "ConnectorsController_discoverSource",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/connectors/municipality-patterns/{slug}": {
+      "post": {
+        "operationId": "ConnectorsController_municipalityPatterns",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/sources": {
+      "get": {
+        "operationId": "SourcesController_list[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources": {
+      "get": {
+        "operationId": "SourcesController_list[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/summary": {
+      "get": {
+        "operationId": "SourcesController_summary[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/summary": {
+      "get": {
+        "operationId": "SourcesController_summary[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/coverage": {
+      "get": {
+        "operationId": "SourcesController_coverage[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/coverage": {
+      "get": {
+        "operationId": "SourcesController_coverage[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/activation": {
+      "get": {
+        "operationId": "SourcesController_activationState[0]",
+        "parameters": [
+          {
+            "name": "live_check",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/activation": {
+      "get": {
+        "operationId": "SourcesController_activationState[1]",
+        "parameters": [
+          {
+            "name": "live_check",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/activation/summary": {
+      "get": {
+        "operationId": "SourcesController_activationSummary[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/activation/summary": {
+      "get": {
+        "operationId": "SourcesController_activationSummary[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/health": {
+      "get": {
+        "operationId": "SourcesController_health[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/health": {
+      "get": {
+        "operationId": "SourcesController_health[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/quality": {
+      "get": {
+        "operationId": "SourcesController_quality[0]",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "live_check",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "capability",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/quality": {
+      "get": {
+        "operationId": "SourcesController_quality[1]",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "live_check",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "capability",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/municipalities": {
+      "get": {
+        "operationId": "SourcesController_municipalities[0]",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "accessStatus",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/municipalities": {
+      "get": {
+        "operationId": "SourcesController_municipalities[1]",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "accessStatus",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/municipality-coverage": {
+      "get": {
+        "operationId": "SourcesController_municipalityCoverage[0]",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "accessStatus",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/municipality-coverage": {
+      "get": {
+        "operationId": "SourcesController_municipalityCoverage[1]",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "accessStatus",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/municipalities/{id}/capability": {
+      "get": {
+        "operationId": "SourcesController_municipalityCapability[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/municipalities/{id}/capability": {
+      "get": {
+        "operationId": "SourcesController_municipalityCapability[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/candidates/normalize": {
+      "post": {
+        "operationId": "SourcesController_normalizeCandidate[0]",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/candidates/normalize": {
+      "post": {
+        "operationId": "SourcesController_normalizeCandidate[1]",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/{id}/discover": {
+      "post": {
+        "operationId": "SourcesController_discover[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/{id}/discover": {
+      "post": {
+        "operationId": "SourcesController_discover[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/sources/{id}": {
+      "get": {
+        "operationId": "SourcesController_get[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/{id}": {
+      "get": {
+        "operationId": "SourcesController_get[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/municipalities/{slug}/discover": {
+      "post": {
+        "operationId": "MunicipalitiesController_discover[0]",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "municipalities"
+        ]
+      }
+    },
+    "/api/v1/municipalities/{slug}/discover": {
+      "post": {
+        "operationId": "MunicipalitiesController_discover[1]",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "municipalities"
+        ]
+      }
+    },
+    "/municipalities/{slug}/gis-endpoints": {
+      "get": {
+        "operationId": "MunicipalitiesController_listGisEndpoints[0]",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "municipalities"
+        ]
+      }
+    },
+    "/api/v1/municipalities/{slug}/gis-endpoints": {
+      "get": {
+        "operationId": "MunicipalitiesController_listGisEndpoints[1]",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "municipalities"
+        ]
+      }
+    },
+    "/municipalities/{slug}/gis-endpoints/refresh": {
+      "post": {
+        "operationId": "MunicipalitiesController_refreshGisEndpoints[0]",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "municipalities"
+        ]
+      }
+    },
+    "/api/v1/municipalities/{slug}/gis-endpoints/refresh": {
+      "post": {
+        "operationId": "MunicipalitiesController_refreshGisEndpoints[1]",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "municipalities"
+        ]
+      }
+    },
+    "/parcels/query": {
+      "post": {
+        "operationId": "ParcelsController_query",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParcelQueryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "parcels"
+        ]
+      }
+    },
+    "/parsel/search": {
+      "get": {
+        "operationId": "ParselCompatController_search[0]",
+        "parameters": [
+          {
+            "name": "query",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ParselCompat"
+        ]
+      }
+    },
+    "/api/v1/parsel/search": {
+      "get": {
+        "operationId": "ParselCompatController_search[1]",
+        "parameters": [
+          {
+            "name": "query",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ParselCompat"
+        ]
+      }
+    },
+    "/parsel": {
+      "get": {
+        "operationId": "ParselCompatController_lookup[0]",
+        "parameters": [
+          {
+            "name": "ada",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "parsel",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "il",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ilce",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ParselCompat"
+        ]
+      }
+    },
+    "/api/v1/parsel": {
+      "get": {
+        "operationId": "ParselCompatController_lookup[1]",
+        "parameters": [
+          {
+            "name": "ada",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "parsel",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "il",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ilce",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ParselCompat"
+        ]
+      }
+    },
+    "/parsel/geometry/{id}": {
+      "get": {
+        "operationId": "ParselCompatController_geometry[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ParselCompat"
+        ]
+      }
+    },
+    "/api/v1/parsel/geometry/{id}": {
+      "get": {
+        "operationId": "ParselCompatController_geometry[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ParselCompat"
+        ]
+      }
+    },
+    "/parsel/{id}/context": {
+      "get": {
+        "operationId": "ParselCompatController_context[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_geometry",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ParselCompat"
+        ]
+      }
+    },
+    "/api/v1/parsel/{id}/context": {
+      "get": {
+        "operationId": "ParselCompatController_context[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_geometry",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ParselCompat"
+        ]
+      }
+    },
+    "/parsel/{id}/related-plans": {
+      "get": {
+        "operationId": "ParselCompatController_relatedPlans[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ParselCompat"
+        ]
+      }
+    },
+    "/api/v1/parsel/{id}/related-plans": {
+      "get": {
+        "operationId": "ParselCompatController_relatedPlans[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ParselCompat"
+        ]
+      }
+    },
+    "/parsel/{id}/summary": {
+      "get": {
+        "operationId": "ParselCompatController_summary[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ParselCompat"
+        ]
+      }
+    },
+    "/api/v1/parsel/{id}/summary": {
+      "get": {
+        "operationId": "ParselCompatController_summary[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ParselCompat"
+        ]
+      }
+    },
+    "/watchlist": {
+      "get": {
+        "operationId": "WatchlistCompatController_listWatchlist[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WatchlistCompat"
+        ]
+      },
+      "post": {
+        "operationId": "WatchlistCompatController_createWatchlist[0]",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WatchlistCompat"
+        ]
+      }
+    },
+    "/api/v1/watchlist": {
+      "get": {
+        "operationId": "WatchlistCompatController_listWatchlist[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WatchlistCompat"
+        ]
+      },
+      "post": {
+        "operationId": "WatchlistCompatController_createWatchlist[1]",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WatchlistCompat"
+        ]
+      }
+    },
+    "/watchlist/{id}": {
+      "delete": {
+        "operationId": "WatchlistCompatController_deleteWatchlist[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WatchlistCompat"
+        ]
+      }
+    },
+    "/api/v1/watchlist/{id}": {
+      "delete": {
+        "operationId": "WatchlistCompatController_deleteWatchlist[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WatchlistCompat"
+        ]
+      }
+    },
+    "/reports/generate": {
+      "post": {
+        "operationId": "ReportsCompatController_generateReport[0]",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ReportsCompat"
+        ]
+      }
+    },
+    "/api/v1/reports/generate": {
+      "post": {
+        "operationId": "ReportsCompatController_generateReport[1]",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ReportsCompat"
+        ]
+      }
+    },
+    "/reports/{id}": {
+      "get": {
+        "operationId": "ReportsCompatController_getReport[0]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ReportsCompat"
+        ]
+      }
+    },
+    "/api/v1/reports/{id}": {
+      "get": {
+        "operationId": "ReportsCompatController_getReport[1]",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ReportsCompat"
+        ]
+      }
+    },
+    "/geo/validate": {
+      "post": {
+        "operationId": "GeoController_validate",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "geo"
+        ]
+      }
+    },
+    "/geo/integrity/summary": {
+      "get": {
+        "operationId": "GeoController_integritySummary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "geo"
+        ]
+      }
+    },
+    "/geo/integrity/scan": {
+      "post": {
+        "operationId": "GeoController_integrityScan",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "geo"
+        ]
+      }
+    },
+    "/geo/audit/contract": {
+      "get": {
+        "operationId": "GeoController_auditContract",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "geo"
+        ]
+      }
+    },
+    "/geo/performance/index-recommendations": {
+      "get": {
+        "operationId": "GeoController_indexRecommendations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "geo"
+        ]
+      }
+    },
+    "/geo/performance/postgis-optimizations": {
+      "get": {
+        "operationId": "GeoController_postgisOptimizations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "geo"
+        ]
+      }
+    },
+    "/geo/performance/client-guidance": {
+      "get": {
+        "operationId": "GeoController_clientGuidance",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "geo"
+        ]
+      }
+    },
+    "/plans": {
+      "get": {
+        "operationId": "PlansCompatController_plans[0]",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "planType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PlansCompat"
+        ]
+      }
+    },
+    "/api/v1/plans": {
+      "get": {
+        "operationId": "PlansCompatController_plans[1]",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "planType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PlansCompat"
+        ]
+      }
+    },
+    "/plans/aski": {
+      "get": {
+        "operationId": "PlansCompatController_askiPlans[0]",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PlansCompat"
+        ]
+      }
+    },
+    "/api/v1/plans/aski": {
+      "get": {
+        "operationId": "PlansCompatController_askiPlans[1]",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PlansCompat"
+        ]
+      }
+    },
+    "/plans/latest-regions": {
+      "get": {
+        "operationId": "PlansCompatController_latestRegions[0]",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "municipality_slug",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "has_geometry",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PlansCompat"
+        ]
+      }
+    },
+    "/api/v1/plans/latest-regions": {
+      "get": {
+        "operationId": "PlansCompatController_latestRegions[1]",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "municipality_slug",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "has_geometry",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "PlansCompat"
+        ]
+      }
+    },
+    "/aski/active": {
+      "get": {
+        "operationId": "AskiCompatController_active[0]",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AskiCompat"
+        ]
+      }
+    },
+    "/api/v1/aski/active": {
+      "get": {
+        "operationId": "AskiCompatController_active[1]",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AskiCompat"
+        ]
+      }
+    },
+    "/aski/active/geojson": {
+      "get": {
+        "operationId": "AskiCompatController_activeGeojson[0]",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AskiCompat"
+        ]
+      }
+    },
+    "/api/v1/aski/active/geojson": {
+      "get": {
+        "operationId": "AskiCompatController_activeGeojson[1]",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AskiCompat"
+        ]
+      }
+    },
+    "/eplan/askidaki-planlar": {
+      "get": {
+        "operationId": "EplanController_askidakiPlanlar",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "eplan"
+        ]
+      }
+    },
+    "/eplan/yururlukteki-planlar": {
+      "get": {
+        "operationId": "EplanController_yururluktekiPlanlar",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "eplan"
+        ]
+      }
+    },
+    "/eplan/search": {
+      "get": {
+        "operationId": "EplanController_search",
+        "parameters": [
+          {
+            "name": "province",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "district",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "planType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "eplan"
+        ]
+      }
+    },
+    "/eplan/sync": {
+      "post": {
+        "operationId": "EplanController_syncAll",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "eplan"
+        ]
+      }
+    },
+    "/eplan/notify": {
+      "post": {
+        "operationId": "EplanController_triggerNotifications",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "eplan"
+        ]
+      }
+    },
+    "/eplan/subscriptions": {
+      "post": {
+        "operationId": "EplanController_upsertSubscription",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "eplan"
+        ]
+      },
+      "get": {
+        "operationId": "EplanController_listSubscriptions",
+        "parameters": [
+          {
+            "name": "userReference",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "eplan"
+        ]
+      }
+    },
+    "/eplan/tucbs/capabilities": {
+      "get": {
+        "operationId": "EplanController_tucbsCapabilities",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "eplan"
+        ]
+      }
+    },
+    "/jobs/status": {
+      "get": {
+        "operationId": "JobsController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/jobs/geo/integrity/daily": {
+      "post": {
+        "operationId": "JobsController_enqueueGeoIntegrity",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "HealthController_health[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "operationId": "HealthController_health[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/ingestion/requirements": {
+      "get": {
+        "operationId": "IngestionController_requirements",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ingestion"
+        ]
+      }
+    },
+    "/ingestion/readiness": {
+      "get": {
+        "operationId": "IngestionController_readiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ingestion"
+        ]
+      }
+    },
+    "/map/tiles/status": {
+      "get": {
+        "operationId": "MapController_tileServerStatus[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/api/v1/map/tiles/status": {
+      "get": {
+        "operationId": "MapController_tileServerStatus[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/map/tiles/cache-strategy": {
+      "get": {
+        "operationId": "MapController_tileCacheStrategy[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/api/v1/map/tiles/cache-strategy": {
+      "get": {
+        "operationId": "MapController_tileCacheStrategy[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/map/layers": {
+      "get": {
+        "operationId": "MapController_layers[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/api/v1/map/layers": {
+      "get": {
+        "operationId": "MapController_layers[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/map/live-layers": {
+      "get": {
+        "operationId": "MapController_liveLayers[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/api/v1/map/live-layers": {
+      "get": {
+        "operationId": "MapController_liveLayers[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/map/live-layers/probe": {
+      "get": {
+        "operationId": "MapController_liveLayerProbe[0]",
+        "parameters": [
+          {
+            "name": "source_id",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endpoint_url",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "layer_name",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/api/v1/map/live-layers/probe": {
+      "get": {
+        "operationId": "MapController_liveLayerProbe[1]",
+        "parameters": [
+          {
+            "name": "source_id",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endpoint_url",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "layer_name",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/map/providers": {
+      "get": {
+        "operationId": "MapController_providers[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/api/v1/map/providers": {
+      "get": {
+        "operationId": "MapController_providers[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/map/providers/health": {
+      "get": {
+        "operationId": "MapController_providerHealth[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/api/v1/map/providers/health": {
+      "get": {
+        "operationId": "MapController_providerHealth[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/map/providers/styles": {
+      "get": {
+        "operationId": "MapController_providerStyles[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/api/v1/map/providers/styles": {
+      "get": {
+        "operationId": "MapController_providerStyles[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/map/providers/readiness": {
+      "get": {
+        "operationId": "MapController_providerReadiness[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/api/v1/map/providers/readiness": {
+      "get": {
+        "operationId": "MapController_providerReadiness[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/market/capabilities": {
+      "get": {
+        "operationId": "MarketController_capabilities",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/market/parcel": {
+      "post": {
+        "operationId": "MarketController_parcel",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "market"
+        ]
+      }
+    },
+    "/analysis/pipeline": {
+      "get": {
+        "operationId": "AnalysisController_pipeline",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/analysis/runs": {
+      "get": {
+        "operationId": "AnalysisController_runs",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/analysis/provenance/{parcelId}": {
+      "get": {
+        "operationId": "AnalysisController_provenance",
+        "parameters": [
+          {
+            "name": "parcelId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/analysis/parcel-potential": {
+      "post": {
+        "operationId": "AnalysisController_parcelPotential",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/analysis/plan-notes/explain": {
+      "post": {
+        "operationId": "AnalysisController_explainPlanNotes",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/simulation/building-envelope/{parcelId}": {
+      "get": {
+        "operationId": "SimulationController_buildingEnvelope",
+        "parameters": [
+          {
+            "name": "parcelId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userReference",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "simulation"
+        ]
+      }
+    },
+    "/simulation/merge-candidates/{parcelId}": {
+      "get": {
+        "operationId": "SimulationController_mergeCandidates",
+        "parameters": [
+          {
+            "name": "parcelId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "simulation"
+        ]
+      }
+    },
+    "/simulation/emsal-share/calculate": {
+      "post": {
+        "operationId": "SimulationController_calculateEmsalShare",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "simulation"
+        ]
+      }
+    },
+    "/user-data/{userReference}/history": {
+      "get": {
+        "operationId": "UserDataController_history",
+        "parameters": [
+          {
+            "name": "userReference",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "user-data"
+        ]
+      }
+    },
+    "/user-data/{userReference}/favorites": {
+      "get": {
+        "operationId": "UserDataController_favorites",
+        "parameters": [
+          {
+            "name": "userReference",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "user-data"
+        ]
+      }
+    },
+    "/website/architecture": {
+      "get": {
+        "operationId": "WebsiteController_architecture",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "website"
+        ]
+      }
+    },
+    "/website/bootstrap": {
+      "get": {
+        "operationId": "WebsiteController_bootstrap",
+        "parameters": [
+          {
+            "name": "userReference",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "website"
+        ]
+      }
+    },
+    "/website/live-readiness": {
+      "get": {
+        "operationId": "WebsiteController_liveReadiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "website"
+        ]
+      }
+    },
+    "/website/session/start": {
+      "post": {
+        "operationId": "WebsiteController_startSession",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "website"
+        ]
+      }
+    },
+    "/website/session/verify": {
+      "post": {
+        "operationId": "WebsiteController_verifySession",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "website"
+        ]
+      }
+    },
+    "/website/bff/parcel-workflow": {
+      "post": {
+        "operationId": "WebsiteController_parcelWorkflow",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "website"
+        ]
+      }
+    },
+    "/website/bff/municipal-parcel-workflow": {
+      "post": {
+        "operationId": "WebsiteController_municipalParcelWorkflow",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "website"
+        ]
+      }
+    },
+    "/website/bff/parcel-report": {
+      "post": {
+        "operationId": "WebsiteController_parcelReport",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "website"
+        ]
+      }
+    },
+    "/website/bff/plan-note-explain": {
+      "post": {
+        "operationId": "WebsiteController_planNoteExplain",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "website"
+        ]
+      }
+    },
+    "/website/bff/parcel-market": {
+      "post": {
+        "operationId": "WebsiteController_parcelMarket",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "website"
+        ]
+      }
+    },
+    "/website/workspace/{userReference}": {
+      "get": {
+        "operationId": "WebsiteController_workspace",
+        "parameters": [
+          {
+            "name": "userReference",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "website"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Türkiye E-İmar Platform API",
+    "description": "Backend foundation for source discovery, connector orchestration, parcel queries, and GIS analysis.",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "ParcelQueryDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "ada_parsel",
+              "coordinate",
+              "address",
+              "geojson",
+              "kml"
+            ]
+          },
+          "ada": {
+            "type": "string"
+          },
+          "parselNo": {
+            "type": "string"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "srid": {
+            "type": "number",
+            "default": 4326
+          },
+          "address": {
+            "type": "string"
+          },
+          "geometry": {
+            "type": "object",
+            "description": "GeoJSON geometry object"
+          },
+          "kml": {
+            "type": "string",
+            "description": "Raw KML string"
+          },
+          "municipalityId": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string"
+          },
+          "bbox": {
+            "description": "WGS84 bbox as [minLon, minLat, maxLon, maxLat]",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "limit": {
+            "type": "number",
+            "default": 20,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "type"
+        ]
+      }
+    }
+  }
+}

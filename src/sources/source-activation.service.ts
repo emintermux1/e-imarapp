@@ -8,7 +8,7 @@ import { SOURCE_REGISTRY, SourceAccessStatus, SourceCategory, SourceJurisdiction
 
 export type SourceActivationStatus = 'active' | 'blocked' | 'needs_contract' | 'unavailable' | 'metadata_only';
 
-const LIVE_PUBLIC_CONNECTOR_KINDS = [ConnectorKind.NetcadKeos, ConnectorKind.Ekent, ConnectorKind.Ogc, ConnectorKind.ArcgisRest, ConnectorKind.MunicipalPortal, ConnectorKind.PublicPortal, ConnectorKind.PublicApi];
+const LIVE_PUBLIC_CONNECTOR_KINDS = [ConnectorKind.NetcadKeos, ConnectorKind.Keos, ConnectorKind.Webgis, ConnectorKind.Ekent, ConnectorKind.Ogc, ConnectorKind.Wms, ConnectorKind.Wfs, ConnectorKind.Geoserver, ConnectorKind.ArcgisRest, ConnectorKind.MunicipalPortal, ConnectorKind.PublicPortal, ConnectorKind.PublicApi];
 
 export interface SourceActivationRecord {
   sourceId: string;
@@ -116,7 +116,7 @@ export class SourceActivationService {
     const requirement = evaluateSourceRequirement(source, (envName) => this.config?.get<string>(envName) ?? process.env[envName]);
     const metadataOnly = source.access.status === 'public_metadata' || source.access.status === 'metadata_only';
     const publicLiveCandidate = source.access.status === 'public' && source.connectorKinds.some((kind) => LIVE_PUBLIC_CONNECTOR_KINDS.includes(kind));
-    const needsContract = source.access.status === 'unknown' && source.connectorKinds.some((kind) => [ConnectorKind.NetcadKeos, ConnectorKind.Ekent, ConnectorKind.Ogc, ConnectorKind.ArcgisRest].includes(kind));
+    const needsContract = source.access.status === 'unknown' && source.connectorKinds.some((kind) => [ConnectorKind.NetcadKeos, ConnectorKind.Keos, ConnectorKind.Webgis, ConnectorKind.Ekent, ConnectorKind.Ogc, ConnectorKind.Wms, ConnectorKind.Wfs, ConnectorKind.Geoserver, ConnectorKind.ArcgisRest].includes(kind));
     const activationStatus: SourceActivationStatus = protectedSource
       ? 'blocked'
       : publicLiveCandidate

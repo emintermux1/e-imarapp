@@ -87,6 +87,11 @@ export class HttpProbeService {
     const haystack = `${endpoint} ${contentType ?? ''} ${sample}`.toLowerCase();
     const kinds = new Set<ConnectorKind>();
     if (/netgis|keos|\.ashx|\.asmx|imardurumu/.test(haystack)) kinds.add(ConnectorKind.NetcadKeos);
+    if (/keos/.test(haystack)) kinds.add(ConnectorKind.Keos);
+    if (/webgis|kentrehberi|e-?imar/.test(haystack)) kinds.add(ConnectorKind.Webgis);
+    if (/service=wms|wms_capabilities/.test(haystack)) kinds.add(ConnectorKind.Wms);
+    if (/service=wfs|wfs/.test(haystack)) kinds.add(ConnectorKind.Wfs);
+    if (/geoserver/.test(haystack)) kinds.add(ConnectorKind.Geoserver);
     if (/service=wms|wms_capabilities|wfs|geoserver|getcapabilities|capability/.test(haystack)) kinds.add(ConnectorKind.Ogc);
     if (/arcgis\/rest|mapserver|featureserver/.test(haystack)) kinds.add(ConnectorKind.ArcgisRest);
     if (/ekent/.test(haystack)) kinds.add(ConnectorKind.Ekent);
