@@ -10,6 +10,8 @@ export enum ConnectorKind {
   Wfs = 'wfs',
   Geoserver = 'geoserver',
   ArcgisRest = 'arcgis_rest',
+  Mapserver = 'mapserver',
+  Overpass = 'overpass',
   Ekent = 'ekent',
   Documentation = 'documentation'
 }
@@ -25,6 +27,14 @@ export enum ProbeStatus {
   EndpointChanged = 'endpoint_changed',
   MethodContractRequired = 'method_contract_required'
 }
+
+export type PublicReadinessStatus =
+  | 'verified_live'
+  | 'public_metadata'
+  | 'captcha_required'
+  | 'requires_credentials'
+  | 'requires_legal_agreement'
+  | 'unavailable';
 
 export interface ProbeResult {
   endpoint: string;

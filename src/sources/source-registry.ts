@@ -1,4 +1,4 @@
-import { ConnectorKind } from '../connectors/connector.types';
+import { ConnectorKind, PublicReadinessStatus } from '../connectors/connector.types';
 import { TURKEY_MUNICIPAL_COVERAGE_CANDIDATES } from './turkey-coverage';
 
 export type SourceAccessStatus = 'public' | 'public_metadata' | 'metadata_only' | 'unknown' | 'requires_credentials' | 'requires_legal_agreement';
@@ -23,6 +23,13 @@ export interface SourceRegistryEntry {
   };
 }
 
+export function sourcePublicReadinessStatus(source: SourceRegistryEntry): PublicReadinessStatus {
+  if (source.access.status === 'requires_legal_agreement') return 'requires_legal_agreement';
+  if (source.access.status === 'requires_credentials') return 'requires_credentials';
+  if (source.access.status === 'public_metadata' || source.access.status === 'metadata_only' || source.access.status === 'public') return 'public_metadata';
+  return 'unavailable';
+}
+
 const municipalNotes = 'Public municipal imar portal. The platform treats it as a live public source and uses discovery/probe to resolve Netcad/WebGIS/OGC endpoints before normalized imar fields are shown.';
 const nationalNotes = 'Official public source. Connector discovery verifies live service availability and endpoint contracts before normalized data is shown.';
 
@@ -38,7 +45,7 @@ export const SOURCE_REGISTRY: SourceRegistryEntry[] = [
   },
   {
     id: 'csb-e-plan', name: 'ÇŞİDB E-Plan Güncel', jurisdiction: 'national', category: 'plan', homepageUrl: 'https://eplan.csb.gov.tr/',
-    connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'public', notes: 'Official e-Plan portal; public plan catalog and imar durum flows are verified by discovery.' }, capabilities: ['plan_catalog', 'plan_lookup', 'zoning_status'], documentationUrls: ['https://e-plan.gov.tr/']
+    connectorKinds: [ConnectorKind.PublicPortal, ConnectorKind.Wms, ConnectorKind.Geoserver], access: { status: 'public_metadata', notes: 'Official e-Plan portal; only anonymous WMS/GetCapabilities and catalog metadata are probed. Captcha/login flows are not bypassed.' }, capabilities: ['plan_catalog', 'plan_lookup', 'zoning_status', 'wms'], documentationUrls: ['https://e-plan.gov.tr/']
   },
   {
     id: 'e-plan', name: 'E-Plan Portalı', jurisdiction: 'national', category: 'plan', homepageUrl: 'https://e-plan.gov.tr/',
@@ -48,7 +55,7 @@ export const SOURCE_REGISTRY: SourceRegistryEntry[] = [
     id: 'csb-e-plan-legacy', name: 'ÇŞİDB E-Plan Legacy/Alternatif', jurisdiction: 'national', category: 'plan', homepageUrl: 'https://e-plan.gov.tr/',
     connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'public', notes: 'Legacy or alternate e-Plan hostname retained for discovery compatibility and canonical redirect checks.' }, capabilities: ['plan_catalog']
   },
-  { id: 'tucbs-public-api', name: 'Türkiye Ulusal CBS Public API', jurisdiction: 'national', category: 'open_data', homepageUrl: 'https://tucbs-public-api.csb.gov.tr/', connectorKinds: [ConnectorKind.Ogc, ConnectorKind.PublicApi], access: { status: 'public', notes: nationalNotes }, capabilities: ['wms', 'wfs', 'geospatial_api', 'plan_catalog'], documentationUrls: ['https://tucbs.gov.tr/'] },
+  { id: 'tucbs-public-api', name: 'Türkiye Ulusal CBS Public API', jurisdiction: 'national', category: 'open_data', homepageUrl: 'https://tucbs-public-api.csb.gov.tr/', connectorKinds: [ConnectorKind.Ogc, ConnectorKind.PublicApi, ConnectorKind.Wms, ConnectorKind.Wfs], access: { status: 'public_metadata', notes: 'TUCBS public metadata/catalog discovery only where anonymous access is available; e-Devlet and credentialed flows are not probed.' }, capabilities: ['wms', 'wfs', 'geospatial_api', 'geospatial_catalog', 'plan_catalog'], documentationUrls: ['https://tucbs.gov.tr/'] },
   { id: 'tucbs-ana', name: 'Türkiye Ulusal CBS Ana Portal', jurisdiction: 'national', category: 'open_data', homepageUrl: 'https://tucbs.gov.tr/', connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'public_metadata', notes: 'National CBS portal and metadata entry point; exact service access is determined per catalog endpoint.' }, capabilities: ['geospatial_catalog', 'wms', 'wfs'] },
   { id: 'edevlet-csb-tucbs', name: 'e-Devlet ÇŞİDB TUCBS Hizmeti', jurisdiction: 'national', category: 'open_data', homepageUrl: 'https://www.turkiye.gov.tr/csb-tucbs-8514', connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'requires_credentials', notes: 'e-Devlet workflow requires authenticated legal access; credentials are not stored in this repository.' }, capabilities: ['authenticated_service_catalog', 'tucbs_access'] },
   { id: 'atlas-ulusal-cbs', name: 'Atlas Ulusal CBS', jurisdiction: 'national', category: 'basemap', homepageUrl: 'https://www.atlas.gov.tr/', connectorKinds: [ConnectorKind.Ogc, ConnectorKind.PublicPortal], access: { status: 'public', notes: nationalNotes }, capabilities: ['basemap_context', 'geospatial_catalog', 'wms'] },
@@ -64,7 +71,7 @@ export const SOURCE_REGISTRY: SourceRegistryEntry[] = [
   { id: 'maptiler-cloud-api', name: 'MapTiler Cloud API', jurisdiction: 'global', category: 'tile_service', homepageUrl: 'https://docs.maptiler.com/cloud/api/', connectorKinds: [ConnectorKind.Documentation], access: { status: 'requires_credentials', notes: 'Commercial map API requires MAPTILER_API_KEY via environment variables and terms-compliant use.' }, capabilities: ['basemap_context'] },
   { id: 'here-map-tile-api', name: 'HERE APIs', jurisdiction: 'global', category: 'tile_service', homepageUrl: 'https://developer.here.com/documentation', connectorKinds: [ConnectorKind.Documentation], access: { status: 'requires_credentials', notes: 'HERE APIs require HERE_API_KEY via environment variables and product-specific license review.' }, capabilities: ['basemap_context'] },
   { id: 'cesium-ion', name: 'Cesium ion', jurisdiction: 'global', category: 'tile_service', homepageUrl: 'https://cesium.com/platform/cesium-ion/', connectorKinds: [ConnectorKind.Documentation], access: { status: 'requires_credentials', notes: 'Cesium ion requires CESIUM_ION_TOKEN via environment variables for hosted terrain and 3D Tiles.' }, capabilities: ['basemap_context'] },
-  { id: 'openstreetmap-api', name: 'OpenStreetMap API', jurisdiction: 'global', category: 'basemap', homepageUrl: 'https://wiki.openstreetmap.org/wiki/API', connectorKinds: [ConnectorKind.PublicApi], access: { status: 'public_metadata', notes: 'Public OSM documentation. Production use must respect OSM tile and API usage policies.' }, capabilities: ['basemap_context'] },
+  { id: 'openstreetmap-api', name: 'OpenStreetMap API / Overpass', jurisdiction: 'global', category: 'basemap', homepageUrl: 'https://wiki.openstreetmap.org/wiki/API', connectorKinds: [ConnectorKind.PublicApi, ConnectorKind.Overpass], access: { status: 'public_metadata', notes: 'Public OSM/Overpass context only. Respect rate limits and never treat OSM context as official cadastral or zoning data.' }, capabilities: ['basemap_context', 'osm_context'] },
   { id: 'usgs-landsat', name: 'USGS Landsat Data', jurisdiction: 'global', category: 'satellite', homepageUrl: 'https://landsat.gsfc.nasa.gov/data/', connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'unknown', notes: 'Landsat data portal documentation; exact API account requirements must be verified per product.' }, capabilities: ['satellite_imagery'] },
   ...municipalSources(),
   ...generatedTurkeyMunicipalCoverage()

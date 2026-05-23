@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConnectorKind } from '../connectors/connector.types';
-import { SOURCE_REGISTRY, SourceAccessStatus, SourceRegistryEntry } from './source-registry';
+import { SOURCE_REGISTRY, SourceAccessStatus, SourceRegistryEntry, sourcePublicReadinessStatus } from './source-registry';
 import { isProtectedSource, isPublicCandidateSource, summarizeSources, toMunicipalitySummary } from './source-coverage';
 
 export type ImarQuerySupport = 'supported' | 'source_unavailable' | 'protected' | 'unknown';
@@ -33,7 +33,12 @@ export interface MunicipalityCapability {
 @Injectable()
 export class SourcesService {
   list() {
-    return { status: 'ok', count: SOURCE_REGISTRY.length, sources: SOURCE_REGISTRY };
+    return {
+      status: 'ok',
+      count: SOURCE_REGISTRY.length,
+      readinessStatuses: ['verified_live', 'public_metadata', 'captcha_required', 'requires_credentials', 'requires_legal_agreement', 'unavailable'],
+      sources: SOURCE_REGISTRY.map((source) => ({ ...source, publicReadiness: { status: sourcePublicReadinessStatus(source), message: source.access.notes } }))
+    };
   }
 
   summary() {

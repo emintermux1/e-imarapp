@@ -128,6 +128,26 @@ export const CONNECTOR_PLUGINS: ConnectorPluginDefinition[] = [
     nextStep: 'Catalog MapServer/FeatureServer layers, then identify parcel/zoning fields and source license.'
   },
   {
+    kind: ConnectorKind.Mapserver,
+    label: 'Generic MapServer public metadata',
+    family: 'ogc',
+    detects: ['MapServer', 'GetCapabilities', 'f=pjson'],
+    candidatePaths: ['/MapServer?f=pjson', '/arcgis/rest/services?f=pjson'],
+    outputContract: { requiredFields: REQUIRED_FIELDS, dataTypes: ['public_metadata', 'official', 'unavailable'] },
+    legalBoundary: 'Anonymous service metadata is inspected only; protected layer queries are not attempted.',
+    nextStep: 'Record public layer metadata/readiness and only query attributes after terms and layer semantics are verified.'
+  },
+  {
+    kind: ConnectorKind.Overpass,
+    label: 'OpenStreetMap / Overpass context lookup',
+    family: 'public_api',
+    detects: ['overpass-api', 'openstreetmap', 'building', 'landuse'],
+    candidatePaths: ['https://overpass-api.de/api/interpreter'],
+    outputContract: { requiredFields: REQUIRED_FIELDS, dataTypes: ['public_metadata', 'derived', 'unavailable'] },
+    legalBoundary: 'Use as public context/basemap only; never present OSM/Overpass results as official cadastral parcel records.',
+    nextStep: 'Apply strict radius, timeout, and rate-limit fallback messaging before displaying context around a parcel.'
+  },
+  {
     kind: ConnectorKind.Geoserver,
     label: 'GeoServer OWS',
     family: 'ogc',
