@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { IntegrationErrorCode } from '../common/error-taxonomy';
 import { DatabaseService } from '../database/database.service';
+import { AuditRepository } from '../audit/audit.repository';
 
 @Injectable()
 export class GeoService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly audit: AuditRepository
+  ) {}
 
   async integritySummary(): Promise<unknown> {
     if (!this.db.isConfigured()) {
@@ -73,20 +77,60 @@ export class GeoService {
     };
   }
 
-  auditContract() {
-    return {
-      status: 'not_ready',
-      issue: {
-        code: IntegrationErrorCode.NotConfigured,
-        message: 'Audit/version/rollback tables are not enabled in this runtime.'
-      },
-      proposedModel: {
-        geometry_audit_log: ['id', 'entity_type', 'entity_id', 'operation', 'actor_ref', 'reason', 'before_hash', 'after_hash', 'created_at'],
-        geometry_versions: ['id', 'entity_type', 'entity_id', 'version_no', 'geometry', 'metadata', 'source_id', 'created_at'],
-        rollbackRequest: { entityType: 'parcel', entityId: 'uuid', targetVersion: 3, reason: 'operator reviewed topology regression' }
-      },
-      guarantees: ['append_only_audit', 'no_silent_official_repair', 'rollback_requires_reason']
+  async auditContract() {
+    const model = {
+      entity_audit_log: ['id', 'entity_type', 'entity_id', 'operation', 'actor_ref', 'reason', 'before_value', 'after_value', 'before_hash', 'after_hash', 'source_id', 'created_at'],
+      entity_versions: ['id', 'entity_type', 'entity_id', 'version_no', 'value', 'source_id', 'created_by', 'reason', 'created_at'],
+      rollbackRequest: { entityType: 'parcel', entityId: 'parcel/TR-34-BES-1234-2', targetVersion: 3, reason: 'operator reviewed topology regression' }
     };
+
+    if (!this.db.isConfigured()) {
+      return {
+        status: 'sample_ready',
+        persistence: 'repository_defined_database_not_configured',
+        issue: {
+          code: IntegrationErrorCode.NotConfigured,
+          message: 'DATABASE_URL is not configured; returning concrete sample audit/version records instead of schema-only output.'
+        },
+        model,
+        supportedEntities: ['parcel', 'source', 'report'],
+        sampleRecords: this.audit.sampleRecords(),
+        sampleVersions: [
+          { entityType: 'parcel', entityId: 'parcel/TR-34-BES-1234-2', versionNo: 1, status: 'sample_record', sourceId: 'istanbul-besiktas-keos' },
+          { entityType: 'source', entityId: 'source/istanbul-besiktas-keos', versionNo: 2, status: 'sample_record', sourceId: 'istanbul-besiktas-keos' },
+          { entityType: 'report', entityId: 'report/demo-feasibility-001', versionNo: 1, status: 'sample_record', sourceId: null }
+        ],
+        guarantees: ['append_only_audit', 'no_silent_official_repair', 'rollback_requires_reason']
+      };
+    }
+
+    try {
+      const [auditRows, versionRows] = await Promise.all([
+        this.db.query(`select id, entity_type, entity_id, operation, actor_ref, reason, before_hash, after_hash, source_id, created_at from entity_audit_log order by created_at desc limit 5`),
+        this.db.query(`select id, entity_type, entity_id, version_no, source_id, created_by, reason, created_at from entity_versions order by created_at desc limit 5`)
+      ]);
+
+      return {
+        status: 'ok',
+        persistence: 'database',
+        model,
+        supportedEntities: ['parcel', 'source', 'report'],
+        records: auditRows.rows,
+        versions: versionRows.rows,
+        counts: { auditRecords: auditRows.rowCount, versions: versionRows.rowCount },
+        guarantees: ['append_only_audit', 'no_silent_official_repair', 'rollback_requires_reason']
+      };
+    } catch (error) {
+      return {
+        status: 'setup_required',
+        persistence: 'database_configured_tables_unavailable',
+        issue: { code: IntegrationErrorCode.NotConfigured, message: error instanceof Error ? error.message : String(error) },
+        model,
+        supportedEntities: ['parcel', 'source', 'report'],
+        sampleRecords: this.audit.sampleRecords(),
+        guarantees: ['append_only_audit', 'no_silent_official_repair', 'rollback_requires_reason']
+      };
+    }
   }
 
   indexRecommendations() {

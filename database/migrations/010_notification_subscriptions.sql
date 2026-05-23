@@ -18,7 +18,7 @@ create table if not exists notification_deliveries (
   channel text not null check (channel in ('webhook', 'push')),
   target text not null,
   payload jsonb not null default '{}'::jsonb,
-  status text not null check (status in ('queued', 'sent', 'failed', 'requires_provider')),
+  status text not null check (status in ('queued', 'sent', 'failed', 'requires_provider', 'dry_run')),
   response jsonb,
   created_at timestamptz not null default now()
 );

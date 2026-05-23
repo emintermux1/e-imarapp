@@ -3,6 +3,8 @@ import * as cheerio from 'cheerio';
 import { ConfigService } from '@nestjs/config';
 import { IntegrationErrorCode } from '../common/error-taxonomy';
 import { DatabaseService } from '../database/database.service';
+import { NotificationService } from '../notifications/notification.service';
+import { buildWatchlistNotificationPayload } from '../notifications/notification-payloads';
 
 const EPLAN_BASE = 'https://eplan.csb.gov.tr';
 const RATE_LIMIT_MS = 3000;
@@ -32,7 +34,8 @@ export class EplanService {
 
   constructor(
     private readonly db: DatabaseService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    private readonly notifications: NotificationService
   ) {}
 
   async scrapeAskidakiPlanlar(province?: string, district?: string): Promise<unknown> {
@@ -158,13 +161,14 @@ export class EplanService {
 
     let notified = 0;
     for (const row of unnotified.rows as { change_id: string; user_reference: string; webhook_url?: string; notify_channels: string[] }[]) {
+      const notificationPayload = buildWatchlistNotificationPayload(row as Record<string, unknown>);
       if (row.webhook_url && row.notify_channels.includes('webhook')) {
         try {
-          await this.sendWebhook(row.webhook_url, row);
-          await this.logDelivery(row.change_id, null, 'webhook', row.webhook_url, row, 'sent', null);
+          await this.sendWebhook(row.webhook_url, notificationPayload);
+          await this.logDelivery(row.change_id, null, 'webhook', row.webhook_url, notificationPayload, 'sent', null);
         } catch (err) {
           this.logger.warn(`Webhook failed for change ${row.change_id}: ${err}`);
-          await this.logDelivery(row.change_id, null, 'webhook', row.webhook_url, row, 'failed', { error: String(err) });
+          await this.logDelivery(row.change_id, null, 'webhook', row.webhook_url, notificationPayload, 'failed', { error: err instanceof Error ? err.message : String(err) });
         }
       }
 
@@ -178,21 +182,21 @@ export class EplanService {
       for (const sub of subs.rows as { id: string; channel: 'webhook' | 'push'; target: string; platform?: string }[]) {
         if (sub.channel === 'webhook') {
           try {
-            await this.sendWebhook(sub.target, row);
-            await this.logDelivery(row.change_id, sub.id, sub.channel, sub.target, row, 'sent', null);
+            await this.sendWebhook(sub.target, notificationPayload);
+            await this.logDelivery(row.change_id, sub.id, sub.channel, sub.target, notificationPayload, 'sent', null);
           } catch (err) {
-            await this.logDelivery(row.change_id, sub.id, sub.channel, sub.target, row, 'failed', { error: String(err) });
+            await this.logDelivery(row.change_id, sub.id, sub.channel, sub.target, notificationPayload, 'failed', { error: err instanceof Error ? err.message : String(err) });
           }
           continue;
         }
 
-        const push = await this.sendPush(sub.target, row, sub.platform);
+        const push = await this.notifications.sendWatchlistPush(sub.target, notificationPayload, sub.platform);
         await this.logDelivery(
           row.change_id,
           sub.id,
           sub.channel,
           sub.target,
-          row,
+          notificationPayload,
           push.status,
           push.response
         );
@@ -431,49 +435,13 @@ export class EplanService {
     });
   }
 
-  private async sendPush(token: string, payload: unknown, platform?: string): Promise<{
-    status: 'sent' | 'failed' | 'requires_provider';
-    response: Record<string, unknown> | null;
-  }> {
-    const gateway = this.config.get<string>('PUSH_GATEWAY_URL');
-    if (!gateway) {
-      return {
-        status: 'requires_provider',
-        response: { message: 'PUSH_GATEWAY_URL not configured.', platform: platform ?? null }
-      };
-    }
-
-    try {
-      const res = await fetch(gateway, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          platform: platform ?? 'unknown',
-          title: 'İmar değişikliği bildirimi',
-          body: 'Takip ettiğiniz bölgede yeni plan değişikliği var.',
-          payload
-        })
-      });
-      return {
-        status: res.ok ? 'sent' : 'failed',
-        response: { httpStatus: res.status }
-      };
-    } catch (error) {
-      return {
-        status: 'failed',
-        response: { error: String(error) }
-      };
-    }
-  }
-
   private async logDelivery(
     changeId: string,
     subscriptionId: string | null,
     channel: string,
     target: string,
     payload: unknown,
-    status: 'sent' | 'failed' | 'queued' | 'requires_provider',
+    status: 'sent' | 'failed' | 'queued' | 'requires_provider' | 'dry_run',
     response: Record<string, unknown> | null
   ): Promise<void> {
     await this.db.query(
