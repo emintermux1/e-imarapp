@@ -17,11 +17,11 @@ const GROUPS: LayerDescriptor["group"][] = [
 ];
 
 const STATUS_LABELS: Record<LayerDescriptor["status"], string> = {
-  official: "official",
-  public_metadata: "public metadata",
-  demo: "demo",
-  derived: "derived",
-  not_ready: "not ready"
+  official: "resmî",
+  public_metadata: "public kayıt",
+  demo: "açık kayıt",
+  derived: "türetilmiş",
+  not_ready: "keşif bekliyor"
 };
 
 export function LayerToggleList() {

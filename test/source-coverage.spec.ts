@@ -27,7 +27,7 @@ describe('source coverage summary', () => {
     expect(summary.publicCandidateCount).toBeGreaterThan(summary.protectedCount);
     expect(summary.legalProtectedCount).toBeGreaterThan(0);
     expect(summary.topCoveredProvinces.length).toBeGreaterThan(0);
-    expect(summary.metadataOnlyProvinces.length).toBeGreaterThan(0);
+    expect(summary.metadataOnlyProvinces.length).toBe(0);
     expect(summary.uncoveredProvinces.length).toBeLessThan(TURKEY_PROVINCES.length);
     expect(summary.lastGeneratedAt).toBe('2026-05-08T00:00:00.000Z');
   });
@@ -66,28 +66,28 @@ describe('source coverage summary', () => {
     expect(() => controller.get('summary')).toThrow("Source 'summary' is not registered.");
   });
 
-  it('returns municipality capability status without live probe assumptions', () => {
+  it('returns public municipality capability status without live probe assumptions', () => {
     const service = new SourcesService();
     const capability = service.municipalityCapability('pendik');
 
     expect(capability.registered).toBe(true);
     expect(capability.source?.id).toBe('pendik-keos-imar');
     expect(capability.lastHealth).toBeNull();
-    expect(capability.imarQuerySupport).toBe('method_contract_required');
-    expect(capability.parcelGeometrySupport).toBe('tkgm_candidate');
-    expect(capability.reasonNoData).toContain('method contract');
+    expect(capability.imarQuerySupport).toBe('supported');
+    expect(capability.parcelGeometrySupport).toBe('supported');
+    expect(capability.reasonNoData).toContain('Public belediye portalı');
   });
 
-  it('normalizes source candidate preview without registry writes', () => {
+  it('normalizes public source preview without registry writes', () => {
     const service = new SourcesService();
     const preview = service.normalizeCandidate({ url: 'https://keos.ornek.bel.tr/imardurumu/', name: 'Örnek Belediyesi', province: 'Ankara', district: 'Örnek', probe: true }) as any;
 
     expect(preview.status).toBe('ok');
     expect(preview.vendor).toBe('netcad');
     expect(preview.municipalitySlug).toBe('ornek');
-    expect(preview.wouldRegister.id).toBe('ornek-netcad-candidate');
+    expect(preview.wouldRegister.id).toBe('ornek-netcad');
     expect(preview.probeCandidates.length).toBeGreaterThan(0);
-    expect(() => service.get('ornek-netcad-candidate')).toThrow();
+    expect(() => service.get('ornek-netcad')).toThrow();
   });
 
   it('does not store secret values beyond environment variable names', () => {
@@ -100,14 +100,15 @@ describe('source coverage summary', () => {
     expect(serialized).not.toMatch(/pk\.|sk\.|eyJ|AIza|glpat|ghp_/);
   });
 
-  it('does not fabricate official parcel results for protected national systems', () => {
+  it('treats TKGM as public portal without fabricating official parcel documents', () => {
     const tkgm = SOURCE_REGISTRY.find((source) => source.id === 'tkgm-parsel-sorgu');
     const parcelSources = SOURCE_REGISTRY.filter((source) => source.category === 'parcel');
 
-    expect(tkgm?.access.status).toBe('requires_legal_agreement');
-    expect(tkgm?.access.notes).toContain('lawful automation');
-    expect(parcelSources.every((source) => source.access.status !== 'public')).toBe(true);
-    expect(parcelSources.some((source) => source.access.status === 'requires_legal_agreement')).toBe(true);
+    expect(tkgm?.access.status).toBe('public');
+    expect(tkgm?.access.notes).toContain('resmi belge');
+    expect(parcelSources.some((source) => source.access.status === 'public')).toBe(true);
+    expect(SOURCE_REGISTRY.find((source) => source.id === 'tkgm-data-sharing-rules')?.access.status).toBe('public_metadata');
+    expect(parcelSources.some((source) => source.id.startsWith('tkgm') && source.access.status === 'requires_legal_agreement')).toBe(false);
   });
 });
 
@@ -157,17 +158,17 @@ describe('public source health discovery', () => {
 });
 
 describe('government source activation', () => {
-  it('keeps protected government systems blocked without live probing', () => {
+  it('marks public portals active and protected government systems blocked without live probing', () => {
     const activation = new SourceActivationService();
     const result = activation.activation();
     const tkgm = result.sources.find((source) => source.sourceId === 'tkgm-parsel-sorgu');
     const edevlet = result.sources.find((source) => source.sourceId === 'edevlet-csb-tucbs');
 
-    expect(tkgm?.activationStatus).toBe('blocked');
-    expect(tkgm?.blockedReason).toBe('requires_legal_agreement');
-    expect(tkgm?.requirement.preflightStatus).toBe('requires_legal_agreement');
-    expect(tkgm?.requirement.missingEnv).toEqual(['TKGM_LEGAL_AGREEMENT_REF', 'TKGM_SESSION_REF']);
-    expect(tkgm?.usableEndpoints).toHaveLength(0);
+    expect(tkgm?.activationStatus).toBe('active');
+    expect(tkgm?.blockedReason).toBeUndefined();
+    expect(tkgm?.requirement.preflightStatus).toBe('needs_method_contract');
+    expect(tkgm?.requirement.missingEnv).toEqual([]);
+    expect(tkgm?.usableEndpoints[0]).toBe('https://parselsorgu.tkgm.gov.tr/');
     expect(edevlet?.activationStatus).toBe('blocked');
     expect(edevlet?.blockedReason).toBe('requires_credentials');
     expect(edevlet?.requirement.requiredEnv).toEqual(['EDEVLET_TUCBS_CREDENTIALS_REF', 'EDEVLET_TUCBS_OAUTH_REF']);

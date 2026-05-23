@@ -22,6 +22,9 @@
     "web:build": "npm --prefix apps/e_imar_web run build",
     "web:preview": "npm --prefix apps/e_imar_web run start",
     "web:typecheck": "npm --prefix apps/e_imar_web run typecheck",
+    "web:production-guardrails": "jest --runInBand test/web-parcel-source-mode.spec.ts",
+    "openapi:export": "ts-node scripts/export-openapi.ts",
+    "openapi:generate": "npm run openapi:export && openapi-typescript docs/openapi.generated.json -o apps/e_imar_web/src/types/generated/openapi.ts",
     "web:lint": "npm --prefix apps/e_imar_web run lint",
     "web:smoke": "node scripts/web-smoke.mjs"
   },
@@ -50,6 +53,7 @@
     "@types/node": "^25.6.2",
     "@types/pg": "^8.15.5",
     "jest": "^30.4.1",
+    "openapi-typescript": "^7.10.1",
     "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"

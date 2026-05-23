@@ -1,6 +1,6 @@
-# Türkiye E-İmar MVP
+# Türkiye E-İmar Platform Backend Foundation
 
-This repository is being narrowed toward one sellable MVP: a canonical web app that lets a user search or click a parcel, see honest official-source readiness, and get a sourced zoning summary when verified data exists.
+This repository contains the first backend-first foundation for a production-oriented Turkey e-imar, parcel, zoning, and municipal GIS platform.
 
 ## Principles
 
@@ -10,16 +10,14 @@ This repository is being narrowed toward one sellable MVP: a canonical web app t
 - PostGIS is the canonical spatial store.
 - New municipal connectors should be added through source metadata and connector plugins, not hard-coded endpoint logic.
 
-## Canonical stack
+## Stack
 
-- Product web app: Next.js 14 in `apps/e_imar_web`
-- API/runtime container: FastAPI in `app/`, served on port `8000`
-- TypeScript service modules and tests remain in `src/` while the backend is consolidated, but the Docker/API entrypoint is FastAPI.
+- Node.js, TypeScript, NestJS, Fastify
 - PostgreSQL/PostGIS
-- Redis-backed job orchestration
+- Redis + BullMQ-compatible job orchestration
 - MinIO for object storage
 - OpenSearch for search indexing
-- FastAPI OpenAPI docs
+- Swagger/OpenAPI
 - pg_tileserv-compatible vector tile serving
 - Prometheus/Grafana observability
 
@@ -29,10 +27,10 @@ This repository is being narrowed toward one sellable MVP: a canonical web app t
 npm install
 docker compose up -d
 cp .env.example .env
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+npm run start:dev
 ```
 
-API docs are available at `http://localhost:8000/docs`.
+Swagger UI is available at `http://localhost:3000/docs`.
 
 ### Web frontend startup (canonical Next.js app)
 
@@ -48,27 +46,28 @@ scripts.
 Production parcel rendering must be configured explicitly:
 
 ```bash
+NEXT_PUBLIC_EIMAR_SITE_URL=https://www.example.com
 NEXT_PUBLIC_EIMAR_DATA_MODE=api
 NEXT_PUBLIC_EIMAR_API_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api/v1
 # or
 NEXT_PUBLIC_EIMAR_DATA_MODE=vector-tile
 NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL=http://localhost:7800/public.parcels/{z}/{x}/{y}.pbf
-# only for non-production previews that intentionally show synthetic parcels
-NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=true
+NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=0
 ```
 
 Development defaults to labelled demo parcels. Production does not silently fall
 back to demo when a live API/vector tile endpoint is missing; the map stays
 visible and reports an unavailable parcel source state.
 
-Legacy/reference frontends have been moved under `_archive/legacy-frontends/`.
-Root scripts target `apps/e_imar_web` so agents and humans do not accidentally
-edit a stale shell.
+`apps/web`, `web-next`, `apps/e_imar_next`, and `frontend/` are deprecated or
+reference prototypes. Root scripts target `apps/e_imar_web` so agents and
+humans do not accidentally open a stale shell.
 
 ### Legacy prototype frontends
 
-Older experiments remain for historical reference only under
-`_archive/legacy-frontends/`. Do not use them as the product frontend unless
+Older experiments remain for historical reference only. Do not use `apps/web`,
+`web-next`, `apps/e_imar_next`, or `frontend/` as the product frontend unless
 explicitly working on legacy migration.
 
 Docker Compose now includes the API service as well as PostGIS, Redis, MinIO, OpenSearch, pg_tileserv, Prometheus, and Grafana.
@@ -163,7 +162,7 @@ If you want to use local `.env`, copy `.env.example` to `.env` and fill the opti
 
 ## API behavior
 
-If PostGIS or Redis is not configured, API endpoints return a `not_ready` or `unavailable` status with a concrete next action. They do not invent parcel or plan results. Municipal parcel workflows return `method_contract_required`, `protected`, `source_not_found`, or `not_ready` when registry, TKGM geometry, or Netcad/KEOS contracts are not verified; demo/derived/public metadata is never labeled as official data.
+If PostGIS or Redis is not configured, API endpoints return a `not_ready`, `public_discovery`, or `unavailable` status with a concrete next action. They do not invent parcel or plan results. Municipal parcel workflows treat public KEOS/Netcad/WebGIS portals as live public sources, then expose `active`, `public_discovery`, `protected`, `source_not_found`, or `not_ready` states while TKGM geometry and endpoint field contracts are resolved; örnek/türetilmiş/public metadata is never labeled as official data.
 
 ## Geometry validation, integrity, and platform hardening
 
@@ -183,7 +182,7 @@ RATE_LIMIT_MAX=120
 CORS_ORIGIN=https://your-frontend.example
 ```
 
-The API bootstrap enables CORS, common security headers, and strict validation. Public connector probing endpoints apply lightweight in-memory rate limiting, user-agent/IP keyed metadata, and hard limit caps to reduce scraping pressure without blocking legitimate interactive use.
+The Fastify bootstrap enables CORS, common security headers, and strict validation. Public connector probing endpoints apply lightweight in-memory rate limiting, user-agent/IP keyed metadata, and hard limit caps to reduce scraping pressure without blocking legitimate interactive use.
 
 ## Tests
 
@@ -208,7 +207,7 @@ See `docs/adr/0001-backend-first-geospatial-foundation.md`.
 
 ## Website app and integration
 
-The canonical product frontend is `apps/e_imar_web` (Next.js 14 App Router). It consumes the FastAPI `/api/v1/*` endpoints and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data. Legacy/reference apps live under `_archive/legacy-frontends/` unless explicitly migrated.
+The canonical product frontend is `apps/e_imar_web` (Next.js 14 App Router). It consumes the FastAPI `/api/v1/*` endpoints and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data. `frontend/`, `apps/web`, `apps/web-next`, and `apps/e_imar_next` are legacy/reference apps unless explicitly migrated.
 
 - App README: `apps/e_imar_web/README.md`
 - Architecture and runbook: `docs/website-architecture.md`
@@ -239,12 +238,23 @@ Required website integration env:
 WEBSITE_SESSION_SECRET=...
 OPENAI_API_KEY=...          # for plan-note explain
 PUSH_GATEWAY_URL=...        # for push channel delivery
+NEXT_PUBLIC_EIMAR_SITE_URL=https://www.example.com
 NEXT_PUBLIC_EIMAR_DATA_MODE=api
 NEXT_PUBLIC_EIMAR_API_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api/v1
 NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL=...      # required for vector-tile mode
 NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=0   # production should stay unavailable instead of demo
 NEXT_PUBLIC_MAPBOX_TOKEN=... # optional; empty uses token-free basemaps
 ```
+
+`NEXT_PUBLIC_EIMAR_API_BASE_URL` is the canonical website backend origin.
+`NEXT_PUBLIC_API_BASE_URL` is still accepted for API-v1-specific clients and is
+used first when both variables are present to preserve older deployments. The
+website app also publishes robots, sitemap, manifest, icon and OpenGraph
+metadata from `NEXT_PUBLIC_EIMAR_SITE_URL` (or `VERCEL_URL` in previews).
+It exposes `GET /healthz` for uptime checks and `GET /readyz` for production
+readiness gates; `readyz` returns 503 if production lacks a live API/vector tile
+source or if demo fallback is enabled.
 
 CI and smoke tests do not require real provider secrets. Configure production/staging values in the deploy target or GitHub environment secrets; never commit them.
 

@@ -1,9 +1,14 @@
 export enum ConnectorKind {
   NetcadKeos = 'netcad_keos',
+  Keos = 'keos',
+  Webgis = 'webgis',
   MunicipalPortal = 'municipal_portal',
   PublicPortal = 'public_portal',
   PublicApi = 'public_api',
   Ogc = 'ogc',
+  Wms = 'wms',
+  Wfs = 'wfs',
+  Geoserver = 'geoserver',
   ArcgisRest = 'arcgis_rest',
   Ekent = 'ekent',
   Documentation = 'documentation'

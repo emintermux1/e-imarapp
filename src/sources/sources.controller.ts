@@ -5,7 +5,7 @@ import { SourceAccessStatus } from './source-registry';
 import { SourcesService } from './sources.service';
 
 @ApiTags('sources')
-@Controller('sources')
+@Controller(['sources', 'api/v1/sources'])
 export class SourcesController {
   constructor(private readonly sources: SourcesService, private readonly activation?: SourceActivationService) {}
 

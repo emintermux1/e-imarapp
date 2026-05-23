@@ -1,5 +1,5 @@
 /**
- * Askı haritası overlay'i için poligonlar. Bu sınırlar sentetik demo
+ * Askı haritası overlay'i için poligonlar. Bu sınırlar sentetik örnek
  * kapsamıdır; resmi belediye/TKGM askı planı geometrisi değildir.
  */
 
@@ -175,8 +175,8 @@ const derivedSeeds: PolygonSeed[] = DEMO_PARCEL_CLUSTERS.filter((cluster, index)
     const status: AskiPolygonStatus = index % 9 === 0 ? "donusum" : index % 5 === 0 ? "onaylandi" : index % 7 === 0 ? "reddedildi" : "askida";
     const startMonth = status === "askida" ? 4 + (index % 3) : 1 + (index % 10);
     return {
-      id: `demo-aski-${cluster.id}`,
-      baslik: `${cluster.ilce} ${cluster.mahalle} demo plan askı alanı`,
+      id: `sample-aski-${cluster.id}`,
+      baslik: `${cluster.ilce} ${cluster.mahalle} örnek plan askı alanı`,
       belediye: `${cluster.ilce} Belediyesi`,
       baslangic: `2026-${String(startMonth).padStart(2, "0")}-${String(4 + (index % 20)).padStart(2, "0")}`,
       bitis: `2026-${String(Math.min(12, startMonth + 2)).padStart(2, "0")}-${String(8 + (index % 18)).padStart(2, "0")}`,
@@ -186,7 +186,7 @@ const derivedSeeds: PolygonSeed[] = DEMO_PARCEL_CLUSTERS.filter((cluster, index)
       ilceSlug: slugify(cluster.ilce),
       lng: cluster.center[0] + ((index % 3) - 1) * 0.0022,
       lat: cluster.center[1] + ((index % 4) - 1.5) * 0.0016,
-      planAdi: `${cluster.mahalle} 1/1000 Demo UİP Tadilatı`,
+      planAdi: `${cluster.mahalle} 1/1000 Örnek UİP Tadilatı`,
       size: [0.005 + (index % 3) * 0.001, 0.0035 + (index % 2) * 0.001]
     };
   });

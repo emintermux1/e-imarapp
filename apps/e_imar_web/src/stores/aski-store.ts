@@ -26,14 +26,14 @@ export const useAskiStore = create<AskiState>()((set) => ({
         message:
           safePlans.length > 0
             ? `${safePlans.length} canlı askı planı yüklendi`
-            : "Canlı askı planı dönmedi — yerel/demo katman gösteriliyor",
+            : "Canlı askı planı dönmedi — yerel/public kayıt katmanı gösteriliyor",
         lastCheckedAt: new Date().toISOString()
       });
     } catch (error) {
       set({
         plans: [],
         status: "unavailable",
-        message: `${humanizeApiError(error)} Yerel/demo askı katmanı korunuyor.`,
+        message: `${humanizeApiError(error)} Yerel/public askı katmanı korunuyor.`,
         lastCheckedAt: new Date().toISOString()
       });
     }

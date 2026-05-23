@@ -21,6 +21,7 @@ export interface ParcelMarketContext {
   areaM2?: number | null;
   zoningType?: string | null;
   centroid?: [number, number] | null;
+  manualListingLinks?: string[] | null;
 }
 
 export interface MarketProviderReadiness {
@@ -62,7 +63,7 @@ export interface NormalizedMarketListing {
   capturedAt: string;
   match: MarketListingMatch;
   provenance: {
-    source: 'provider_adapter';
+    source: 'provider_adapter' | 'manual_link';
     providerId: MarketProviderId;
     readinessStatus: MarketReadinessStatus;
     reason: string;
@@ -119,4 +120,3 @@ export interface ParcelMarketResponse {
     providerCount: number;
   };
 }
-

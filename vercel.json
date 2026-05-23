@@ -6,7 +6,7 @@
   "installCommand": "npm ci --prefix apps/e_imar_web",
   "framework": "nextjs",
   "outputDirectory": "apps/e_imar_web/.next",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/e_imar_web package.json package-lock.json vercel.json",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/e_imar_web package.json package-lock.json vercel.json README.md docs/website-architecture.md",
   "env": {
     "NEXT_TELEMETRY_DISABLED": "1"
   }

@@ -3,8 +3,8 @@ import { ConnectorKind } from '../connectors/connector.types';
 import { SOURCE_REGISTRY, SourceAccessStatus, SourceRegistryEntry } from './source-registry';
 import { isProtectedSource, isPublicCandidateSource, summarizeSources, toMunicipalitySummary } from './source-coverage';
 
-export type ImarQuerySupport = 'supported' | 'method_contract_required' | 'source_unavailable' | 'protected' | 'unknown';
-export type ParcelGeometrySupport = 'tkgm_candidate' | 'supported' | 'protected' | 'unknown';
+export type ImarQuerySupport = 'supported' | 'source_unavailable' | 'protected' | 'unknown';
+export type ParcelGeometrySupport = 'supported' | 'protected' | 'unknown';
 
 export interface MunicipalityCapability {
   source: {
@@ -94,7 +94,7 @@ export class SourcesService {
         imarQuerySupport: 'unknown',
         parcelGeometrySupport: 'unknown',
         reasonNoData: 'Belediye kaynağı registry içinde bulunamadı',
-        nextAction: 'Kaynak katkı/import önizlemesi ile resmi URL ve belediye bilgilerini doğrulayın.'
+        nextAction: 'Public portal URL’sini kaynak katkı/import önizlemesiyle ekleyin.'
       };
     }
     return this.municipalityCapabilityForSource(source);
@@ -105,21 +105,23 @@ export class SourcesService {
     if (!normalizedUrl) return { status: 'invalid_input', message: 'Geçerli bir http/https URL gereklidir.' };
     const vendor = this.guessVendor(normalizedUrl);
     const municipalitySlug = this.guessMunicipalitySlug(normalizedUrl, input.name, input.district);
-    const sourceId = `${municipalitySlug || 'unknown'}-${vendor === 'unknown' ? 'municipal' : vendor}-candidate`;
-    const connectorKinds = vendor === 'netcad' || vendor === 'webgis'
-      ? [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal]
-      : vendor === 'ekent'
-        ? [ConnectorKind.Ekent, ConnectorKind.MunicipalPortal]
-        : [ConnectorKind.MunicipalPortal];
+    const sourceId = `${municipalitySlug || 'unknown'}-${vendor === 'unknown' ? 'municipal' : vendor}`;
+    const connectorKinds = vendor === 'netcad'
+      ? [ConnectorKind.NetcadKeos, ConnectorKind.Keos, ConnectorKind.Wms, ConnectorKind.Wfs]
+      : vendor === 'webgis'
+        ? [ConnectorKind.Webgis, ConnectorKind.Ogc, ConnectorKind.Wms, ConnectorKind.Wfs]
+        : vendor === 'ekent'
+          ? [ConnectorKind.Ekent, ConnectorKind.MunicipalPortal]
+          : [ConnectorKind.MunicipalPortal];
     const capabilities = vendor === 'netcad' || vendor === 'webgis'
-      ? ['zoning_status', 'municipal_gis', 'netcad_keos']
-      : ['zoning_status', 'municipal_gis'];
+      ? ['zoning_status', 'municipal_gis', 'netcad_keos', 'parcel_lookup', 'plan_lookup']
+      : ['zoning_status', 'municipal_gis', 'parcel_lookup'];
     const accessStatusGuess = this.guessAccessStatus(normalizedUrl, vendor);
     const accessStatusReason = accessStatusGuess === 'requires_credentials'
       ? 'URL içinde açık kimlik doğrulama/protected erişim işareti görüldü; canlı doğrulama yine gereklidir.'
       : accessStatusGuess === 'public_metadata'
         ? 'URL daha çok dokümantasyon / metadata benzeri görünüyor; canlı veri erişimi doğrulanmadı.'
-        : 'Canlı probe olmadan erişim durumu güvenle doğrulanamaz.';
+        : 'Public portal olarak önizlenir; canlı probe servis uçlarını ve alan kontratını ayrıca çözer.';
     const wouldRegister = {
       id: sourceId,
       name: input.name || `${input.district || municipalitySlug || 'Belediye'} imar kaynağı`,
@@ -127,7 +129,7 @@ export class SourcesService {
       category: 'municipal_gis',
       homepageUrl: normalizedUrl,
       connectorKinds,
-      access: { status: 'unknown', notes: 'User-submitted public candidate. Live probe and legal/protection checks required before ingestion.' },
+      access: { status: 'public', notes: 'User-submitted public portal preview. Live probe resolves endpoint contract and stops on login/captcha/protected flows.' },
       capabilities,
       metadata: { province: input.province, district: input.district, municipalitySlug, vendor }
     };
@@ -144,7 +146,7 @@ export class SourcesService {
       capabilities,
       wouldRegister,
       probeCandidates,
-      note: 'Registry otomatik güncellenmez; captcha/login/kapalı endpoint varsa otomatik çağrı yapılmamalıdır.'
+      note: 'Registry otomatik güncellenmez; public portal discovery captcha/login/kapalı endpoint görürse otomatik çağrı yapmaz.'
     };
   }
 
@@ -152,15 +154,15 @@ export class SourcesService {
     const protectedSource = isProtectedSource(source);
     const publicCandidate = isPublicCandidateSource(source);
     const hasZoning = source.capabilities.includes('zoning_status');
-    const netcadLike = source.connectorKinds.includes(ConnectorKind.NetcadKeos) || source.connectorKinds.includes(ConnectorKind.Ekent);
+    const hasMunicipalPortal = source.connectorKinds.some((kind) => [ConnectorKind.NetcadKeos, ConnectorKind.Keos, ConnectorKind.Webgis, ConnectorKind.Ekent, ConnectorKind.MunicipalPortal, ConnectorKind.PublicPortal, ConnectorKind.Ogc, ConnectorKind.Wms, ConnectorKind.Wfs, ConnectorKind.Geoserver, ConnectorKind.ArcgisRest].includes(kind));
     const imarQuerySupport: ImarQuerySupport = protectedSource
       ? 'protected'
       : !publicCandidate
         ? 'source_unavailable'
-        : hasZoning && netcadLike
-          ? 'method_contract_required'
+        : hasZoning && hasMunicipalPortal
+          ? 'supported'
           : 'unknown';
-    const parcelGeometrySupport: ParcelGeometrySupport = protectedSource ? 'protected' : 'tkgm_candidate';
+    const parcelGeometrySupport: ParcelGeometrySupport = protectedSource ? 'protected' : publicCandidate ? 'supported' : 'unknown';
     return {
       source: {
         id: source.id,
@@ -183,13 +185,13 @@ export class SourcesService {
       parcelGeometrySupport,
       reasonNoData: protectedSource
         ? 'Kaynak captcha/login veya onaylı erişim gerektiriyor'
-        : imarQuerySupport === 'method_contract_required'
-          ? 'Endpoint adayı var ancak method contract çözülmedi'
-          : 'Kaynak kayıtlı ancak canlı endpoint doğrulanmadı',
+        : imarQuerySupport === 'supported'
+          ? 'Public belediye portalı kayıtlı; endpoint/provenance keşfiyle bilgi amaçlı imar alanları gösterilir'
+          : 'Kaynak kayıtlı; public health/discovery probe servis uçlarını doğrular',
       nextAction: protectedSource
         ? 'Otomatik keşfi durdurun; onaylı erişim veya resmi izin gereklidir.'
-        : imarQuerySupport === 'method_contract_required'
-          ? 'Netcad/KEOS WSDL ve public JavaScript method contract resolver çalıştırılmalı.'
+        : imarQuerySupport === 'supported'
+          ? 'Public portalı aç, Netcad/KEOS/OGC servis uçlarını keşfet ve dönen alanları provenance ile normalize et.'
           : 'Public health/discovery probe ile endpoint doğrulanmalı.'
     };
   }

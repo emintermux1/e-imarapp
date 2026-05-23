@@ -7,7 +7,7 @@ import type { Viewer as ViewerT } from "cesium";
 type Status = "idle" | "loading" | "ready" | "error";
 
 interface ViewerOptions {
-  /** Pull from cesium ion = false. We use only OSM imagery + ellipsoid terrain */
+  /** Pull from Cesium ion = false. We use only OSM imagery + ellipsoid terrain */
   imageryUrl?: string;
   /** Hide all default widgets except the canvas */
   minimal?: boolean;
@@ -94,6 +94,23 @@ export function useCesiumViewer(
           timeline: !minimal,
           animation: !minimal,
           shouldAnimate: false,
+          scene3DOnly: true,
+          orderIndependentTranslucency: false,
+          requestRenderMode: true,
+          maximumRenderTimeChange: Number.POSITIVE_INFINITY,
+          targetFrameRate: 30,
+          msaaSamples: 1,
+          contextOptions: {
+            webgl: {
+              alpha: false,
+              antialias: false,
+              depth: true,
+              failIfMajorPerformanceCaveat: false,
+              powerPreference: "default",
+              preserveDrawingBuffer: false,
+              stencil: false
+            }
+          },
           // Prevent Cesium from spawning its own credit container which the
           // CSS hides anyway; using a `div` keeps DOM tidy.
           creditContainer: makeCreditContainer()
@@ -107,6 +124,7 @@ export function useCesiumViewer(
             viewer.scene.skyAtmosphere.show = true;
           }
           viewer.scene.fog.enabled = true;
+          viewer.scene.requestRender();
         } catch {
           /* swallow */
         }
@@ -126,6 +144,7 @@ export function useCesiumViewer(
             destination: CesiumMod.Cartesian3.fromDegrees(lng, lat, h),
             orientation
           });
+          viewer.scene.requestRender();
         } else {
           // Türkiye genel görünümü
           viewer.camera.setView({
@@ -136,6 +155,7 @@ export function useCesiumViewer(
               roll: 0
             }
           });
+          viewer.scene.requestRender();
         }
 
         viewerRef.current = viewer;

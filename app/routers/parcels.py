@@ -155,7 +155,7 @@ async def get_parcel_context(
     if not parcel:
         raise HTTPException(status_code=404, detail="Parcel not found")
     rows, match_method = await get_related_plan_rows(db, parcel, limit=limit, include_geometry=include_geometry)
-    related = rows_to_related_plans(rows, include_geometry=include_geometry, relation=match_method if match_method != "none" else "candidate")
+    related = rows_to_related_plans(rows, include_geometry=include_geometry, relation=match_method if match_method != "none" else "metadata_match")
     aski = [item for item in related if (item.status or "").lower() == "aski"]
     source = find_best_source(parcel.province, parcel.district, parcel.municipality)
     quality = build_quality_metadata(parcel=parcel, source=source, related_count=len(related), aski_count=len(aski))
@@ -170,7 +170,7 @@ async def get_parcel_context(
         history_available=False,
         generated_at=utc_now(),
         message=(
-            "Spatial kesişim kullanılmadı; plan adayları belediye/ilçe/il metadatası ile eşleştirildi."
+            "Spatial kesişim kullanılmadı; plan kayıtları belediye/ilçe/il metadatası ile eşleştirildi."
             if match_method != "none"
             else "Bu parsel için plan/askı ilişkisi hesaplanamadı; eşleşebilir belediye metadatası yok."
         ),

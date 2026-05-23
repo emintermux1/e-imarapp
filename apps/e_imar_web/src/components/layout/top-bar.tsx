@@ -13,7 +13,8 @@ import {
   Map as MapIcon,
   RefreshCw,
   Loader2,
-  MapPinned
+  MapPinned,
+  FileText
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { BrandMark } from "@/components/layout/brand-mark";
@@ -114,6 +115,32 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
 
         <Tooltip>
           <TooltipTrigger asChild>
+            <Link
+              href="/plan-notu"
+              className="hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-blue/25 bg-[rgb(var(--accent-blue)/0.08)] px-2.5 text-[11px] font-medium text-fg-secondary transition-colors hover:border-brand-blue/45 hover:bg-[rgb(var(--accent-blue)/0.12)] hover:text-fg-primary xl:inline-flex soft-press"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              Plan notu
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Plan notu açıklayıcı</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href="/calisma-alani"
+              className="hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-border-subtle bg-surface-1 px-2.5 text-[11px] font-medium text-fg-secondary transition-colors hover:bg-surface-2 hover:text-fg-primary 2xl:inline-flex soft-press"
+            >
+              <UserCircle2 className="h-3.5 w-3.5" />
+              Workspace
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Kullanıcı geçmişi, favoriler ve bildirimler</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
             <button
               type="button"
               onClick={() => {
@@ -134,7 +161,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
           </TooltipTrigger>
           <TooltipContent side="bottom">
             <div className="max-w-xs space-y-2">
-              <p>{askiApiMessage ?? (backendAskiOffline ? "Backend offline; sayaç fallback gösteriyor" : askiMode ? "Askı modunu kapat" : "Askı haritasını aç ve en yakın askıya yakınlaş")}</p>
+              <p>{askiApiMessage ?? (backendAskiOffline ? "Backend offline; sayaç yerel/public kayıt gösteriyor" : askiMode ? "Askı modunu kapat" : "Askı haritasını aç ve en yakın askıya yakınlaş")}</p>
               <button
                 type="button"
                 onClick={(event) => {

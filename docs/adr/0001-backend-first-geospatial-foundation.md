@@ -10,7 +10,7 @@ The platform must support Turkey-wide e-imar workflows without fabricating parce
 
 ## Decision
 
-The current Docker/API runtime is a backend-first FastAPI service with:
+The first implementation is a backend-first NestJS service with:
 
 - a real-source registry for national, municipal, basemap, and open data systems;
 - connector discovery that probes live endpoints and records explicit access/error states;

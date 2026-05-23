@@ -1,7 +1,5 @@
 # Government source activation design
 
-> Historical PR #123 design note. Current runtime documentation treats the Docker-backed API as FastAPI and the canonical frontend as `apps/e_imar_web`; older NestJS/frontend/mobile references below are preserved as project history, not current implementation guidance.
-
 ## Goal
 
 Activate every usable Turkish government and municipal data source in the app and website without fabricating official data or bypassing protected access. The product will aggressively discover and use public endpoints, while clearly marking TKGM, e-Devlet, MAKS, or municipal flows that require credentials, captcha handling, or legal data-sharing agreements.

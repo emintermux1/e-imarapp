@@ -18,6 +18,7 @@ import {
 } from "@/data/parcels";
 import { getSnapshotForYear } from "@/data/historical-snapshots";
 import { TURKEY_CENTER } from "@/lib/geo/turkey";
+import { findNearestParcel } from "@/lib/analysis/selected-place-analysis";
 
 interface CesiumCanvasProps {
   className?: string;
@@ -49,6 +50,7 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
   const selectedParcelId = useMapStore((s) => s.selectedParcelId);
   const flyTarget = useMapStore((s) => s.flyTarget);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const setSelectedPoint = useMapStore((s) => s.setSelectedPoint);
   const setHoveredParcelId = useMapStore((s) => s.setHoveredParcelId);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
   const timelineYear = useUIStore((s) => s.timelineYear);
@@ -57,6 +59,7 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
   const sunMonth = useUIStore((s) => s.sunMonth);
   const emsalWireframe = useUIStore((s) => s.emsalWireframe);
   const viewCorridor = useUIStore((s) => s.viewCorridor);
+  const setMapMode = useUIStore((s) => s.setMapMode);
 
   // Render parcels whenever viewer/year/selection/wireframe change
   React.useEffect(() => {
@@ -182,6 +185,80 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
     }
   }, [viewer, Cesium, viewCorridor, selectedParcelId]);
 
+  React.useEffect(() => {
+    if (!viewer || !Cesium) return;
+    const onControl = (event: Event) => {
+      const detail = (event as CustomEvent<{ action?: string }>).detail;
+      switch (detail?.action) {
+        case "in":
+          viewer.camera.zoomIn(viewer.camera.positionCartographic.height * 0.45);
+          break;
+        case "out":
+          viewer.camera.zoomOut(viewer.camera.positionCartographic.height * 0.75);
+          break;
+        case "north":
+          viewer.camera.setView({
+            orientation: {
+              heading: 0,
+              pitch: viewer.camera.pitch,
+              roll: 0
+            }
+          });
+          break;
+        case "reset":
+          setSelectedParcelId(null);
+          setSelectedPoint(null);
+          viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(TURKEY_CENTER[0], TURKEY_CENTER[1] - 0.3, 1_350_000),
+            duration: 0.8,
+            orientation: {
+              heading: 0,
+              pitch: Cesium.Math.toRadians(-65),
+              roll: 0
+            }
+          });
+          break;
+        case "locate":
+          if (!navigator.geolocation) {
+            window.dispatchEvent(new CustomEvent("eimar:map:location-status", { detail: { message: "Konum izni bu tarayıcıda yok." } }));
+            break;
+          }
+          window.dispatchEvent(new CustomEvent("eimar:map:location-status", { detail: { message: "3D konum aranıyor…" } }));
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const lng = position.coords.longitude;
+              const lat = position.coords.latitude;
+              const nearest = findNearestParcel(lng, lat, 2500);
+              setSelectedPoint({
+                lng,
+                lat,
+                source: "system",
+                nearestParcelId: nearest?.parcel.id
+              });
+              setRightPanelOpen(true);
+              viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(lng, lat, 1800),
+                duration: 0.8,
+                orientation: {
+                  heading: 0,
+                  pitch: Cesium.Math.toRadians(-55),
+                  roll: 0
+                }
+              });
+              window.dispatchEvent(new CustomEvent("eimar:map:location-status", { detail: { message: "Konum 3D sahneye taşındı." } }));
+            },
+            () => {
+              window.dispatchEvent(new CustomEvent("eimar:map:location-status", { detail: { message: "Konum izni alınamadı." } }));
+            },
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+          );
+          break;
+      }
+    };
+    window.addEventListener("eimar:map:control", onControl);
+    return () => window.removeEventListener("eimar:map:control", onControl);
+  }, [Cesium, setRightPanelOpen, setSelectedParcelId, setSelectedPoint, viewer]);
+
   // Mouse hover + click handlers
   React.useEffect(() => {
     if (!viewer || !Cesium) return;
@@ -239,9 +316,27 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
       const entity = picked && (picked.id as EntityT | undefined);
       if (entity && entity.properties && entity.properties.parcelId) {
         const id = entity.properties.parcelId.getValue() as string;
+        setSelectedPoint(null);
         setSelectedParcelId(id);
         setRightPanelOpen(true);
+        return;
       }
+      const cartesian = viewer.camera.pickEllipsoid(
+        m.position,
+        viewer.scene.globe.ellipsoid
+      );
+      if (!cartesian) return;
+      const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+      const lng = Cesium.Math.toDegrees(cartographic.longitude);
+      const lat = Cesium.Math.toDegrees(cartographic.latitude);
+      const nearest = findNearestParcel(lng, lat, 2500);
+      setSelectedPoint({
+        lng,
+        lat,
+        source: "map",
+        nearestParcelId: nearest?.parcel.id
+      });
+      setRightPanelOpen(true);
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
     return () => {
@@ -254,7 +349,7 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
         }
       }
     };
-  }, [viewer, Cesium, setHoveredParcelId, setSelectedParcelId, setRightPanelOpen]);
+  }, [viewer, Cesium, setHoveredParcelId, setSelectedParcelId, setSelectedPoint, setRightPanelOpen]);
 
   return (
     <div
@@ -269,15 +364,27 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
           <CesiumLoader />
         </div>
       )}
+      {status === "ready" && (
+        <div className="pointer-events-none absolute left-1/2 top-24 z-[2] hidden -translate-x-1/2 rounded-full border border-white/15 bg-slate-950/72 px-3 py-1.5 text-[11px] font-semibold text-white/82 shadow-[0_18px_50px_-34px_rgba(0,0,0,0.9)] backdrop-blur-sm md:block">
+          3D açık · Parsel seç, gölge/emsal analizini sağ panelden yönet
+        </div>
+      )}
       {status === "error" && (
         <div className="absolute inset-0 z-[1] grid place-items-center p-4">
-          <div className="max-w-md w-full bg-surface-2 border border-status-error rounded-md shadow-card p-4 text-center">
-            <h2 className="text-sm font-semibold text-status-error">
+          <div className="max-w-md w-full rounded-[1.5rem] border border-status-error/35 bg-surface-2/96 p-5 text-center shadow-card">
+            <h2 className="text-base font-black text-status-error">
               3D modu başlatılamadı
             </h2>
             <p className="mt-1 text-[12px] text-fg-secondary">
               {error ?? "WebGL desteğini doğrulayın."}
             </p>
+            <button
+              type="button"
+              onClick={() => setMapMode("2d")}
+              className="mt-4 inline-flex h-9 items-center justify-center rounded-full border border-border-subtle bg-surface-1 px-4 text-xs font-bold text-fg-primary hover:bg-surface-3"
+            >
+              2D haritaya dön
+            </button>
           </div>
         </div>
       )}

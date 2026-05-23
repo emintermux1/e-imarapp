@@ -6,13 +6,16 @@ export type ProvenanceDataType = 'official' | 'public_metadata' | 'demo' | 'deri
 export interface ProvenanceRecord {
   sourceId: string;
   sourceName: string;
+  sourceUrl?: string;
   endpoint?: string;
+  retrievedAt: string;
   fetchedAt: string;
   responseHash?: string;
   dataType: ProvenanceDataType;
   confidence: number;
   connectorKind?: ConnectorKind | string;
   status: string;
+  limitations: string[];
 }
 
 export function sha256ResponseBody(body?: string | Buffer): string | undefined {
@@ -20,13 +23,18 @@ export function sha256ResponseBody(body?: string | Buffer): string | undefined {
   return createHash('sha256').update(body).digest('hex');
 }
 
-export function provenanceRecord(input: Omit<ProvenanceRecord, 'fetchedAt' | 'confidence'> & { fetchedAt?: string; confidence?: number; responseBody?: string | Buffer }): ProvenanceRecord {
-  const { responseBody, confidence, fetchedAt, responseHash, ...rest } = input;
+export function provenanceRecord(input: Omit<ProvenanceRecord, 'retrievedAt' | 'fetchedAt' | 'confidence' | 'limitations'> & { retrievedAt?: string; fetchedAt?: string; confidence?: number; responseBody?: string | Buffer; limitations?: string[] }): ProvenanceRecord {
+  const { responseBody, confidence, retrievedAt, fetchedAt, responseHash, sourceUrl, endpoint, limitations, ...rest } = input;
   const hash = responseHash ?? sha256ResponseBody(responseBody);
+  const timestamp = retrievedAt ?? fetchedAt ?? new Date().toISOString();
   return {
     ...rest,
-    fetchedAt: fetchedAt ?? new Date().toISOString(),
+    endpoint,
+    sourceUrl: sourceUrl ?? endpoint,
+    retrievedAt: timestamp,
+    fetchedAt: timestamp,
     ...(hash ? { responseHash: hash } : {}),
-    confidence: Math.max(0, Math.min(1, confidence ?? 0.5))
+    confidence: Math.max(0, Math.min(1, confidence ?? 0.5)),
+    limitations: limitations ?? []
   };
 }
