@@ -43,6 +43,14 @@ Web app runs at `http://localhost:3000`. The canonical product frontend is the
 map-first Next.js workspace in `apps/e_imar_web`, matching the root `web:*`
 scripts.
 
+Canonical web deployment is Vercel running this repository from the root with
+`vercel.json`: install `apps/e_imar_web`, build the canonical Next.js app, and
+serve `apps/e_imar_web/.next`. See `docs/deployment.md`. The repo no longer
+disables Vercel for Git; however, `e-imarapp.vercel.app` should be treated as
+unverified until a Vercel deployment and `/healthz` response are checked. A 404
+from that domain is consistent with no successful Vercel project deployment or
+a project still pointed at a stale/legacy root.
+
 Production parcel rendering must be configured explicitly:
 
 ```bash
@@ -58,11 +66,18 @@ NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=0
 
 Development defaults to labelled demo parcels. Production does not silently fall
 back to demo when a live API/vector tile endpoint is missing; the map stays
-visible and reports an unavailable parcel source state.
+visible and reports an unavailable parcel source state. Public source discovery
+metadata, cached source records, or provider status may be shown, but those
+states are labelled as `public_metadata`, `fallback`, `protected`,
+`source_not_found`, `not_ready`, or `unavailable`; they are not official parcel,
+zoning, plan, or municipality facts.
 
 `apps/web`, `web-next`, `apps/e_imar_next`, and `frontend/` are deprecated or
 reference prototypes. Root scripts target `apps/e_imar_web` so agents and
-humans do not accidentally open a stale shell.
+humans do not accidentally open a stale shell. The Flutter app currently lives
+under `legacy/apps/e_imar_mobile` and is maintained as a compile-checked
+prototype only; it is not the production mobile surface and has no store/release
+deploy pipeline in this repository.
 
 ### Legacy prototype frontends
 
@@ -207,7 +222,9 @@ See `docs/adr/0001-backend-first-geospatial-foundation.md`.
 
 ## Website app and integration
 
-The canonical product frontend is `apps/e_imar_web` (Next.js 14 App Router). It consumes the FastAPI `/api/v1/*` endpoints and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data. `frontend/`, `apps/web`, `apps/web-next`, and `apps/e_imar_next` are legacy/reference apps unless explicitly migrated.
+The canonical product frontend is `apps/e_imar_web` (Next.js 14 App Router). It consumes the backend `/api/v1/*`, `/website/*`, and `/connectors/*` endpoints through the deploy rewrites and renders readiness/error states instead of inventing parcel, zoning, municipality, or map data. `frontend/`, `apps/web`, `apps/web-next`, and `apps/e_imar_next` are legacy/reference apps unless explicitly migrated.
+
+Production web deployment is documented in `docs/deployment.md`. Do not describe `e-imarapp.vercel.app` or any custom domain as live from repository config alone; verify a successful Vercel deployment plus `/healthz`, and use `/readyz` to confirm whether live source configuration is production-ready.
 
 - App README: `apps/e_imar_web/README.md`
 - Architecture and runbook: `docs/website-architecture.md`
@@ -254,7 +271,9 @@ website app also publishes robots, sitemap, manifest, icon and OpenGraph
 metadata from `NEXT_PUBLIC_EIMAR_SITE_URL` (or `VERCEL_URL` in previews).
 It exposes `GET /healthz` for uptime checks and `GET /readyz` for production
 readiness gates; `readyz` returns 503 if production lacks a live API/vector tile
-source or if demo fallback is enabled.
+source or if demo fallback is enabled. In that state the deployed web shell may
+still render, but parcel/plan production data is explicitly unavailable rather
+than replaced with demo values.
 
 CI and smoke tests do not require real provider secrets. Configure production/staging values in the deploy target or GitHub environment secrets; never commit them.
 
