@@ -115,8 +115,8 @@ export class GeoService {
         persistence: 'database',
         model,
         supportedEntities: ['parcel', 'source', 'report'],
-        records: auditRows.rows,
-        versions: versionRows.rows,
+        records: auditRows.rows.map((row) => this.normalizeAuditRecord(row as Record<string, unknown>)),
+        versions: versionRows.rows.map((row) => this.normalizeAuditVersion(row as Record<string, unknown>)),
         counts: { auditRecords: auditRows.rowCount, versions: versionRows.rowCount },
         guarantees: ['append_only_audit', 'no_silent_official_repair', 'rollback_requires_reason']
       };
@@ -185,5 +185,33 @@ export class GeoService {
       'duplicate parcel candidate keys',
       'Turkey-ish bbox sanity for WGS84/WebMercator inputs'
     ];
+  }
+
+  private normalizeAuditRecord(row: Record<string, unknown>) {
+    return {
+      id: row.id,
+      entityType: row.entity_type,
+      entityId: row.entity_id,
+      operation: row.operation,
+      actorRef: row.actor_ref,
+      reason: row.reason,
+      beforeHash: row.before_hash,
+      afterHash: row.after_hash,
+      sourceId: row.source_id,
+      createdAt: row.created_at
+    };
+  }
+
+  private normalizeAuditVersion(row: Record<string, unknown>) {
+    return {
+      id: row.id,
+      entityType: row.entity_type,
+      entityId: row.entity_id,
+      versionNo: row.version_no,
+      sourceId: row.source_id,
+      createdBy: row.created_by,
+      reason: row.reason,
+      createdAt: row.created_at
+    };
   }
 }

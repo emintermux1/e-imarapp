@@ -56,11 +56,18 @@ class NotificationService:
         if not self.push_gateway_url:
             return {"channel": "push", "sent": False, "reason": "PUSH_GATEWAY_URL not configured"}
 
+        payload_data = dict(data or {})
+        token = str(payload_data.pop("token", "") or payload_data.pop("target", "") or user_id)
+        platform = str(payload_data.pop("platform", "") or "unknown")
+        for sensitive_key in ("webhook_url", "push_gateway_url"):
+            payload_data.pop(sensitive_key, None)
+
         payload = {
-            "user_id": str(user_id),
+            "token": token,
+            "platform": platform,
             "title": title,
             "body": body,
-            "payload": data or {},
+            "payload": payload_data,
         }
 
         if self.push_dry_run:
