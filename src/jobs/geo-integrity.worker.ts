@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
+import { AuditRepository } from '../audit/audit.repository';
 import { DiscoveryService } from '../connectors/discovery.service';
 import { HttpProbeService } from '../connectors/http-probe.service';
 import { DatabaseService } from '../database/database.service';
@@ -21,7 +22,8 @@ export function createGeoIntegrityDailyWorker(env: WorkerEnv = process.env) {
     maxRetriesPerRequest: null,
     enableReadyCheck: false
   });
-  const geo = new GeoService(new DatabaseService({ get: (key: string) => env[key as keyof WorkerEnv] } as never));
+  const database = new DatabaseService({ get: (key: string) => env[key as keyof WorkerEnv] } as never);
+  const geo = new GeoService(database, new AuditRepository(database));
   const discovery = new DiscoveryService(new HttpProbeService());
 
   const geoWorker = new Worker(
