@@ -17,6 +17,9 @@ const COMMON_PATHS = [
   '/imardurumu/Services/Proxy.ashx',
   '/geoserver/ows?service=WMS&request=GetCapabilities',
   '/geoserver/ows?service=WFS&request=GetCapabilities',
+  '/ows?service=WMS&request=GetCapabilities',
+  '/ows?service=WFS&request=GetCapabilities',
+  '/wms?service=WMS&request=GetCapabilities',
   '/arcgis/rest/services?f=pjson'
 ];
 

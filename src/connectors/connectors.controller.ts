@@ -6,6 +6,7 @@ import { ConnectorPluginRegistryService } from './connector-plugin-registry.serv
 import { DiscoveryService, PublicHealthFilters } from './discovery.service';
 import { NetcadKeosService } from './netcad-keos.service';
 import { OgcDiscoveryService } from './ogc-discovery.service';
+import { OpenPublicSourceService } from './open-public-source.service';
 
 @ApiTags('connectors')
 @Controller('connectors')
@@ -15,6 +16,7 @@ export class ConnectorsController {
     private readonly plugins: ConnectorPluginRegistryService,
     private readonly netcad: NetcadKeosService,
     private readonly ogc: OgcDiscoveryService,
+    private readonly openPublic: OpenPublicSourceService,
     private readonly rateLimit: RateLimitService
   ) {}
 
@@ -31,6 +33,35 @@ export class ConnectorsController {
   @Get('plugins/:kind')
   connectorPlugin(@Param('kind') kind: string) {
     return this.plugins.get(kind);
+  }
+
+  @Get('open-public/readiness')
+  openPublicReadiness() {
+    return this.openPublic.registryReadiness();
+  }
+
+  @Post('open-public/e-plan/wms')
+  probeEPlanWms(@Req() request: FastifyRequest) {
+    this.enforceConnectorRateLimit(request, 'open-public-e-plan');
+    return this.openPublic.probeEPlanWms();
+  }
+
+  @Post('open-public/tucbs/catalog')
+  probeTucbsCatalog(@Req() request: FastifyRequest) {
+    this.enforceConnectorRateLimit(request, 'open-public-tucbs');
+    return this.openPublic.probeTucbsPublicCatalog();
+  }
+
+  @Post('open-public/osm/context')
+  osmContext(@Body() body: { lat: number; lon: number; radiusMeters?: number; endpoint?: string }, @Req() request: FastifyRequest) {
+    this.enforceConnectorRateLimit(request, 'open-public-osm');
+    return this.openPublic.lookupOsmContext(body);
+  }
+
+  @Post('open-public/municipal/capabilities')
+  municipalCapabilities(@Body() body: { baseUrl: string }, @Req() request: FastifyRequest) {
+    this.enforceConnectorRateLimit(request, 'open-public-municipal');
+    return this.openPublic.discoverMunicipalCapabilities(body);
   }
 
   @Get(':id/plugins/plan')
