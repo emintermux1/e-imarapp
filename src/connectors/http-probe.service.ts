@@ -94,6 +94,8 @@ export class HttpProbeService {
     if (/geoserver/.test(haystack)) kinds.add(ConnectorKind.Geoserver);
     if (/service=wms|wms_capabilities|wfs|geoserver|getcapabilities|capability/.test(haystack)) kinds.add(ConnectorKind.Ogc);
     if (/arcgis\/rest|mapserver|featureserver/.test(haystack)) kinds.add(ConnectorKind.ArcgisRest);
+    if (/mapserver/.test(haystack)) kinds.add(ConnectorKind.Mapserver);
+    if (/overpass|openstreetmap/.test(haystack)) kinds.add(ConnectorKind.Overpass);
     if (/ekent/.test(haystack)) kinds.add(ConnectorKind.Ekent);
     return [...kinds];
   }

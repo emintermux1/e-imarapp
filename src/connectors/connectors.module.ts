@@ -7,11 +7,12 @@ import { DiscoveryService } from './discovery.service';
 import { HttpProbeService } from './http-probe.service';
 import { NetcadKeosService } from './netcad-keos.service';
 import { OgcDiscoveryService } from './ogc-discovery.service';
+import { OpenPublicSourceService } from './open-public-source.service';
 
 @Module({
   imports: [DatabaseModule, CommonModule],
   controllers: [ConnectorsController],
-  providers: [HttpProbeService, DiscoveryService, ConnectorPluginRegistryService, NetcadKeosService, OgcDiscoveryService],
-  exports: [HttpProbeService, DiscoveryService, ConnectorPluginRegistryService, NetcadKeosService, OgcDiscoveryService]
+  providers: [HttpProbeService, DiscoveryService, ConnectorPluginRegistryService, NetcadKeosService, OgcDiscoveryService, OpenPublicSourceService],
+  exports: [HttpProbeService, DiscoveryService, ConnectorPluginRegistryService, NetcadKeosService, OgcDiscoveryService, OpenPublicSourceService]
 })
 export class ConnectorsModule {}
