@@ -1,9 +1,9 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { MapService } from './map.service';
 
 @ApiTags('map')
-@Controller('map')
+@Controller(['map', 'api/v1/map'])
 export class MapController {
   constructor(private readonly map: MapService) {}
 
@@ -20,6 +20,20 @@ export class MapController {
   @Get('layers')
   layers() {
     return this.map.layers();
+  }
+
+  @Get('live-layers')
+  liveLayers() {
+    return this.map.liveLayers();
+  }
+
+  @Get('live-layers/probe')
+  liveLayerProbe(
+    @Query('source_id') sourceId?: string,
+    @Query('endpoint_url') endpointUrl?: string,
+    @Query('layer_name') layerName?: string
+  ) {
+    return this.map.liveLayerProbe(sourceId, endpointUrl, layerName);
   }
 
   @Get('providers')

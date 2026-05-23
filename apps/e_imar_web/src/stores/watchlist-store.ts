@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { getBackendWatchlist } from "@/lib/api/backend-client";
 import type { MarketProviderId } from "@/types/api";
-import type { AskiAlertIntent, ProvenanceKind } from "../lib/aski-tracking";
+import { DEFAULT_WATCHLIST_ALERT_INTENTS, type AskiAlertIntent, type ProvenanceKind } from "../lib/aski-tracking";
 
 const noopStorage: Storage = {
   getItem: () => null,
@@ -39,7 +39,10 @@ export interface WatchlistEntry {
   addedAt: string;
   provenance: ProvenanceKind;
   alertIntents: AskiAlertIntent[];
-  trackingMode: "local_only";
+  trackingMode: "local_only" | "backend";
+  backendId?: string | number | null;
+  backendParcelId?: string | number | null;
+  backendPlanId?: string | number | null;
 }
 
 export interface ListingFavorite {
@@ -57,7 +60,7 @@ export interface MarketFiltersState {
 type WatchlistAddEntry = Omit<WatchlistEntry, "addedAt" | "alertIntents" | "trackingMode" | "provenance"> & {
   provenance?: ProvenanceKind;
   alertIntents?: AskiAlertIntent[];
-  trackingMode?: "local_only";
+  trackingMode?: "local_only" | "backend";
 };
 
 interface WatchlistState {
@@ -80,9 +83,40 @@ function normalizeEntry(entry: Partial<WatchlistEntry> & Pick<WatchlistEntry, "i
     ...entry,
     addedAt: entry.addedAt ?? new Date().toISOString(),
     provenance: entry.provenance ?? "demo",
-    alertIntents: entry.alertIntents ?? ["imar_change", "aski_plan", "cevre_plan", "source_access_status_change"],
+    alertIntents: entry.alertIntents ?? DEFAULT_WATCHLIST_ALERT_INTENTS,
     trackingMode: entry.trackingMode ?? "local_only"
   };
+}
+
+function normalizeBackendWatchlistItem(item: Record<string, unknown>): WatchlistEntry | null {
+  const backendId = item.id;
+  const parcelId = item.parcel_id ?? item.parcelId ?? null;
+  const planId = item.plan_id ?? item.planId ?? null;
+  const id = parcelId ? `backend:${String(parcelId)}` : planId ? `plan:${String(planId)}` : backendId ? `watchlist:${String(backendId)}` : null;
+  if (!id) return null;
+  const label = typeof item.label === "string" && item.label.trim() ? item.label.trim() : id;
+  const parts = label.split(/\s+/);
+  const adaParsel = parts.find((part) => /^\d+\/\d+/.test(part));
+  const [ada = "—", parsel = "—"] = adaParsel?.split("/") ?? [];
+  const location = parts.find((part) => part.includes("/"));
+  const [ilce = "—", il = "—"] = location && location !== adaParsel ? location.split("/") : ["—", "—"];
+  return normalizeEntry({
+    id,
+    ada,
+    parsel,
+    il,
+    ilce,
+    mahalle: typeof item.mahalle === "string" ? item.mahalle : "Backend kayıt",
+    zoningType: "Backend alarm",
+    yuzolcumuM2: Number(item.area_m2 ?? item.alan_m2 ?? 0),
+    centroid: [0, 0],
+    addedAt: typeof item.created_at === "string" ? item.created_at : undefined,
+    provenance: "official",
+    trackingMode: "backend",
+    backendId: backendId as string | number | null,
+    backendParcelId: parcelId as string | number | null,
+    backendPlanId: planId as string | number | null
+  });
 }
 
 export const useWatchlistStore = create<WatchlistState>()(
@@ -110,7 +144,15 @@ export const useWatchlistStore = create<WatchlistState>()(
       has: (id) => get().items.some((i) => i.id === id),
       hydrateBackend: async () => {
         try {
-          await getBackendWatchlist();
+          const items = await getBackendWatchlist();
+          const backendItems = items
+            .map((item) => normalizeBackendWatchlistItem(item))
+            .filter((item): item is WatchlistEntry => Boolean(item));
+          if (backendItems.length === 0) return;
+          set((state) => {
+            const localOnly = state.items.filter((item) => !backendItems.some((backendItem) => backendItem.id === item.id));
+            return { items: [...backendItems, ...localOnly] };
+          });
         } catch {
           // Local watchlist must stay non-blocking when backend is unavailable.
         }

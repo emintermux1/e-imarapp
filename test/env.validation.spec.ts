@@ -10,6 +10,8 @@ describe('validateEnv', () => {
       MINIO_ENDPOINT: 'http://localhost:9000',
       OPENSEARCH_URL: 'http://localhost:9200',
       PG_TILESERV_URL: 'http://localhost:7800',
+      NEXT_PUBLIC_EIMAR_API_BASE_URL: 'https://api.example.test',
+      NEXT_PUBLIC_EIMAR_SITE_URL: 'https://www.example.test',
       OPENAI_MODEL: 'gpt-4.1-mini'
     });
 
@@ -18,6 +20,8 @@ describe('validateEnv', () => {
     expect(env.RATE_LIMIT_WINDOW_MS).toBe(60_000);
     expect(env.RATE_LIMIT_MAX).toBe(120);
     expect(env.DATABASE_URL).toBe('postgres://user:pass@localhost:5432/eimar');
+    expect(env.NEXT_PUBLIC_EIMAR_API_BASE_URL).toBe('https://api.example.test');
+    expect(env.NEXT_PUBLIC_EIMAR_SITE_URL).toBe('https://www.example.test');
   });
 
   it('rejects malformed urls and placeholder secrets with actionable messages', () => {

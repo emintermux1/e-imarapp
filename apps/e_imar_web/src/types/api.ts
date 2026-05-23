@@ -318,6 +318,337 @@ export interface SourceActivationResponse {
   sources: SourceActivationRecord[];
 }
 
+export type WebsiteProbeStatus =
+  | "verified_live"
+  | "method_contract_required"
+  | "protected"
+  | "requires_credentials"
+  | "captcha_required"
+  | "public_metadata"
+  | "not_ready"
+  | "source_not_found"
+  | "unavailable";
+
+export interface WebsiteCapabilityFlags {
+  parcelWorkflow: boolean;
+  municipalParcelWorkflow: boolean;
+  parcelReport: boolean;
+  planNoteExplain: boolean;
+  watchlistNotifications: boolean;
+  emsalShareCalculator: boolean;
+  marketCockpit: boolean;
+}
+
+export interface WebsiteBootstrapResponse {
+  status: string;
+  product?: {
+    name?: string;
+    mode?: string;
+    ui?: string;
+  };
+  websiteCapabilities?: WebsiteCapabilityFlags;
+  map?: {
+    tileStatus?: unknown;
+    providers?: unknown;
+  };
+  ingestionRequirements?: unknown;
+  sourceCoverage?: {
+    totalSources: number;
+    municipalSources: number;
+    nationalSources: number;
+    globalSources: number;
+    publicCandidateCount: number;
+    protectedCount: number;
+    lastGeneratedAt: string;
+  };
+  sourceActivation?: SourceActivationResponse["summary"];
+  activeSources?: SourceActivationRecord[];
+  workspace?: WebsiteWorkspaceResponse | null;
+  error?: string;
+}
+
+export interface WebsiteParcelWorkflowResponse {
+  status: string;
+  parcelQuery?: Record<string, unknown>;
+  potentialSummary?: Record<string, unknown>;
+  emsalShare?: EmsalShareCalculationResponse | null;
+  issue?: Record<string, unknown>;
+  message?: string;
+}
+
+export interface WebsiteParcelReportSection {
+  id?: string;
+  title?: string;
+  status?: string;
+  body?: string;
+  items?: Array<Record<string, unknown>>;
+  [key: string]: unknown;
+}
+
+export interface ProvenanceRecord {
+  sourceId?: string;
+  sourceName?: string;
+  endpoint?: string;
+  fetchedAt?: string;
+  responseHash?: string;
+  dataType?: "official" | "public_metadata" | "demo" | "derived" | string;
+  confidence?: number;
+  connectorKind?: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
+export interface WebsiteParcelReportResponse {
+  status: string;
+  reportId?: string;
+  generatedAt?: string;
+  title?: string;
+  disclaimer?: string;
+  query?: Record<string, unknown>;
+  sections?: WebsiteParcelReportSection[];
+  provenance?: ProvenanceRecord[] | Array<Record<string, unknown>>;
+  printableHtml?: string;
+  downloadFilename?: string;
+  issue?: Record<string, unknown>;
+  message?: string;
+}
+
+export interface WebsiteReadinessSource {
+  sourceId: string;
+  sourceName: string;
+  category: "tkgm" | "municipality" | "eplan" | "other" | string;
+  status: WebsiteProbeStatus;
+  endpoint?: string | null;
+  checkedAt: string;
+  dataType: "official" | "public_metadata" | "unavailable" | string;
+  message: string;
+  nextAction: string;
+}
+
+export interface WebsiteLiveReadinessResponse {
+  status: "ok" | "not_ready" | string;
+  generatedAt: string;
+  deployment: {
+    apiBaseUrl?: string | null;
+    httpsReady: boolean;
+    requiredEnv: Array<{
+      key: string;
+      configured: boolean;
+      purpose: string;
+    }>;
+  };
+  sources: WebsiteReadinessSource[];
+  error?: string;
+}
+
+export interface BackendMapProviderResponse {
+  id: string;
+  name: string;
+  configured: boolean;
+  requiredEnv: string;
+  envStatus?: string;
+  issue?: string;
+  capabilities: string[];
+  docsUrl?: string;
+}
+
+export interface BackendTileStatusResponse {
+  status: "ok" | "not_ready" | "unavailable" | string;
+  endpoint?: string | null;
+  httpStatus?: number;
+  issue?: {
+    code?: string;
+    message?: string;
+    [key: string]: unknown;
+  };
+  readiness?: {
+    recommendedLayers?: Array<Record<string, unknown>>;
+    cacheHeaders?: Record<string, string>;
+    tilePathTemplate?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+export interface IngestionRequirementSource {
+  sourceId: string;
+  name: string;
+  accessStatus: string;
+  reason: string;
+  homepageUrl: string;
+  requiredEnv: string[];
+}
+
+export interface IngestionRequirementsResponse {
+  status: "ok" | string;
+  count: number;
+  sources: IngestionRequirementSource[];
+  note: string;
+}
+
+export interface WebsiteWorkspaceBucket {
+  status?: string;
+  userReference?: string;
+  count?: number;
+  items?: Array<Record<string, unknown>>;
+  subscriptions?: Array<Record<string, unknown>>;
+  issue?: {
+    code?: string;
+    message?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+export interface WebsiteWorkspaceResponse {
+  userReference: string;
+  history: WebsiteWorkspaceBucket;
+  favorites: WebsiteWorkspaceBucket;
+  subscriptions: WebsiteWorkspaceBucket;
+}
+
+export interface WebsiteSessionPayload {
+  userReference: string;
+  roles: string[];
+  issuedAt: string;
+  expiresAt: string;
+}
+
+export interface WebsiteSessionStartResponse {
+  status: "ok" | "invalid_input" | "requires_credentials" | string;
+  token?: string;
+  payload?: WebsiteSessionPayload;
+  message?: string;
+}
+
+export interface WebsiteSessionVerifyResponse {
+  status: "ok" | "invalid_input" | "invalid_token" | "expired_token" | "requires_credentials" | string;
+  payload?: WebsiteSessionPayload;
+  message?: string;
+}
+
+export interface PlanNoteExplanation {
+  plainSummary?: string;
+  bullets: string[];
+  risks: string[];
+  uncertainties: string[];
+}
+
+export interface PlanNoteExplainResponse {
+  status: "ok" | "invalid_input" | "requires_credentials" | "provider_error" | string;
+  provider?: "openai" | string;
+  model?: string;
+  message?: string;
+  issue?: {
+    code?: string;
+    message?: string;
+    [key: string]: unknown;
+  };
+  explanation?: PlanNoteExplanation;
+}
+
+export interface AnalysisPipelineResponse {
+  stages: Array<{
+    id: string;
+    description: string;
+    status: string;
+  }>;
+  storage?: string;
+  reviewPolicy?: string;
+}
+
+export interface AnalysisRunsResponse {
+  status: string;
+  count: number;
+  runs: Array<Record<string, unknown>>;
+  issue?: Record<string, unknown>;
+}
+
+export interface BuildingEnvelopeResponse {
+  status: "ok" | "not_ready" | "not_found" | string;
+  parcelId?: string;
+  envelope?: {
+    parcelAreaM2?: number;
+    maxConstructionAreaM2?: number | null;
+    maxFootprintM2?: number | null;
+    emsal?: number | null;
+    taks?: number | null;
+    kaks?: unknown;
+    gabari?: unknown;
+    buildingHeight?: unknown;
+    approachRules?: unknown;
+    zoningFunction?: unknown;
+    planTitle?: unknown;
+  };
+  issue?: Record<string, unknown>;
+}
+
+export interface MergeCandidatesResponse {
+  status: "ok" | "empty" | "not_ready" | string;
+  parcelId?: string;
+  candidates?: Array<Record<string, unknown>>;
+  note?: string;
+  issue?: Record<string, unknown>;
+}
+
+export interface EmsalShareCalculationResponse {
+  status: "ok" | "invalid_input" | string;
+  inputs?: Record<string, unknown>;
+  output?: {
+    totalConstructionAreaM2?: number;
+    netSellableAreaM2?: number;
+    maxFootprintM2?: number | null;
+    estimatedFloors?: number | null;
+    estimatedIndependentUnits?: number;
+    estimatedParkingNeed?: number;
+    shareBreakdown?: {
+      ownerNetAreaM2?: number;
+      contractorNetAreaM2?: number;
+    };
+  };
+  message?: string;
+  note?: string;
+}
+
+export interface EplanSearchResponse {
+  status: "ok" | "empty" | "not_ready" | "unavailable" | string;
+  count?: number;
+  plans?: Array<Record<string, unknown>>;
+  source?: string;
+  scrapedAt?: string;
+  issue?: Record<string, unknown>;
+}
+
+export interface EplanSubscriptionResponse {
+  status: "ok" | "invalid_input" | "not_ready" | string;
+  count?: number;
+  subscriptions?: Array<Record<string, unknown>>;
+  subscription?: Record<string, unknown>;
+  issue?: Record<string, unknown>;
+  message?: string;
+}
+
+export interface BackendWatchlistItem {
+  id: number | string;
+  user_id?: number | string;
+  parcel_id?: number | string | null;
+  plan_id?: number | string | null;
+  geom_wkt?: string | null;
+  notification_channels?: string[];
+  label?: string | null;
+  created_at?: string | null;
+  [key: string]: unknown;
+}
+
+export interface PremiumModuleState {
+  key: string;
+  title: string;
+  status: string;
+  detail: string;
+  href?: string;
+  actionLabel?: string;
+}
+
 export interface RelatedPlanItem {
   id: number;
   label: string;

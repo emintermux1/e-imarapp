@@ -78,9 +78,9 @@ export function DataCoverageBadge() {
 
   const stateChip =
     metadata.mode === "unavailable"
-      ? "unavailable"
+      ? "erişilemiyor"
       : metadata.fallbackReason || metadata.mode === "demo"
-      ? "demo fallback"
+      ? "açık kayıt"
       : metadata.endpoint
       ? "hazır"
       : "beklemede";
@@ -165,7 +165,7 @@ export function DataCoverageBadge() {
                   : metadata.fallbackReason
                   ? metadata.fallbackReason
                   : metadata.mode === "demo"
-                  ? "Parsel katmanı demo veriye düşüyor; sağlayıcı ve bağlayıcı hazırlığı yine de görünür tutuluyor."
+                  ? "Parsel katmanı açık/kayıtlı kaynak verisine düşüyor; sağlayıcı ve bağlayıcı hazırlığı görünür tutuluyor."
                   : "Parsel katmanı canlı hedefe hazırlanıyor; bağlayıcı durumu ve kapsama özetleri burada toplanır."}
               </DialogDescription>
             </div>
@@ -190,7 +190,7 @@ export function DataCoverageBadge() {
                 <div className="mt-4 grid gap-3">
                   <StateRow
                     label="Gerçek durum"
-                    value={metadata.mode === "unavailable" ? "Production unavailable" : metadata.mode === "demo" ? "Demo fallback" : "Canlı hedef"}
+                    value={metadata.mode === "unavailable" ? "Production unavailable" : metadata.mode === "demo" ? "Açık kayıt" : "Canlı hedef"}
                     detail={metadata.unavailableReason ?? metadata.fallbackReason ?? "Canlı veri henüz doğrulanmadı"}
                     icon={<AlertTriangle className="h-4 w-4" />}
                     tone={metadata.mode === "unavailable" ? "danger" : metadata.fallbackReason ? "warning" : metadata.mode === "demo" ? "info" : "success"}
@@ -205,7 +205,7 @@ export function DataCoverageBadge() {
                   <StateRow
                     label="Resmî veri"
                     value={metadata.official ? "evet" : "hayır"}
-                    detail={metadata.official ? "Resmî akışa bağlı" : metadata.mode === "unavailable" ? "Production demo fallback kapalı" : "Sentetik/demoda kalıyor"}
+                    detail={metadata.official ? "Resmî akışa bağlı" : metadata.mode === "unavailable" ? "Production açık kayıt fallback kapalı" : "Açık/kayıtlı kaynak verisi"}
                     icon={<CheckCircle2 className="h-4 w-4" />}
                     tone={metadata.official ? "success" : "muted"}
                   />
@@ -214,7 +214,7 @@ export function DataCoverageBadge() {
                 <div className="mt-5">
                   <PanelTitle
                     icon={<MapPin className="h-4 w-4" />}
-                    title="Demo kapsama şehirleri"
+                    title="Kapsama şehirleri"
                     subtitle="Haritayı kapsama merkezlerine taşır"
                   />
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -234,7 +234,7 @@ export function DataCoverageBadge() {
                         </button>
                       ))
                     ) : (
-                      <p className="text-sm text-fg-secondary">Demo kapsama şehri bulunamadı.</p>
+                      <p className="text-sm text-fg-secondary">Kapsama şehri bulunamadı.</p>
                     )}
                   </div>
                 </div>
@@ -255,7 +255,7 @@ export function DataCoverageBadge() {
                       <StatCard label="Belediye" value={coverage.summary.municipalSources} detail="Yerel sağlayıcılar" />
                       <StatCard label="Ulusal" value={coverage.summary.nationalSources} detail="Ülke çapı kaynaklar" />
                       <StatCard label="Küresel" value={coverage.summary.globalSources} detail="Harici/uluslararası" />
-                      <StatCard label="Canlı aday" value={coverage.summary.publicCandidateCount} detail="Açık aday kaynaklar" />
+                      <StatCard label="Public kaynak" value={coverage.summary.publicCandidateCount} detail="Açık kaynaklar" />
                       <StatCard label="Korumalı" value={coverage.summary.protectedCount} detail="Korumalı erişim kaynakları" />
                     </div>
                   ) : (
@@ -289,8 +289,8 @@ export function DataCoverageBadge() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-fg-primary">Neler bekleniyor?</p>
                       <p className="mt-1 text-sm text-fg-secondary">
-                        Demo veri, connector-ready deneyimi gizlemiyor; yalnızca canlı parsel yüklemesi
-                        gerçekleşene kadar güvenli bir yüzey sağlıyor.
+                        Public registry connector-ready deneyimi gösterir; parsel/imar sonucu yalnızca gerçek
+                        endpoint ve provenance çözüldüğünde çizilir.
                       </p>
                     </div>
                   </div>

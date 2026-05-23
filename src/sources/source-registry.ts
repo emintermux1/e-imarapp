@@ -23,14 +23,14 @@ export interface SourceRegistryEntry {
   };
 }
 
-const municipalNotes = 'Municipal public portal seed. Live probing determines endpoint health, legal terms, and whether captcha/session protection is present.';
-const nationalNotes = 'Official public metadata entry. Connector discovery must verify live service availability and protected boundaries before ingestion.';
+const municipalNotes = 'Public municipal imar portal. The platform treats it as a live public source and uses discovery/probe to resolve Netcad/WebGIS/OGC endpoints before normalized imar fields are shown.';
+const nationalNotes = 'Official public source. Connector discovery verifies live service availability and endpoint contracts before normalized data is shown.';
 
 export const SOURCE_REGISTRY: SourceRegistryEntry[] = [
   {
     id: 'tkgm-parsel-sorgu', name: 'TKGM Parsel Sorgu Uygulaması', jurisdiction: 'national', category: 'parcel', homepageUrl: 'https://parselsorgu.tkgm.gov.tr/',
-    connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'requires_legal_agreement', notes: 'Official parcel query portal; lawful automation, session, captcha, and data-sharing constraints must be verified at runtime.' },
-    capabilities: ['parcel_lookup', 'municipal_gis'], documentationUrls: ['https://www.tkgm.gov.tr/mevzuat/tapu-ve-kadastro-verilerinin-paylasilmasina-iliskin-usul-ve-esaslar']
+    connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'public', notes: 'Official public parcel query portal. Use as bilgi amaçlı public source with provenance; do not present output as a signed/resmi belge.' },
+    capabilities: ['parcel_lookup', 'parcel_geometry', 'municipal_gis'], documentationUrls: ['https://www.tkgm.gov.tr/mevzuat/tapu-ve-kadastro-verilerinin-paylasilmasina-iliskin-usul-ve-esaslar']
   },
   {
     id: 'tkgm-data-sharing-rules', name: 'TKGM Veri Paylaşımı Usul ve Esasları', jurisdiction: 'national', category: 'parcel', homepageUrl: 'https://www.tkgm.gov.tr/mevzuat/tapu-ve-kadastro-verilerinin-paylasilmasina-iliskin-usul-ve-esaslar',
@@ -38,23 +38,23 @@ export const SOURCE_REGISTRY: SourceRegistryEntry[] = [
   },
   {
     id: 'csb-e-plan', name: 'ÇŞİDB E-Plan Güncel', jurisdiction: 'national', category: 'plan', homepageUrl: 'https://eplan.csb.gov.tr/',
-    connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'unknown', notes: 'Official e-Plan portal; public plan catalog and protected workflows must be separated by discovery.' }, capabilities: ['plan_catalog', 'plan_lookup'], documentationUrls: ['https://e-plan.gov.tr/']
+    connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'public', notes: 'Official e-Plan portal; public plan catalog and imar durum flows are verified by discovery.' }, capabilities: ['plan_catalog', 'plan_lookup', 'zoning_status'], documentationUrls: ['https://e-plan.gov.tr/']
   },
   {
     id: 'e-plan', name: 'E-Plan Portalı', jurisdiction: 'national', category: 'plan', homepageUrl: 'https://e-plan.gov.tr/',
-    connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'unknown', notes: 'Legacy e-Plan hostname retained for compatibility and canonical redirect checks.' }, capabilities: ['plan_catalog']
+    connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'public', notes: 'Legacy e-Plan hostname retained for compatibility and canonical redirect checks.' }, capabilities: ['plan_catalog']
   },
   {
     id: 'csb-e-plan-legacy', name: 'ÇŞİDB E-Plan Legacy/Alternatif', jurisdiction: 'national', category: 'plan', homepageUrl: 'https://e-plan.gov.tr/',
-    connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'unknown', notes: 'Legacy or alternate e-Plan hostname retained for discovery compatibility and canonical redirect checks.' }, capabilities: ['plan_catalog']
+    connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'public', notes: 'Legacy or alternate e-Plan hostname retained for discovery compatibility and canonical redirect checks.' }, capabilities: ['plan_catalog']
   },
-  { id: 'tucbs-public-api', name: 'Türkiye Ulusal CBS Public API', jurisdiction: 'national', category: 'open_data', homepageUrl: 'https://tucbs-public-api.csb.gov.tr/', connectorKinds: [ConnectorKind.Ogc, ConnectorKind.PublicApi], access: { status: 'unknown', notes: nationalNotes }, capabilities: ['wms', 'wfs', 'geospatial_api', 'plan_catalog'], documentationUrls: ['https://tucbs.gov.tr/'] },
+  { id: 'tucbs-public-api', name: 'Türkiye Ulusal CBS Public API', jurisdiction: 'national', category: 'open_data', homepageUrl: 'https://tucbs-public-api.csb.gov.tr/', connectorKinds: [ConnectorKind.Ogc, ConnectorKind.PublicApi], access: { status: 'public', notes: nationalNotes }, capabilities: ['wms', 'wfs', 'geospatial_api', 'plan_catalog'], documentationUrls: ['https://tucbs.gov.tr/'] },
   { id: 'tucbs-ana', name: 'Türkiye Ulusal CBS Ana Portal', jurisdiction: 'national', category: 'open_data', homepageUrl: 'https://tucbs.gov.tr/', connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'public_metadata', notes: 'National CBS portal and metadata entry point; exact service access is determined per catalog endpoint.' }, capabilities: ['geospatial_catalog', 'wms', 'wfs'] },
   { id: 'edevlet-csb-tucbs', name: 'e-Devlet ÇŞİDB TUCBS Hizmeti', jurisdiction: 'national', category: 'open_data', homepageUrl: 'https://www.turkiye.gov.tr/csb-tucbs-8514', connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'requires_credentials', notes: 'e-Devlet workflow requires authenticated legal access; credentials are not stored in this repository.' }, capabilities: ['authenticated_service_catalog', 'tucbs_access'] },
-  { id: 'atlas-ulusal-cbs', name: 'Atlas Ulusal CBS', jurisdiction: 'national', category: 'basemap', homepageUrl: 'https://www.atlas.gov.tr/', connectorKinds: [ConnectorKind.Ogc, ConnectorKind.PublicPortal], access: { status: 'unknown', notes: nationalNotes }, capabilities: ['basemap_context', 'geospatial_catalog', 'wms'] },
+  { id: 'atlas-ulusal-cbs', name: 'Atlas Ulusal CBS', jurisdiction: 'national', category: 'basemap', homepageUrl: 'https://www.atlas.gov.tr/', connectorKinds: [ConnectorKind.Ogc, ConnectorKind.PublicPortal], access: { status: 'public', notes: nationalNotes }, capabilities: ['basemap_context', 'geospatial_catalog', 'wms'] },
   { id: 'csb-cbs', name: 'ÇŞB Coğrafi Bilgi Sistemleri', jurisdiction: 'national', category: 'open_data', homepageUrl: 'https://cbs.csb.gov.tr/', connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'public_metadata', notes: 'Official CBS portal; only public catalog metadata should be harvested without authenticated agreements.' }, capabilities: ['geospatial_catalog', 'wms', 'wfs'] },
   { id: 'akilli-sehirler-yerel-veri', name: 'Akıllı Şehirler Yerel Veri Platformları', jurisdiction: 'national', category: 'open_data', homepageUrl: 'https://akillisehirler.csb.gov.tr/yerel-veri-platformlari/', connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'public_metadata', notes: 'Official local data platforms page; discovery should collect public metadata links only.' }, capabilities: ['municipal_gis', 'geospatial_catalog'] },
-  { id: 'bulutkbs', name: 'BulutKBS', jurisdiction: 'national', category: 'municipal_gis', homepageUrl: 'https://bulutkbs.gov.tr/', connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'unknown', notes: 'Public/institutional KBS portal; connector must separate public views from protected flows.' }, capabilities: ['municipal_gis', 'parcel_lookup'] },
+  { id: 'bulutkbs', name: 'BulutKBS', jurisdiction: 'national', category: 'municipal_gis', homepageUrl: 'https://bulutkbs.gov.tr/', connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'public', notes: 'Public BulutKBS vatandaş portal; connector resolves public views and endpoint contracts before normalized use.' }, capabilities: ['municipal_gis', 'parcel_lookup'] },
   { id: 'maks', name: 'Mekansal Adres Kayıt Sistemi', jurisdiction: 'national', category: 'address', homepageUrl: 'https://maks.nvi.gov.tr/', connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'requires_legal_agreement', notes: 'MAKS production integration requires official legal protocol and institutional credentials.' }, capabilities: ['address_registry'] },
   { id: 'netcad-arazi-yonetimi', name: 'Netcad Arazi Yönetimi Referansı', jurisdiction: 'national', category: 'municipal_gis', homepageUrl: 'https://www.netcad.com/tr/cozumler/arazi-yonetimi#incele', connectorKinds: [ConnectorKind.Documentation], access: { status: 'public_metadata', notes: 'Vendor reference page for land management and Netcad implementation patterns; not a municipal data source.' }, capabilities: ['netcad_keos', 'municipal_gis'] },
   { id: 'netcad-netgis-server', name: 'Netcad NetGIS Server', jurisdiction: 'national', category: 'municipal_gis', homepageUrl: 'https://www.netcad.com/netgis-server', connectorKinds: [ConnectorKind.Documentation], access: { status: 'public_metadata', notes: 'Vendor documentation and fingerprint reference for NetGIS/KEOS patterns; not itself a parcel data source.' }, capabilities: ['netcad_keos', 'municipal_gis'] },
@@ -104,6 +104,10 @@ function municipalSources(): SourceRegistryEntry[] {
     ['altinordu-ekent-imar', 'Altınordu Belediyesi eKent İmar Durumu', 'https://ekent.altinordu.bel.tr/imardurumu/', 'Ordu', 'Altınordu', 'altinordu', 'ekent'],
     ['aksaray-ebelediye-imar', 'Aksaray Belediyesi e-Belediye İmar Durumu', 'https://ebelediye.aksaray.bel.tr:444/imardurumu/', 'Aksaray', 'Merkez', 'aksaray', 'ekent'],
     ['sehitkamil-keos-imar', 'Şehitkamil Belediyesi KEOS İmar Durumu', 'https://keos.sehitkamil.bel.tr/imardurumu/', 'Gaziantep', 'Şehitkamil', 'sehitkamil', 'netcad'],
+    ['uskudar-cbs-eharita', 'Üsküdar Belediyesi Kent Rehberi', 'https://cbs.uskudar.bel.tr/eharita/', 'İstanbul', 'Üsküdar', 'uskudar', 'webgis'],
+    ['fatih-kentrehberi-webgis', 'Fatih Belediyesi Kent Rehberi', 'https://kentrehberi.fatih.bel.tr/webgis/', 'İstanbul', 'Fatih', 'fatih', 'webgis'],
+    ['batman-keos-imar', 'Batman Belediyesi E-İmar', 'https://keos.batman.bel.tr/imardurumu/', 'Batman', 'Merkez', 'batman', 'netcad'],
+    ['avcilar-imar', 'Avcılar Belediyesi İmar Durumu', 'https://www.avcilar.bel.tr/sayfalar/imar-durumu', 'İstanbul', 'Avcılar', 'avcilar', 'municipal'],
     ['cankaya-imar-durumu', 'Çankaya Belediyesi İmar Durumu', 'https://imardurumu.cankaya.bel.tr/', 'Ankara', 'Çankaya', 'cankaya', 'municipal'],
     ['sultangazi-webgis-imar', 'Sultangazi Belediyesi WebGIS İmar Durumu', 'https://webgis.sultangazi.bel.tr/imardurumu/', 'İstanbul', 'Sultangazi', 'sultangazi', 'netcad'],
     ['basaksehir-webgis-imar', 'Başakşehir Belediyesi WebGIS İmar Durumu', 'https://webgis.basaksehir.bel.tr/imardurumu/', 'İstanbul', 'Başakşehir', 'basaksehir', 'netcad'],
@@ -127,14 +131,15 @@ function municipalSources(): SourceRegistryEntry[] {
 
   const connectorKindsForVendor = (vendor?: string) => {
     if (vendor === 'ekent') return [ConnectorKind.Ekent, ConnectorKind.MunicipalPortal];
-    if (vendor === 'netcad') return [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal];
+    if (vendor === 'netcad') return [ConnectorKind.NetcadKeos, ConnectorKind.Keos, ConnectorKind.Wms, ConnectorKind.Wfs];
+    if (vendor === 'webgis') return [ConnectorKind.Webgis, ConnectorKind.Ogc, ConnectorKind.Wms, ConnectorKind.Wfs];
     return [ConnectorKind.MunicipalPortal];
   };
 
   const capabilitiesForVendor = (vendor?: string) => {
-    if (vendor === 'ekent') return ['zoning_status', 'municipal_gis', 'ekent'];
-    if (vendor === 'netcad') return ['zoning_status', 'municipal_gis', 'netcad_keos'];
-    return ['zoning_status', 'municipal_gis'];
+    if (vendor === 'ekent') return ['zoning_status', 'municipal_gis', 'ekent', 'parcel_lookup', 'plan_lookup'];
+    if (vendor === 'netcad' || vendor === 'webgis') return ['zoning_status', 'municipal_gis', 'netcad_keos', 'parcel_lookup', 'plan_lookup'];
+    return ['zoning_status', 'municipal_gis', 'parcel_lookup'];
   };
 
   return rows.map(([id, name, homepageUrl, province, district, municipalitySlug, vendor]) => ({
@@ -144,7 +149,7 @@ function municipalSources(): SourceRegistryEntry[] {
     category: 'municipal_gis' as const,
     homepageUrl,
     connectorKinds: connectorKindsForVendor(vendor),
-    access: { status: 'unknown' as const, notes: municipalNotes },
+    access: { status: 'public' as const, notes: municipalNotes },
     capabilities: capabilitiesForVendor(vendor),
     metadata: { province, district, municipalitySlug, vendor }
   }));

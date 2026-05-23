@@ -46,13 +46,14 @@ scripts.
 Production parcel rendering must be configured explicitly:
 
 ```bash
+NEXT_PUBLIC_EIMAR_SITE_URL=https://www.example.com
 NEXT_PUBLIC_EIMAR_DATA_MODE=api
 NEXT_PUBLIC_EIMAR_API_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api/v1
 # or
 NEXT_PUBLIC_EIMAR_DATA_MODE=vector-tile
 NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL=http://localhost:7800/public.parcels/{z}/{x}/{y}.pbf
-# only for non-production previews that intentionally show synthetic parcels
-NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=true
+NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=0
 ```
 
 Development defaults to labelled demo parcels. Production does not silently fall
@@ -161,7 +162,7 @@ If you want to use local `.env`, copy `.env.example` to `.env` and fill the opti
 
 ## API behavior
 
-If PostGIS or Redis is not configured, API endpoints return a `not_ready` or `unavailable` status with a concrete next action. They do not invent parcel or plan results. Municipal parcel workflows return `method_contract_required`, `protected`, `source_not_found`, or `not_ready` when registry, TKGM geometry, or Netcad/KEOS contracts are not verified; demo/derived/public metadata is never labeled as official data.
+If PostGIS or Redis is not configured, API endpoints return a `not_ready`, `public_discovery`, or `unavailable` status with a concrete next action. They do not invent parcel or plan results. Municipal parcel workflows treat public KEOS/Netcad/WebGIS portals as live public sources, then expose `active`, `public_discovery`, `protected`, `source_not_found`, or `not_ready` states while TKGM geometry and endpoint field contracts are resolved; örnek/türetilmiş/public metadata is never labeled as official data.
 
 ## Geometry validation, integrity, and platform hardening
 
@@ -237,12 +238,23 @@ Required website integration env:
 WEBSITE_SESSION_SECRET=...
 OPENAI_API_KEY=...          # for plan-note explain
 PUSH_GATEWAY_URL=...        # for push channel delivery
+NEXT_PUBLIC_EIMAR_SITE_URL=https://www.example.com
 NEXT_PUBLIC_EIMAR_DATA_MODE=api
 NEXT_PUBLIC_EIMAR_API_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api/v1
 NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL=...      # required for vector-tile mode
 NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK=0   # production should stay unavailable instead of demo
 NEXT_PUBLIC_MAPBOX_TOKEN=... # optional; empty uses token-free basemaps
 ```
+
+`NEXT_PUBLIC_EIMAR_API_BASE_URL` is the canonical website backend origin.
+`NEXT_PUBLIC_API_BASE_URL` is still accepted for API-v1-specific clients and is
+used first when both variables are present to preserve older deployments. The
+website app also publishes robots, sitemap, manifest, icon and OpenGraph
+metadata from `NEXT_PUBLIC_EIMAR_SITE_URL` (or `VERCEL_URL` in previews).
+It exposes `GET /healthz` for uptime checks and `GET /readyz` for production
+readiness gates; `readyz` returns 503 if production lacks a live API/vector tile
+source or if demo fallback is enabled.
 
 CI and smoke tests do not require real provider secrets. Configure production/staging values in the deploy target or GitHub environment secrets; never commit them.
 

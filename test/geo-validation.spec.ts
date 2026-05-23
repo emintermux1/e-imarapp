@@ -1,5 +1,5 @@
 import type * as GeoJSON from "geojson";
-import { ringSignedArea, validateAndRepairGeoJson } from "../frontend/lib/geo-validation";
+import { ringSignedArea, validateAndRepairGeoJson } from "../legacy/apps/frontend/lib/geo-validation";
 
 describe("validateAndRepairGeoJson", () => {
   it("flags CRS mismatch when crs present", () => {

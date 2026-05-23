@@ -128,7 +128,7 @@ function ScoreDial({ value, color }: { value: number; color: string }) {
 
 function summaryLabel(value: number) {
   if (value >= 80) return "Yüksek getiri potansiyeli";
-  if (value >= 65) return "Cazip portföy adayı";
+  if (value >= 65) return "Cazip portföy fırsatı";
   if (value >= 50) return "Orta segment, dikkatli inceleme";
   return "Risk/getiri dengesi zayıf";
 }

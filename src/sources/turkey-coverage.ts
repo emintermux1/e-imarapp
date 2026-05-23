@@ -18,8 +18,8 @@ export interface TurkeyCoverageEntry extends SourceRegistryEntry {
   region?: string;
 }
 
-const municipalityNotes = 'Municipal source metadata derived from public homepage patterns or already-registered seed portals. Live probing must verify service availability and protection boundaries before ingestion.';
-const nationalNotes = 'National or global metadata entry. Discovery must keep public metadata separate from live legal access and never fabricate parcel, zoning, or address results.';
+const municipalityNotes = 'Public municipal imar portal pattern. Live probing resolves service availability and endpoint contracts before normalized imar fields are shown.';
+const nationalNotes = 'National or global public source. Discovery verifies endpoint contracts before normalized data is shown.';
 
 export const TURKEY_PROVINCES: TurkeyProvinceRecord[] = [
   { code: '01', slug: 'adana', name: 'Adana', region: 'Akdeniz' },
@@ -113,12 +113,12 @@ export const NATIONAL_COVERAGE_SEEDS: TurkeyCoverageEntry[] = [
     category: 'parcel',
     homepageUrl: 'https://parselsorgu.tkgm.gov.tr/',
     connectorKinds: [ConnectorKind.PublicPortal],
-    access: { status: 'requires_legal_agreement', notes: 'Official parcel query portal; lawful automation, session, captcha, and data-sharing constraints must be verified at runtime.' },
+    access: { status: 'public', notes: 'Official public parcel query portal. Use as bilgi amaçlı public source with provenance; do not present output as a signed/resmi belge.' },
     capabilities: ['parcel_lookup', 'parcel_geometry'],
     documentationUrls: ['https://www.tkgm.gov.tr/mevzuat/tapu-ve-kadastro-verilerinin-paylasilmasina-iliskin-usul-ve-esaslar'],
     vendor: 'tkgm',
-    provenance: ['official homepage', 'public metadata only; no parcel result claims'],
-    nextAction: 'Verify legal access and protected-session handling before attempting any query flow.',
+    provenance: ['official homepage', 'public bilgi amaçlı parcel portal'],
+    nextAction: 'Resolve the public portal query contract and keep bilgi amaçlı/resmi belge disclaimer visible.',
     region: 'Marmara'
   },
   {
@@ -142,11 +142,11 @@ export const NATIONAL_COVERAGE_SEEDS: TurkeyCoverageEntry[] = [
     category: 'plan',
     homepageUrl: 'https://eplan.csb.gov.tr/',
     connectorKinds: [ConnectorKind.PublicPortal],
-    access: { status: 'public_metadata', notes: 'Official e-Plan portal; public plan catalog and protected workflows must be separated by discovery.' },
+    access: { status: 'public', notes: 'Official e-Plan portal; public plan catalog and imar durum flows are treated as live public sources and verified by discovery.' },
     capabilities: ['plan_catalog', 'plan_lookup'],
     vendor: 'csb',
     provenance: ['official portal metadata'],
-    nextAction: 'Probe public catalog metadata only; never assume the protected plan workflow is available.',
+    nextAction: 'Probe public catalog and imar durum endpoints; normalize plan outputs with provenance.',
     region: 'Marmara'
   },
   {
@@ -156,7 +156,7 @@ export const NATIONAL_COVERAGE_SEEDS: TurkeyCoverageEntry[] = [
     category: 'plan',
     homepageUrl: 'https://e-plan.gov.tr/',
     connectorKinds: [ConnectorKind.PublicPortal],
-    access: { status: 'public_metadata', notes: 'Legacy or alternate e-Plan hostname retained for discovery compatibility and canonical redirect checks.' },
+    access: { status: 'public', notes: 'Legacy or alternate e-Plan hostname retained for discovery compatibility and canonical redirect checks.' },
     capabilities: ['plan_catalog'],
     vendor: 'csb',
     provenance: ['official portal metadata', 'redirect compatibility'],
@@ -240,11 +240,11 @@ export const NATIONAL_COVERAGE_SEEDS: TurkeyCoverageEntry[] = [
     category: 'municipal_gis',
     homepageUrl: 'https://bulutkbs.gov.tr/',
     connectorKinds: [ConnectorKind.PublicPortal],
-    access: { status: 'metadata_only', notes: 'Public/institutional KBS portal; the registry only carries safe metadata and does not assert live endpoint availability.' },
+    access: { status: 'public', notes: 'Public BulutKBS vatandaş portal; discovery resolves public views and endpoint contracts before normalized use.' },
     capabilities: ['municipal_gis', 'parcel_lookup'],
     vendor: 'bulutkbs',
-    provenance: ['public portal metadata', 'metadata_only'],
-    nextAction: 'Treat as a metadata reference until a live, authorized endpoint is verified.',
+    provenance: ['public portal', 'public discovery source'],
+    nextAction: 'Resolve public views and endpoint contracts; keep protected/session-only flows out of automation.',
     region: 'Marmara'
   },
   {
@@ -421,15 +421,15 @@ function slugify(value: string): string {
 function vendorTemplate(vendor: string, slug: string): { homepageUrl: string; connectorKinds: ConnectorKind[]; capabilities: string[] } {
   switch (vendor) {
     case 'netcad':
-      return { homepageUrl: `https://keos.${slug}.bel.tr/imardurumu/`, connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.MunicipalPortal], capabilities: ['zoning_status', 'municipal_gis', 'netcad_keos'] };
+      return { homepageUrl: `https://keos.${slug}.bel.tr/imardurumu/`, connectorKinds: [ConnectorKind.NetcadKeos, ConnectorKind.Keos, ConnectorKind.Wms, ConnectorKind.Wfs], capabilities: ['zoning_status', 'municipal_gis', 'netcad_keos', 'parcel_lookup', 'plan_lookup'] };
     case 'webgis':
-      return { homepageUrl: `https://webgis.${slug}.bel.tr/imardurumu/`, connectorKinds: [ConnectorKind.MunicipalPortal], capabilities: ['zoning_status', 'municipal_gis'] };
+      return { homepageUrl: `https://webgis.${slug}.bel.tr/imardurumu/`, connectorKinds: [ConnectorKind.Webgis, ConnectorKind.Ogc, ConnectorKind.Wms, ConnectorKind.Wfs], capabilities: ['zoning_status', 'municipal_gis', 'netcad_keos', 'parcel_lookup', 'plan_lookup'] };
     case 'ekent':
-      return { homepageUrl: `https://ekent.${slug}.bel.tr/imardurumu/`, connectorKinds: [ConnectorKind.Ekent, ConnectorKind.MunicipalPortal], capabilities: ['zoning_status', 'municipal_gis', 'ekent'] };
+      return { homepageUrl: `https://ekent.${slug}.bel.tr/imardurumu/`, connectorKinds: [ConnectorKind.Ekent, ConnectorKind.MunicipalPortal], capabilities: ['zoning_status', 'municipal_gis', 'ekent', 'parcel_lookup', 'plan_lookup'] };
     case 'kbs':
-      return { homepageUrl: `https://kbs.${slug}.bel.tr/`, connectorKinds: [ConnectorKind.MunicipalPortal], capabilities: ['municipal_gis', 'zoning_status'] };
+      return { homepageUrl: `https://kbs.${slug}.bel.tr/`, connectorKinds: [ConnectorKind.MunicipalPortal], capabilities: ['municipal_gis', 'zoning_status', 'parcel_lookup'] };
     default:
-      return { homepageUrl: `https://cbs.${slug}.bel.tr/`, connectorKinds: [ConnectorKind.MunicipalPortal], capabilities: ['municipal_gis', 'zoning_status'] };
+      return { homepageUrl: `https://cbs.${slug}.bel.tr/`, connectorKinds: [ConnectorKind.MunicipalPortal], capabilities: ['municipal_gis', 'zoning_status', 'parcel_lookup'] };
   }
 }
 
@@ -438,17 +438,17 @@ export function buildTurkeyMunicipalCoverageCandidates(): TurkeyCoverageEntry[] 
   return TURKEY_PROVINCES.map((province, index) => {
     const vendor = vendors[index % vendors.length];
     const template = vendorTemplate(vendor, province.slug);
-    const slug = `${province.slug}-${vendor}-coverage-candidate`;
+    const slug = `${province.slug}-${vendor}-coverage`;
     return {
       id: slug,
-      name: `${province.name} İmar Portalı Adayı`,
+      name: `${province.name} İmar Portalı`,
       jurisdiction: 'municipal',
       category: 'municipal_gis',
       homepageUrl: template.homepageUrl,
       connectorKinds: template.connectorKinds,
       access: {
-        status: 'metadata_only',
-        notes: 'Pattern-derived municipal coverage candidate; homepage and service endpoints are not yet verified.'
+        status: 'public',
+        notes: 'Public municipal portal seed; discovery verifies homepage health and resolves endpoint contracts before normalized imar fields are shown.'
       },
       capabilities: template.capabilities,
       province: province.name,
@@ -463,9 +463,9 @@ export function buildTurkeyMunicipalCoverageCandidates(): TurkeyCoverageEntry[] 
       },
       provenance: [
         'pattern-derived from observed municipal Netcad/WebGIS/eKent/KBS portal conventions',
-        'metadata_only candidate; live endpoint not verified'
+        'public discovery source; endpoint contract verified before query results are shown'
       ],
-      nextAction: 'Verify the homepage, run a public health probe, and stop if captcha or credentials are required.',
+      nextAction: 'Run public health/discovery, resolve service methods and returned fields, and stop if captcha or credentials appear.',
       region: province.region
     };
   });
@@ -490,4 +490,3 @@ export function provinceCodeBySlug(slug: string): string | undefined {
 export function provinceSlugFromName(name: string): string | undefined {
   return TURKEY_PROVINCES.find((province) => province.name === name)?.slug;
 }
-

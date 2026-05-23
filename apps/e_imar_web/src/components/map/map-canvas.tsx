@@ -214,15 +214,46 @@ export function MapCanvas({
       const fillOpacity = layerOpacity["parcels-fill"];
       if (fillOpacity != null && map.getLayer("parcels-fill")) {
         try {
+          const selectedOpacity = Math.min(1, fillOpacity + 0.3);
+          const multiSelectedOpacity = Math.min(1, fillOpacity + 0.2);
+          const hoverOpacity = Math.min(1, fillOpacity + 0.18);
           map.setPaintProperty("parcels-fill", "fill-opacity", [
-            "case",
-            ["boolean", ["feature-state", "selected"], false],
-            Math.min(1, fillOpacity + 0.3),
-            ["boolean", ["feature-state", "multiSelected"], false],
-            Math.min(1, fillOpacity + 0.2),
-            ["boolean", ["feature-state", "hover"], false],
-            Math.min(1, fillOpacity + 0.18),
-            ["interpolate", ["linear"], ["zoom"], 11.4, Math.min(0.18, fillOpacity), 13.5, Math.min(0.38, fillOpacity), 16, fillOpacity]
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            11.4,
+            [
+              "case",
+              ["boolean", ["feature-state", "selected"], false],
+              selectedOpacity,
+              ["boolean", ["feature-state", "multiSelected"], false],
+              multiSelectedOpacity,
+              ["boolean", ["feature-state", "hover"], false],
+              hoverOpacity,
+              Math.min(0.18, fillOpacity)
+            ],
+            13.5,
+            [
+              "case",
+              ["boolean", ["feature-state", "selected"], false],
+              selectedOpacity,
+              ["boolean", ["feature-state", "multiSelected"], false],
+              multiSelectedOpacity,
+              ["boolean", ["feature-state", "hover"], false],
+              hoverOpacity,
+              Math.min(0.38, fillOpacity)
+            ],
+            16,
+            [
+              "case",
+              ["boolean", ["feature-state", "selected"], false],
+              selectedOpacity,
+              ["boolean", ["feature-state", "multiSelected"], false],
+              multiSelectedOpacity,
+              ["boolean", ["feature-state", "hover"], false],
+              hoverOpacity,
+              fillOpacity
+            ]
           ] as never);
         } catch {
           /* swallow */
@@ -740,7 +771,7 @@ export function MapCanvas({
       const homepage = props.homepage_url;
       const sourceUrl = props.url;
       const endpointSummary = Number(props.candidate_endpoint_count ?? 0) > 0
-        ? `${props.candidate_endpoint_count} aday uç · ${props.candidate_endpoint_types ?? "portal"}`
+        ? `${props.candidate_endpoint_count} public uç · ${props.candidate_endpoint_types ?? "portal"}`
         : props.type ?? "portal";
       const popupRoot = document.createElement("div");
       popupRoot.style.cssText = "font:12px sans-serif;min-width:220px";
@@ -770,7 +801,7 @@ export function MapCanvas({
         serviceLink.href = sourceUrl;
         serviceLink.target = "_blank";
         serviceLink.rel = "noreferrer";
-        serviceLink.textContent = "Aday servisi aç";
+        serviceLink.textContent = "Public servisi aç";
         serviceLink.style.display = "block";
         serviceLink.style.marginTop = "6px";
         popupRoot.append(serviceLink);
@@ -1187,7 +1218,7 @@ export function MapCanvas({
                   {parcelSourceMetadata.unavailableReason}
                 </p>
                 <p className="mt-2 text-[11px] leading-relaxed text-fg-muted">
-                  Harita ve taban katmanları açık kalır; demo parseller production ortamında sessizce çizilmez. Canlı API için <code className="rounded bg-surface-1 px-1 py-0.5">NEXT_PUBLIC_EIMAR_API_BASE_URL</code> veya vector tile için <code className="rounded bg-surface-1 px-1 py-0.5">NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL</code> ayarlayın.
+                  Harita ve taban katmanları açık kalır; örnek parseller production ortamında sessizce çizilmez. Canlı API için <code className="rounded bg-surface-1 px-1 py-0.5">NEXT_PUBLIC_EIMAR_API_BASE_URL</code> veya vector tile için <code className="rounded bg-surface-1 px-1 py-0.5">NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL</code> ayarlayın.
                 </p>
               </div>
             </div>
@@ -1596,8 +1627,8 @@ function coverageStatus(capability?: {
   imarQuerySupport?: string;
 }) {
   if (capability?.protected) return "protected";
-  if (capability?.imarQuerySupport === "method_contract_required") return "method_contract_required";
-  if (capability?.publicCandidate) return "public_candidate";
+  if (capability?.imarQuerySupport === "supported") return "public_source";
+  if (capability?.publicCandidate) return "public_source";
   if (capability?.registered) return "registered";
   return "unknown";
 }
@@ -1609,8 +1640,8 @@ function coverageStatusLabel(capability?: {
   imarQuerySupport?: string;
 }) {
   if (capability?.protected) return "korumalı";
-  if (capability?.imarQuerySupport === "method_contract_required") return "method contract";
-  if (capability?.publicCandidate) return "public aday";
+  if (capability?.imarQuerySupport === "supported") return "public sorgu";
+  if (capability?.publicCandidate) return "public kaynak";
   if (capability?.registered) return "kayıtlı";
   return "bilinmiyor";
 }
@@ -1652,7 +1683,7 @@ function ensureLiveSourceLayers(map: Map) {
             "blocked", "#EF4444",
             "requires_auth", "#EF4444",
             "requires_approval", "#EF4444",
-            "candidate", "#2563EB",
+            "public_discovery", "#2563EB",
             "#0EA5E9"
           ] as never,
           "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 5, 8, 8, 12, 12] as never,

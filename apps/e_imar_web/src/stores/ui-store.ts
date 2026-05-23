@@ -145,7 +145,11 @@ export const useUIStore = create<UIState>()(
       setLegendCollapsed: (v) => set({ legendCollapsed: v }),
       setFullscreenMap: (v) => set({ fullscreenMap: v }),
 
-      setMapMode: (m) => set({ mapMode: m }),
+      setMapMode: (m) =>
+        set((s) => ({
+          mapMode: m,
+          compareMode: m === "3d" ? "off" : s.compareMode
+        })),
       setTimelineYear: (y) => set({ timelineYear: y }),
       setTimelineCompareYear: (y) => set({ timelineCompareYear: y }),
       setCompareMode: (m) => set({ compareMode: m }),

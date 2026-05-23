@@ -62,10 +62,10 @@ export function SectionAski({ parcel }: { parcel: ParcelProps }) {
           <span className="font-medium">Askı workbench</span>
         </div>
         <p className="mt-1 leading-relaxed">
-          Bu görünüm map overlay kayıtlarını yerel demo/derived provenance ile gösterir; resmi canlı askı verisi olmadığı yerde veri uydurulmaz.
+          Bu görünüm map overlay kayıtlarını yerel örnek/türetilmiş provenance ile gösterir; resmi canlı askı verisi olmadığı yerde veri uydurulmaz.
         </p>
         <div className="mt-2 inline-flex items-center rounded-full border border-border-subtle bg-bg px-2 py-0.5 text-[10px] uppercase tracking-wider text-fg-muted">
-live_sync: {liveStatus} · overlay provenance: demo/derived
+live_sync: {liveStatus} · overlay provenance: örnek/türetilmiş
         </div>
       </div>
 
@@ -103,7 +103,7 @@ live_sync: {liveStatus} · overlay provenance: demo/derived
       </div>
 
       <div className="grid gap-2 rounded-md border border-border-subtle bg-surface-2 p-3 text-[11px] sm:grid-cols-4">
-        <MiniStat label="demo" value={provenanceSummary.demo.toString()} />
+        <MiniStat label="açık kayıt" value={provenanceSummary.demo.toString()} />
         <MiniStat label="public_metadata" value={provenanceSummary.public_metadata.toString()} />
         <MiniStat label="official" value={provenanceSummary.official.toString()} />
         <MiniStat label="derived" value={provenanceSummary.derived.toString()} />
@@ -180,7 +180,7 @@ live_sync: {liveStatus} · overlay provenance: demo/derived
         <div className="rounded-md border border-dashed border-border-subtle bg-surface-1/40 px-3 py-3 text-center">
           <p className="text-xs text-fg-secondary">Bu parsel için bilinen askı kaydı eşleşmedi.</p>
           <p className="mt-1 text-[11px] text-fg-muted leading-relaxed">
-            Map overlay ve mevcut demo/derived kayıtlarında bu ada/parsel için resmi veya sentetik eşleşme bulunmadı.
+            Map overlay ve mevcut örnek/türetilmiş kayıtlarda bu ada/parsel için resmi veya sentetik eşleşme bulunmadı.
           </p>
         </div>
       )}

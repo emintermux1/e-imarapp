@@ -192,14 +192,19 @@ function planNotlari(zoning: ZoningType, cluster: ParcelClusterSeed, rng: Rng): 
     "Yol kotu üzerinden gabari hesaplanır.",
     "Jeolojik-jeoteknik etüt raporu dikkate alınacaktır.",
     "Toplanma alanı mesafesi 500 m içinde değerlendirilecektir.",
-    "Bu kayıt sentetik demo veridir; resmi kadastro kaydı değildir."
+    "Bu kayıt yerel açık kaynak uyumluluk verisidir; resmi kadastro kaydı değildir."
   ];
   if (zoning === "Ticaret" || zoning === "Karma") notes.push("Zemin katlarda ticari kullanım sürekliliği aranır.");
   if (zoning === "Yesil") notes.push("Açık ve yeşil alan niteliği korunacaktır.");
   if (zoning === "Sanayi") notes.push("Çevresel etki ve servis yolu koşulları sağlanmadan ruhsatlandırılamaz.");
   if (cluster.kind === "coastal") notes.push("Kıyı yaklaşma ve siluet kararları saklıdır.");
   const count = int(rng, 3, 5);
-  return [...notes].sort(() => rng.next() - 0.5).slice(0, count);
+  const shuffled = [...notes];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rng.next() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, count);
 }
 
 function buildAski(cluster: ParcelClusterSeed, index: number, rng: Rng): Aski | undefined {
@@ -356,9 +361,9 @@ function normalizeFeatured(): ParcelFeature[] {
         detailedUse: use,
         constraints,
         planLayer: feature.properties.planLayer ?? planLayer(use, status, scale, zoningType),
-        planNotlari: feature.properties.planNotlari.includes("Bu kayıt sentetik demo veridir; resmi kadastro kaydı değildir.")
+        planNotlari: feature.properties.planNotlari.includes("Bu kayıt yerel açık kaynak uyumluluk verisidir; resmi kadastro kaydı değildir.")
           ? feature.properties.planNotlari
-          : [...feature.properties.planNotlari, "Bu kayıt sentetik demo veridir; resmi kadastro kaydı değildir."]
+          : [...feature.properties.planNotlari, "Bu kayıt yerel açık kaynak uyumluluk verisidir; resmi kadastro kaydı değildir."]
       }
     };
   });

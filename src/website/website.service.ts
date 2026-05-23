@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AnalysisService } from '../analysis/analysis.service';
 import { ConnectorKind } from '../connectors/connector.types';
+import { dataAttribution } from '../common/data-attribution';
 import { provenanceRecord } from '../common/provenance';
 import { EplanService } from '../eplan/eplan.service';
 import { IngestionService } from '../ingestion/ingestion.service';
@@ -36,7 +37,7 @@ interface MunicipalParcelWorkflowInput {
 
 type WebsiteProbeStatus =
   | 'verified_live'
-  | 'method_contract_required'
+  | 'public_discovery'
   | 'protected'
   | 'requires_credentials'
   | 'captcha_required'
@@ -137,7 +138,10 @@ export class WebsiteService {
   }
 
   liveReadiness(): unknown {
-    const apiBaseUrl = this.config.get<string>('PUBLIC_API_BASE_URL') ?? this.config.get<string>('NEXT_PUBLIC_API_BASE_URL');
+    const apiBaseUrl =
+      this.config.get<string>('NEXT_PUBLIC_EIMAR_API_BASE_URL') ??
+      this.config.get<string>('NEXT_PUBLIC_API_BASE_URL') ??
+      this.config.get<string>('PUBLIC_API_BASE_URL');
     const hasDatabase = Boolean(this.config.get<string>('DATABASE_URL'));
     const hasRedis = Boolean(this.config.get<string>('REDIS_URL'));
     const hasSessionSecret = Boolean(this.config.get<string>('WEBSITE_SESSION_SECRET'));
@@ -161,26 +165,26 @@ export class WebsiteService {
           sourceId: 'tkgm-parsel-sorgu',
           sourceName: 'TKGM Parsel Sorgu',
           category: 'tkgm',
-          status: 'not_ready',
+          status: 'public_discovery',
           endpoint: 'https://parselsorgu.tkgm.gov.tr/',
-          message: 'Resmî TKGM geometri sonucu için doğrulanmış public contract henüz etkin değil.',
-          nextAction: 'Yasal erişim ve public method contract doğrulanınca verified_live açılabilir.'
+          message: 'TKGM Parsel Sorgu public portal olarak kullanılır; sonuç bilgi amaçlı/provenance ile gösterilir.',
+          nextAction: 'Public query contract ve dönen parsel geometri alanlarını çöz.'
         }),
         this.readinessSource({
           sourceId: 'municipality-registry',
           sourceName: 'Belediye kaynak registry',
           category: 'municipality',
-          status: 'public_metadata',
-          message: 'Belediye kaynakları registry ve discovery metadata seviyesinde gösteriliyor.',
-          nextAction: 'Belediye bazında KEOS/Netcad/WMS method contract doğrulanmalı.'
+          status: 'public_discovery',
+          message: 'Belediye KEOS/Netcad/WebGIS portalları public canlı kaynak olarak açılır.',
+          nextAction: 'Belediye bazında servis uçları, katmanlar ve dönen alanlar discovery ile çözülür.'
         }),
         this.readinessSource({
           sourceId: 'eplan',
           sourceName: 'e-Plan',
           category: 'eplan',
-          status: 'method_contract_required',
-          message: 'e-Plan entegrasyonu için canlı sorgu contract doğrulaması gerekiyor.',
-          nextAction: 'Plan sorgu contract ve rate/access koşulları sabitlenmeli.'
+          status: 'public_discovery',
+          message: 'e-Plan public askı/yürürlük/imar durumu akışları discovery ile kullanılır.',
+          nextAction: 'Plan sorgu contract ve döküman link alanları provenance ile normalize edilir.'
         })
       ]
     };
@@ -206,7 +210,7 @@ export class WebsiteService {
       status: input.status,
       endpoint: input.endpoint,
       checkedAt: new Date().toISOString(),
-      dataType: input.status === 'verified_live' ? 'official' : input.status === 'public_metadata' ? 'public_metadata' : 'unavailable',
+      dataType: input.status === 'verified_live' ? 'official' : input.status === 'public_discovery' || input.status === 'public_metadata' ? 'public_metadata' : 'unavailable',
       message: input.message,
       nextAction: input.nextAction
     };
@@ -273,11 +277,31 @@ export class WebsiteService {
       });
     }
 
+    const attribution = dataAttribution({
+      provenance: firstParcel
+        ? [provenanceRecord({
+            sourceId: typeof firstParcel.source_id === 'string' ? firstParcel.source_id : 'parcel-query',
+            sourceName: typeof firstParcel.source_name === 'string' ? firstParcel.source_name : 'Parcel workflow',
+            endpoint: typeof firstParcel.source_url === 'string' ? firstParcel.source_url : undefined,
+            dataType: typeof firstParcel.source_status === 'string' && firstParcel.source_status === 'official' ? 'official' : 'public_metadata',
+            connectorKind: ConnectorKind.PublicPortal,
+            status: parcelResult.status ?? 'ok',
+            confidence: typeof firstParcel.confidence === 'number' ? firstParcel.confidence : 0.5,
+            limitations: ['Parcel workflow only returns normalized fields that are backed by source/provenance metadata.']
+          })]
+        : [],
+      sourceUrl: typeof firstParcel?.source_url === 'string' ? firstParcel.source_url : null,
+      limitations: firstParcel
+        ? ['Official/cadastral certainty depends on the upstream source contract and returned provenance.']
+        : ['No parcel row was returned; zoning or plan values are not fabricated.']
+    });
+
     return {
       status: 'ok',
       parcelQuery: parcelResult,
       potentialSummary: potential,
-      emsalShare
+      emsalShare,
+      ...attribution
     };
   }
 
@@ -300,30 +324,54 @@ export class WebsiteService {
         parcelGeometryAttempt: { status: 'not_ready', source: 'tkgm-parsel-sorgu', message: 'Belediye kaynağı bulunmadan TKGM/parsel geometri eşleştirmesi başlatılmadı.' },
         zoningAttempt: { status: 'source_not_found', source: null, message: 'Belediye kaynağı registry içinde bulunamadı.' },
         noDataReason: 'Belediye kaynağı registry içinde bulunamadı',
-        provenance: []
+        ...dataAttribution({
+          provenance: [],
+          limitations: ['Municipality source was not found; parcel/zoning data is intentionally unavailable.']
+        })
       };
     }
     const capability = this.sources.municipalityCapabilityForSource(source);
     const activation = this.sourceActivation.activationForSource(source);
     const protectedSource = capability.protected;
     const endpointCandidate = source.homepageUrl;
-    const provenance = [provenanceRecord({ sourceId: source.id, sourceName: source.name, endpoint: endpointCandidate, dataType: 'public_metadata', connectorKind: source.connectorKinds[0], status: 'registry_metadata', confidence: 0.45 })];
+    const provenance = [provenanceRecord({
+      sourceId: source.id,
+      sourceName: source.name,
+      endpoint: endpointCandidate,
+      dataType: 'public_metadata',
+      connectorKind: source.connectorKinds[0],
+      status: 'public_discovery',
+      confidence: activation.activationStatus === 'active' ? 0.7 : 0.45,
+      limitations: [
+        'Public metadata/discovery is not an official signed imar document.',
+        protectedSource ? 'Kaynak captcha/login gerektiriyor; korumalı akış bypass edilmez.' : 'Normalized imar fields wait for endpoint contract resolution.'
+      ]
+    })];
     const parcelGeometryAttempt = {
-      status: protectedSource ? 'protected' : 'not_ready',
+      status: protectedSource ? 'protected' : 'public_discovery',
       source: 'tkgm-parsel-sorgu',
       endpoint: 'https://parselsorgu.tkgm.gov.tr/',
-      message: protectedSource ? 'Kaynak korumalı olduğu için parsel geometri akışı durduruldu.' : activation.activationStatus === 'active' ? 'Public kaynak aktif; TKGM eşleştirmesi resmi endpoint/protokol doğrulaması bekliyor.' : 'TKGM/parsel geometri entegrasyonu aday durumda; doğrulanmış public geometri endpointi henüz hazır değil.'
+      message: protectedSource ? 'Kaynak korumalı olduğu için parsel geometri akışı durduruldu.' : 'TKGM public parsel portalı bilgi amaçlı geometri eşleştirmesi için kullanılır; sonuç resmi belge olarak sunulmaz.'
     };
     const zoningAttempt = {
-      status: protectedSource ? 'protected' : activation.activationStatus === 'active' ? 'active_public_source' : 'method_contract_required',
+      status: protectedSource ? 'protected' : activation.activationStatus === 'active' ? 'active_public_source' : 'public_discovery',
       source: source.id,
       endpoint: activation.usableEndpoints[0] ?? endpointCandidate,
       method: undefined as string | undefined,
-      message: protectedSource ? 'Kaynak captcha/login gerektiriyor.' : activation.activationStatus === 'active' ? 'Public kaynak aktif; veri metodu provenance ile kullanılabilir.' : 'Kaynak bulundu ama method contract çözülmedi.'
+      message: protectedSource ? 'Kaynak captcha/login gerektiriyor.' : activation.activationStatus === 'active' ? 'Public kaynak aktif; veri metodu provenance ile kullanılabilir.' : 'Public kaynak kayıtlı; servis metodu discovery ile çözülür.'
     };
     const status = protectedSource ? 'protected' : activation.activationStatus;
     const noDataReason = protectedSource ? 'Kaynak captcha/login gerektiriyor' : activation.nextAction;
-    return { status, query: normalized, municipalityCapability: capability, sourceActivation: activation, parcelGeometryAttempt, zoningAttempt, noDataReason, provenance };
+    return {
+      status,
+      query: normalized,
+      municipalityCapability: capability,
+      sourceActivation: activation,
+      parcelGeometryAttempt,
+      zoningAttempt,
+      noDataReason,
+      ...dataAttribution({ provenance, limitations: [noDataReason] })
+    };
   }
 
   async parcelReport(input: {
@@ -360,6 +408,11 @@ export class WebsiteService {
       parcelWorkflow: parcelWorkflow as Record<string, unknown> | null,
       municipalWorkflow: municipalWorkflow as Record<string, unknown> | null
     });
+    const attribution = dataAttribution({
+      provenance: report.provenance as any,
+      retrievedAt: report.generatedAt,
+      limitations: [report.disclaimer]
+    });
     return {
       status: report.status,
       reportId: report.reportId,
@@ -368,9 +421,13 @@ export class WebsiteService {
       disclaimer: report.disclaimer,
       query: report.query,
       sections: report.sections,
-      provenance: report.provenance,
+      provenance: attribution.provenance,
       printableHtml: report.printableHtml,
-      downloadFilename: report.downloadFilename
+      downloadFilename: report.downloadFilename,
+      sourceUrl: attribution.sourceUrl,
+      retrievedAt: attribution.retrievedAt,
+      confidence: attribution.confidence,
+      limitations: attribution.limitations
     };
   }
 
@@ -393,7 +450,20 @@ export class WebsiteService {
         resultCount: 1
       });
     }
-    return explanation;
+    const attribution = dataAttribution({
+      provenance: [provenanceRecord({
+        sourceId: 'openai-plan-note-explain',
+        sourceName: 'OpenAI plan note explanation',
+        endpoint: 'https://api.openai.com/v1/chat/completions',
+        dataType: 'derived',
+        connectorKind: ConnectorKind.PublicApi,
+        status: typeof explanation === 'object' && explanation && 'status' in explanation ? String((explanation as { status?: unknown }).status) : 'unknown',
+        confidence: 0.55,
+        limitations: ['AI explanation is derived guidance, not legal imar advice or an official plan note.']
+      })],
+      limitations: ['Use the official source plan note and municipality/TKGM records for binding decisions.']
+    });
+    return { ...(explanation as Record<string, unknown>), ...attribution };
   }
 
   async workspace(userReference: string): Promise<unknown> {

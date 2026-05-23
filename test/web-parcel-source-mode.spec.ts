@@ -29,7 +29,7 @@ describe('web parcel source mode gate', () => {
     });
   });
 
-  it('uses labelled demo parcels by default in development', () => {
+  it('uses labelled sample parcels by default in development', () => {
     resetParcelEnv({ NODE_ENV: 'development' });
 
     const snapshot = getParcelSourceSnapshot();
@@ -40,20 +40,20 @@ describe('web parcel source mode gate', () => {
     expect(snapshot.metadata.official).toBe(false);
   });
 
-  it('falls back to labelled demo data for missing live config outside production', () => {
+  it('falls back to labelled sample data for missing live config outside production', () => {
     resetParcelEnv({ NODE_ENV: 'development', NEXT_PUBLIC_EIMAR_DATA_MODE: 'api' });
 
     const snapshot = getParcelSourceSnapshot();
 
     expect(snapshot.metadata.mode).toBe('demo');
     expect(snapshot.metadata.requestedMode).toBe('api');
-    expect(snapshot.metadata.availability).toBe('development_demo_fallback');
+    expect(snapshot.metadata.availability).toBe('development_sample_fallback');
     expect(snapshot.metadata.fallbackReason).toContain('NEXT_PUBLIC_EIMAR_API_BASE_URL');
     expect(snapshot.metadata.unavailableReason).toBeUndefined();
     expect(snapshot.collection.features.length).toBeGreaterThan(0);
   });
 
-  it('does not silently draw demo parcels in production when live config is missing', () => {
+  it('does not silently draw sample parcels in production when live config is missing', () => {
     resetParcelEnv({ NODE_ENV: 'production', NEXT_PUBLIC_EIMAR_DATA_MODE: 'api' });
 
     const snapshot = getParcelSourceSnapshot();
@@ -61,12 +61,12 @@ describe('web parcel source mode gate', () => {
     expect(snapshot.metadata.mode).toBe('unavailable');
     expect(snapshot.metadata.availability).toBe('production_unavailable');
     expect(snapshot.metadata.demoFallbackAllowed).toBe(false);
-    expect(snapshot.metadata.unavailableReason).toContain('demo fallback kapalı');
+    expect(snapshot.metadata.unavailableReason).toContain('açık/kayıtlı veri fallback kapalı');
     expect(snapshot.metadata.featureCount).toBe(0);
     expect(snapshot.collection.features).toHaveLength(0);
   });
 
-  it('allows intentional production demo previews only with an explicit flag', () => {
+  it('allows intentional production sample previews only with an explicit flag', () => {
     resetParcelEnv({
       NODE_ENV: 'production',
       NEXT_PUBLIC_EIMAR_DATA_MODE: 'demo',
@@ -79,5 +79,51 @@ describe('web parcel source mode gate', () => {
     expect(snapshot.metadata.demoFallbackAllowed).toBe(true);
     expect(snapshot.metadata.unavailableReason).toBeUndefined();
     expect(snapshot.collection.features.length).toBeGreaterThan(0);
+  });
+
+  it('accepts API-v1 aliases without breaking production API mode', () => {
+    resetParcelEnv({
+      NODE_ENV: 'production',
+      NEXT_PUBLIC_EIMAR_DATA_MODE: 'api',
+      NEXT_PUBLIC_API_BASE_URL: 'https://api.example.test/api/v1'
+    });
+
+    const snapshot = getParcelSourceSnapshot();
+
+    expect(snapshot.metadata.mode).toBe('api');
+    expect(snapshot.metadata.availability).toBe('ready');
+    expect(snapshot.metadata.endpoint).toBe('https://api.example.test/api/v1');
+    expect(snapshot.metadata.unavailableReason).toBeUndefined();
+  });
+
+  it('treats malformed production API URLs as unavailable instead of localhost fallback', () => {
+    resetParcelEnv({
+      NODE_ENV: 'production',
+      NEXT_PUBLIC_EIMAR_DATA_MODE: 'api',
+      NEXT_PUBLIC_API_BASE_URL: 'not a url'
+    });
+
+    const snapshot = getParcelSourceSnapshot();
+
+    expect(snapshot.metadata.mode).toBe('unavailable');
+    expect(snapshot.metadata.availability).toBe('production_unavailable');
+    expect(snapshot.metadata.endpoint).toBeUndefined();
+    expect(snapshot.metadata.unavailableReason).toContain('NEXT_PUBLIC_EIMAR_API_BASE_URL veya NEXT_PUBLIC_API_BASE_URL');
+  });
+
+  it('falls through to the canonical API URL when the API-v1 alias is malformed', () => {
+    resetParcelEnv({
+      NODE_ENV: 'production',
+      NEXT_PUBLIC_EIMAR_DATA_MODE: 'api',
+      NEXT_PUBLIC_API_BASE_URL: 'not a url',
+      NEXT_PUBLIC_EIMAR_API_BASE_URL: 'https://api.example.test'
+    });
+
+    const snapshot = getParcelSourceSnapshot();
+
+    expect(snapshot.metadata.mode).toBe('api');
+    expect(snapshot.metadata.availability).toBe('ready');
+    expect(snapshot.metadata.endpoint).toBe('https://api.example.test');
+    expect(snapshot.metadata.unavailableReason).toBeUndefined();
   });
 });
