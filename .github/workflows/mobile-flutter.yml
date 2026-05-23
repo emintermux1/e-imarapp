@@ -29,4 +29,3 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - run: flutter build bundle --debug
-</ぞparameter>

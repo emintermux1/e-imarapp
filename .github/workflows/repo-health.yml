@@ -16,6 +16,8 @@ on:
       - "Dockerfile"
       - "docker-compose.yml"
       - "vercel.json"
+      - "docs/deployment.md"
+      - "docs/website-architecture.md"
       - ".env.example"
       - ".github/workflows/**"
   push:
@@ -35,6 +37,8 @@ on:
       - "Dockerfile"
       - "docker-compose.yml"
       - "vercel.json"
+      - "docs/deployment.md"
+      - "docs/website-architecture.md"
       - ".env.example"
       - ".github/workflows/**"
 

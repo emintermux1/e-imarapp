@@ -10,8 +10,9 @@ This is the canonical polished GIS product frontend for the repository at
 `apps/e_imar_web`. The older `frontend/`, `apps/web/`, `apps/web-next/`, and
 `apps/e_imar_next/` apps are legacy/reference workspaces unless explicitly migrated.
 
-> This package replaces the previous Vite shell. The Flutter mobile app at
-> `apps/e_imar_mobile/` is **not** modified by this work.
+> This package replaces previous web prototypes. The Flutter mobile app currently
+> lives at `legacy/apps/e_imar_mobile/`; it is a compile-checked prototype, not
+> the production mobile surface and not a store/release deployment target.
 
 ---
 
@@ -30,7 +31,9 @@ npm run web:preview
 npm run web:smoke
 ```
 
-The repo-root `web:*` scripts intentionally point to this canonical app.
+The repo-root `web:*` scripts intentionally point to this canonical app. Vercel
+deployment also runs from the repository root via `vercel.json`, installs this
+package, builds this package, and serves `apps/e_imar_web/.next`.
 
 The first install runs `scripts/copy-cesium-assets.mjs` (also wired to
 `predev` and `prebuild`). It copies Cesium's runtime workers, widgets,
@@ -98,7 +101,10 @@ GET /readyz
 
 `/healthz` is a no-store uptime probe. `/readyz` is stricter and returns 503 in
 production if the app cannot resolve a live API/vector tile parcel source or if
-demo fallback is enabled.
+demo fallback is enabled. Do not call a public Vercel/domain deployment live
+from repository config alone; verify Vercel produced a deployment and that
+`/healthz` returns 200. A rendered shell with `/readyz` 503 means the web app is
+up but production parcel data is not ready.
 
 ---
 

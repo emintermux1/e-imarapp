@@ -76,10 +76,17 @@ Session tokens are HMAC-signed with `WEBSITE_SESSION_SECRET`.
 
 ## Production deployment pattern
 
+The canonical web deployment path is the repository-root Vercel project defined
+by `vercel.json`, serving the Next.js app in `apps/e_imar_web`. See
+`docs/deployment.md` for the exact deploy commands, environment variables, and
+verification checks. Do not claim a Vercel domain is live until a deployment and
+`/healthz` response have been verified; use `/readyz` to distinguish a reachable
+web shell from production-ready live data.
+
 - Web app server -> API gateway -> NestJS API
 - Redis + BullMQ for async tasks
 - PostgreSQL/PostGIS for geospatial state
 - MinIO/S3 for artifacts
 - OpenSearch for indexing/search
 
-No fake datasets should be introduced in this layer; all unavailable integrations must return explicit readiness states.
+No fake datasets should be introduced in this layer; all unavailable integrations must return explicit readiness states. Public metadata, fallback/cache, protected, source-not-found, not-ready, and unavailable states are allowed only when clearly labelled and must not be presented as official live data.

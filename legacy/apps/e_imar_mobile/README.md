@@ -1,6 +1,10 @@
-# E-İmar Mobil
+# E-İmar Mobil (legacy prototype)
 
-Premium Flutter foundation for Turkey's E-İmar & Emsal Sorgu mobile product.
+Flutter foundation for Turkey's E-İmar & Emsal Sorgu mobile product exploration.
+This workspace is currently a legacy/prototype surface: it is compile-checked in
+CI, but it is not the production mobile app and does not define a store/release
+deployment pipeline. The current production deploy path for this repository is
+the web app in `apps/e_imar_web`.
 
 ## What this app foundation covers
 
