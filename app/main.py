@@ -9,6 +9,7 @@ from app.config import settings
 from app.core.logging import setup_logging
 from app.database import safe_init_db
 from app.routers import (
+    admin,
     analysis,
     aski,
     auth,
@@ -68,6 +69,7 @@ def create_app():
     )
 
     app.include_router(health.router, prefix="", tags=["health"])
+    app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
     app.include_router(parcels.router, prefix="/api/v1", tags=["parcels"])
     app.include_router(plans.router, prefix="/api/v1", tags=["plans"])
