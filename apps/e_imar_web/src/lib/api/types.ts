@@ -71,6 +71,43 @@ export interface MunicipalityCoverageResponse extends StatusEnvelope {
   municipalities: MunicipalityCoverageEntry[];
 }
 
+export interface SourceStatusEntry {
+  id: string;
+  name: string;
+  status:
+    | "available"
+    | "captcha_required"
+    | "requires_credentials"
+    | "unavailable"
+    | "unknown";
+  method: "soap" | "wms" | "netgis" | "html" | "unknown";
+  lastChecked: string | null;
+  endpoints?: string[];
+  baseUrl: string;
+  type: "keos" | "webgis" | "ekent" | "custom";
+  vendor: string;
+  region: "istanbul" | "ankara" | "izmir" | "diger";
+  bbox: [number, number, number, number];
+}
+
+export interface WebsiteSearchResult {
+  label: string;
+  municipalityId: string;
+  bbox: [number, number, number, number];
+  parcelData?: {
+    ada?: string;
+    parsel?: string;
+    imarDurumu?: string;
+  };
+  source: string;
+}
+
+export interface WebsiteSearchResponse {
+  type: "parcel" | "address" | "municipality" | "coordinate";
+  results: WebsiteSearchResult[];
+  message?: string;
+}
+
 export interface MunicipalParcelWorkflowAttempt {
   status: string;
   source: string | null;
@@ -88,10 +125,21 @@ export interface MunicipalParcelWorkflowResponse extends StatusEnvelope {
     mahalle?: string;
     ada?: string;
     parsel?: string;
+    lng?: number;
+    lat?: number;
   };
   municipalityCapability: MunicipalityCapability;
   parcelGeometryAttempt: MunicipalParcelWorkflowAttempt;
   zoningAttempt: MunicipalParcelWorkflowAttempt;
+  parcelData?: {
+    ada?: string;
+    parsel?: string;
+    imarDurumu?: string;
+    planNotu?: string;
+    sourceUrl?: string;
+    method?: string;
+    status?: string;
+  } | null;
   noDataReason: string;
   provenance: ProvenanceRecord[];
 }

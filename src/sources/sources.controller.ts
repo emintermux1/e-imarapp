@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { DiscoveryJob } from '../jobs/discovery.job';
 import { SourceActivationService } from './source-activation.service';
 import { SourceAccessStatus } from './source-registry';
 import { SourcesService } from './sources.service';
@@ -7,7 +8,11 @@ import { SourcesService } from './sources.service';
 @ApiTags('sources')
 @Controller(['sources', 'api/v1/sources'])
 export class SourcesController {
-  constructor(private readonly sources: SourcesService, private readonly activation?: SourceActivationService) {}
+  constructor(
+    private readonly sources: SourcesService,
+    private readonly activation?: SourceActivationService,
+    private readonly discovery?: DiscoveryJob
+  ) {}
 
   @Get()
   list() {
@@ -127,6 +132,11 @@ export class SourcesController {
     @Query('accessStatus') accessStatus?: SourceAccessStatus
   ) {
     return this.sources.municipalityCoverage({ province, district, vendor, accessStatus });
+  }
+
+  @Get('status')
+  sourceStatus() {
+    return this.discovery?.status() ?? [];
   }
 
   @Get('municipalities/:id/capability')

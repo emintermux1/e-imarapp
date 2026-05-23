@@ -64,9 +64,16 @@ export class WebsiteController {
       mahalle?: string;
       ada?: string;
       parsel?: string;
+      lng?: number;
+      lat?: number;
     }
   ) {
     return this.website.municipalParcelWorkflow(body);
+  }
+
+  @Post('bff/search')
+  search(@Body() body: { query: string; municipalityId?: string }) {
+    return this.website.search(body);
   }
 
   @Post('bff/parcel-report')

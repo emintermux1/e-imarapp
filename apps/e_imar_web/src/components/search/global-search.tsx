@@ -1,11 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { Search, ArrowRight, MapPin, Building2, Hash, Crosshair } from "lucide-react";
+import {
+  Search,
+  ArrowRight,
+  MapPin,
+  Building2,
+  Hash,
+  Crosshair,
+} from "lucide-react";
 import {
   Popover,
   PopoverAnchor,
-  PopoverContent
+  PopoverContent,
 } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -13,12 +20,13 @@ import {
   CommandList,
   CommandGroup,
   CommandItem,
-  CommandEmpty
+  CommandEmpty,
 } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
 import { useSearch, type SearchMode } from "@/hooks/use-search";
 import { useHistoryStore } from "@/stores/history-store";
 import { useMapStore } from "@/stores/map-store";
+import { useMunicipalityStore } from "@/stores/municipality-store";
 import { useUIStore } from "@/stores/ui-store";
 import { ZoningBadge } from "@/components/gis/zoning-badge";
 import { SourceBadge } from "@/components/gis/source-badge";
@@ -27,18 +35,24 @@ import type { SearchResult } from "@/types/geo";
 import { cn } from "@/lib/utils";
 import { getLocationBoundary } from "@/data/location-boundaries";
 
-const TABS: SearchMode[] = ["Hepsi", "AdaParsel", "Koordinat", "Adres", "Belediye"];
+const TABS: SearchMode[] = [
+  "Hepsi",
+  "AdaParsel",
+  "Koordinat",
+  "Adres",
+  "Belediye",
+];
 const TAB_LABELS: Record<SearchMode, string> = {
   Hepsi: "Hepsi",
   AdaParsel: "Ada/Parsel",
   Koordinat: "Koordinat",
   Adres: "Adres",
-  Belediye: "Belediye"
+  Belediye: "Belediye",
 };
 const SUGGESTIONS = [
   { primary: "Beşiktaş Levent 1234/2", mode: "AdaParsel" as SearchMode },
   { primary: "Çankaya Çukurambar", mode: "Adres" as SearchMode },
-  { primary: "İstanbul Büyükşehir Belediyesi", mode: "Belediye" as SearchMode }
+  { primary: "İstanbul Büyükşehir Belediyesi", mode: "Belediye" as SearchMode },
 ];
 
 const PLACEHOLDERS: Record<SearchMode, string> = {
@@ -46,7 +60,7 @@ const PLACEHOLDERS: Record<SearchMode, string> = {
   AdaParsel: "Örn. 1234/2 veya 1234-2",
   Koordinat: "Örn. 41.04321, 29.00821",
   Adres: "Mahalle, ilçe, il…",
-  Belediye: "Belediye adı…"
+  Belediye: "Belediye adı…",
 };
 
 export function GlobalSearch() {
@@ -56,6 +70,10 @@ export function GlobalSearch() {
   const flyTo = useMapStore((s) => s.flyTo);
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
   const setSelectedArea = useMapStore((s) => s.setSelectedArea);
+  const setSelectedPoint = useMapStore((s) => s.setSelectedPoint);
+  const setSelectedMunicipality = useMunicipalityStore(
+    (s) => s.setSelectedMunicipality,
+  );
 
   const [mode, setMode] = React.useState<SearchMode>("Hepsi");
   const [query, setQuery] = React.useState("");
@@ -104,12 +122,19 @@ export function GlobalSearch() {
     pushHistory({
       query: r.primary,
       mode: mode === "AdaParsel" ? "AdaParsel" : mode,
-      resultCount: results.length
+      resultCount: results.length,
     });
     setSearchOpen(false);
     setQuery("");
     if (r.type === "parcel") {
       setSelectedArea(null);
+      if (r.municipalityId) {
+        setSelectedMunicipality({
+          municipalityId: r.municipalityId,
+          municipalityName: r.secondary ?? r.primary,
+          sourceId: r.municipalityId,
+        });
+      }
       setSelectedParcelId(r.parcelId);
       setRightPanelOpen(true);
       if (r.centroid) {
@@ -119,25 +144,49 @@ export function GlobalSearch() {
       setSelectedArea(null);
       setSelectedParcelId(null);
       flyTo({ center: [r.lng, r.lat], zoom: 14 });
+      window.dispatchEvent(
+        new CustomEvent("eimar:map:coordinate-query", {
+          detail: { lng: r.lng, lat: r.lat },
+        }),
+      );
     } else if (r.centroid) {
       setSelectedParcelId(null);
-      const boundary = r.type === "address" || r.type === "location"
-        ? getLocationBoundary({ il: r.il, ilce: r.ilce, mahalle: r.mahalle })
-        : undefined;
-      setSelectedArea(boundary ? {
-        id: boundary.id,
-        kind: boundary.kind,
-        label: boundary.label,
-        il: boundary.il,
-        ilce: boundary.ilce,
-        mahalle: boundary.mahalle,
-        feature: boundary.feature
-      } : null);
+      const boundary =
+        r.type === "address" || r.type === "location"
+          ? getLocationBoundary({ il: r.il, ilce: r.ilce, mahalle: r.mahalle })
+          : undefined;
+      if (r.type === "belediye" && r.municipalityId) {
+        setSelectedMunicipality({
+          municipalityId: r.municipalityId,
+          municipalityName: r.primary,
+          sourceId: r.municipalityId,
+        });
+      }
+      setSelectedArea(
+        boundary
+          ? {
+              id: boundary.id,
+              kind: boundary.kind,
+              label: boundary.label,
+              il: boundary.il,
+              ilce: boundary.ilce,
+              mahalle: boundary.mahalle,
+              feature: boundary.feature,
+            }
+          : null,
+      );
       flyTo({
         center: r.centroid,
         bounds: r.bbox ?? boundary?.bounds,
-        zoom: r.type === "address" ? 12 : 11
+        zoom: r.type === "address" ? 12 : 11,
       });
+      if (r.type === "address") {
+        setSelectedPoint({
+          lng: r.centroid[0],
+          lat: r.centroid[1],
+          source: "search",
+        });
+      }
     }
   }
 
@@ -186,7 +235,7 @@ export function GlobalSearch() {
               "group flex h-11 w-full items-center gap-2 rounded-full px-4",
               "border border-white/60 bg-white/82 text-sm text-fg-secondary shadow-[inset_0_1px_0_rgb(255_255_255/0.9),0_14px_36px_-28px_rgb(var(--accent-navy)/0.7)]",
               "transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-brand-green/45 hover:bg-white active:scale-[0.99]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
             )}
             aria-label="Ara"
           >
@@ -231,7 +280,13 @@ export function GlobalSearch() {
               </TabsList>
             </Tabs>
             <span className="text-[11px] text-fg-muted hidden sm:inline">
-              {searchState.loading ? "API aranıyor…" : results.length > 0 ? `${results.length} sonuç` : query ? "Sonuç yok" : "İmleciniz hazır"}
+              {searchState.loading
+                ? "API aranıyor…"
+                : results.length > 0
+                  ? `${results.length} sonuç`
+                  : query
+                    ? "Sonuç yok"
+                    : "İmleciniz hazır"}
             </span>
           </div>
 
@@ -244,7 +299,9 @@ export function GlobalSearch() {
                       <CommandItem
                         key={h.id}
                         selected={active === idx}
-                        onSelectItem={() => handleSelectHistory(h.query, h.mode)}
+                        onSelectItem={() =>
+                          handleSelectHistory(h.query, h.mode)
+                        }
                       >
                         <span className="inline-flex h-6 w-6 items-center justify-center rounded-sm border border-border-subtle bg-surface-1 text-fg-muted shrink-0">
                           <Hash className="h-3.5 w-3.5" />
@@ -280,7 +337,8 @@ export function GlobalSearch() {
               </>
             ) : results.length === 0 ? (
               <CommandEmpty>
-                {searchState.message ?? "Sonuç bulunamadı. Farklı sekme veya ada/parsel formatı deneyin."}
+                {searchState.message ??
+                  "Sonuç bulunamadı. Farklı sekme veya ada/parsel formatı deneyin."}
               </CommandEmpty>
             ) : (
               <ResultGroups
@@ -311,7 +369,7 @@ function ResultGroups({
   results,
   activeIndex,
   onSelect,
-  groupedByType
+  groupedByType,
 }: {
   results: SearchResult[];
   activeIndex: number;
@@ -332,13 +390,18 @@ function ResultGroups({
       </CommandGroup>
     );
   }
-  const groupOrder: Array<SearchResult["type"]> = ["coordinate", "parcel", "address", "belediye"];
+  const groupOrder: Array<SearchResult["type"]> = [
+    "coordinate",
+    "parcel",
+    "address",
+    "belediye",
+  ];
   const headings: Record<SearchResult["type"], string> = {
     coordinate: "Koordinat",
     parcel: "Parsel",
     location: "Konum",
     address: "Adres",
-    belediye: "Belediye"
+    belediye: "Belediye",
   };
   let runningIdx = 0;
   return (
@@ -369,7 +432,7 @@ function ResultGroups({
 function ResultRow({
   result,
   selected,
-  onSelect
+  onSelect,
 }: {
   result: SearchResult;
   selected: boolean;
@@ -378,14 +441,12 @@ function ResultRow({
   const icon = (() => {
     if (result.type === "parcel") return <Hash className="h-3.5 w-3.5" />;
     if (result.type === "address") return <MapPin className="h-3.5 w-3.5" />;
-    if (result.type === "coordinate") return <Crosshair className="h-3.5 w-3.5" />;
+    if (result.type === "coordinate")
+      return <Crosshair className="h-3.5 w-3.5" />;
     return <Building2 className="h-3.5 w-3.5" />;
   })();
   return (
-    <CommandItem
-      selected={selected}
-      onSelectItem={onSelect}
-    >
+    <CommandItem selected={selected} onSelectItem={onSelect}>
       <span className="inline-flex h-6 w-6 items-center justify-center rounded-sm border border-border-subtle bg-surface-1 text-fg-muted shrink-0">
         {icon}
       </span>
@@ -396,28 +457,63 @@ function ResultRow({
             {result.secondary}
           </div>
         )}
-        {result.type === "parcel" && (result.meta || result.qualityHints?.length || result.ambiguityCount) && (
-          <div className="mt-1 flex flex-wrap gap-1 overflow-hidden text-[9.5px] leading-none text-fg-muted">
-            {result.meta && <span className="truncate rounded-sm border border-border-subtle bg-surface-1 px-1.5 py-1">{result.meta}</span>}
-            {result.ambiguityCount && result.ambiguityCount > 1 && <span className="rounded-sm border border-status-warning/30 bg-status-warning/10 px-1.5 py-1 text-status-warning">Aynı ada/parsel farklı ilçelerde var</span>}
-            {result.qualityHints?.slice(0, 1).map((hint) => <span key={hint} className="hidden max-w-[220px] truncate rounded-sm border border-border-subtle bg-surface-1 px-1.5 py-1 sm:inline">{hint}</span>)}
-          </div>
-        )}
+        {result.type === "parcel" &&
+          (result.meta ||
+            result.qualityHints?.length ||
+            result.ambiguityCount) && (
+            <div className="mt-1 flex flex-wrap gap-1 overflow-hidden text-[9.5px] leading-none text-fg-muted">
+              {result.meta && (
+                <span className="truncate rounded-sm border border-border-subtle bg-surface-1 px-1.5 py-1">
+                  {result.meta}
+                </span>
+              )}
+              {result.ambiguityCount && result.ambiguityCount > 1 && (
+                <span className="rounded-sm border border-status-warning/30 bg-status-warning/10 px-1.5 py-1 text-status-warning">
+                  Aynı ada/parsel farklı ilçelerde var
+                </span>
+              )}
+              {result.qualityHints?.slice(0, 1).map((hint) => (
+                <span
+                  key={hint}
+                  className="hidden max-w-[220px] truncate rounded-sm border border-border-subtle bg-surface-1 px-1.5 py-1 sm:inline"
+                >
+                  {hint}
+                </span>
+              ))}
+            </div>
+          )}
       </div>
       {result.type === "parcel" && (
         <div className="flex max-w-[52%] shrink-0 flex-col items-end gap-1">
           <span className="inline-flex items-center gap-1.5">
-            {result.sourceStatus && <SourceBadge status={result.sourceStatus} />}
+            {result.sourceStatus && (
+              <SourceBadge status={result.sourceStatus} />
+            )}
             <ZoningBadge type={result.zoningType} size="xs" />
           </span>
           <span className="hidden max-w-full items-center gap-1 overflow-hidden text-[9.5px] text-fg-muted sm:inline-flex">
             {result.geometryAvailable != null && (
-              <span className={cn("truncate", result.geometryAvailable ? "text-status-success" : "text-status-warning")}>
+              <span
+                className={cn(
+                  "truncate",
+                  result.geometryAvailable
+                    ? "text-status-success"
+                    : "text-status-warning",
+                )}
+              >
                 {geometryLabel(result.geometryAvailable)}
               </span>
             )}
-            {result.planMatchStatus && <span className="truncate">Plan {matchStatusLabel(result.planMatchStatus)}</span>}
-            {result.askiMatchStatus && <span className="truncate">Askı {matchStatusLabel(result.askiMatchStatus)}</span>}
+            {result.planMatchStatus && (
+              <span className="truncate">
+                Plan {matchStatusLabel(result.planMatchStatus)}
+              </span>
+            )}
+            {result.askiMatchStatus && (
+              <span className="truncate">
+                Askı {matchStatusLabel(result.askiMatchStatus)}
+              </span>
+            )}
           </span>
         </div>
       )}

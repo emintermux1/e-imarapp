@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AnalysisService } from '../analysis/analysis.service';
+import { KeosConnector } from '../connectors/keos.connector';
 import { ConnectorKind } from '../connectors/connector.types';
 import { dataAttribution } from '../common/data-attribution';
 import { provenanceRecord } from '../common/provenance';
@@ -14,6 +15,7 @@ import { ParcelQueryDto } from '../parcels/dto/parcel-query.dto';
 import { ParcelsService } from '../parcels/parcels.service';
 import { SourcesService } from '../sources/sources.service';
 import { SourceActivationService } from '../sources/source-activation.service';
+import { findMunicipalRegistryEntry, MUNICIPAL_REGISTRY, municipalitiesContainingCoordinate, normalizeMunicipalText } from '../sources/municipal-registry';
 import { SimulationService } from '../simulation/simulation.service';
 import { UserDataService } from '../user-data/user-data.service';
 import { buildParcelReport } from './parcel-report';
@@ -33,6 +35,13 @@ interface MunicipalParcelWorkflowInput {
   mahalle?: string;
   ada?: string;
   parsel?: string;
+  lng?: number;
+  lat?: number;
+}
+
+interface WebsiteSearchInput {
+  query: string;
+  municipalityId?: string;
 }
 
 type WebsiteProbeStatus =
@@ -59,7 +68,8 @@ export class WebsiteService {
     private readonly ingestion: IngestionService,
     private readonly sources: SourcesService,
     private readonly sourceActivation: SourceActivationService,
-    private readonly market: MarketService
+    private readonly market: MarketService,
+    private readonly keos?: KeosConnector
   ) {}
 
   architecture() {
@@ -194,6 +204,73 @@ export class WebsiteService {
     return this.market.inspectParcelMarket(input.query);
   }
 
+  async search(input: WebsiteSearchInput): Promise<unknown> {
+    const query = input.query?.trim() ?? '';
+    if (!query) return { type: 'address', results: [] };
+
+    const coordinate = this.parseCoordinate(query);
+    if (coordinate) {
+      const municipality = municipalitiesContainingCoordinate(coordinate.lng, coordinate.lat)[0];
+      const bbox = municipality?.bbox ?? this.pointBBox(coordinate.lng, coordinate.lat);
+      return {
+        type: 'coordinate',
+        results: [{
+          label: `${coordinate.lat.toFixed(5)}, ${coordinate.lng.toFixed(5)}`,
+          municipalityId: municipality?.id ?? input.municipalityId ?? '',
+          bbox,
+          source: 'coordinate'
+        }]
+      };
+    }
+
+    const parcel = this.parseAdaParsel(query);
+    if (parcel) {
+      const municipality = findMunicipalRegistryEntry(input.municipalityId) ?? this.findMunicipalityInText(query);
+      if (!municipality) {
+        return {
+          type: 'parcel',
+          results: [],
+          message: 'Ada/parsel sorgusu için aktif belediye seçilmelidir.'
+        };
+      }
+      const parcelData = this.keos
+        ? await this.keos.queryParcel({ municipalityId: municipality.id, ada: parcel.ada, parsel: parcel.parsel })
+        : null;
+      return {
+        type: 'parcel',
+        results: [{
+          label: `${municipality.name} · ${parcel.ada} ada ${parcel.parsel} parsel`,
+          municipalityId: municipality.id,
+          bbox: municipality.bbox,
+          parcelData: {
+            ada: parcelData?.ada ?? parcel.ada,
+            parsel: parcelData?.parsel ?? parcel.parsel,
+            imarDurumu: parcelData?.imarDurumu ?? parcelData?.message ?? undefined
+          },
+          source: parcelData?.sourceUrl ?? municipality.baseUrl
+        }]
+      };
+    }
+
+    const municipalityResults = this.searchMunicipalities(query);
+    if (municipalityResults.length) {
+      return {
+        type: 'municipality',
+        results: municipalityResults.map((municipality) => ({
+          label: municipality.name,
+          municipalityId: municipality.id,
+          bbox: municipality.bbox,
+          source: municipality.baseUrl
+        }))
+      };
+    }
+
+    return {
+      type: 'address',
+      results: await this.searchAddress(query)
+    };
+  }
+
   private readinessSource(input: {
     sourceId: string;
     sourceName: string;
@@ -307,16 +384,19 @@ export class WebsiteService {
 
   async municipalParcelWorkflow(input: MunicipalParcelWorkflowInput): Promise<unknown> {
     const source = this.sources.findMunicipality({ id: input.municipalityId, municipalitySlug: input.municipalitySlug, province: input.province, district: input.district });
+    const municipalEntry = findMunicipalRegistryEntry(input.municipalityId) ?? findMunicipalRegistryEntry(input.municipalitySlug) ?? findMunicipalRegistryEntry(source?.metadata?.municipalitySlug);
     const normalized = {
       province: input.province?.trim(),
-      district: input.district?.trim() ?? source?.metadata?.district,
-      municipalityId: input.municipalityId ?? source?.id,
-      municipalitySlug: input.municipalitySlug ?? source?.metadata?.municipalitySlug,
+      district: input.district?.trim() ?? source?.metadata?.district ?? municipalEntry?.district,
+      municipalityId: input.municipalityId ?? source?.id ?? municipalEntry?.id,
+      municipalitySlug: input.municipalitySlug ?? source?.metadata?.municipalitySlug ?? municipalEntry?.id,
       mahalle: input.mahalle?.trim(),
       ada: input.ada?.trim(),
-      parsel: input.parsel?.trim()
+      parsel: input.parsel?.trim(),
+      lng: typeof input.lng === 'number' ? input.lng : undefined,
+      lat: typeof input.lat === 'number' ? input.lat : undefined
     };
-    if (!source) {
+    if (!source && !municipalEntry) {
       return {
         status: 'source_not_found',
         query: normalized,
@@ -330,18 +410,28 @@ export class WebsiteService {
         })
       };
     }
-    const capability = this.sources.municipalityCapabilityForSource(source);
-    const activation = this.sourceActivation.activationForSource(source);
+    const capability = source ? this.sources.municipalityCapabilityForSource(source) : this.sources.municipalityCapability(municipalEntry?.id ?? '');
+    const activation = source ? this.sourceActivation.activationForSource(source) : null;
     const protectedSource = capability.protected;
-    const endpointCandidate = source.homepageUrl;
+    const endpointCandidate = source?.homepageUrl ?? municipalEntry?.baseUrl ?? '';
+    const liveParcel = !protectedSource && this.keos && municipalEntry
+      ? await this.keos.queryParcel({
+          municipalityId: municipalEntry.id,
+          ada: normalized.ada,
+          parsel: normalized.parsel,
+          lng: normalized.lng,
+          lat: normalized.lat,
+          bbox: municipalEntry.bbox
+        })
+      : null;
     const provenance = [provenanceRecord({
-      sourceId: source.id,
-      sourceName: source.name,
+      sourceId: source?.id ?? municipalEntry?.id ?? '',
+      sourceName: source?.name ?? municipalEntry?.name ?? '',
       endpoint: endpointCandidate,
       dataType: 'public_metadata',
-      connectorKind: source.connectorKinds[0],
-      status: 'public_discovery',
-      confidence: activation.activationStatus === 'active' ? 0.7 : 0.45,
+      connectorKind: source?.connectorKinds[0] ?? ConnectorKind.MunicipalPortal,
+      status: liveParcel?.status ?? 'public_discovery',
+      confidence: liveParcel?.status === 'available' ? 0.78 : activation?.activationStatus === 'active' ? 0.7 : 0.45,
       limitations: [
         'Public metadata/discovery is not an official signed imar document.',
         protectedSource ? 'Kaynak captcha/login gerektiriyor; korumalı akış bypass edilmez.' : 'Normalized imar fields wait for endpoint contract resolution.'
@@ -354,14 +444,18 @@ export class WebsiteService {
       message: protectedSource ? 'Kaynak korumalı olduğu için parsel geometri akışı durduruldu.' : 'TKGM public parsel portalı bilgi amaçlı geometri eşleştirmesi için kullanılır; sonuç resmi belge olarak sunulmaz.'
     };
     const zoningAttempt = {
-      status: protectedSource ? 'protected' : activation.activationStatus === 'active' ? 'active_public_source' : 'public_discovery',
-      source: source.id,
-      endpoint: activation.usableEndpoints[0] ?? endpointCandidate,
-      method: undefined as string | undefined,
-      message: protectedSource ? 'Kaynak captcha/login gerektiriyor.' : activation.activationStatus === 'active' ? 'Public kaynak aktif; veri metodu provenance ile kullanılabilir.' : 'Public kaynak kayıtlı; servis metodu discovery ile çözülür.'
+      status: protectedSource ? 'protected' : liveParcel?.status === 'available' ? 'active_public_source' : activation?.activationStatus === 'active' ? 'active_public_source' : liveParcel?.status ?? 'public_discovery',
+      source: source?.id ?? municipalEntry?.id ?? null,
+      endpoint: liveParcel?.endpoint ?? activation?.usableEndpoints[0] ?? endpointCandidate,
+      method: liveParcel?.method,
+      message: protectedSource
+        ? 'Kaynak captcha/login gerektiriyor.'
+        : liveParcel?.status === 'available'
+          ? 'Public belediye kaynağından canlı yanıt alındı.'
+          : liveParcel?.message ?? (activation?.activationStatus === 'active' ? 'Public kaynak aktif; veri metodu provenance ile kullanılabilir.' : 'Public kaynak kayıtlı; servis metodu discovery ile çözülür.')
     };
-    const status = protectedSource ? 'protected' : activation.activationStatus;
-    const noDataReason = protectedSource ? 'Kaynak captcha/login gerektiriyor' : activation.nextAction;
+    const status = protectedSource ? 'protected' : liveParcel?.status === 'available' ? 'active' : activation?.activationStatus ?? liveParcel?.status ?? 'metadata_only';
+    const noDataReason = protectedSource ? 'Kaynak captcha/login gerektiriyor' : liveParcel?.message ?? activation?.nextAction ?? 'Public kaynak registry içinde; canlı endpoint discovery sonucu bekleniyor.';
     return {
       status,
       query: normalized,
@@ -369,9 +463,102 @@ export class WebsiteService {
       sourceActivation: activation,
       parcelGeometryAttempt,
       zoningAttempt,
+      parcelData: liveParcel ? {
+        ada: liveParcel.ada,
+        parsel: liveParcel.parsel,
+        imarDurumu: liveParcel.imarDurumu,
+        planNotu: liveParcel.planNotu,
+        sourceUrl: liveParcel.sourceUrl,
+        method: liveParcel.method,
+        status: liveParcel.status
+      } : null,
       noDataReason,
       ...dataAttribution({ provenance, limitations: [noDataReason] })
     };
+  }
+
+  private parseAdaParsel(query: string): { ada: string; parsel: string } | null {
+    const text = query.trim();
+    const explicit = text.match(/(\d+)\s*ada\s*(\d+)\s*parsel/i);
+    if (explicit) return { ada: explicit[1], parsel: explicit[2] };
+    const slash = text.match(/(\d+)\/(\d+)/);
+    if (slash) return { ada: slash[1], parsel: slash[2] };
+    return null;
+  }
+
+  private parseCoordinate(query: string): { lng: number; lat: number } | null {
+    const match = query.trim().match(/^(-?\d+(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d+(?:[.,]\d+)?)$/);
+    if (!match) return null;
+    const first = Number(match[1].replace(',', '.'));
+    const second = Number(match[2].replace(',', '.'));
+    if (!Number.isFinite(first) || !Number.isFinite(second)) return null;
+    const aIsLat = first >= 35 && first <= 43 && second >= 25 && second <= 45;
+    const bIsLat = second >= 35 && second <= 43 && first >= 25 && first <= 45;
+    if (aIsLat) return { lat: first, lng: second };
+    if (bIsLat) return { lat: second, lng: first };
+    return null;
+  }
+
+  private findMunicipalityInText(query: string) {
+    const normalized = normalizeMunicipalText(query);
+    return MUNICIPAL_REGISTRY.find((entry) => normalized.includes(normalizeMunicipalText(entry.id)) || normalized.includes(normalizeMunicipalText(entry.name.replace(/ Belediyesi$/i, ''))));
+  }
+
+  private searchMunicipalities(query: string) {
+    const normalized = normalizeMunicipalText(query.replace(/\bimar\b/iu, ''));
+    if (!normalized) return [];
+    return MUNICIPAL_REGISTRY.filter((entry) => {
+      const name = normalizeMunicipalText(entry.name);
+      return name.includes(normalized) || normalized.includes(normalizeMunicipalText(entry.id));
+    }).slice(0, 8);
+  }
+
+  private async searchAddress(query: string) {
+    const results = await this.searchNominatim(query);
+    return results.map((result) => {
+      const municipality = municipalitiesContainingCoordinate(result.lng, result.lat)[0];
+      return {
+        label: result.label,
+        municipalityId: municipality?.id ?? '',
+        bbox: result.bbox ?? municipality?.bbox ?? this.pointBBox(result.lng, result.lat),
+        source: result.source
+      };
+    });
+  }
+
+  private async searchNominatim(query: string): Promise<Array<{ label: string; lng: number; lat: number; bbox?: [number, number, number, number]; source: string }>> {
+    const url = new URL('https://nominatim.openstreetmap.org/search');
+    url.searchParams.set('format', 'jsonv2');
+    url.searchParams.set('limit', '5');
+    url.searchParams.set('countrycodes', 'tr');
+    url.searchParams.set('q', query);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: { 'User-Agent': 'e-imarapp-address-search/0.1', Accept: 'application/json' }
+      });
+      if (!response.ok) return [];
+      const rows = await response.json() as Array<{ display_name?: string; lon?: string; lat?: string; boundingbox?: string[] }>;
+      return rows.map((row) => {
+        const lng = Number(row.lon);
+        const lat = Number(row.lat);
+        const bbox = row.boundingbox?.length === 4
+          ? [Number(row.boundingbox[2]), Number(row.boundingbox[0]), Number(row.boundingbox[3]), Number(row.boundingbox[1])] as [number, number, number, number]
+          : undefined;
+        return { label: row.display_name ?? query, lng, lat, bbox, source: 'nominatim' };
+      }).filter((row) => Number.isFinite(row.lng) && Number.isFinite(row.lat));
+    } catch {
+      return [];
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  private pointBBox(lng: number, lat: number): [number, number, number, number] {
+    const delta = 0.01;
+    return [lng - delta, lat - delta, lng + delta, lat + delta];
   }
 
   async parcelReport(input: {
