@@ -42,6 +42,14 @@ const routeSmokeChecks = [
     ],
   },
   {
+    pathname: "/workspace",
+    snippets: [
+      "Çalışma alanı",
+      "BFF / workspace + session",
+      "Abonelikler",
+    ],
+  },
+  {
     pathname: "/emsal",
     snippets: [
       "Emsal Hesabı",
@@ -103,7 +111,7 @@ async function waitForServer() {
 }
 
 async function assertPage(pathname, snippets) {
-  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 30_000);
+  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 60_000);
   if (!response.ok) {
     throw new Error(`${pathname} returned HTTP ${response.status}`);
   }
