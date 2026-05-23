@@ -6,6 +6,7 @@ const routes = [
   { path: "/kaynaklar", priority: 0.9 },
   { path: "/plan-notu", priority: 0.8 },
   { path: "/calisma-alani", priority: 0.8 },
+  { path: "/workspace", priority: 0.8 },
   { path: "/emsal", priority: 0.7 }
 ];
 

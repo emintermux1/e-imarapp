@@ -2,20 +2,33 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Bell, CheckCircle2, Database, History, KeyRound, Loader2, Star, TriangleAlert, UserRound } from "lucide-react";
+import { ArrowLeft, Database, KeyRound, Loader2, UserRound } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
+import { StateError } from "@/components/states/state-error";
 import { Button } from "@/components/ui/button";
+import { PremiumModulePanel } from "@/components/workspace/premium-module-panel";
+import { SessionPanel } from "@/components/workspace/session-panel";
+import { type SubscriptionFormState } from "@/components/workspace/subscriptions-tab";
+import { WorkspaceTabs } from "@/components/workspace/workspace-tabs";
 import {
   getPremiumModuleStates,
   getWebsiteWorkspace,
   humanizeApiError,
+  listEplanSubscriptions,
   startWebsiteSession,
+  upsertEplanSubscription,
   verifyWebsiteSession
 } from "@/lib/api/backend-client";
-import type { PremiumModuleState, WebsiteSessionStartResponse, WebsiteSessionVerifyResponse, WebsiteWorkspaceBucket, WebsiteWorkspaceResponse } from "@/types/api";
-import { cn } from "@/lib/utils";
+import type { EplanSubscriptionResponse, PremiumModuleState, WebsiteSessionStartResponse, WebsiteSessionVerifyResponse, WebsiteWorkspaceResponse } from "@/types/api";
 
 const DEFAULT_USER = "web-cockpit";
+
+const DEFAULT_SUBSCRIPTION_FORM: SubscriptionFormState = {
+  channel: "webhook",
+  target: "",
+  platform: "external-webhook",
+  active: true
+};
 
 export default function WorkspacePage() {
   const [userReference, setUserReference] = React.useState(DEFAULT_USER);
@@ -28,20 +41,40 @@ export default function WorkspacePage() {
   const [loadingSession, setLoadingSession] = React.useState(false);
   const [premiumModules, setPremiumModules] = React.useState<PremiumModuleState[]>([]);
   const [loadingPremiumModules, setLoadingPremiumModules] = React.useState(true);
+  const [subscriptionResponse, setSubscriptionResponse] = React.useState<EplanSubscriptionResponse | null>(null);
+  const [subscriptionError, setSubscriptionError] = React.useState<string | null>(null);
+  const [subscriptionForm, setSubscriptionForm] = React.useState<SubscriptionFormState>(DEFAULT_SUBSCRIPTION_FORM);
+  const [savingSubscription, setSavingSubscription] = React.useState(false);
+
+  const activeUserReference = userReference.trim() || DEFAULT_USER;
+
+  const loadSubscriptions = React.useCallback(async (ref: string) => {
+    try {
+      const response = await listEplanSubscriptions(ref);
+      setSubscriptionResponse(response);
+      setSubscriptionError(null);
+    } catch (error) {
+      setSubscriptionResponse(null);
+      setSubscriptionError(humanizeApiError(error, "E-plan abonelikleri şu an okunamıyor."));
+    }
+  }, []);
 
   const loadWorkspace = React.useCallback(async () => {
-    const ref = userReference.trim() || DEFAULT_USER;
+    const ref = activeUserReference;
     setLoadingWorkspace(true);
     setWorkspaceError(null);
     try {
-      setWorkspace(await getWebsiteWorkspace(ref));
+      const response = await getWebsiteWorkspace(ref);
+      setWorkspace(response);
+      await loadSubscriptions(ref);
     } catch (error) {
       setWorkspace(null);
+      setSubscriptionResponse(null);
       setWorkspaceError(humanizeApiError(error, "Workspace endpoint'i şu an kullanılamıyor."));
     } finally {
       setLoadingWorkspace(false);
     }
-  }, [userReference]);
+  }, [activeUserReference, loadSubscriptions]);
 
   React.useEffect(() => {
     void loadWorkspace();
@@ -50,7 +83,7 @@ export default function WorkspacePage() {
   React.useEffect(() => {
     let alive = true;
     setLoadingPremiumModules(true);
-    getPremiumModuleStates(undefined, userReference.trim() || DEFAULT_USER)
+    getPremiumModuleStates(undefined, activeUserReference)
       .then((states) => {
         if (alive) setPremiumModules(states);
       })
@@ -60,10 +93,10 @@ export default function WorkspacePage() {
     return () => {
       alive = false;
     };
-  }, [userReference]);
+  }, [activeUserReference]);
 
   async function issueSession() {
-    const ref = userReference.trim() || DEFAULT_USER;
+    const ref = activeUserReference;
     setLoadingSession(true);
     setSessionError(null);
     setVerification(null);
@@ -81,9 +114,40 @@ export default function WorkspacePage() {
     }
   }
 
-  const historyBucket = workspace?.history;
-  const favoritesBucket = workspace?.favorites;
-  const subscriptionBucket = workspace?.subscriptions;
+  async function saveSubscription(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const target = subscriptionForm.target.trim();
+    if (!target) {
+      setSubscriptionError("Abonelik hedefi girin.");
+      return;
+    }
+    setSavingSubscription(true);
+    setSubscriptionError(null);
+    try {
+      const response = await upsertEplanSubscription({
+        userReference: activeUserReference,
+        channel: subscriptionForm.channel,
+        target,
+        platform: subscriptionForm.platform.trim() || (subscriptionForm.channel === "push" ? "web" : "external-webhook"),
+        active: subscriptionForm.active,
+        metadata: {
+          source: "workspace-ui",
+          createdBy: "calisma-alani"
+        }
+      });
+      setSubscriptionResponse(response);
+      if (response.status === "ok") {
+        setSubscriptionForm((current) => ({ ...current, target: "" }));
+        await loadWorkspace();
+      }
+    } catch (error) {
+      setSubscriptionError(humanizeApiError(error, "Abonelik kaydedilemedi."));
+    } finally {
+      setSavingSubscription(false);
+    }
+  }
+
+  const visibleWorkspaceError = workspaceError ?? subscriptionError;
 
   return (
     <AppShell>
@@ -104,7 +168,7 @@ export default function WorkspacePage() {
                     <p className="text-[11px] font-black uppercase tracking-[0.22em] text-brand-green">BFF / workspace + session</p>
                     <h1 className="mt-1 text-2xl font-black tracking-[-0.04em] text-fg-primary">Çalışma alanı</h1>
                     <p className="mt-2 max-w-2xl text-sm leading-relaxed text-fg-secondary">
-                      Geçmiş, favoriler ve plan bildirim abonelikleri tek backend workspace çağrısında toplanır; oturum secret yoksa durum açıkça `requires_credentials` kalır.
+                      Geçmiş, favoriler ve plan bildirim abonelikleri tablı tek workspace yüzeyinde birleşir; backend `not_ready`, `requires_credentials` ve `unavailable` durumları uydurma içerikle kapatılmaz.
                     </p>
                   </div>
                 </div>
@@ -114,7 +178,7 @@ export default function WorkspacePage() {
                     <input
                       value={userReference}
                       onChange={(event) => setUserReference(event.target.value)}
-                      className="h-10 w-[220px] rounded-full border border-border-subtle bg-bg px-3 text-sm text-fg-primary"
+                      className="h-10 w-[220px] rounded-full border border-border-subtle bg-bg px-3 text-sm text-fg-primary outline-none transition focus:border-brand-green/60"
                     />
                   </label>
                   <Button onClick={loadWorkspace} disabled={loadingWorkspace} variant="outline">
@@ -129,30 +193,17 @@ export default function WorkspacePage() {
               </div>
             </header>
 
-            {workspaceError && (
-              <div className="border-b border-status-warning/30 bg-status-warning/10 px-5 py-3 text-sm text-status-warning">
-                {workspaceError}
-              </div>
-            )}
-
-            <div className="grid gap-4 p-5 lg:grid-cols-3">
-              <WorkspaceBucketCard
-                icon={<History className="h-4 w-4" />}
-                title="Sorgu geçmişi"
-                bucket={historyBucket}
-                emptyText="Backend history tablosunda kayıt yok veya erişim hazır değil."
-              />
-              <WorkspaceBucketCard
-                icon={<Star className="h-4 w-4" />}
-                title="Favoriler"
-                bucket={favoritesBucket}
-                emptyText="Favori parsel/plan kaydı yok."
-              />
-              <WorkspaceBucketCard
-                icon={<Bell className="h-4 w-4" />}
-                title="Bildirim abonelikleri"
-                bucket={subscriptionBucket}
-                emptyText="E-plan aboneliği yok veya servis not_ready döndü."
+            <div className="grid gap-4 p-5">
+              {visibleWorkspaceError && <StateError title="Workspace uyarısı" description={visibleWorkspaceError} compact />}
+              <WorkspaceTabs
+                workspace={workspace}
+                loading={loadingWorkspace}
+                error={workspaceError}
+                subscriptionResponse={subscriptionResponse}
+                subscriptionForm={subscriptionForm}
+                savingSubscription={savingSubscription}
+                onSubscriptionFormChange={setSubscriptionForm}
+                onSubscriptionSubmit={saveSubscription}
               />
             </div>
           </section>
@@ -163,165 +214,4 @@ export default function WorkspacePage() {
       </div>
     </AppShell>
   );
-}
-
-function PremiumModulePanel({
-  modules,
-  loading
-}: {
-  modules: PremiumModuleState[];
-  loading: boolean;
-}) {
-  return (
-    <section className="rounded-[1.5rem] border border-border-subtle bg-surface-2/94 p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-green">Premium / readiness</p>
-          <h2 className="mt-1 text-base font-black text-fg-primary">Bağlı backend modülleri</h2>
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-fg-secondary">
-            Analiz, yapı zarfı, tevhid, e-plan ve abonelik uçları gerçek durumlarıyla gösterilir; parsel gerektiren modüller seçim yoksa `not_ready` kalır.
-          </p>
-        </div>
-        {loading && <Loader2 className="h-4 w-4 animate-spin text-fg-muted" />}
-      </div>
-      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {(modules.length ? modules : fallbackPremiumModules()).map((module) => (
-          <section key={module.key} className={cn("rounded-2xl border p-3", moduleTone(module.status))}>
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className="text-sm font-black text-fg-primary">{module.title}</h3>
-                <p className="mt-1 text-xs leading-relaxed text-fg-secondary">{module.detail}</p>
-              </div>
-              <span className="rounded-full border border-current/20 bg-white/25 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em]">
-                {module.status}
-              </span>
-            </div>
-            {module.href && (
-              <Link href={module.href} className="mt-3 inline-flex text-xs font-bold text-fg-primary underline decoration-border-strong underline-offset-4">
-                {module.actionLabel ?? "Aç"}
-              </Link>
-            )}
-          </section>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function WorkspaceBucketCard({
-  icon,
-  title,
-  bucket,
-  emptyText
-}: {
-  icon: React.ReactNode;
-  title: string;
-  bucket?: WebsiteWorkspaceBucket;
-  emptyText: string;
-}) {
-  const records = Array.isArray(bucket?.items) ? bucket.items : Array.isArray(bucket?.subscriptions) ? bucket.subscriptions : [];
-  const count = bucket?.count ?? records.length;
-  const status = bucket?.status ?? (bucket ? "ok" : "not_loaded");
-  const issue = readIssue(bucket);
-
-  return (
-    <section className="rounded-[1.5rem] border border-border-subtle bg-surface-1/80 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border-subtle bg-surface-2 text-fg-muted">{icon}</span>
-          <div>
-            <h2 className="text-sm font-black text-fg-primary">{title}</h2>
-            <p className="text-[11px] text-fg-muted">{status}</p>
-          </div>
-        </div>
-        <span className="rounded-full border border-border-subtle bg-surface-2 px-2 py-0.5 text-xs font-bold tabular-nums text-fg-primary">{count}</span>
-      </div>
-      {issue && (
-        <div className="mt-3 rounded-xl border border-status-warning/30 bg-status-warning/10 px-3 py-2 text-[11px] leading-relaxed text-status-warning">
-          {issue}
-        </div>
-      )}
-      {records.length === 0 ? (
-        <p className="mt-4 text-sm leading-relaxed text-fg-secondary">{emptyText}</p>
-      ) : (
-        <div className="mt-4 space-y-2">
-          {records.slice(0, 5).map((item, index) => (
-            <RecordPreview key={String(item.id ?? item.created_at ?? index)} item={item} />
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-function RecordPreview({ item }: { item: Record<string, unknown> }) {
-  const title = String(item.label ?? item.query_type ?? item.channel ?? item.id ?? "Kayıt");
-  const detail = String(item.created_at ?? item.updated_at ?? item.target ?? item.status ?? "Detay yok");
-  return (
-    <div className="rounded-xl border border-border-subtle bg-bg/75 px-3 py-2">
-      <div className="truncate text-sm font-semibold text-fg-primary">{title}</div>
-      <div className="mt-0.5 truncate text-[11px] text-fg-muted">{detail}</div>
-    </div>
-  );
-}
-
-function SessionPanel({
-  session,
-  verification,
-  error,
-  loading
-}: {
-  session: WebsiteSessionStartResponse | null;
-  verification: WebsiteSessionVerifyResponse | null;
-  error: string | null;
-  loading: boolean;
-}) {
-  const status = loading ? "loading" : error ? "unavailable" : verification?.status ?? session?.status ?? "idle";
-  return (
-    <section className={cn("rounded-[1.5rem] border p-4", statusTone(status))}>
-      <div className="flex items-start gap-3">
-        {status === "ok" ? <CheckCircle2 className="mt-0.5 h-5 w-5" /> : status === "loading" ? <Loader2 className="mt-0.5 h-5 w-5 animate-spin" /> : <TriangleAlert className="mt-0.5 h-5 w-5" />}
-        <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-black text-fg-primary">{status === "ok" ? "Oturum doğrulandı" : status === "idle" ? "Oturum denenmedi" : "Oturum hazır değil"}</h2>
-          <p className="mt-1 text-sm leading-relaxed text-fg-secondary">
-            {error ?? verification?.message ?? session?.message ?? "WEBSITE_SESSION_SECRET tanımlıysa token üretilip hemen verify edilir."}
-          </p>
-          {session?.token && (
-            <code className="mt-3 block max-w-full overflow-hidden text-ellipsis rounded-xl border border-border-subtle bg-bg px-3 py-2 text-[11px] text-fg-muted">
-              {session.token}
-            </code>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function readIssue(bucket?: WebsiteWorkspaceBucket) {
-  const message = bucket?.issue?.message;
-  return typeof message === "string" ? message : null;
-}
-
-function statusTone(status: string) {
-  if (status === "ok") return "border-status-success/35 bg-status-success/10 text-status-success";
-  if (status === "loading") return "border-brand-blue/30 bg-brand-blue/10 text-brand-blue";
-  if (status === "idle") return "border-border-subtle bg-surface-2/94 text-fg-muted";
-  return "border-status-warning/35 bg-status-warning/10 text-status-warning";
-}
-
-function moduleTone(status: string) {
-  if (status === "ok") return "border-status-success/30 bg-status-success/10 text-status-success";
-  if (["empty", "not_ready", "requires_credentials", "unavailable"].includes(status)) return "border-status-warning/30 bg-status-warning/10 text-status-warning";
-  return "border-brand-blue/30 bg-[rgb(var(--accent-blue)/0.08)] text-brand-blue";
-}
-
-function fallbackPremiumModules(): PremiumModuleState[] {
-  return [
-    {
-      key: "loading",
-      title: "Modüller okunuyor",
-      status: "loading",
-      detail: "Canlı endpoint durumları bekleniyor."
-    }
-  ];
 }
