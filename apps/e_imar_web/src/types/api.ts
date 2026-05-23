@@ -71,6 +71,7 @@ export interface PlanResponse {
   aski_start?: string;
   aski_end?: string;
   pdf_url?: string;
+  created_at?: string;
   gml_url?: string;
   geom_geojson?: GeoJSON.Geometry | GeoJSON.Feature | GeoJSON.FeatureCollection | Record<string, unknown>;
 }
@@ -88,6 +89,7 @@ export interface LatestRegionResponse {
   aski_start?: string;
   aski_end?: string;
   pdf_url?: string;
+  created_at?: string;
   gml_url?: string;
   source: DataSourceStatus;
   has_geometry: boolean;
@@ -109,6 +111,7 @@ export interface ReportResponse {
   plan_id?: number;
   status: string;
   pdf_url?: string;
+  created_at?: string;
 }
 
 export interface BackendMapLayerResponse {

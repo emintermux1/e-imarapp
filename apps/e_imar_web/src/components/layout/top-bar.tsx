@@ -22,6 +22,7 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { BasemapSwitcher } from "@/components/map/basemap-switcher";
 import { HeaderBreadcrumb } from "@/components/layout/header-breadcrumb";
 import { IconButton } from "@/components/ui/icon-button";
+import { NotificationBell } from "@/components/notifications/notification-center";
 import { useUIStore } from "@/stores/ui-store";
 import { useMapStore } from "@/stores/map-store";
 import {
@@ -256,6 +257,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
         <ModeToggle mapMode={mapMode} setMapMode={setMapMode} />
         <span className="hidden md:inline-flex"><BasemapSwitcher /></span>
         <span className="hidden lg:inline-flex"><ThemeToggle /></span>
+        <NotificationBell />
         <Tooltip>
           <TooltipTrigger asChild>
             <span>
