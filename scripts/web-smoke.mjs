@@ -1,0 +1,244 @@
+#!/usr/bin/env node
+import { spawn } from "node:child_process";
+
+const ROOT_DIR = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+const WEB_DIR = `${ROOT_DIR}/apps/e_imar_web`;
+const PORT = Number(process.env.WEB_SMOKE_PORT || 3100);
+const HOST = process.env.WEB_SMOKE_HOST || "127.0.0.1";
+const BASE_URL = `http://${HOST}:${PORT}`;
+const TIMEOUT_MS = Number(process.env.WEB_SMOKE_TIMEOUT_MS || 90_000);
+
+const homeShellSnippets = [
+  "Tek yerden sorgula",
+  "Ada/parsel, adres, koordinat veya belediye seç",
+  "Kaynak merkezi",
+  "Sorgu",
+  "Katman",
+];
+
+const routeSmokeChecks = [
+  {
+    pathname: "/kaynaklar",
+    snippets: [
+      "Kaynak komuta merkezi",
+      "Canlı, public ve korumalı veri kaynakları",
+      "Registry tablosu",
+    ],
+  },
+  {
+    pathname: "/plan-notu",
+    snippets: [
+      "Plan notu açıklayıcı",
+      "BFF / plan-note-explain",
+      "Endpoint",
+    ],
+  },
+  {
+    pathname: "/calisma-alani",
+    snippets: [
+      "Çalışma alanı",
+      "BFF / workspace + session",
+      "Sorgu geçmişi",
+    ],
+  },
+  {
+    pathname: "/emsal",
+    snippets: [
+      "Emsal Hesabı",
+      "Parametreler",
+      "Parsel Seç",
+    ],
+  },
+];
+
+let server;
+let stopping = false;
+
+function log(message) {
+  console.log(`[web-smoke] ${message}`);
+}
+
+function fail(message) {
+  console.error(`[web-smoke] ${message}`);
+  process.exitCode = 1;
+  cleanup();
+}
+
+function cleanup() {
+  stopping = true;
+  if (server && !server.killed) {
+    server.kill("SIGTERM");
+    setTimeout(() => {
+      if (server && !server.killed) server.kill("SIGKILL");
+    }, 5_000).unref();
+  }
+}
+
+async function fetchWithTimeout(url, timeoutMs = 8_000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function waitForServer() {
+  const startedAt = Date.now();
+  let lastError = "server did not respond";
+
+  while (Date.now() - startedAt < TIMEOUT_MS) {
+    try {
+      const response = await fetchWithTimeout(BASE_URL, 5_000);
+      if (response.ok) return;
+      lastError = `HTTP ${response.status}`;
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+  }
+
+  throw new Error(`Timed out waiting for ${BASE_URL}: ${lastError}`);
+}
+
+async function assertPage(pathname, snippets) {
+  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 30_000);
+  if (!response.ok) {
+    throw new Error(`${pathname} returned HTTP ${response.status}`);
+  }
+
+  const html = (await response.text()).replaceAll("<!-- -->", "");
+  const missing = snippets.filter((snippet) => !html.includes(snippet));
+  if (missing.length > 0) {
+    throw new Error(`${pathname} missing expected shell text: ${missing.join(", ")}`);
+  }
+}
+
+async function assertStatusPage(pathname, expectedStatus, snippets) {
+  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 30_000);
+  if (response.status !== expectedStatus) {
+    throw new Error(`${pathname} expected HTTP ${expectedStatus}, received ${response.status}`);
+  }
+
+  const html = (await response.text()).replaceAll("<!-- -->", "");
+  const missing = snippets.filter((snippet) => !html.includes(snippet));
+  if (missing.length > 0) {
+    throw new Error(`${pathname} missing expected shell text: ${missing.join(", ")}`);
+  }
+}
+
+async function assertText(pathname, snippets) {
+  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 30_000);
+  if (!response.ok) {
+    throw new Error(`${pathname} returned HTTP ${response.status}`);
+  }
+
+  const text = await response.text();
+  const missing = snippets.filter((snippet) => !text.includes(snippet));
+  if (missing.length > 0) {
+    throw new Error(`${pathname} missing expected publish text: ${missing.join(", ")}`);
+  }
+}
+
+async function assertJson(pathname, checks) {
+  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 30_000);
+  if (!response.ok) {
+    throw new Error(`${pathname} returned HTTP ${response.status}`);
+  }
+
+  const payload = await response.json();
+  for (const check of checks) {
+    if (!check(payload)) {
+      throw new Error(`${pathname} failed JSON publish artifact check`);
+    }
+  }
+}
+
+async function assertImage(pathname) {
+  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 30_000);
+  if (!response.ok) {
+    throw new Error(`${pathname} returned HTTP ${response.status}`);
+  }
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.startsWith("image/")) {
+    throw new Error(`${pathname} returned non-image content-type ${contentType}`);
+  }
+}
+
+async function assertHeader(pathname, headerName, expectedValue) {
+  const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 30_000);
+  if (!response.ok) {
+    throw new Error(`${pathname} returned HTTP ${response.status}`);
+  }
+
+  const actualValue = response.headers.get(headerName);
+  if (actualValue !== expectedValue) {
+    throw new Error(`${pathname} expected ${headerName}: ${expectedValue}, received ${actualValue}`);
+  }
+}
+
+process.on("exit", cleanup);
+process.on("SIGINT", () => fail("interrupted"));
+process.on("SIGTERM", () => fail("terminated"));
+
+try {
+  log(`starting apps/e_imar_web on ${BASE_URL}`);
+  server = spawn("./node_modules/.bin/next", ["dev", "-p", String(PORT), "-H", HOST], {
+    cwd: WEB_DIR,
+    env: {
+      ...process.env,
+      NEXT_TELEMETRY_DISABLED: "1",
+      NEXT_PUBLIC_EIMAR_SITE_URL: process.env.NEXT_PUBLIC_EIMAR_SITE_URL || BASE_URL,
+      NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:9/api/v1",
+      NEXT_PUBLIC_EIMAR_API_BASE_URL: process.env.NEXT_PUBLIC_EIMAR_API_BASE_URL || "http://127.0.0.1:9",
+      NEXT_PUBLIC_EIMAR_DATA_MODE: process.env.NEXT_PUBLIC_EIMAR_DATA_MODE || "fixture",
+      NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL: process.env.NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL || "",
+      NEXT_PUBLIC_MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "",
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+
+  server.stdout.on("data", (chunk) => process.stdout.write(chunk));
+  server.stderr.on("data", (chunk) => process.stderr.write(chunk));
+  server.on("exit", (code, signal) => {
+    if (stopping) return;
+    if (process.exitCode === undefined && code !== null && code !== 0) {
+      process.exitCode = code;
+      console.error(`[web-smoke] web app exited early with code ${code}`);
+    } else if (signal && process.exitCode === undefined) {
+      process.exitCode = 1;
+      console.error(`[web-smoke] web app exited early from ${signal}`);
+    }
+  });
+
+  await waitForServer();
+  await assertPage("/", homeShellSnippets);
+  for (const check of routeSmokeChecks) {
+    await assertPage(check.pathname, check.snippets);
+  }
+  await assertText("/robots.txt", [`Sitemap: ${BASE_URL}/sitemap.xml`, "Allow: /"]);
+  await assertText("/sitemap.xml", [`<loc>${BASE_URL}/</loc>`, `<loc>${BASE_URL}/kaynaklar</loc>`]);
+  await assertJson("/manifest.webmanifest", [
+    (payload) => payload?.name === "E-İmar · Türkiye Parsel Sorgu",
+    (payload) => Array.isArray(payload?.icons) && payload.icons.some((icon) => icon.src === "/icon.svg")
+  ]);
+  await assertJson("/healthz", [
+    (payload) => payload?.status === "ok",
+    (payload) => payload?.app === "e-imar-web"
+  ]);
+  await assertJson("/readyz", [
+    (payload) => payload?.status === "ok",
+    (payload) => payload?.apiBaseUrl === "http://127.0.0.1:9/api/v1",
+    (payload) => Array.isArray(payload?.checks) && payload.checks.every((check) => check.status === "ok")
+  ]);
+  await assertStatusPage("/does-not-exist", 404, ["404 · Sayfa bulunamadı", "Kaynak merkezi"]);
+  await assertHeader("/", "x-content-type-options", "nosniff");
+  await assertHeader("/", "referrer-policy", "strict-origin-when-cross-origin");
+  await assertImage("/icon.svg");
+  await assertImage("/opengraph-image");
+  log("home, BFF cockpit routes, publish artifacts, health checks, 404, and security headers rendered without provider credentials");
+  cleanup();
+} catch (error) {
+  fail(error instanceof Error ? error.message : String(error));
+}

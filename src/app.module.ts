@@ -1,0 +1,56 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { AnalysisModule } from './analysis/analysis.module';
+import { CacheModule } from './cache/cache.module';
+import { EplanModule } from './eplan/eplan.module';
+import { ConnectorsModule } from './connectors/connectors.module';
+import { DatabaseModule } from './database/database.module';
+import { GeoModule } from './geo/geo.module';
+import { HealthModule } from './health/health.module';
+import { IngestionModule } from './ingestion/ingestion.module';
+import { JobsModule } from './jobs/jobs.module';
+import { MapModule } from './map/map.module';
+import { MarketModule } from './market/market.module';
+import { MunicipalitiesModule } from './municipalities/municipalities.module';
+import { ObservabilityModule } from './observability/observability.module';
+import { ParcelsModule } from './parcels/parcels.module';
+import { PlansModule } from './plans/plans.module';
+import { ReportsModule } from './reports/reports.module';
+import { SatelliteModule } from './satellite/satellite.module';
+import { SearchModule } from './search/search.module';
+import { SimulationModule } from './simulation/simulation.module';
+import { SourcesModule } from './sources/sources.module';
+import { StorageModule } from './storage/storage.module';
+import { UserDataModule } from './user-data/user-data.module';
+import { validateEnv } from './config/env.validation';
+import { WebsiteModule } from './website/website.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true, cache: true, validate: validateEnv }),
+    DatabaseModule,
+    ConnectorsModule,
+    SourcesModule,
+    MunicipalitiesModule,
+    ParcelsModule,
+    GeoModule,
+    PlansModule,
+    JobsModule,
+    HealthModule,
+    CacheModule,
+    IngestionModule,
+    SearchModule,
+    StorageModule,
+    MapModule,
+    MarketModule,
+    ObservabilityModule,
+    AnalysisModule,
+    EplanModule,
+    ReportsModule,
+    SimulationModule,
+    UserDataModule,
+    SatelliteModule,
+    WebsiteModule
+  ]
+})
+export class AppModule {}

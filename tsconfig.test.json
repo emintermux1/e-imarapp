@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "resolveJsonModule": true,
+    "paths": {
+      "@/*": ["apps/e_imar_web/src/*"]
+    }
+  },
+  "include": [
+    "test/**/*.ts",
+    "legacy/apps/frontend/lib/**/*.ts",
+    "apps/e_imar_web/src/**/*.ts",
+    "apps/e_imar_web/src/**/*.tsx"
+  ]
+}

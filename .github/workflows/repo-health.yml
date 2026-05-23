@@ -1,0 +1,68 @@
+name: Repository Health
+
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - "src/**"
+      - "test/**"
+      - "apps/e_imar_web/**"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig*.json"
+      - "jest.config.js"
+      - "requirements.txt"
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - "vercel.json"
+      - ".env.example"
+      - ".github/workflows/**"
+  push:
+    branches:
+      - main
+    paths:
+      - "app/**"
+      - "src/**"
+      - "test/**"
+      - "apps/e_imar_web/**"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig*.json"
+      - "jest.config.js"
+      - "requirements.txt"
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - "vercel.json"
+      - ".env.example"
+      - ".github/workflows/**"
+
+jobs:
+  repo-health:
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_EIMAR_API_BASE_URL: http://127.0.0.1:9
+      NEXT_PUBLIC_EIMAR_DATA_MODE: fixture
+      NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL: ""
+      NEXT_PUBLIC_MAPBOX_TOKEN: ""
+      MAPTILER_API_KEY: ""
+      MAPBOX_ACCESS_TOKEN: ""
+      CESIUM_ION_TOKEN: ""
+      HERE_API_KEY: ""
+      OPENAI_API_KEY: ""
+      REPO_HEALTH_SKIP_INSTALL: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install root dependencies
+        run: npm ci
+      - name: Install canonical web dependencies
+        run: npm ci --prefix apps/e_imar_web
+      - name: Run repository health
+        run: npm run repo:health
