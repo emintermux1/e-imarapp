@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AnalysisModule } from '../analysis/analysis.module';
+import { ConnectorsModule } from '../connectors/connectors.module';
 import { EplanModule } from '../eplan/eplan.module';
 import { IngestionModule } from '../ingestion/ingestion.module';
 import { MapModule } from '../map/map.module';
@@ -12,7 +13,7 @@ import { WebsiteController } from './website.controller';
 import { WebsiteService } from './website.service';
 
 @Module({
-  imports: [ParcelsModule, AnalysisModule, SimulationModule, UserDataModule, EplanModule, MapModule, IngestionModule, SourcesModule, MarketModule],
+  imports: [ParcelsModule, AnalysisModule, SimulationModule, UserDataModule, EplanModule, MapModule, IngestionModule, SourcesModule, MarketModule, ConnectorsModule],
   controllers: [WebsiteController],
   providers: [WebsiteService]
 })

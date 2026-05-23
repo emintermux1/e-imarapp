@@ -24,6 +24,8 @@ export interface ParcelSearchResult extends SearchResultBase {
   type: "parcel";
   parcelId: string;
   zoningType: import("./parcel").ZoningType;
+  municipalityId?: string;
+  sourceUrl?: string;
   sourceStatus?: import("./api").DataSourceStatus;
   sourceName?: string;
   sourceProvider?: string;
@@ -47,6 +49,7 @@ export interface AddressSearchResult extends SearchResultBase {
 export interface BelediyeSearchResult extends SearchResultBase {
   type: "belediye";
   il: string;
+  municipalityId?: string;
 }
 
 export interface CoordinateSearchResult extends SearchResultBase {

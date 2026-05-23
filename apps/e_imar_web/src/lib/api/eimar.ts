@@ -9,12 +9,14 @@ import type {
   SourceEntry,
   SourceHealthResponse,
   SourceProbe,
+  SourceStatusEntry,
   SourcesResponse,
+  WebsiteSearchResponse,
 } from "@/lib/api/types";
 import {
   FALLBACK_SOURCE_HEALTH,
   FALLBACK_SOURCES_RESPONSE,
-  getFallbackSourceDetail
+  getFallbackSourceDetail,
 } from "@/data/generated/source-fixtures";
 
 const API_PROXY_BASE = "/api/v1";
@@ -28,7 +30,10 @@ async function request<T>(path: string): Promise<Result<T>> {
     }
     return { ok: true, data: json };
   } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : "Unknown error" };
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 
@@ -45,7 +50,12 @@ function readNullableString(value: unknown): string | null {
 }
 
 function readStringArray(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
+  return Array.isArray(value)
+    ? value.filter(
+        (item): item is string =>
+          typeof item === "string" && item.trim().length > 0,
+      )
+    : [];
 }
 
 function readNumber(value: unknown): number | null {
@@ -76,15 +86,36 @@ function normalizeSourceEntry(value: unknown): SourceEntry | null {
   if (!isRecord(value)) return null;
   const id = readString(value.id ?? value.source_id ?? value.key);
   const name = readString(value.name ?? value.title, id);
-  const baseUrl = readString(value.base_url ?? value.homepage_url ?? value.homepageUrl ?? value.endpoint_url ?? value.service_url);
+  const baseUrl = readString(
+    value.base_url ??
+      value.homepage_url ??
+      value.homepageUrl ??
+      value.endpoint_url ??
+      value.service_url,
+  );
   if (!id || !name || !baseUrl) return null;
   const requiresCredentials = value.requires_credentials === true;
   const requiresApproval = value.requires_approval === true;
   const rawAuth = readString(value.auth ?? value.accessStatus);
-  const auth = rawAuth || (requiresCredentials ? "requires_credentials" : requiresApproval ? "requires_legal_agreement" : "metadata_only");
-  const category = readString(value.category ?? value.kind ?? value.type, "catalog");
-  const provider = readString(value.provider ?? value.vendor ?? value.kind ?? value.type, "registry");
-  const discoveryStrategy = readString(value.discovery_strategy ?? value.kind ?? value.type, "registry");
+  const auth =
+    rawAuth ||
+    (requiresCredentials
+      ? "requires_credentials"
+      : requiresApproval
+        ? "requires_legal_agreement"
+        : "metadata_only");
+  const category = readString(
+    value.category ?? value.kind ?? value.type,
+    "catalog",
+  );
+  const provider = readString(
+    value.provider ?? value.vendor ?? value.kind ?? value.type,
+    "registry",
+  );
+  const discoveryStrategy = readString(
+    value.discovery_strategy ?? value.kind ?? value.type,
+    "registry",
+  );
   const capabilities = readStringArray(value.capabilities);
   return {
     id,
@@ -95,8 +126,15 @@ function normalizeSourceEntry(value: unknown): SourceEntry | null {
     category,
     discovery_strategy: discoveryStrategy,
     capabilities,
-    municipality_name: readNullableString(value.municipality_name ?? value.municipalityName ?? value.district ?? value.province),
-    notes: readNullableString(value.notes ?? value.accessNotes ?? value.message)
+    municipality_name: readNullableString(
+      value.municipality_name ??
+        value.municipalityName ??
+        value.district ??
+        value.province,
+    ),
+    notes: readNullableString(
+      value.notes ?? value.accessNotes ?? value.message,
+    ),
   };
 }
 
@@ -105,7 +143,8 @@ function endpointStrings(value: unknown): string[] {
   return value
     .map((item) => {
       if (typeof item === "string") return item;
-      if (isRecord(item)) return readString(item.url ?? item.endpoint ?? item.href);
+      if (isRecord(item))
+        return readString(item.url ?? item.endpoint ?? item.href);
       return "";
     })
     .filter((item) => item.length > 0);
@@ -114,11 +153,23 @@ function endpointStrings(value: unknown): string[] {
 function normalizeProbe(value: unknown): SourceProbe {
   const record: Record<string, unknown> = isRecord(value) ? value : {};
   return {
-    status: readString(record.status ?? record.raw_status ?? record.accessStatus, "unknown"),
+    status: readString(
+      record.status ?? record.raw_status ?? record.accessStatus,
+      "unknown",
+    ),
     http_status: readNumber(record.http_status),
     latency_ms: readNumber(record.latency_ms),
-    discovered_endpoints: endpointStrings(record.discovered_endpoints ?? record.candidate_endpoints ?? record.endpoints),
-    message: readNullableString(record.message ?? record.failure_reason ?? record.user_message ?? record.notes)
+    discovered_endpoints: endpointStrings(
+      record.discovered_endpoints ??
+        record.candidate_endpoints ??
+        record.endpoints,
+    ),
+    message: readNullableString(
+      record.message ??
+        record.failure_reason ??
+        record.user_message ??
+        record.notes,
+    ),
   };
 }
 
@@ -134,11 +185,13 @@ function normalizeSourcesResponse(payload: unknown): SourcesResponse | null {
     next_actions: readStringArray(record.next_actions),
     fetched_at: readNullableString(record.fetched_at) ?? undefined,
     total: readNumber(record.total) ?? sources.length,
-    sources
+    sources,
   };
 }
 
-function normalizeHealthResponse(payload: unknown): SourceHealthResponse | null {
+function normalizeHealthResponse(
+  payload: unknown,
+): SourceHealthResponse | null {
   const sources = sourceItems(payload)
     .map((item) => {
       const source = normalizeSourceEntry(item);
@@ -149,7 +202,11 @@ function normalizeHealthResponse(payload: unknown): SourceHealthResponse | null 
   if (!sources.length) return null;
   const record = responseRecord(payload);
   const rollup = isRecord(record.rollup)
-    ? Object.fromEntries(Object.entries(record.rollup).filter(([, value]) => typeof value === "number")) as Record<string, number>
+    ? (Object.fromEntries(
+        Object.entries(record.rollup).filter(
+          ([, value]) => typeof value === "number",
+        ),
+      ) as Record<string, number>)
     : sources.reduce<Record<string, number>>((acc, source) => {
         acc[source.status] = (acc[source.status] ?? 0) + 1;
         return acc;
@@ -161,11 +218,13 @@ function normalizeHealthResponse(payload: unknown): SourceHealthResponse | null 
     fetched_at: readNullableString(record.fetched_at) ?? undefined,
     total: readNumber(record.total) ?? sources.length,
     rollup,
-    sources
+    sources,
   };
 }
 
-function normalizeDetailResponse(payload: unknown): SourceDetailResponse | null {
+function normalizeDetailResponse(
+  payload: unknown,
+): SourceDetailResponse | null {
   const record = responseRecord(payload);
   if (!Object.keys(record).length) return null;
   const source = normalizeSourceEntry(record.source ?? record);
@@ -176,7 +235,7 @@ function normalizeDetailResponse(payload: unknown): SourceDetailResponse | null 
     next_actions: readStringArray(record.next_actions),
     fetched_at: readNullableString(record.fetched_at) ?? undefined,
     source,
-    probe: normalizeProbe(record.probe ?? record)
+    probe: normalizeProbe(record.probe ?? record),
   };
 }
 
@@ -189,7 +248,9 @@ export async function fetchSources(): Promise<Result<SourcesResponse>> {
   return { ok: true as const, data: FALLBACK_SOURCES_RESPONSE };
 }
 
-export async function fetchSourceHealth(): Promise<Result<SourceHealthResponse>> {
+export async function fetchSourceHealth(): Promise<
+  Result<SourceHealthResponse>
+> {
   const result = await request<unknown>("/api/v1/sources/health");
   if (result.ok) {
     const normalized = normalizeHealthResponse(result.data);
@@ -198,29 +259,43 @@ export async function fetchSourceHealth(): Promise<Result<SourceHealthResponse>>
   return { ok: true as const, data: FALLBACK_SOURCE_HEALTH };
 }
 
-export async function fetchSourceDetail(sourceId: string): Promise<Result<SourceDetailResponse>> {
-  const result = await request<unknown>(`/api/v1/sources/${encodeURIComponent(sourceId)}`);
+export async function fetchSourceDetail(
+  sourceId: string,
+): Promise<Result<SourceDetailResponse>> {
+  const result = await request<unknown>(
+    `/api/v1/sources/${encodeURIComponent(sourceId)}`,
+  );
   if (result.ok) {
     const normalized = normalizeDetailResponse(result.data);
     if (normalized) return { ok: true as const, data: normalized };
   }
   const fallback = getFallbackSourceDetail(sourceId);
   if (fallback) return { ok: true as const, data: fallback };
-  return { ok: false as const, error: result.ok ? "Unexpected source response" : result.error };
+  return {
+    ok: false as const,
+    error: result.ok ? "Unexpected source response" : result.error,
+  };
 }
 
 export function reprobeSource(sourceId: string) {
-  return fetch(`${API_PROXY_BASE}/sources/${encodeURIComponent(sourceId)}/probe`, { method: "POST" })
+  return fetch(
+    `${API_PROXY_BASE}/sources/${encodeURIComponent(sourceId)}/probe`,
+    { method: "POST" },
+  )
     .then(async (response) => {
       const json = (await response.json()) as unknown;
-      if (!response.ok) return { ok: false as const, error: `HTTP ${response.status}` };
+      if (!response.ok)
+        return { ok: false as const, error: `HTTP ${response.status}` };
       const normalized = normalizeDetailResponse(json);
       if (normalized) return { ok: true as const, data: normalized };
       const fallback = getFallbackSourceDetail(sourceId);
       if (fallback) return { ok: true as const, data: fallback };
       return { ok: false as const, error: "Unexpected source response" };
     })
-    .catch((error) => ({ ok: false as const, error: error instanceof Error ? error.message : "Unknown error" }));
+    .catch((error) => ({
+      ok: false as const,
+      error: error instanceof Error ? error.message : "Unknown error",
+    }));
 }
 
 export function fetchActiveAski() {
@@ -231,14 +306,47 @@ export function fetchActiveAskiGeoJSON() {
   return request<AskiGeoJsonResponse>(`${API_PROXY_BASE}/aski/active/geojson`);
 }
 
-export function fetchMunicipalityCoverage(params?: { province?: string; district?: string; vendor?: string; accessStatus?: string }) {
+export function fetchMunicipalityCoverage(params?: {
+  province?: string;
+  district?: string;
+  vendor?: string;
+  accessStatus?: string;
+}) {
   const search = new URLSearchParams();
   if (params?.province) search.set("province", params.province);
   if (params?.district) search.set("district", params.district);
   if (params?.vendor) search.set("vendor", params.vendor);
   if (params?.accessStatus) search.set("accessStatus", params.accessStatus);
   const query = search.toString();
-  return request<MunicipalityCoverageResponse>(`${API_PROXY_BASE}/sources/municipality-coverage${query ? `?${query}` : ""}`);
+  return request<MunicipalityCoverageResponse>(
+    `${API_PROXY_BASE}/sources/municipality-coverage${query ? `?${query}` : ""}`,
+  );
+}
+
+export function fetchSourceStatus() {
+  return request<SourceStatusEntry[]>(`${API_PROXY_BASE}/sources/status`);
+}
+
+export function searchWebsite(payload: {
+  query: string;
+  municipalityId?: string;
+}) {
+  return fetch(`/website/bff/search`, {
+    method: "POST",
+    cache: "no-store",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+    .then(async (response) => {
+      const json = (await response.json()) as WebsiteSearchResponse;
+      if (!response.ok)
+        return { ok: false as const, error: `HTTP ${response.status}` };
+      return { ok: true as const, data: json };
+    })
+    .catch((error) => ({
+      ok: false as const,
+      error: error instanceof Error ? error.message : "Unknown error",
+    }));
 }
 
 export function fetchMunicipalParcelWorkflow(payload: {
@@ -249,6 +357,8 @@ export function fetchMunicipalParcelWorkflow(payload: {
   mahalle?: string;
   ada?: string;
   parsel?: string;
+  lng?: number;
+  lat?: number;
 }) {
   return fetch(`/website/bff/municipal-parcel-workflow`, {
     method: "POST",
@@ -258,16 +368,25 @@ export function fetchMunicipalParcelWorkflow(payload: {
   })
     .then(async (response) => {
       const json = (await response.json()) as MunicipalParcelWorkflowResponse;
-      if (!response.ok) return { ok: false as const, error: `HTTP ${response.status}` };
+      if (!response.ok)
+        return { ok: false as const, error: `HTTP ${response.status}` };
       return { ok: true as const, data: json };
     })
-    .catch((error) => ({ ok: false as const, error: error instanceof Error ? error.message : "Unknown error" }));
+    .catch((error) => ({
+      ok: false as const,
+      error: error instanceof Error ? error.message : "Unknown error",
+    }));
 }
 
-export function fetchOgcCatalog(sourceId: string, params?: { endpoint?: string; service?: "WMS" | "WFS" }) {
+export function fetchOgcCatalog(
+  sourceId: string,
+  params?: { endpoint?: string; service?: "WMS" | "WFS" },
+) {
   const search = new URLSearchParams();
   if (params?.endpoint) search.set("endpoint", params.endpoint);
   if (params?.service) search.set("service", params.service);
   const query = search.toString();
-  return request<OgcLayerCatalogResponse>(`/connectors/${encodeURIComponent(sourceId)}/ogc/catalog${query ? `?${query}` : ""}`);
+  return request<OgcLayerCatalogResponse>(
+    `/connectors/${encodeURIComponent(sourceId)}/ogc/catalog${query ? `?${query}` : ""}`,
+  );
 }

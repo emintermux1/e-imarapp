@@ -1,4 +1,5 @@
 import { ConnectorKind, PublicReadinessStatus } from '../connectors/connector.types';
+import { MUNICIPAL_REGISTRY, MunicipalRegistryEntry } from './municipal-registry';
 import { TURKEY_MUNICIPAL_COVERAGE_CANDIDATES } from './turkey-coverage';
 
 export type SourceAccessStatus = 'public' | 'public_metadata' | 'metadata_only' | 'unknown' | 'requires_credentials' | 'requires_legal_agreement';
@@ -74,6 +75,7 @@ export const SOURCE_REGISTRY: SourceRegistryEntry[] = [
   { id: 'openstreetmap-api', name: 'OpenStreetMap API / Overpass', jurisdiction: 'global', category: 'basemap', homepageUrl: 'https://wiki.openstreetmap.org/wiki/API', connectorKinds: [ConnectorKind.PublicApi, ConnectorKind.Overpass], access: { status: 'public_metadata', notes: 'Public OSM/Overpass context only. Respect rate limits and never treat OSM context as official cadastral or zoning data.' }, capabilities: ['basemap_context', 'osm_context'] },
   { id: 'usgs-landsat', name: 'USGS Landsat Data', jurisdiction: 'global', category: 'satellite', homepageUrl: 'https://landsat.gsfc.nasa.gov/data/', connectorKinds: [ConnectorKind.PublicPortal], access: { status: 'unknown', notes: 'Landsat data portal documentation; exact API account requirements must be verified per product.' }, capabilities: ['satellite_imagery'] },
   ...municipalSources(),
+  ...municipalRegistrySources(),
   ...generatedTurkeyMunicipalCoverage()
 ];
 
@@ -160,4 +162,52 @@ function municipalSources(): SourceRegistryEntry[] {
     capabilities: capabilitiesForVendor(vendor),
     metadata: { province, district, municipalitySlug, vendor }
   }));
+}
+
+function municipalRegistrySources(): SourceRegistryEntry[] {
+  const existingSlugs = new Set(municipalSources().map((source) => source.metadata?.municipalitySlug).filter(Boolean));
+  const existingNationalIds = new Set(['tkgm-parsel-sorgu', 'csb-e-plan', 'tucbs-public-api', 'atlas-ulusal-cbs']);
+  return MUNICIPAL_REGISTRY
+    .filter((entry) => !existingSlugs.has(entry.id))
+    .filter((entry) => !existingNationalIds.has(registrySourceId(entry)))
+    .map((entry) => ({
+      id: registrySourceId(entry),
+      name: `${entry.name} ${entry.type === 'custom' ? 'İmar/CBS' : entry.type.toUpperCase()} Kaynağı`,
+      jurisdiction: entry.district === 'Merkezi Devlet' ? 'national' as const : 'municipal' as const,
+      category: entry.district === 'Merkezi Devlet' ? 'open_data' as const : 'municipal_gis' as const,
+      homepageUrl: new URL(entry.queryPath, entry.baseUrl).toString(),
+      connectorKinds: connectorKindsForMunicipalRegistry(entry),
+      access: { status: 'public' as const, notes: municipalNotes },
+      capabilities: capabilitiesForMunicipalRegistry(entry),
+      metadata: {
+        province: entry.province,
+        district: entry.district,
+        municipalitySlug: entry.id,
+        vendor: entry.vendor === 'custom' ? 'municipal' : entry.vendor
+      }
+    }));
+}
+
+function registrySourceId(entry: MunicipalRegistryEntry): string {
+  if (entry.id === 'tkgm') return 'tkgm-parsel-sorgu';
+  if (entry.id === 'eplan') return 'csb-e-plan';
+  if (entry.id === 'tucbs') return 'tucbs-public-api';
+  if (entry.id === 'atlas') return 'atlas-ulusal-cbs';
+  return `${entry.id}-${entry.type}-imar`;
+}
+
+function connectorKindsForMunicipalRegistry(entry: MunicipalRegistryEntry): ConnectorKind[] {
+  if (entry.type === 'keos') return [ConnectorKind.NetcadKeos, ConnectorKind.Keos, ConnectorKind.Wms, ConnectorKind.Wfs];
+  if (entry.type === 'webgis') return [ConnectorKind.Webgis, ConnectorKind.Ogc, ConnectorKind.Wms, ConnectorKind.Wfs];
+  if (entry.type === 'ekent') return [ConnectorKind.Ekent, ConnectorKind.MunicipalPortal];
+  if (entry.vendor === 'tkgm' || entry.vendor === 'csb') return [ConnectorKind.PublicPortal, ConnectorKind.Ogc, ConnectorKind.Wms, ConnectorKind.Wfs];
+  return [ConnectorKind.MunicipalPortal];
+}
+
+function capabilitiesForMunicipalRegistry(entry: MunicipalRegistryEntry): string[] {
+  if (entry.vendor === 'tkgm') return ['parcel_lookup', 'parcel_geometry', 'municipal_gis'];
+  if (entry.vendor === 'csb') return ['plan_catalog', 'wms', 'wfs', 'geospatial_catalog'];
+  if (entry.type === 'keos' || entry.type === 'webgis') return ['zoning_status', 'municipal_gis', 'netcad_keos', 'parcel_lookup', 'plan_lookup'];
+  if (entry.type === 'ekent') return ['zoning_status', 'municipal_gis', 'ekent', 'parcel_lookup', 'plan_lookup'];
+  return ['zoning_status', 'municipal_gis', 'parcel_lookup'];
 }
