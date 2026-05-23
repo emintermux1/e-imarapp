@@ -27,7 +27,10 @@ async def test_push_dry_run_uses_defined_payload_without_http_call():
     )
 
     assert result[0]["dry_run"] is True
-    payload = result[0]["payload"]["payload"]
+    gateway_payload = result[0]["payload"]
+    assert gateway_payload["token"] == "42"
+    assert gateway_payload["platform"] == "unknown"
+    payload = gateway_payload["payload"]
     assert payload["event"] == "watchlist_change"
     assert payload["user_id"] == "42"
     assert payload["parcel_id"] == "parcel-1"

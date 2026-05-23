@@ -27,7 +27,36 @@ describe('GeoService audit contract', () => {
       isConfigured: () => true,
       query: async (sql: string) => {
         queries.push(sql);
-        return { rowCount: 1, rows: [{ id: 'row-1' }] };
+        if (sql.includes('entity_versions')) {
+          return {
+            rowCount: 1,
+            rows: [{
+              id: 'version-1',
+              entity_type: 'parcel',
+              entity_id: 'parcel/TR-34-BES-1234-2',
+              version_no: 2,
+              source_id: 'istanbul-besiktas-keos',
+              created_by: 'worker:test',
+              reason: 'version test',
+              created_at: '2026-05-23T00:00:00.000Z'
+            }]
+          };
+        }
+        return {
+          rowCount: 1,
+          rows: [{
+            id: 'row-1',
+            entity_type: 'parcel',
+            entity_id: 'parcel/TR-34-BES-1234-2',
+            operation: 'update',
+            actor_ref: 'worker:test',
+            reason: 'audit test',
+            before_hash: 'sha256:before',
+            after_hash: 'sha256:after',
+            source_id: 'istanbul-besiktas-keos',
+            created_at: '2026-05-23T00:00:00.000Z'
+          }]
+        };
       }
     };
     const service = new GeoService(db as any, new AuditRepository(db as any));
@@ -36,7 +65,21 @@ describe('GeoService audit contract', () => {
 
     expect(contract.status).toBe('ok');
     expect(contract.persistence).toBe('database');
-    expect(contract.records).toEqual([{ id: 'row-1' }]);
+    expect(contract.records).toEqual([expect.objectContaining({
+      id: 'row-1',
+      entityType: 'parcel',
+      entityId: 'parcel/TR-34-BES-1234-2',
+      actorRef: 'worker:test',
+      beforeHash: 'sha256:before',
+      sourceId: 'istanbul-besiktas-keos',
+      createdAt: '2026-05-23T00:00:00.000Z'
+    })]);
+    expect(contract.versions).toEqual([expect.objectContaining({
+      id: 'version-1',
+      entityType: 'parcel',
+      versionNo: 2,
+      createdBy: 'worker:test'
+    })]);
     expect(queries.join('\n')).toContain('entity_audit_log');
     expect(queries.join('\n')).toContain('entity_versions');
   });
