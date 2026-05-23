@@ -18,6 +18,8 @@ import { AskiPopover } from "@/components/map/aski-popover";
 import { TimelineFloating } from "@/components/gis/timeline-floating";
 import { Section3DAnalizleri } from "@/components/gis/section-3d-analizleri";
 import { LiveReadinessStrip } from "@/components/product/live-readiness-strip";
+import { LayerCatalogDrawer } from "@/components/map/layer-catalog-drawer";
+import { HomepageQueryCard } from "@/components/product/homepage-query-card";
 import { useUIStore } from "@/stores/ui-store";
 import { BrandMark } from "./brand-mark";
 import { GlobalSearch } from "@/components/search/global-search";
@@ -49,6 +51,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
   const setMapMode = useUIStore((s) => s.setMapMode);
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
   const [legendDockOpen, setLegendDockOpen] = React.useState(false);
+  const [layerCatalogOpen, setLayerCatalogOpen] = React.useState(false);
   const [askiPopover, setAskiPopover] = React.useState<{
     feature: AskiPolygonFeature;
     position: { x: number; y: number };
@@ -118,6 +121,9 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
               />
             )}
             <MapInstructionIsland />
+            <div className={cn("pointer-events-auto absolute top-44 z-20 hidden w-[420px] transition-[left] duration-300 2xl:block", leftDockClass)}>
+              <HomepageQueryCard />
+            </div>
             <div className={cn("pointer-events-auto absolute top-24 z-20 hidden transition-[left] duration-300 xl:flex", leftDockClass)}>
               <MapSourceDock />
             </div>
@@ -137,16 +143,13 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
               searchOpen={searchOpen}
               onOpenSearch={() => setSearchOpen(true)}
               legendOpen={!legendCollapsed}
-              onToggleLegend={() => {
-                const next = !legendCollapsed;
-                setLegendCollapsed(next);
-                setLegendDockOpen(!next);
-              }}
+              onToggleLegend={() => setLayerCatalogOpen(true)}
               fullscreenMap={fullscreenMap}
               onToggleFullscreen={() => setFullscreenMap(!fullscreenMap)}
               mapMode={mapMode}
               onToggle3D={() => setMapMode(mapMode === "3d" ? "2d" : "3d")}
             />
+            <LayerCatalogDrawer open={layerCatalogOpen} onOpenChange={setLayerCatalogOpen} />
             <div
               className={cn(
                 "pointer-events-auto absolute right-4 z-10 hidden max-w-[280px] transition-[bottom] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] md:block",

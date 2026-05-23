@@ -164,6 +164,10 @@
     );
     animation: shimmer 1.4s infinite;
   }
+
+  .admin-input {
+    @apply h-10 w-full rounded-2xl border border-border-subtle bg-surface-2 px-3 text-sm font-semibold text-fg-primary shadow-[inset_0_1px_0_rgb(255_255_255/0.7)] placeholder:text-fg-muted/70 focus:border-brand-green;
+  }
 }
 
 /* MapLibre HUD adjustments — we render our own so hide native ones */
