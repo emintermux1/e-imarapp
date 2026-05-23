@@ -110,7 +110,19 @@ async function waitForServer() {
   throw new Error(`Timed out waiting for ${BASE_URL}: ${lastError}`);
 }
 
+async function warmRoute(pathname) {
+  try {
+    const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 45_000);
+    if (!response.ok) return false;
+    await response.arrayBuffer();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function assertPage(pathname, snippets) {
+  await warmRoute(pathname);
   const response = await fetchWithTimeout(`${BASE_URL}${pathname}`, 60_000);
   if (!response.ok) {
     throw new Error(`${pathname} returned HTTP ${response.status}`);
