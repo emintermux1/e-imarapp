@@ -37,6 +37,7 @@ export function GET() {
   const demoFallbackEnabled =
     truthy(process.env.NEXT_PUBLIC_EIMAR_ENABLE_DEMO_FALLBACK) || truthy(process.env.NEXT_PUBLIC_EIMAR_ALLOW_DEMO_DATA);
 
+  const explicitDemoMode = sourceMode === "demo";
   const checks = [
     check("site-url", siteUrl.valid, siteUrl.reason ?? "Canonical website URL can be resolved."),
     check(
@@ -45,17 +46,17 @@ export function GET() {
         ? apiBaseUrl.configured && apiBaseUrl.valid
         : sourceMode === "vector-tile"
         ? Boolean(vectorTileUrl)
-        : !production && sourceMode === "demo",
+        : explicitDemoMode,
       sourceMode === "api"
         ? "API mode requires NEXT_PUBLIC_EIMAR_API_BASE_URL or NEXT_PUBLIC_API_BASE_URL."
         : sourceMode === "vector-tile"
         ? "Vector tile mode requires NEXT_PUBLIC_EIMAR_VECTOR_TILE_URL."
-        : "Demo mode is allowed only outside production."
+        : "Demo mode serves labelled sample parcels without a live API."
     ),
     check(
       "production-demo-fallback",
-      !production || !demoFallbackEnabled,
-      "Production must not silently fall back to demo parcel data."
+      !production || !demoFallbackEnabled || explicitDemoMode,
+      "Production must not silently fall back to demo parcel data unless demo mode is explicit."
     )
   ];
   const ready = checks.every((item) => item.status === "ok");

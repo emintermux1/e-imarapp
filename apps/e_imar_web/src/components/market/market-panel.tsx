@@ -266,21 +266,21 @@ function FilterButton({ active, label, onClick }: { active: boolean; label: stri
 }
 
 function statusClass(status: ParcelMarketResponse["status"]) {
-  if (status === "ok") return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700";
+  if (status === "ok") return "border-brand-navy/30 bg-brand-navy/10 text-brand-navy";
   if (status === "degraded") return "border-amber-500/30 bg-amber-500/10 text-amber-700";
   if (status === "empty") return "border-slate-500/30 bg-slate-500/10 text-slate-700";
   return "border-red-500/30 bg-red-500/10 text-red-700";
 }
 
 function readinessClass(status: string) {
-  if (status === "ok" || status === "no_match") return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700";
+  if (status === "ok" || status === "no_match") return "border-brand-navy/30 bg-brand-navy/10 text-brand-navy";
   if (status === "requires_credentials") return "border-amber-500/30 bg-amber-500/10 text-amber-700";
   if (status === "blocked" || status === "unsupported") return "border-red-500/30 bg-red-500/10 text-red-700";
   return "border-border-subtle bg-surface-1 text-fg-muted";
 }
 
 function matchClass(status: string) {
-  if (status === "strong") return "text-emerald-700";
+  if (status === "strong") return "text-brand-navy";
   if (status === "partial") return "text-amber-700";
   return "text-fg-muted";
 }

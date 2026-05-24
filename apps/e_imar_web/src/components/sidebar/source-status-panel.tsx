@@ -199,7 +199,7 @@ export function SourceStatusPanel() {
                           key={layerName}
                           type="button"
                           onClick={() => void activateLiveLayer(item.id, wmsLayer.url, layerName)}
-                          className="block w-full truncate rounded border border-border-subtle bg-bg/80 px-1.5 py-1 text-left text-[10px] text-fg-secondary hover:bg-emerald-50 hover:text-emerald-900"
+                          className="block w-full truncate rounded border border-border-subtle bg-bg/80 px-1.5 py-1 text-left text-[10px] text-fg-secondary hover:bg-surface-2 hover:text-fg-primary"
                           title={String(layer.title ?? layerName)}
                         >
                           {String(layer.title ?? layerName)}
@@ -224,16 +224,16 @@ export function SourceStatusPanel() {
       )}
 
       {activeMapLayers.length > 0 && (
-        <div className="mt-2 rounded-md border border-emerald-300/50 bg-emerald-50/70 px-2 py-1.5">
-          <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-800">Haritada açık WMS</div>
+        <div className="mt-2 rounded-md border border-border-subtle bg-surface-1 px-2 py-1.5">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-fg-secondary">Haritada açık WMS</div>
           <div className="mt-1 flex flex-col gap-1">
             {activeMapLayers.map((layer) => (
-              <div key={String(layer.id)} className="flex items-center gap-2 text-[10.5px] text-emerald-950">
+              <div key={String(layer.id)} className="flex items-center gap-2 text-[10.5px] text-fg-primary">
                 <span className="min-w-0 flex-1 truncate">{layer.name ?? layer.title ?? layer.source_id}</span>
                 <button
                   type="button"
                   onClick={() => deactivateLiveLayer(layer.id)}
-                  className="rounded border border-emerald-300/70 bg-white/70 px-1.5 py-0.5 text-[10px] text-emerald-900 hover:bg-white"
+                  className="rounded border border-border-subtle bg-surface-2 px-1.5 py-0.5 text-[10px] text-fg-secondary hover:bg-white hover:text-fg-primary"
                 >
                   Kapat
                 </button>
@@ -316,7 +316,7 @@ function Pill({ children, tone }: { children: React.ReactNode; tone: "warning" |
 
 function Metric({ label, value, tone }: { label: string; value: number; tone: "live" | "blocked" | "metadata" | "external" }) {
   return (
-    <div className={cn("rounded-md border px-1 py-1", tone === "live" && "border-emerald-300/60 bg-emerald-50 text-emerald-800", tone === "blocked" && "border-rose-300/60 bg-rose-50 text-rose-800", tone === "metadata" && "border-amber-300/60 bg-amber-50 text-amber-800", tone === "external" && "border-sky-300/60 bg-sky-50 text-sky-800")}>
+    <div className={cn("rounded-md border px-1 py-1", tone === "live" && "border-brand-navy/30 bg-brand-navy/10 text-brand-navy", tone === "blocked" && "border-rose-300/60 bg-rose-50 text-rose-800", tone === "metadata" && "border-amber-300/60 bg-amber-50 text-amber-800", tone === "external" && "border-sky-300/60 bg-sky-50 text-sky-800")}>
       <div className="font-semibold tabular-nums">{value}</div>
       <div className="uppercase tracking-wide opacity-75">{label}</div>
     </div>
@@ -324,7 +324,7 @@ function Metric({ label, value, tone }: { label: string; value: number; tone: "l
 }
 
 function statusClass(status: string) {
-  if (status === "live") return "bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,.16)]";
+  if (status === "live") return "bg-brand-navy shadow-[0_0_0_3px_rgb(var(--accent-navy)/0.16)]";
   if (["blocked", "requires_auth", "requires_approval"].includes(status)) return "bg-rose-500";
   if (status === "timeout") return "bg-amber-500";
   return "bg-sky-500";
@@ -344,7 +344,7 @@ function statusLabel(status: string) {
 }
 
 function activationDot(status: string) {
-  if (status === "active") return "bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,.16)]";
+  if (status === "active") return "bg-brand-navy shadow-[0_0_0_3px_rgb(var(--accent-navy)/0.16)]";
   if (status === "blocked") return "bg-rose-500";
   if (status === "needs_contract") return "bg-amber-500";
   if (status === "metadata_only") return "bg-sky-500";

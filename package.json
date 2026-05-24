@@ -10,6 +10,7 @@
     "dev:all:open": "node scripts/dev-all.mjs --open",
     "dev:demo": "node scripts/dev-web-demo.mjs",
     "dev:demo:open": "node scripts/dev-web-demo.mjs --open",
+    "deploy:demo": "node scripts/deploy-demo-production.mjs --tunnel",
     "dev:api": "npm run start:dev",
     "setup:local": "node scripts/setup-local.mjs",
     "build": "tsc -p tsconfig.build.json",

@@ -151,7 +151,7 @@ export function GISLegend({ collapsed: collapsedProp, onCollapsedChange }: {
                 <span aria-hidden className="block h-3 w-4 rounded-[2px] border border-[#102A4C] bg-[#102A4C]/25" />
               </LegendItem>
               <LegendItem label="Onaylandı">
-                <span aria-hidden className="block h-3 w-4 rounded-[2px] border border-emerald-700 bg-emerald-500/20" />
+                <span aria-hidden className="block h-3 w-4 rounded-[2px] border border-brand-navy/70 bg-brand-navy/20" />
               </LegendItem>
               <LegendItem label="Reddedildi">
                 <span aria-hidden className="block h-3 w-4 rounded-[2px] border border-red-700 bg-red-500/20" />
@@ -165,7 +165,7 @@ export function GISLegend({ collapsed: collapsedProp, onCollapsedChange }: {
                   className="block h-2 w-20 rounded-full"
                   style={{
                     background:
-                      "linear-gradient(90deg,#86EFAC 0%,#FACC15 45%,#F97316 65%,#DC2626 82%,#9F1239 100%)"
+                      "linear-gradient(90deg,#94A3B8 0%,#FACC15 45%,#F97316 65%,#DC2626 82%,#9F1239 100%)"
                   }}
                 />
               </LegendItem>

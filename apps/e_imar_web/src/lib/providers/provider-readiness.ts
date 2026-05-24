@@ -102,7 +102,7 @@ export function readinessTone(label: ReadinessLabel): ReadinessTone {
 export function readinessClassName(tone: ReadinessTone) {
   switch (tone) {
     case "success":
-      return "border-emerald-500/25 bg-emerald-500/8 text-emerald-700 dark:text-emerald-300";
+      return "border-brand-navy/25 bg-brand-navy/8 text-brand-navy dark:text-fg-primary";
     case "warning":
       return "border-amber-500/25 bg-amber-500/8 text-amber-700 dark:text-amber-300";
     case "danger":

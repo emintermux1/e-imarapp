@@ -108,7 +108,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
           <div className="h-full w-full">{children}</div>
         ) : (
           <div className="relative h-full w-full">
-            <div aria-hidden className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_50%_18%,transparent_0,transparent_62%,rgb(6_20_14/0.05)_100%)]" />
+            <div aria-hidden className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_50%_18%,transparent_0,transparent_62%,rgb(var(--accent-navy)/0.04)_100%)]" />
             <MapShell
               cursorReadoutRef={cursorReadoutRef}
               zoomReadoutRef={zoomReadoutRef}
