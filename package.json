@@ -6,6 +6,9 @@
   "license": "UNLICENSED",
   "scripts": {
     "dev": "npm run web:dev",
+    "dev:all": "node scripts/dev-all.mjs",
+    "dev:api": "npm run start:dev",
+    "setup:local": "node scripts/setup-local.mjs",
     "build": "tsc -p tsconfig.build.json",
     "cloud:setup": "bash scripts/cloud-agent-setup.sh",
     "docker:up": "docker compose up -d",
