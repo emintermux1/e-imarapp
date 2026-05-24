@@ -35,6 +35,8 @@ import {
 } from "@/lib/providers/provider-readiness";
 
 export function DataCoverageBadge() {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
   const metadata = React.useMemo(() => getParcelSourceMetadata(), []);
   const [open, setOpen] = React.useState(false);
   const [coverage, setCoverage] = React.useState<SourceCoverageState>({
@@ -106,21 +108,24 @@ export function DataCoverageBadge() {
           <span
             className={cn(
               "inline-flex h-4 w-4 items-center justify-center rounded-full border",
-              metadata.mode === "unavailable"
+              !mounted
+                ? "border-border-subtle bg-surface-1 text-fg-muted"
+                : metadata.mode === "unavailable"
                 ? "border-rose-500/30 bg-rose-500/10 text-rose-700"
                 : metadata.fallbackReason
                 ? "border-amber-500/30 bg-amber-500/10 text-amber-700"
                 : "border-sky-500/30 bg-sky-500/10 text-sky-700"
             )}
+            suppressHydrationWarning
           >
             <Database className="h-2.5 w-2.5" />
           </span>
           <span className="font-medium text-fg-primary">Parsel</span>
-          <span className="rounded-full bg-surface-1 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-fg-muted">
-            {stateChip}
+          <span className="rounded-full bg-surface-1 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-fg-muted" suppressHydrationWarning>
+            {mounted ? stateChip : "…"}
           </span>
-          <span className="tabular-nums text-fg-muted">
-            {metadata.featureCount.toLocaleString("tr-TR")}
+          <span className="tabular-nums text-fg-muted" suppressHydrationWarning>
+            {mounted ? metadata.featureCount.toLocaleString("tr-TR") : "—"}
           </span>
         </button>
       </DialogTrigger>

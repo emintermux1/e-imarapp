@@ -11,6 +11,38 @@ import {
   searchResultToOverlayFeature,
 } from "@/lib/api/parcel-normalizer";
 
+export function selectBackendFeature(
+  state: Pick<BackendParcelState, "parcels" | "overlays">,
+  id: string | null | undefined,
+): ParcelFeature | null {
+  if (!id) return null;
+  const numeric = parseBackendParcelId(id);
+  if (numeric != null) {
+    const parcel = state.parcels[numeric];
+    return parcel ? backendParcelToFeature(parcel) : null;
+  }
+  return state.overlays[id] ?? null;
+}
+
+export function selectVisibleLiveFeatures(
+  state: Pick<BackendParcelState, "parcels" | "overlays">,
+): ParcelFeature[] {
+  const features: ParcelFeature[] = [];
+  const seen = new Set<string>();
+  Object.values(state.parcels).forEach((parcel) => {
+    const feature = backendParcelToFeature(parcel);
+    if (!feature.geometry.coordinates.length) return;
+    seen.add(feature.properties.id);
+    features.push(feature);
+  });
+  Object.values(state.overlays).forEach((feature) => {
+    if (seen.has(feature.properties.id)) return;
+    if (!feature.geometry.coordinates.length) return;
+    features.push(feature);
+  });
+  return features;
+}
+
 interface BackendParcelState {
   parcels: Record<number, ParcelResponse>;
   overlays: Record<string, ParcelFeature>;
@@ -55,15 +87,7 @@ export const useBackendParcelStore = create<BackendParcelState>()((set, get) => 
     });
     if (changed) set({ overlays: next });
   },
-  getFeature: (id) => {
-    if (!id) return null;
-    const numeric = parseBackendParcelId(id);
-    if (numeric != null) {
-      const parcel = get().parcels[numeric];
-      return parcel ? backendParcelToFeature(parcel) : null;
-    }
-    return get().overlays[id] ?? null;
-  },
+  getFeature: (id) => selectBackendFeature(get(), id),
   getResponse: (id) => {
     const numeric = parseBackendParcelId(id);
     return numeric == null ? null : get().parcels[numeric] ?? null;
@@ -76,20 +100,5 @@ export const useBackendParcelStore = create<BackendParcelState>()((set, get) => 
     const parcel = get().parcels[numeric];
     return parcel ? extractGeometry(parcel.geometri) : null;
   },
-  getVisibleLiveFeatures: () => {
-    const features: ParcelFeature[] = [];
-    const seen = new Set<string>();
-    Object.values(get().parcels).forEach((parcel) => {
-      const feature = backendParcelToFeature(parcel);
-      if (!feature.geometry.coordinates.length) return;
-      seen.add(feature.properties.id);
-      features.push(feature);
-    });
-    Object.values(get().overlays).forEach((feature) => {
-      if (seen.has(feature.properties.id)) return;
-      if (!feature.geometry.coordinates.length) return;
-      features.push(feature);
-    });
-    return features;
-  },
+  getVisibleLiveFeatures: () => selectVisibleLiveFeatures(get()),
 }));

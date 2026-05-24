@@ -66,7 +66,7 @@ import type { AskiPolygonFeature } from "@/data/aski-polygons";
 import { getRiskGridCollection } from "@/data/risk-grid";
 import { ZONING_PRESETS } from "@/data/zoning";
 import { getSnapshotForYear } from "@/data/historical-snapshots";
-import { useBackendParcelStore } from "@/stores/backend-parcel-store";
+import { useBackendParcelStore, selectBackendFeature, selectVisibleLiveFeatures } from "@/stores/backend-parcel-store";
 import { useSourceStore } from "@/stores/source-store";
 import { useLatestRegionsStore } from "@/stores/latest-regions-store";
 import type { ProbedLiveMapLayer } from "@/types/api";
@@ -153,10 +153,16 @@ export function MapCanvas({
   const selectedArea = useMapStore((s) => s.selectedArea);
   const multiSelectedParcelIds = useMapStore((s) => s.multiSelectedParcelIds);
   const selectedPoint = useMapStore((s) => s.selectedPoint);
-  const selectedLiveFeature = useBackendParcelStore((s) =>
-    s.getFeature(selectedParcelId),
+  const backendParcels = useBackendParcelStore((s) => s.parcels);
+  const backendOverlays = useBackendParcelStore((s) => s.overlays);
+  const selectedLiveFeature = React.useMemo(
+    () => selectBackendFeature({ parcels: backendParcels, overlays: backendOverlays }, selectedParcelId),
+    [backendOverlays, backendParcels, selectedParcelId],
   );
-  const liveParcelFeatures = useBackendParcelStore((s) => s.getVisibleLiveFeatures());
+  const liveParcelFeatures = React.useMemo(
+    () => selectVisibleLiveFeatures({ parcels: backendParcels, overlays: backendOverlays }),
+    [backendOverlays, backendParcels],
+  );
   const liveLayers = useSourceStore((s) => s.liveLayers);
   const activeMapLayers = useSourceStore((s) => s.activeMapLayers);
   const activateLiveLayer = useSourceStore((s) => s.activateLiveLayer);
