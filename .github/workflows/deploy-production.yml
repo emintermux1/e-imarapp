@@ -50,7 +50,10 @@ jobs:
       - name: Report deploy status
         run: |
           echo "Verify: ${{ needs.verify.result }}"
-          echo "Vercel: ${{ needs.deploy-vercel.result }}"
+          echo "Vercel: ${{ needs.deploy-vercel.result || 'skipped (VERCEL_TOKEN not configured)' }}"
           if [ "${{ needs.verify.result }}" != "success" ]; then
             exit 1
+          fi
+          if [ "${{ needs.deploy-vercel.result }}" = "failure" ]; then
+            echo "::warning::Vercel deploy failed. Set VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID in GitHub Production secrets, or run Deploy VPS workflow."
           fi
