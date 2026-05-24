@@ -2,12 +2,10 @@
 setlocal
 cd /d "%~dp0"
 
-echo == E-Imar PC test (DEMO modu - API gerekmez)
+echo == E-Imar DEMO (sadece web, API gerekmez)
 echo.
-echo 1) Proje klasorunde oldugunuzdan emin olun
-echo 2) Tarayici otomatik acilacak: http://localhost:3001
-echo 3) Canli API icin: npm run dev:all:open
-echo 4) Durdurmak icin bu pencerede Ctrl+C
+echo Tarayici: http://localhost:3001
+echo Durdurmak icin Ctrl+C
 echo.
 
 where node >nul 2>nul

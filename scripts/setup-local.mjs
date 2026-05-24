@@ -42,5 +42,6 @@ run("npm", ["install"], WEB);
 console.log("");
 console.log("Setup complete.");
 console.log("Start the app:");
-console.log("  npm run dev:all");
-console.log("  or on Windows: start.cmd");
+console.log("  npm run dev:demo:open   (demo, no API)");
+console.log("  npm run dev:all       (API + web)");
+console.log("  or on Windows: demo.cmd / test-pc.cmd");

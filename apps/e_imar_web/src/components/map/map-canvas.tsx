@@ -82,6 +82,7 @@ import {
   useDrawingStore,
 } from "@/stores/drawing-store";
 import { getParcelSourceMetadata } from "@/data/parcels";
+import { isDemoDataMode } from "@/lib/demo-mode";
 import {
   emptySelectedAreaCollection,
   getLocationBoundary,
@@ -201,7 +202,8 @@ export function MapCanvas({
     () => getParcelSourceMetadata(),
     [],
   );
-  const parcelSourceUnavailable = parcelSourceMetadata.mode === "unavailable";
+  const parcelSourceUnavailable =
+    !isDemoDataMode() && parcelSourceMetadata.mode === "unavailable";
 
   React.useEffect(() => {
     activeDrawingToolRef.current = activeDrawingTool;

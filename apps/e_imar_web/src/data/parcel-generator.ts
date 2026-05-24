@@ -331,7 +331,9 @@ function generateCluster(cluster: ParcelClusterSeed, startMapId: number): Parcel
             gurultuSkoru: Math.max(15, Math.min(95, Math.round(rand(rng, 30, 82) + (zoningType === "Ticaret" ? 8 : 0))))
           },
           planNotlari: planNotlari(zoningType, cluster, rng),
-          centroid
+          centroid,
+          backendId: mapId,
+          sourceStatus: "demo"
         },
         geometry: { type: "Polygon", coordinates: [ring] }
       });
@@ -363,7 +365,9 @@ function normalizeFeatured(): ParcelFeature[] {
         planLayer: feature.properties.planLayer ?? planLayer(use, status, scale, zoningType),
         planNotlari: feature.properties.planNotlari.includes("Bu kayıt yerel açık kaynak uyumluluk verisidir; resmi kadastro kaydı değildir.")
           ? feature.properties.planNotlari
-          : [...feature.properties.planNotlari, "Bu kayıt yerel açık kaynak uyumluluk verisidir; resmi kadastro kaydı değildir."]
+          : [...feature.properties.planNotlari, "Bu kayıt yerel açık kaynak uyumluluk verisidir; resmi kadastro kaydı değildir."],
+        backendId: mapId,
+        sourceStatus: "demo"
       }
     };
   });

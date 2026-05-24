@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { getBackendAskiPlans, humanizeApiError } from "@/lib/api/backend-client";
+import { demoModeLabel, shouldUseDemoFixtures } from "@/lib/demo-mode";
 import type { PlanResponse } from "@/types/api";
 
 interface AskiState {
@@ -32,8 +33,10 @@ export const useAskiStore = create<AskiState>()((set) => ({
     } catch (error) {
       set({
         plans: [],
-        status: "unavailable",
-        message: `${humanizeApiError(error)} Yerel/public askı katmanı korunuyor.`,
+        status: shouldUseDemoFixtures() ? "fallback" : "unavailable",
+        message: shouldUseDemoFixtures()
+          ? `${demoModeLabel()} Yerel askı katmanı gösteriliyor.`
+          : `${humanizeApiError(error)} Yerel/public askı katmanı korunuyor.`,
         lastCheckedAt: new Date().toISOString()
       });
     }

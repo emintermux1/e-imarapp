@@ -14,10 +14,16 @@ import type {
   WebsiteSearchResponse,
 } from "@/lib/api/types";
 import {
+  resolveDemoMunicipalWorkflow,
+  resolveDemoMunicipalityCoverage,
+  resolveDemoOgcCatalog,
+} from "@/data/demo-api-fixtures";
+import {
   FALLBACK_SOURCE_HEALTH,
   FALLBACK_SOURCES_RESPONSE,
   getFallbackSourceDetail,
 } from "@/data/generated/source-fixtures";
+import { shouldUseDemoFixtures } from "@/lib/demo-mode";
 
 const API_PROXY_BASE = "/api/v1";
 
@@ -312,6 +318,15 @@ export function fetchMunicipalityCoverage(params?: {
   vendor?: string;
   accessStatus?: string;
 }) {
+  if (shouldUseDemoFixtures()) {
+    return Promise.resolve({
+      ok: true as const,
+      data: resolveDemoMunicipalityCoverage({
+        province: params?.province,
+        district: params?.district,
+      }),
+    });
+  }
   const search = new URLSearchParams();
   if (params?.province) search.set("province", params.province);
   if (params?.district) search.set("district", params.district);
@@ -360,6 +375,12 @@ export function fetchMunicipalParcelWorkflow(payload: {
   lng?: number;
   lat?: number;
 }) {
+  if (shouldUseDemoFixtures()) {
+    return Promise.resolve({
+      ok: true as const,
+      data: resolveDemoMunicipalWorkflow(payload as Record<string, unknown>),
+    });
+  }
   return fetch(`/website/bff/municipal-parcel-workflow`, {
     method: "POST",
     cache: "no-store",
@@ -382,6 +403,12 @@ export function fetchOgcCatalog(
   sourceId: string,
   params?: { endpoint?: string; service?: "WMS" | "WFS" },
 ) {
+  if (shouldUseDemoFixtures()) {
+    return Promise.resolve({
+      ok: true as const,
+      data: resolveDemoOgcCatalog(sourceId),
+    });
+  }
   return fetch(`/connectors/${encodeURIComponent(sourceId)}/ogc/catalog`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

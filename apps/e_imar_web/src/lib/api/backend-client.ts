@@ -37,6 +37,8 @@ import type {
   WebsiteSessionVerifyResponse,
   WebsiteWorkspaceResponse
 } from "@/types/api";
+import { resolveDemoApiFixture, resolveDemoOriginFixture } from "@/data/demo-api-fixtures";
+import { shouldUseDemoFixtures, demoModeLabel } from "@/lib/demo-mode";
 import { readPublicBackendBase, toApiOrigin } from "@/lib/public-config";
 
 export const API_BASE = readPublicBackendBase();
@@ -55,6 +57,14 @@ export class ApiFetchError extends Error {
 }
 
 export function humanizeApiError(error: unknown, fallback?: string) {
+  if (shouldUseDemoFixtures()) {
+    if (error instanceof ApiFetchError && error.status == null) {
+      return fallback ?? demoModeLabel();
+    }
+    if (error instanceof TypeError && /failed to fetch/i.test(error.message)) {
+      return fallback ?? demoModeLabel();
+    }
+  }
   if (error instanceof ApiFetchError) {
     if (error.status == null) {
       return `Backend erişilemiyor. NestJS API servisinin ${API_BASE} üzerinde çalıştığını kontrol edin.`;
@@ -80,6 +90,11 @@ function makeOriginUrl(path: string) {
 }
 
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  if (shouldUseDemoFixtures()) {
+    const fixture = resolveDemoApiFixture<T>(path, options);
+    if (fixture !== undefined) return fixture;
+  }
+
   const headers = new Headers(options.headers);
   if (!headers.has("Accept")) headers.set("Accept", "application/json");
   if (options.body && !headers.has("Content-Type")) {
@@ -110,6 +125,11 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
 }
 
 export async function originFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  if (shouldUseDemoFixtures()) {
+    const fixture = resolveDemoOriginFixture<T>(path, options);
+    if (fixture !== undefined) return fixture;
+  }
+
   const headers = new Headers(options.headers);
   if (!headers.has("Accept")) headers.set("Accept", "application/json");
   if (options.body && !headers.has("Content-Type")) {
