@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
+import { motion } from "framer-motion";
 import { TopBar } from "./top-bar";
 import { LeftSidebar } from "./left-sidebar";
 import { RightInfoPanel } from "./right-info-panel";
@@ -12,14 +12,11 @@ import { MobileBottomSheet } from "./mobile-bottom-sheet";
 import { Sheet } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarSections } from "@/components/sidebar/sidebar-sections";
-import { DataCoverageBadge } from "@/components/map/data-coverage-badge";
 import { MunicipalityWorkbench } from "@/components/map/municipality-workbench";
 import { AskiPopover } from "@/components/map/aski-popover";
 import { TimelineFloating } from "@/components/gis/timeline-floating";
 import { Section3DAnalizleri } from "@/components/gis/section-3d-analizleri";
-import { LiveReadinessStrip } from "@/components/product/live-readiness-strip";
 import { LayerCatalogDrawer } from "@/components/map/layer-catalog-drawer";
-import { HomepageQueryCard } from "@/components/product/homepage-query-card";
 import { SkipToMain } from "@/components/a11y/skip-to-main";
 import { useUIStore } from "@/stores/ui-store";
 import { BrandMark } from "./brand-mark";
@@ -125,18 +122,14 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
               />
             )}
             <MapInstructionIsland />
-            <div className={cn("pointer-events-auto absolute top-44 z-20 hidden w-[420px] transition-[left] duration-300 2xl:block", leftDockClass)}>
-              <HomepageQueryCard />
-            </div>
-            <div className={cn("pointer-events-auto absolute top-24 z-20 hidden transition-[left] duration-300 xl:flex", leftDockClass)}>
-              <MapSourceDock />
-            </div>
-            <div className="pointer-events-auto absolute right-[420px] top-24 z-20 hidden xl:block">
-              <LiveReadinessStrip />
-            </div>
-            <div className={cn("pointer-events-auto absolute bottom-24 z-20 hidden w-[min(760px,calc(100vw-34rem))] transition-[left] duration-300 2xl:block", leftDockClass)}>
-              <MunicipalityWorkbench />
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.04, ease: [0.32, 0.72, 0, 1] }}
+              className={cn("pointer-events-auto absolute bottom-24 z-20 hidden transition-[left] duration-300 xl:block", leftDockClass)}
+            >
+              <MunicipalityWorkbench collapsedByDefault />
+            </motion.div>
             <MapHud
               cursorReadoutRef={cursorReadoutRef}
               zoomReadoutRef={zoomReadoutRef}
@@ -193,19 +186,6 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
   );
 }
 
-function MapSourceDock() {
-  return (
-    <div className="map-glass-shell flex items-center gap-2 rounded-2xl px-2 py-2">
-      <DataCoverageBadge />
-      <Link
-        href="/kaynaklar"
-        className="soft-press inline-flex h-8 items-center rounded-full border border-border-subtle bg-surface-1 px-3 text-[11px] font-bold text-fg-secondary transition-colors hover:bg-white hover:text-fg-primary"
-      >
-        Kaynak merkezi
-      </Link>
-    </div>
-  );
-}
 
 function MapInstructionIsland() {
   return (

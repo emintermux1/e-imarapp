@@ -3,7 +3,8 @@
 import * as React from "react";
 import { AlertCircle, TrendingUp, MapPin, Satellite, FileSearch, Route, Mountain, Building2, Clock3 } from "lucide-react";
 import { ZoningBadge } from "@/components/gis/zoning-badge";
-import { SourceBadge } from "@/components/gis/source-badge";
+import { sourceStatusLabel } from "@/lib/api/quality-labels";
+import { metricValueTone } from "@/lib/ui/status-tones";
 import { cn } from "@/lib/utils";
 import type { ParcelProps } from "@/types/parcel";
 import { PLAN_LAYER_LABELS, PLAN_STATUS_LABELS } from "@/data/zoning";
@@ -69,37 +70,19 @@ export function SectionParcelSummary({ parcel }: { parcel: ParcelProps }) {
           label="Yatırım"
           value={investmentGrade}
           icon={<TrendingUp className="h-3 w-3" />}
-          valueColor={
-            parcel.yatirimSkoru >= 75
-              ? "text-[rgb(var(--status-success))]"
-              : parcel.yatirimSkoru >= 50
-              ? "text-[rgb(var(--accent-blue))]"
-              : "text-[rgb(var(--status-warning))]"
-          }
+          valueColor={metricValueTone(parcel.yatirimSkoru >= 75 ? "positive" : parcel.yatirimSkoru >= 50 ? "neutral" : "caution")}
         />
         <MetricBadge
           label="Risk"
           value={riskLevel}
           icon={<AlertCircle className="h-3 w-3" />}
-          valueColor={
-            riskLevel === "Düşük"
-              ? "text-[rgb(var(--status-success))]"
-              : riskLevel === "Orta"
-              ? "text-[rgb(var(--status-warning))]"
-              : "text-[rgb(var(--status-error))]"
-          }
+          valueColor={metricValueTone(riskLevel === "Düşük" ? "positive" : riskLevel === "Orta" ? "caution" : "danger")}
         />
         <MetricBadge
           label="Erişim"
           value={accessibilityLevel}
           icon={<MapPin className="h-3 w-3" />}
-          valueColor={
-            parcel.cevre.ulasimSkoru >= 75
-              ? "text-[rgb(var(--status-success))]"
-              : parcel.cevre.ulasimSkoru >= 50
-              ? "text-[rgb(var(--accent-blue))]"
-              : "text-[rgb(var(--status-warning))]"
-          }
+          valueColor={metricValueTone(parcel.cevre.ulasimSkoru >= 75 ? "positive" : parcel.cevre.ulasimSkoru >= 50 ? "neutral" : "caution")}
         />
       </div>
 
@@ -184,14 +167,12 @@ function InfoTile({
 }) {
   return (
     <div className="rounded-lg border border-border-subtle bg-surface-2 px-2 py-2 shadow-[inset_0_1px_0_rgb(255_255_255/0.72)]">
-      <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider text-fg-muted">
-          {icon}
-          {label}
-        </span>
-        <SourceBadge status={status} className="h-4 px-1 text-[8px]" />
-      </div>
+      <span className="inline-flex items-center gap-1 text-[9px] font-medium text-fg-muted">
+        {icon}
+        {label}
+      </span>
       <div className="mt-1 text-[12px] font-semibold tabular-nums text-fg-primary">{value}</div>
+      <div className="mt-0.5 text-[9px] text-fg-muted">{sourceStatusLabel(status)}</div>
     </div>
   );
 }
@@ -209,12 +190,10 @@ function PlaceholderCard({
 }) {
   return (
     <div className="rounded-lg border border-border-subtle bg-surface-2 px-2.5 py-2 shadow-[inset_0_1px_0_rgb(255_255_255/0.72)]">
-      <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-fg-primary">
-          <span className="text-fg-muted">{icon}</span>
-          {title}
-        </span>
-        <SourceBadge status={status} className="h-4 px-1.5 text-[8px]" />
+      <div className="flex items-center gap-1.5 text-[11px] font-medium text-fg-primary">
+        <span className="text-fg-muted">{icon}</span>
+        {title}
+        <span className="ml-auto text-[9px] font-normal text-fg-muted">{sourceStatusLabel(status)}</span>
       </div>
       <p className="mt-1 text-[11px] leading-relaxed text-fg-muted">{text}</p>
     </div>

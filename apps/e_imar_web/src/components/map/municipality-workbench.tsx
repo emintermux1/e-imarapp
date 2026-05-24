@@ -60,7 +60,7 @@ const FALLBACK_MUNICIPALITIES = BELEDIYE_LIST.slice(0, 10).map((record) => ({
   }
 }));
 
-export function MunicipalityWorkbench() {
+export function MunicipalityWorkbench({ collapsedByDefault = false }: { collapsedByDefault?: boolean }) {
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
   const flyTo = useMapStore((s) => s.flyTo);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
@@ -92,6 +92,7 @@ export function MunicipalityWorkbench() {
     error: string | null;
   }>({ loading: false, result: null, error: null });
   const [activeLayers, setActiveLayers] = React.useState<string[]>([]);
+  const [panelOpen, setPanelOpen] = React.useState(!collapsedByDefault);
 
   const coverageQuery = useQuery({
     queryKey: ["municipality-coverage", parcelQuery.province, parcelQuery.district],
@@ -219,11 +220,22 @@ export function MunicipalityWorkbench() {
   return (
     <section className="map-glass-shell pointer-events-auto overflow-hidden rounded-[1.75rem]">
       <div className="flex items-center justify-between gap-2 border-b border-border-subtle/80 bg-surface-2/80 px-4 py-3">
-        <div>
+        <div className="min-w-0">
           <div className="section-eyebrow">Belediye / veri durumu</div>
-          <div className="text-sm font-black text-fg-primary">Kaynak seç, sorgula, alan kontratını gör</div>
+          <div className="truncate text-sm font-semibold text-fg-primary">
+            {selectedMunicipality?.name ?? "Kaynak seç, sorgula"}
+          </div>
         </div>
-        <Popover open={open} onOpenChange={setOpen}>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setPanelOpen((value) => !value)}
+            className="soft-press inline-flex h-9 items-center gap-1 rounded-full border border-border-subtle bg-surface-1 px-2.5 text-[11px] font-semibold text-fg-secondary hover:bg-white hover:text-fg-primary"
+          >
+            {panelOpen ? "Daralt" : "Genişlet"}
+            <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", panelOpen && "rotate-180")} />
+          </button>
+          <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <button className="soft-press inline-flex h-10 items-center gap-2 rounded-full border border-border-subtle bg-surface-1 px-3 text-sm font-semibold text-fg-primary hover:bg-white">
               <Building2 className="h-4 w-4 text-fg-muted" />
@@ -286,8 +298,10 @@ export function MunicipalityWorkbench() {
             </CommandRoot>
           </PopoverContent>
         </Popover>
+        </div>
       </div>
 
+      {panelOpen && (
       <div className="grid gap-3 p-4 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="space-y-3">
           <MunicipalityStatusCard entry={selectedMunicipality} />
@@ -350,6 +364,7 @@ export function MunicipalityWorkbench() {
           {catalog.error && <Notice tone="warning" title="Katalog okunamadı">{catalog.error}</Notice>}
         </div>
       </div>
+      )}
     </section>
   );
 }

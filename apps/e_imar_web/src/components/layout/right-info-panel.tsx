@@ -630,13 +630,6 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             />
           </section>
 
-          <ParcelShareSummaryCard
-            parcel={parcelData!}
-            summary={parcelSummary}
-            context={parcelContext}
-            status={parcelContextStatus}
-            geometrySource={backendGeometry ? "live" : parcelData!.centroid ? "demo" : "unavailable"}
-          />
           {comparisonParcels.length >= 2 && (
             <ParcelComparisonCard parcels={comparisonParcels} onClear={clearMultiSelection} />
           )}
@@ -649,7 +642,7 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
             )}
             <Accordion
               type="multiple"
-              defaultValue={["ai-analiz", "guven", "ilgili-planlar", "konum", "imar"]}
+              defaultValue={["imar"]}
               className="divide-y divide-border-subtle"
             >
               {pointAnalysis && (
@@ -1037,7 +1030,7 @@ function GlassMetric({ icon, label, value }: { icon: React.ReactNode; label: str
 function insightToneClass(tone: PlaceInsightCard["tone"]) {
   switch (tone) {
     case "good":
-      return "border-status-success/30 bg-[rgb(var(--status-success)/0.06)]";
+      return "border-brand-navy/20 bg-brand-navy/5";
     case "warning":
       return "border-status-warning/35 bg-[rgb(var(--status-warning)/0.06)]";
     case "danger":
@@ -1311,7 +1304,7 @@ function ShareFact({
     <div className="min-w-0 rounded-md border border-border-subtle bg-surface-1/70 px-2 py-2">
       <div className="flex items-center justify-between gap-2">
         <span className="truncate text-[9px] uppercase tracking-wider text-fg-muted">{label}</span>
-        <SourceBadge status={status} className="h-4 px-1 text-[8px]" />
+        <span className="truncate text-[9px] text-fg-muted">{sourceStatusLabel(status as DataSourceStatus)}</span>
       </div>
       <div className="mt-1 truncate text-[11px] font-medium text-fg-primary">{value}</div>
     </div>
@@ -1415,9 +1408,9 @@ function ParcelWorkflowStrip({
   return (
     <div className="grid grid-cols-5 gap-1.5">
       {steps.map((step) => (
-        <div key={step.label} className="rounded-md border border-border-subtle bg-surface-2/80 px-1.5 py-1">
-          <div className="text-[9px] uppercase tracking-wider text-fg-muted">{step.label}</div>
-          <SourceBadge status={step.status} label={step.text} className="mt-1 h-4 px-1 text-[8px]" />
+        <div key={step.label} className="rounded-md border border-border-subtle bg-surface-2/80 px-1.5 py-1.5">
+          <div className="text-[9px] font-medium text-fg-muted">{step.label}</div>
+          <div className="mt-1 truncate text-[10px] font-semibold text-fg-secondary">{step.text}</div>
         </div>
       ))}
     </div>

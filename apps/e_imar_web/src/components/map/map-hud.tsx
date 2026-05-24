@@ -169,7 +169,7 @@ export function MapHud({
             aria-hidden
             className={cn(
               "block h-1 w-1 rounded-full",
-              mapMode === "3d" ? "bg-brand-blue" : "bg-status-success"
+              mapMode === "3d" ? "bg-brand-blue" : "bg-brand-navy"
             )}
           />
           <span className="font-medium">

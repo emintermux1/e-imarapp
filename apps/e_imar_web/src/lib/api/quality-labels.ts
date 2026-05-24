@@ -1,13 +1,13 @@
 import type { DataSourceStatus, ParcelQualityMetadata, ParcelSummaryResponse, SourceQualityRecord } from "@/types/api";
 
 export const SOURCE_STATUS_LABELS: Record<DataSourceStatus, string> = {
-  live: "Canlı",
-  fallback: "Kayıtlı kaynak",
+  live: "Canlı kaynak",
+  fallback: "Yedek kayıt",
   unavailable: "Erişilemiyor",
-  computed: "Hesaplandı",
-  demo: "Açık kayıt",
-  official: "Resmî",
-  public_metadata: "Açık kayıt",
+  computed: "Hesaplanmış",
+  demo: "Örnek veri",
+  official: "Resmî kayıt",
+  public_metadata: "Metadata",
   derived: "Türetilmiş",
   not_ready: "Keşif bekliyor"
 };
@@ -57,7 +57,7 @@ export function formatQualityTimestamp(value?: string | null) {
 }
 
 export function geometryLabel(available?: boolean | null) {
-  return available ? "Geometri var" : "Geometri yok";
+  return available ? "Geometri mevcut" : "Geometri yok";
 }
 
 export function matchStatusLabel(value?: string | null) {

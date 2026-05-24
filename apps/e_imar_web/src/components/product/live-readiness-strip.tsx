@@ -102,7 +102,7 @@ function ReadinessMiniSource({ source }: { source: WebsiteReadinessSource }) {
         {source.status === "public_metadata" ? (
           <RadioTower className="h-3 w-3 shrink-0 text-[rgb(var(--accent-blue))]" />
         ) : source.status === "verified_live" ? (
-          <CheckCircle2 className="h-3 w-3 shrink-0 text-status-success" />
+          <CheckCircle2 className="h-3 w-3 shrink-0 text-brand-navy" />
         ) : (
           <LockKeyhole className="h-3 w-3 shrink-0 text-status-warning" />
         )}
@@ -114,7 +114,7 @@ function ReadinessMiniSource({ source }: { source: WebsiteReadinessSource }) {
 }
 
 function statusClass(status: string) {
-  if (status === "ok") return "border-status-success/30 bg-status-success/10 text-status-success";
+  if (status === "ok") return "border-brand-navy/22 bg-brand-navy/6 text-fg-secondary";
   if (status === "loading") return "border-brand-blue/30 bg-brand-blue/10 text-brand-blue";
   return "border-status-warning/35 bg-status-warning/12 text-status-warning";
 }
