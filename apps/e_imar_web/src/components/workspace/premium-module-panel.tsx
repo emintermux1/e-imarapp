@@ -18,7 +18,7 @@ export function PremiumModulePanel({
     <section className="rounded-[1.5rem] border border-border-subtle bg-surface-2/94 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-green">Premium / readiness</p>
+          <p className="section-eyebrow">Premium / readiness</p>
           <h2 className="mt-1 text-base font-black text-fg-primary">Bağlı backend modülleri</h2>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-fg-secondary">
             Analiz, yapı zarfı, tevhid, e-plan ve abonelik uçları gerçek durumlarıyla gösterilir; parsel gerektiren modüller seçim yoksa `not_ready` kalır.

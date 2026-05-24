@@ -154,18 +154,18 @@ export default function WorkspacePage() {
       <div className="h-full overflow-auto px-4 pb-10 pt-24 lg:pl-[6.5rem] xl:pl-[21rem]">
         <main className="mx-auto max-w-[1280px] space-y-4">
           <section className="overflow-hidden rounded-[2rem] border border-white/55 bg-surface-2/94 shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_28px_90px_-58px_rgb(var(--accent-navy)/0.8)]">
-            <header className="border-b border-border-subtle/80 bg-[radial-gradient(circle_at_top_left,rgb(var(--accent-green)/0.18),transparent_34%),rgb(var(--surface-1)/0.72)] px-5 py-5">
+            <header className="border-b border-border-subtle/80 bg-[radial-gradient(circle_at_top_left,rgb(var(--accent-navy)/0.10),transparent_34%),rgb(var(--surface-1)/0.72)] px-5 py-5">
               <Link href="/" className="mb-4 inline-flex items-center gap-2 text-xs font-semibold text-fg-secondary hover:text-fg-primary">
                 <ArrowLeft className="h-3.5 w-3.5" />
                 Haritaya dön
               </Link>
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
                 <div className="flex items-start gap-3">
-                  <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-brand-green/25 bg-brand-green/10 text-brand-green">
+                  <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-brand-navy/15 bg-brand-navy/8 text-brand-navy">
                     <UserRound className="h-6 w-6" />
                   </span>
                   <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.22em] text-brand-green">BFF / workspace + session</p>
+                    <p className="section-eyebrow">BFF / workspace + session</p>
                     <h1 className="mt-1 text-2xl font-black tracking-[-0.04em] text-fg-primary">Çalışma alanı</h1>
                     <p className="mt-2 max-w-2xl text-sm leading-relaxed text-fg-secondary">
                       Geçmiş, favoriler ve plan bildirim abonelikleri tablı tek workspace yüzeyinde birleşir; backend `not_ready`, `requires_credentials` ve `unavailable` durumları uydurma içerikle kapatılmaz.

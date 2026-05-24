@@ -29,7 +29,7 @@ export default function AdminDashboardPage() {
           { icon: FileText, title: "Rapor kuyruğu", body: "Raporlar kaynak linki, son kontrol tarihi ve resmi belge uyarısıyla saklanır." }
         ].map((item) => (
           <article key={item.title} className="rounded-[1.5rem] border border-border-subtle bg-surface-1 p-4">
-            <item.icon className="h-5 w-5 text-brand-green" />
+            <item.icon className="h-5 w-5 text-brand-navy" />
             <h2 className="mt-3 font-black text-fg-primary">{item.title}</h2>
             <p className="mt-1 text-sm leading-relaxed text-fg-secondary">{item.body}</p>
           </article>
@@ -38,7 +38,7 @@ export default function AdminDashboardPage() {
 
       <div className="mt-4 rounded-[1.5rem] border border-border-subtle bg-surface-1 p-4">
         <div className="flex items-center gap-2 text-sm font-black text-fg-primary">
-          <Activity className="h-4 w-4 text-brand-green" />
+          <Activity className="h-4 w-4 text-fg-secondary" />
           MVP sinyali
         </div>
         <p className="mt-2 text-sm leading-relaxed text-fg-secondary">

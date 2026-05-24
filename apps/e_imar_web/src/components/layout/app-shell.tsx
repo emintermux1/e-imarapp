@@ -69,7 +69,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
   return (
     <div className="relative min-h-dvh overflow-hidden bg-bg text-fg-primary">
       <SkipToMain />
-      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_8%_8%,rgb(var(--accent-green)/0.10),transparent_24rem),radial-gradient(circle_at_92%_0%,rgb(var(--accent-blue)/0.06),transparent_26rem)]" />
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_8%_8%,rgb(var(--accent-navy)/0.06),transparent_24rem),radial-gradient(circle_at_92%_0%,rgb(var(--accent-blue)/0.05),transparent_26rem)]" />
       <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-0 h-28 border-b border-white/30 bg-[linear-gradient(180deg,rgb(var(--surface-2)/0.45),rgb(var(--bg)/0))]" />
       {!fullscreenMap && <TopBar onOpenMobileMenu={() => setMobileNavOpen(true)} />}
 
@@ -216,7 +216,7 @@ function MapInstructionIsland() {
             <Search className="h-4 w-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] font-black uppercase tracking-[0.22em] text-brand-green">
+            <div className="section-eyebrow">
               Tek yerden sorgula
             </div>
             <div className="mt-0.5 truncate text-sm font-black tracking-tight text-fg-primary">
@@ -311,7 +311,7 @@ function DockButton({
         "max-sm:min-h-11 max-sm:min-w-11 max-sm:justify-center max-sm:px-3 max-sm:text-xs"
       )}
     >
-      <span className={active ? "text-white" : "text-brand-green"}>{icon}</span>
+      <span className={active ? "text-white" : "text-fg-secondary"}>{icon}</span>
       {label}
     </button>
   );
@@ -325,7 +325,7 @@ function MobileMapHint() {
   return (
     <div className="pointer-events-auto absolute left-3 top-4 z-10 flex flex-col gap-2 xl:hidden">
       <div className="map-glass-shell max-w-[calc(100vw-5.5rem)] rounded-[1.5rem] px-4 py-3 md:hidden">
-        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-green">Harita komutu</div>
+        <div className="section-eyebrow">Harita komutu</div>
         <div className="mt-1 text-sm font-black leading-tight text-fg-primary">Ara, katman aç veya 3D&apos;ye geç</div>
       </div>
       <div className="hidden gap-2 md:flex xl:hidden">
@@ -356,7 +356,7 @@ function HintButton({
         "soft-press hover:bg-white"
       )}
     >
-      <span className="text-brand-green">{icon}</span>
+      <span className="text-fg-secondary">{icon}</span>
       {label}
     </button>
   );

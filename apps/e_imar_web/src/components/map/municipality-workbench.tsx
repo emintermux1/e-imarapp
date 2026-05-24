@@ -220,7 +220,7 @@ export function MunicipalityWorkbench() {
     <section className="map-glass-shell pointer-events-auto overflow-hidden rounded-[1.75rem]">
       <div className="flex items-center justify-between gap-2 border-b border-border-subtle/80 bg-surface-2/80 px-4 py-3">
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-brand-green">Belediye / veri durumu</div>
+          <div className="section-eyebrow">Belediye / veri durumu</div>
           <div className="text-sm font-black text-fg-primary">Kaynak seç, sorgula, alan kontratını gör</div>
         </div>
         <Popover open={open} onOpenChange={setOpen}>

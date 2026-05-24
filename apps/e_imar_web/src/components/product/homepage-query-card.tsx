@@ -36,13 +36,13 @@ export function HomepageQueryCard({ className }: { className?: string }) {
 
   return (
     <section className={cn("overflow-hidden rounded-[2rem] border border-white/60 bg-surface-2/95 shadow-[0_28px_90px_-62px_rgb(var(--accent-navy)/0.9)]", className)}>
-      <div className="border-b border-border-subtle bg-[radial-gradient(circle_at_top_left,rgb(var(--accent-green)/0.18),transparent_38%),rgb(var(--surface-1)/0.72)] px-5 py-4">
+      <div className="border-b border-border-subtle bg-[radial-gradient(circle_at_top_left,rgb(var(--accent-navy)/0.10),transparent_38%),rgb(var(--surface-1)/0.72)] px-5 py-4">
         <div className="flex items-center gap-3">
           <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[rgb(var(--accent-navy))] text-white">
             <Search className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-brand-green">MVP sorgu</p>
+            <p className="section-eyebrow">MVP sorgu</p>
             <h2 className="text-xl font-black tracking-[-0.04em] text-fg-primary">Ada/parsel ile imar durumunu başlat</h2>
           </div>
         </div>
@@ -80,12 +80,12 @@ export function HomepageQueryCard({ className }: { className?: string }) {
             <ArrowRight className="h-4 w-4" />
           </Button>
           <a href="/kaynaklar" className="inline-flex h-10 items-center gap-2 rounded-full border border-border-subtle bg-surface-1 px-4 text-sm font-bold text-fg-primary hover:bg-white">
-            <ShieldCheck className="h-4 w-4 text-brand-green" />
+            <ShieldCheck className="h-4 w-4 text-fg-secondary" />
             Kaynak durumunu gör
           </a>
         </div>
         <div className="flex items-start gap-2 rounded-2xl border border-border-subtle bg-surface-1/70 px-3 py-2 text-xs leading-relaxed text-fg-secondary">
-          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-green" />
+          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-fg-secondary" />
           Sorgu sonucu resmi belge yerine kaynaklı ön inceleme üretir; resmi belge için ilgili belediye/TKGM bağlantısı gösterilir.
         </div>
       </form>
@@ -106,6 +106,6 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 function inputClass(error?: string) {
   return cn(
     "h-11 w-full rounded-2xl border bg-surface-2 px-3 text-sm font-semibold text-fg-primary shadow-[inset_0_1px_0_rgb(255_255_255/0.7)] placeholder:text-fg-muted/70",
-    error ? "border-status-error/45 bg-status-error/5" : "border-border-subtle focus:border-brand-green"
+    error ? "border-status-error/45 bg-status-error/5" : "border-border-subtle focus:border-brand-navy"
   );
 }

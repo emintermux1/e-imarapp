@@ -58,7 +58,7 @@ export default function PlanNotePage() {
                   <Brain className="h-6 w-6" />
                 </span>
                 <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-brand-green">BFF / plan-note-explain</p>
+                  <p className="section-eyebrow">BFF / plan-note-explain</p>
                   <h1 className="mt-1 text-2xl font-black tracking-[-0.04em] text-fg-primary">Plan notu açıklayıcı</h1>
                   <p className="mt-2 max-w-2xl text-sm leading-relaxed text-fg-secondary">
                     Resmî plan notunu sade dile çevirir; sağlayıcı hazır değilse bunu açık durum kartıyla gösterir.
@@ -157,7 +157,7 @@ function ExplanationPanel({ result }: { result: PlanNoteExplainResponse | null }
   return (
     <section className="space-y-3 rounded-[1.5rem] border border-border-subtle bg-surface-2/94 p-5">
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-green">Sade özet</p>
+        <p className="section-eyebrow">Sade özet</p>
         <h2 className="mt-1 text-lg font-black tracking-[-0.02em] text-fg-primary">{explanation.plainSummary ?? "Özet dönmedi"}</h2>
       </div>
       <ListBlock title="Maddeler" items={explanation.bullets} />

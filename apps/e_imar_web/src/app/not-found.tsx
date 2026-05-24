@@ -39,7 +39,7 @@ export default function NotFound() {
 
           <div className="divide-y divide-border-subtle rounded-xl border border-border-subtle bg-surface-1/70">
             <div className="flex items-start gap-3 p-5">
-              <span className="mt-1 grid h-9 w-9 place-items-center rounded-full border border-border-strong bg-surface-2 text-brand-green">
+              <span className="mt-1 grid h-9 w-9 place-items-center rounded-full border border-border-strong bg-surface-2 text-brand-navy">
                 <Compass className="h-4 w-4" />
               </span>
               <div>

@@ -102,11 +102,11 @@ function SubscriptionForm({
   return (
     <form onSubmit={onSubmit} className="rounded-[1.5rem] border border-border-subtle bg-surface-1/86 p-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.68)]">
       <div className="flex items-start gap-3">
-        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-brand-green/25 bg-brand-green/10 text-brand-green">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-brand-navy/15 bg-brand-navy/8 text-brand-navy">
           <BellPlus className="h-5 w-5" />
         </span>
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-green">POST /eplan/subscriptions</p>
+          <p className="section-eyebrow">POST /eplan/subscriptions</p>
           <h2 className="mt-1 text-base font-black text-fg-primary">Abonelik kontrolü</h2>
           <p className="mt-1 text-xs leading-relaxed text-fg-secondary">Webhook veya push hedefi aynı kullanıcı referansı için upsert edilir.</p>
         </div>

@@ -82,7 +82,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
       className="pointer-events-none fixed left-4 right-4 top-4 z-40 flex h-14 items-center gap-2"
       role="banner"
     >
-      <div className="pointer-events-auto flex h-14 min-w-[64px] items-center gap-2 rounded-full border border-white/12 bg-[linear-gradient(135deg,rgb(var(--accent-navy)/0.98),rgb(var(--accent-green)/0.86))] px-3 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_24px_70px_-48px_rgb(var(--accent-navy)/0.92)] md:min-w-[178px] lg:min-w-[228px]">
+      <div className="pointer-events-auto flex h-14 min-w-[64px] items-center gap-2 rounded-full border border-white/12 bg-[linear-gradient(135deg,rgb(var(--accent-navy)/0.98),rgb(var(--accent-navy)/0.82))] px-3 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_24px_70px_-48px_rgb(var(--accent-navy)/0.92)] md:min-w-[178px] lg:min-w-[228px]">
         <button
           type="button"
           aria-label="Menüyü aç"
@@ -105,7 +105,7 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
           <TooltipTrigger asChild>
             <Link
               href="/kaynaklar"
-              className="hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-green/20 bg-brand-green/10 px-2.5 text-[11px] text-fg-secondary transition-colors hover:border-brand-green/40 hover:bg-brand-green/15 xl:inline-flex soft-press"
+              className="hidden h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-brand-navy/15 bg-brand-navy/8 px-2.5 text-[11px] text-fg-secondary transition-colors hover:border-brand-navy/25 hover:bg-brand-navy/12 xl:inline-flex soft-press"
             >
               <Activity className="h-3.5 w-3.5" />
               <span className="font-medium text-fg-primary">{okSources}/{totalSources || Object.keys(ASKI_LIST).length} kaynak aktif</span>
@@ -193,8 +193,8 @@ export function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu?: () => void }) 
               className={cn(
                 "hidden h-9 min-w-max items-center gap-2 whitespace-nowrap rounded-full border px-3 text-[11px] font-semibold tabular-nums transition-colors 2xl:inline-flex soft-press",
                 latestRegionsStatus === "loading"
-                  ? "border-brand-green/60 bg-[rgb(var(--accent-green)/0.14)] text-fg-primary"
-                  : "border-brand-green/35 bg-[rgb(var(--accent-green)/0.08)] text-fg-secondary hover:border-brand-green/60 hover:bg-[rgb(var(--accent-green)/0.14)] hover:text-fg-primary"
+                  ? "border-brand-navy/35 bg-[rgb(var(--accent-navy)/0.10)] text-fg-primary"
+                  : "border-brand-navy/20 bg-[rgb(var(--accent-navy)/0.06)] text-fg-secondary hover:border-brand-navy/35 hover:bg-[rgb(var(--accent-navy)/0.10)] hover:text-fg-primary"
               )}
             >
               <span className="relative inline-flex h-5 w-5 items-center justify-center rounded-sm border border-brand-blue/30 bg-[rgb(var(--accent-blue)/0.12)] text-[rgb(var(--accent-blue))]">

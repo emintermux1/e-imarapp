@@ -95,7 +95,7 @@ export function ReportRequestForm({ defaultQuery, onReportCreated }: Props) {
           <FileText className="h-4 w-4" />
         </span>
         <div>
-          <h2 className="text-[12px] font-black uppercase tracking-[0.18em] text-brand-green">
+          <h2 className="section-eyebrow">
             Rapor Oluştur
           </h2>
           <p className="mt-0.5 text-[10px] text-fg-muted">

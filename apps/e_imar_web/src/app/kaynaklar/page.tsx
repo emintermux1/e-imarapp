@@ -204,7 +204,7 @@ export default function KaynaklarPage() {
       <div className="h-full overflow-auto px-4 pb-8 pt-24 lg:pl-[6.5rem] xl:pl-[21rem]">
         <main className="mx-auto max-w-[1540px] space-y-4">
           <section className="overflow-hidden rounded-[2rem] border border-white/55 bg-surface-2/94 shadow-[0_1px_0_rgb(255_255_255/0.72)_inset,0_28px_90px_-58px_rgb(var(--accent-navy)/0.8)]">
-            <header className="border-b border-border-subtle/80 bg-[radial-gradient(circle_at_top_left,rgb(var(--accent-green)/0.18),transparent_36%),radial-gradient(circle_at_top_right,rgb(var(--accent-blue)/0.13),transparent_32%),rgb(var(--surface-1)/0.76)] px-5 py-5">
+            <header className="border-b border-border-subtle/80 bg-[radial-gradient(circle_at_top_left,rgb(var(--accent-navy)/0.10),transparent_36%),radial-gradient(circle_at_top_right,rgb(var(--accent-blue)/0.13),transparent_32%),rgb(var(--surface-1)/0.76)] px-5 py-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
                   <Link href="/" className="mb-4 inline-flex items-center gap-2 text-xs font-semibold text-fg-secondary hover:text-fg-primary">
@@ -212,11 +212,11 @@ export default function KaynaklarPage() {
                     Haritaya dön
                   </Link>
                   <div className="flex items-start gap-3">
-                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-brand-green/25 bg-brand-green/10 text-brand-green">
+                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-brand-navy/15 bg-brand-navy/8 text-brand-navy">
                       <RadioTower className="h-6 w-6" />
                     </span>
                     <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.22em] text-brand-green">Kaynak komuta merkezi</p>
+                      <p className="section-eyebrow">Kaynak komuta merkezi</p>
                       <h1 className="mt-1 text-2xl font-black tracking-[-0.04em] text-fg-primary">Canlı, public ve korumalı veri kaynakları</h1>
                       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-fg-secondary">
                         Registry, kalite, aktivasyon, canlı hazırlık, provider ve yükleme gereksinimleri tek ekranda. Veri yoksa sebebi görünür; public erişim, canlı endpoint ve korumalı erişim ayrı tutulur.

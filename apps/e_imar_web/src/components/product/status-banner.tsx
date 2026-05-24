@@ -58,7 +58,7 @@ export function StatusBanner({ compact = false }: { compact?: boolean }) {
           {["TKGM", "Belediye", "e-Plan"].map((label, index) => (
             <div key={label} className="rounded-2xl border border-white/55 bg-white/45 px-3 py-2">
               <div className="flex items-center gap-2 text-xs font-black text-fg-primary">
-                <RadioTower className="h-3.5 w-3.5 text-brand-green" />
+                <RadioTower className="h-3.5 w-3.5 text-brand-navy" />
                 {label}
               </div>
               <p className="mt-1 text-[11px] leading-relaxed text-fg-secondary">

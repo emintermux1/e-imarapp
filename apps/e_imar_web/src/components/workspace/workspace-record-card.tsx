@@ -81,5 +81,5 @@ function labelPair(label: string, value: unknown) {
 function iconTone(type: WorkspaceRecordCardProps["type"]) {
   if (type === "history") return "border-brand-blue/25 bg-brand-blue/10 text-brand-blue";
   if (type === "favorites") return "border-brand-amber/25 bg-brand-amber/10 text-brand-amber";
-  return "border-brand-green/25 bg-brand-green/10 text-brand-green";
+  return "border-brand-navy/15 bg-brand-navy/8 text-brand-navy";
 }

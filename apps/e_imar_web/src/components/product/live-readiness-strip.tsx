@@ -51,7 +51,7 @@ export function LiveReadinessStrip() {
               {status === "ok" ? <CheckCircle2 className="h-4 w-4" /> : status === "loading" ? <Clock3 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
             </span>
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-brand-green">Canlı hazırlık</div>
+              <div className="section-eyebrow">Canlı hazırlık</div>
               <div className="text-sm font-black text-fg-primary">
                 {status === "ok" ? "Ortam hazır" : status === "loading" ? "Kontrol ediliyor" : "Hazır değil"}
               </div>

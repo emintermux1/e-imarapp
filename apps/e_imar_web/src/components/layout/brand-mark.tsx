@@ -51,7 +51,7 @@ export function BrandMark({ className, showLabel = true }: BrandMarkProps) {
           width="7.6"
           height="7.6"
           rx="0.6"
-          stroke="rgb(var(--accent-green))"
+          stroke="rgb(var(--accent-navy))"
           strokeWidth="1"
           fill="none"
         />

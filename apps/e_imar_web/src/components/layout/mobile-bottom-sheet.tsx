@@ -397,7 +397,7 @@ function SheetSnapIndicators({ snap }: { snap: "peek" | "half" | "full" }) {
           key={item.id}
           className={cn(
             "h-1.5 rounded-full transition-all duration-300",
-            snap === item.id ? "w-6 bg-brand-green" : "w-1.5 bg-border-strong/60",
+            snap === item.id ? "w-6 bg-brand-navy" : "w-1.5 bg-border-strong/60",
           )}
           title={item.label}
         />
@@ -421,7 +421,7 @@ function MobileAction({
       onClick={onClick}
       className="soft-press flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border border-border-subtle bg-surface-1/70 px-2 text-[11px] font-bold text-fg-secondary hover:bg-white hover:text-fg-primary"
     >
-      <span className="text-brand-green">{icon}</span>
+      <span className="text-fg-secondary">{icon}</span>
       {label}
     </button>
   );

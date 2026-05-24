@@ -29,7 +29,7 @@ export function GISLegend({ collapsed: collapsedProp, onCollapsedChange }: {
         aria-expanded={!collapsed}
       >
         <span className="inline-flex items-center gap-1.5 font-black text-fg-primary">
-          <Layers className="h-3.5 w-3.5 text-brand-green" />
+          <Layers className="h-3.5 w-3.5 text-brand-navy" />
           Harita katmanları
         </span>
         <ChevronDown

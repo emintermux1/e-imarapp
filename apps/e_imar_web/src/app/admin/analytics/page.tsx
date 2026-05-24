@@ -20,7 +20,7 @@ export default function AdminAnalyticsPage() {
       </div>
       <section className="mt-4 rounded-[1.75rem] border border-border-subtle bg-surface-1 p-5">
         <div className="flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-brand-green" />
+          <BarChart3 className="h-5 w-5 text-brand-navy" />
           <h2 className="font-black text-fg-primary">MVP funnel</h2>
         </div>
         <div className="mt-5 space-y-3">

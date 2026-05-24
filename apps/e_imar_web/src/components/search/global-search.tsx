@@ -325,7 +325,7 @@ export function GlobalSearch() {
               aria-label="GPS konumumu kullan"
               onClick={useMyLocation}
               disabled={gpsPending}
-              className="touch-target shrink-0 rounded-full border border-border-subtle bg-surface-1 text-fg-secondary transition-colors hover:border-brand-green/40 hover:text-brand-green disabled:opacity-60"
+              className="touch-target shrink-0 rounded-full border border-border-subtle bg-surface-1 text-fg-secondary transition-colors hover:border-brand-navy/30 hover:text-fg-primary disabled:opacity-60"
             >
               {gpsPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
             </button>
@@ -335,7 +335,7 @@ export function GlobalSearch() {
             <p
               role="status"
               aria-live="polite"
-              className="border-b border-border-subtle bg-brand-green/8 px-3 py-2 text-[11px] leading-snug text-fg-secondary"
+              className="border-b border-border-subtle bg-brand-navy/6 px-3 py-2 text-[11px] leading-snug text-fg-secondary"
             >
               {gpsMessage}
             </p>

@@ -34,7 +34,7 @@ export function LayerCatalogDrawer({ open, onOpenChange }: { open: boolean; onOp
     <Sheet open={open} onOpenChange={onOpenChange} side="right" width="min(460px, calc(100vw - 1rem))" ariaLabel="Katman kataloğu">
       <div className="flex h-14 items-center justify-between border-b border-border-subtle px-4">
         <div className="flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-2xl bg-brand-green/10 text-brand-green">
+          <span className="grid h-9 w-9 place-items-center rounded-2xl bg-brand-navy/8 text-brand-navy">
             <Layers3 className="h-4 w-4" />
           </span>
           <div>
