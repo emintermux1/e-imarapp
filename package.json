@@ -29,7 +29,12 @@
     "openapi:export": "ts-node scripts/export-openapi.ts",
     "openapi:generate": "npm run openapi:export && openapi-typescript docs/openapi.generated.json -o apps/e_imar_web/src/types/generated/openapi.ts",
     "web:lint": "npm --prefix apps/e_imar_web run lint",
-    "web:smoke": "node scripts/web-smoke.mjs"
+    "web:smoke": "node scripts/web-smoke.mjs",
+    "mobile:pubget": "cd legacy/apps/e_imar_mobile && flutter pub get",
+    "mobile:analyze": "cd legacy/apps/e_imar_mobile && flutter analyze",
+    "mobile:test": "cd legacy/apps/e_imar_mobile && flutter test",
+    "mobile:build": "bash scripts/build-mobile.sh",
+    "mobile:build:debug": "BUILD_TYPE=debug OUTPUT_AAB=0 bash scripts/build-mobile.sh"
   },
   "dependencies": {
     "@fastify/static": "^9.1.3",

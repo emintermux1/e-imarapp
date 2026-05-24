@@ -29,4 +29,5 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - run: flutter build bundle --debug
+      - run: flutter build apk --debug --dart-define=E_IMAR_GATEWAY_BASE_URL=http://10.0.2.2:3000 --dart-define=E_IMAR_ENV=ci
 </ぞparameter>
