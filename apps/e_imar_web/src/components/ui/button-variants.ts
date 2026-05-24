@@ -1,7 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-semibold tabular-nums transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:translate-y-px active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50 select-none",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-semibold tabular-nums transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] active:translate-y-px active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
   {
     variants: {
       variant: {
@@ -20,10 +20,10 @@ export const buttonVariants = cva(
           "bg-status-error text-white border border-status-error hover:bg-[rgb(var(--status-error)/0.9)]"
       },
       size: {
-        sm: "h-8 px-3 text-xs rounded-full",
-        md: "h-10 px-4 rounded-full",
-        lg: "h-12 px-5 rounded-full",
-        icon: "h-9 w-9 rounded-full"
+        sm: "h-10 min-h-10 px-3.5 text-xs rounded-full",
+        md: "h-11 min-h-11 px-4 rounded-full",
+        lg: "h-12 min-h-12 px-5 rounded-full",
+        icon: "h-11 w-11 min-h-11 min-w-11 rounded-full"
       }
     },
     defaultVariants: {

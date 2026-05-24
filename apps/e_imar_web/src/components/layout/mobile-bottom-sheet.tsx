@@ -219,10 +219,11 @@ export function MobileBottomSheet() {
       <button
         type="button"
         aria-label="Sürükle"
-        className="self-stretch py-3 cursor-grab active:cursor-grabbing"
+        className="self-stretch py-3 cursor-grab active:cursor-grabbing touch-none"
         onPointerDown={(e) => dragControls.start(e)}
       >
         <span className="block mx-auto h-1.5 w-12 rounded-full bg-border-strong/70" />
+        <SheetSnapIndicators snap={snap} />
       </button>
       <header className="border-b border-border-subtle px-4 pb-3">
         <div className="flex items-start justify-between gap-2">
@@ -249,7 +250,7 @@ export function MobileBottomSheet() {
           type="button"
           aria-label="Kapat"
           onClick={close}
-          className="h-7 w-7 inline-flex items-center justify-center rounded text-fg-muted hover:text-fg-primary hover:bg-surface-1"
+          className="touch-target inline-flex shrink-0 items-center justify-center rounded-xl text-fg-muted hover:bg-surface-1 hover:text-fg-primary"
         >
           <X className="h-4 w-4" />
         </button>
@@ -383,6 +384,28 @@ export function MobileBottomSheet() {
   );
 }
 
+function SheetSnapIndicators({ snap }: { snap: "peek" | "half" | "full" }) {
+  const snaps: Array<{ id: typeof snap; label: string }> = [
+    { id: "peek", label: "Özet" },
+    { id: "half", label: "Yarım" },
+    { id: "full", label: "Tam" },
+  ];
+  return (
+    <div className="mt-2 flex items-center justify-center gap-1.5" aria-hidden>
+      {snaps.map((item) => (
+        <span
+          key={item.id}
+          className={cn(
+            "h-1.5 rounded-full transition-all duration-300",
+            snap === item.id ? "w-6 bg-brand-green" : "w-1.5 bg-border-strong/60",
+          )}
+          title={item.label}
+        />
+      ))}
+    </div>
+  );
+}
+
 function MobileAction({
   icon,
   label,
@@ -396,7 +419,7 @@ function MobileAction({
     <button
       type="button"
       onClick={onClick}
-      className="soft-press flex h-16 flex-col items-center justify-center gap-1 rounded-2xl border border-border-subtle bg-surface-1/70 text-[11px] font-bold text-fg-secondary hover:bg-white hover:text-fg-primary"
+      className="soft-press flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border border-border-subtle bg-surface-1/70 px-2 text-[11px] font-bold text-fg-secondary hover:bg-white hover:text-fg-primary"
     >
       <span className="text-brand-green">{icon}</span>
       {label}

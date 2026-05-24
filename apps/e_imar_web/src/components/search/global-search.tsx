@@ -8,6 +8,8 @@ import {
   Building2,
   Hash,
   Crosshair,
+  LocateFixed,
+  Loader2,
 } from "lucide-react";
 import {
   Popover,
@@ -34,6 +36,7 @@ import { geometryLabel, matchStatusLabel } from "@/lib/api/quality-labels";
 import type { SearchResult } from "@/types/geo";
 import { cn } from "@/lib/utils";
 import { getLocationBoundary } from "@/data/location-boundaries";
+import { SearchResultSkeleton } from "@/components/search/search-result-skeleton";
 
 const TABS: SearchMode[] = [
   "Hepsi",
@@ -78,6 +81,8 @@ export function GlobalSearch() {
   const [mode, setMode] = React.useState<SearchMode>("Hepsi");
   const [query, setQuery] = React.useState("");
   const [active, setActive] = React.useState(0);
+  const [gpsPending, setGpsPending] = React.useState(false);
+  const [gpsMessage, setGpsMessage] = React.useState<string | null>(null);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
   const searchState = useSearch({ query, mode, limit: 12 });
@@ -203,6 +208,30 @@ export function GlobalSearch() {
     inputRef.current?.focus();
   }
 
+  function useMyLocation() {
+    if (!navigator.geolocation) {
+      setGpsMessage("Tarayıcı konum servisini desteklemiyor.");
+      return;
+    }
+    setGpsPending(true);
+    setGpsMessage(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setMode("Koordinat");
+        setQuery(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        setGpsPending(false);
+        setGpsMessage("GPS konumu alındı. Enter ile haritada açın.");
+        inputRef.current?.focus();
+      },
+      () => {
+        setGpsPending(false);
+        setGpsMessage("Konum izni reddedildi veya sinyal alınamadı.");
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+  }
   function moveActive(delta: number) {
     if (totalSelectable === 0) return;
     setActive((a) => (a + delta + totalSelectable) % totalSelectable);
@@ -259,16 +288,35 @@ export function GlobalSearch() {
           onEscape={() => setSearchOpen(false)}
         >
           <div className="flex items-center gap-2 px-3 border-b border-border-subtle">
-            <Search className="h-4 w-4 text-fg-muted" />
+            <Search className="h-4 w-4 text-fg-muted shrink-0" />
             <input
               ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={PLACEHOLDERS[mode]}
+              aria-label="Arama sorgusu"
               className="flex-1 h-11 bg-transparent border-0 outline-none text-sm text-fg-primary placeholder:text-fg-muted"
             />
+            <button
+              type="button"
+              aria-label="GPS konumumu kullan"
+              onClick={useMyLocation}
+              disabled={gpsPending}
+              className="touch-target shrink-0 rounded-full border border-border-subtle bg-surface-1 text-fg-secondary transition-colors hover:border-brand-green/40 hover:text-brand-green disabled:opacity-60"
+            >
+              {gpsPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
+            </button>
             <Kbd combo={["Esc"]} />
           </div>
+          {gpsMessage && (
+            <p
+              role="status"
+              aria-live="polite"
+              className="border-b border-border-subtle bg-brand-green/8 px-3 py-2 text-[11px] leading-snug text-fg-secondary"
+            >
+              {gpsMessage}
+            </p>
+          )}
           <div className="flex items-center justify-between px-3 py-2 border-b border-border-subtle bg-surface-1/50">
             <Tabs value={mode} onValueChange={(v) => setMode(v as SearchMode)}>
               <TabsList>
@@ -335,6 +383,8 @@ export function GlobalSearch() {
                   })}
                 </CommandGroup>
               </>
+            ) : searchState.loading ? (
+              <SearchResultSkeleton rows={5} />
             ) : results.length === 0 ? (
               <CommandEmpty>
                 {searchState.message ??
