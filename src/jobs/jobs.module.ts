@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ConnectorsModule } from '../connectors/connectors.module';
 import { DatabaseModule } from '../database/database.module';
@@ -9,7 +9,7 @@ import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, ConnectorsModule, MunicipalitiesModule],
+  imports: [ConfigModule, DatabaseModule, ConnectorsModule, forwardRef(() => MunicipalitiesModule)],
   controllers: [JobsController],
   providers: [JobsService, KeosConnector, DiscoveryJob],
   exports: [JobsService, DiscoveryJob]
