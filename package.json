@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "npm run web:dev",
     "dev:all": "node scripts/dev-all.mjs",
+    "dev:all:open": "node scripts/dev-all.mjs --open",
     "dev:api": "npm run start:dev",
     "setup:local": "node scripts/setup-local.mjs",
     "build": "tsc -p tsconfig.build.json",

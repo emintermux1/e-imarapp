@@ -80,12 +80,14 @@ const config: Config = {
         DEFAULT: "6px",
         md: "6px",
         lg: "8px",
-        xl: "12px"
+        xl: "12px",
+        "2xl": "16px",
+        "3xl": "24px"
       },
       boxShadow: {
-        card: "0 1px 0 0 rgba(255,255,255,0.72) inset, 0 18px 42px -30px rgba(10,51,35,0.42)",
-        pop: "0 24px 70px -38px rgba(10,51,35,0.56), 0 0 0 1px rgba(30,128,62,0.10)",
-        sheet: "0 -18px 70px -34px rgba(10,51,35,0.58), 0 -2px 12px -8px rgba(10,51,35,0.35)",
+        card: "0 1px 0 0 rgba(255,255,255,0.78) inset, 0 20px 48px -32px rgba(10,51,35,0.38)",
+        pop: "0 28px 72px -36px rgba(10,51,35,0.48), 0 0 0 1px rgba(10,51,35,0.06)",
+        sheet: "0 -20px 72px -36px rgba(10,51,35,0.52), 0 -2px 14px -8px rgba(10,51,35,0.28)",
         "card-dark": "0 1px 0 0 rgba(0,0,0,0.55), 0 1px 2px 0 rgba(0,0,0,0.45)",
         "pop-dark": "0 8px 24px -6px rgba(0,0,0,0.65), 0 2px 6px -1px rgba(0,0,0,0.45)"
       },

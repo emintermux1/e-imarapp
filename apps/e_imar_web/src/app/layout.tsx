@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { readPublicSiteUrl } from "@/lib/public-config";
 
-const sans = DM_Sans({
+const sans = Plus_Jakarta_Sans({
   subsets: ["latin", "latin-ext"],
   display: "swap",
-  variable: "--font-sans"
+  variable: "--font-sans",
+  weight: ["400", "500", "600", "700", "800"]
 });
 
 const mono = JetBrains_Mono({

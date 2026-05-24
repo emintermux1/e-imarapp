@@ -209,8 +209,9 @@ function MapSourceDock() {
 
 function MapInstructionIsland() {
   return (
-    <section className="pointer-events-auto absolute left-1/2 top-24 z-20 hidden w-[min(640px,calc(100vw-20rem))] -translate-x-1/2 rounded-[2rem] border border-white/55 bg-white/42 p-1.5 shadow-[0_26px_90px_-58px_rgb(var(--accent-navy)/0.8)] md:block xl:top-[5.75rem]">
-      <div className="rounded-[1.55rem] border border-white/60 bg-surface-2/92 px-4 py-3 shadow-[inset_0_1px_0_rgb(255_255_255/0.88)]">
+    <section className="pointer-events-auto absolute left-1/2 top-24 z-20 hidden w-[min(640px,calc(100vw-20rem))] -translate-x-1/2 p-1 md:block xl:top-[5.75rem]">
+      <div className="glass-panel p-1.5">
+        <div className="rounded-[1.45rem] border border-white/60 bg-surface-2/94 px-4 py-3 shadow-[inset_0_1px_0_rgb(255_255_255/0.88)]">
         <div className="mb-3 flex items-center gap-4">
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[rgb(var(--accent-navy))] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.18)]">
             <Search className="h-4 w-4" />
@@ -219,12 +220,13 @@ function MapInstructionIsland() {
             <div className="section-eyebrow">
               Tek yerden sorgula
             </div>
-            <div className="mt-0.5 truncate text-sm font-black tracking-tight text-fg-primary">
+            <div className="mt-0.5 truncate text-sm font-bold tracking-[-0.02em] text-fg-primary">
               Ada/parsel, adres, koordinat veya belediye seç
             </div>
           </div>
         </div>
         <GlobalSearch />
+        </div>
       </div>
     </section>
   );
@@ -251,7 +253,7 @@ function MapActionDock({
 }) {
   return (
     <div className="pointer-events-auto absolute bottom-3 left-1/2 z-20 -translate-x-1/2 md:bottom-4">
-      <div className="rounded-[1.65rem] border border-white/50 bg-white/38 p-1.5 shadow-[0_26px_80px_-48px_rgb(var(--accent-navy)/0.72)] backdrop-blur-md">
+      <div className="glass-panel p-1.5">
         <div className="flex items-center gap-1 rounded-[1.35rem] border border-white/50 bg-surface-2/92 px-1.5 py-1.5 shadow-[inset_0_1px_0_rgb(255_255_255/0.78)]">
           <DockButton
             icon={<LocateFixed className="h-4 w-4" />}

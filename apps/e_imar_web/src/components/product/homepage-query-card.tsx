@@ -35,15 +35,15 @@ export function HomepageQueryCard({ className }: { className?: string }) {
   }
 
   return (
-    <section className={cn("overflow-hidden rounded-[2rem] border border-white/60 bg-surface-2/95 shadow-[0_28px_90px_-62px_rgb(var(--accent-navy)/0.9)]", className)}>
+    <section className={cn("glass-panel overflow-hidden", className)}>
       <div className="border-b border-border-subtle bg-[radial-gradient(circle_at_top_left,rgb(var(--accent-navy)/0.10),transparent_38%),rgb(var(--surface-1)/0.72)] px-5 py-4">
         <div className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[rgb(var(--accent-navy))] text-white">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[rgb(var(--accent-navy))] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.18),0_12px_28px_-16px_rgb(var(--accent-navy)/0.9)]">
             <Search className="h-5 w-5" />
           </span>
           <div>
             <p className="section-eyebrow">MVP sorgu</p>
-            <h2 className="text-xl font-black tracking-[-0.04em] text-fg-primary">Ada/parsel ile imar durumunu başlat</h2>
+            <h2 className="text-balance text-xl font-extrabold tracking-[-0.03em] text-fg-primary">Ada/parsel ile imar durumunu başlat</h2>
           </div>
         </div>
         <p className="mt-3 text-sm leading-relaxed text-fg-secondary">
@@ -96,7 +96,7 @@ export function HomepageQueryCard({ className }: { className?: string }) {
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[11px] font-black uppercase tracking-[0.16em] text-fg-muted">{label}</span>
+      <span className="field-label">{label}</span>
       {children}
       {error && <span className="mt-1.5 block text-xs font-semibold text-status-error">{error}</span>}
     </label>
@@ -105,7 +105,7 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 
 function inputClass(error?: string) {
   return cn(
-    "h-11 w-full rounded-2xl border bg-surface-2 px-3 text-sm font-semibold text-fg-primary shadow-[inset_0_1px_0_rgb(255_255_255/0.7)] placeholder:text-fg-muted/70",
-    error ? "border-status-error/45 bg-status-error/5" : "border-border-subtle focus:border-brand-navy"
+    "h-11 w-full rounded-2xl border bg-surface-2 px-3.5 text-sm font-medium text-fg-primary shadow-[inset_0_1px_0_rgb(255_255_255/0.75)] transition-colors placeholder:text-fg-muted/65 focus:outline-none",
+    error ? "border-status-error/45 bg-status-error/5" : "border-border-subtle focus:border-brand-navy/45 focus:ring-2 focus:ring-brand-navy/10"
   );
 }

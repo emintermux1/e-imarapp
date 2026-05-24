@@ -8,7 +8,7 @@ export const buttonVariants = cva(
         default:
           "bg-fg-primary text-bg hover:bg-fg-secondary border border-transparent",
         primary:
-          "bg-brand-green text-white border border-brand-green hover:bg-[rgb(var(--accent-green)/0.92)] shadow-[0_16px_36px_-24px_rgb(var(--accent-green)/0.95)]",
+          "bg-brand-navy text-white border border-brand-navy hover:bg-[rgb(var(--accent-navy)/0.92)] shadow-[0_16px_36px_-24px_rgb(var(--accent-navy)/0.85)]",
         secondary:
           "bg-surface-2 text-fg-primary border border-border-strong hover:bg-white",
         outline:

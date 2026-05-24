@@ -9,20 +9,20 @@
  */
 
 :root {
-  /* Surfaces & background */
-  --bg: 239 245 238;
-  --surface-1: 230 239 229;
-  --surface-2: 255 255 250;
-  --surface-3: 246 250 244;
+  /* Surfaces & background — warm civic cream, single gray family */
+  --bg: 244 247 243;
+  --surface-1: 236 242 235;
+  --surface-2: 255 255 252;
+  --surface-3: 249 251 247;
 
   /* Borders */
-  --border-subtle: 208 222 207;
-  --border-strong: 170 193 169;
+  --border-subtle: 214 224 212;
+  --border-strong: 178 196 176;
 
   /* Text */
-  --text-primary: 13 31 24;
-  --text-secondary: 63 84 73;
-  --text-muted: 118 132 124;
+  --text-primary: 15 28 22;
+  --text-secondary: 58 76 66;
+  --text-muted: 108 124 114;
 
   /* Accents */
   --accent-red: 172 53 43;       /* ciddi uyarı / askı vurgusu */

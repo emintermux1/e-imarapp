@@ -35,6 +35,7 @@ if not exist apps\e_imar_web\.env (
 echo.
 echo Starting API (:3000) and Web (:3001)...
 echo Open http://localhost:3001 in your browser.
+echo Or run test-pc.cmd to auto-open the browser.
 echo.
 
 node scripts\dev-all.mjs
