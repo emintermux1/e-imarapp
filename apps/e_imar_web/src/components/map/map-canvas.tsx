@@ -70,7 +70,7 @@ import { useBackendParcelStore } from "@/stores/backend-parcel-store";
 import { useSourceStore } from "@/stores/source-store";
 import { useLatestRegionsStore } from "@/stores/latest-regions-store";
 import type { ProbedLiveMapLayer } from "@/types/api";
-import { parseBackendParcelId } from "@/lib/api/parcel-normalizer";
+import { municipalParcelId, parseBackendParcelId } from "@/lib/api/parcel-normalizer";
 import {
   geoJsonBounds,
   geoJsonCentroid,
@@ -96,6 +96,7 @@ import {
 const TURKEY_CENTER: [number, number] = [35.0, 39.0];
 const INITIAL_ZOOM = 5.5;
 const BACKEND_SELECTED_SOURCE = "backend-selected-parcel";
+const LIVE_PARCEL_OVERLAY_SOURCE = "live-parcel-overlays";
 const LIVE_PLAN_REGIONS_SOURCE = "live-plan-regions";
 const EMPTY_FEATURE_COLLECTION: GeoJSON.FeatureCollection = {
   type: "FeatureCollection",
@@ -152,9 +153,10 @@ export function MapCanvas({
   const selectedArea = useMapStore((s) => s.selectedArea);
   const multiSelectedParcelIds = useMapStore((s) => s.multiSelectedParcelIds);
   const selectedPoint = useMapStore((s) => s.selectedPoint);
-  const selectedBackendFeature = useBackendParcelStore((s) =>
+  const selectedLiveFeature = useBackendParcelStore((s) =>
     s.getFeature(selectedParcelId),
   );
+  const liveParcelFeatures = useBackendParcelStore((s) => s.getVisibleLiveFeatures());
   const liveLayers = useSourceStore((s) => s.liveLayers);
   const activeMapLayers = useSourceStore((s) => s.activeMapLayers);
   const activateLiveLayer = useSourceStore((s) => s.activateLiveLayer);
@@ -555,6 +557,7 @@ export function MapCanvas({
         registerMunicipalityCoverageLayers(map);
       }
       ensureLiveSourceLayers(map);
+      ensureLiveParcelOverlayLayers(map);
       ensureBackendSelectedLayer(map);
       ensureSelectedPointLayer(map);
       ensureLatestRegionsLayer(map);
@@ -581,6 +584,7 @@ export function MapCanvas({
         registerMunicipalityCoverageLayers(map);
       }
       ensureLiveSourceLayers(map);
+      ensureLiveParcelOverlayLayers(map);
       ensureBackendSelectedLayer(map);
       ensureSelectedPointLayer(map);
       ensureLatestRegionsLayer(map);
@@ -715,6 +719,45 @@ export function MapCanvas({
       }
     };
 
+    const selectLiveParcelById = (
+      parcelId: string,
+      centroid?: [number, number],
+      shiftKey = false,
+    ) => {
+      if (shiftKey) {
+        toggleMultiSelectedParcelId(parcelId);
+      }
+      setSelectedArea(null);
+      setSelectedParcelId(parcelId);
+      setSelectedPoint(null);
+      setRightPanelOpen(true);
+      if (centroid) {
+        const padding =
+          window.innerWidth >= 1280
+            ? { top: 104, bottom: 96, left: 112, right: 360 }
+            : { top: 86, bottom: 92, left: 24, right: 24 };
+        map.flyTo({
+          center: centroid,
+          zoom: Math.max(map.getZoom(), 16),
+          duration: 600,
+          padding,
+        });
+      }
+    };
+
+    const onLiveParcelClick = (e: maplibregl.MapLayerMouseEvent) => {
+      if (activeDrawingToolRef.current !== "idle") return;
+      const props = e.features?.[0]?.properties as
+        | { id?: string; centroid?: [number, number] }
+        | undefined;
+      if (!props?.id) return;
+      selectLiveParcelById(
+        props.id,
+        Array.isArray(props.centroid) ? props.centroid : undefined,
+        e.originalEvent.shiftKey,
+      );
+    };
+
     const onLocationMouseMove = () => {
       map.getCanvas().style.cursor = "pointer";
     };
@@ -799,6 +842,15 @@ export function MapCanvas({
     map.on("mousemove", "parcels-fill", onParcelMouseMove);
     map.on("mouseleave", "parcels-fill", onParcelMouseLeave);
     map.on("click", "parcels-fill", onParcelClick);
+    map.on("click", "live-parcel-fill", onLiveParcelClick);
+    const onLiveParcelEnter = () => {
+      map.getCanvas().style.cursor = "pointer";
+    };
+    const onLiveParcelLeave = () => {
+      map.getCanvas().style.cursor = "";
+    };
+    map.on("mouseenter", "live-parcel-fill", onLiveParcelEnter);
+    map.on("mouseleave", "live-parcel-fill", onLiveParcelLeave);
 
     let dragStart: { x: number; y: number } | null = null;
     const onMapMouseDown = (e: MapMouseEvent) => {
@@ -841,7 +893,7 @@ export function MapCanvas({
           [minX, minY],
           [maxX, maxY],
         ],
-        { layers: ["parcels-fill"] },
+        { layers: ["parcels-fill", "live-parcel-fill"].filter((layerId) => Boolean(map.getLayer(layerId))) },
       );
       setSelectedArea(null);
       const ids = Array.from(
@@ -850,7 +902,9 @@ export function MapCanvas({
             .map((feature) => {
               const parcel =
                 feature.id == null ? null : getParcelByMapId(feature.id);
-              return parcel?.properties.id;
+              if (parcel) return parcel.properties.id;
+              const props = feature.properties as { id?: string } | undefined;
+              return props?.id ?? null;
             })
             .filter(Boolean) as string[],
         ),
@@ -864,6 +918,7 @@ export function MapCanvas({
       const interactiveFeatures = map.queryRenderedFeatures(e.point, {
         layers: [
           "parcels-fill",
+          "live-parcel-fill",
           "askida-overlay-fill",
           "askida-overlay-line",
           "askida-overlay-hatched",
@@ -911,6 +966,12 @@ export function MapCanvas({
         .detail;
       if (typeof detail?.lng !== "number" || typeof detail?.lat !== "number")
         return;
+      setSelectedPoint({
+        lng: detail.lng,
+        lat: detail.lat,
+        source: "search",
+      });
+      setRightPanelOpen(true);
       void showMunicipalLivePopup(map, detail.lng, detail.lat);
     };
     window.addEventListener("eimar:map:coordinate-query", onCoordinateQuery);
@@ -1094,6 +1155,9 @@ export function MapCanvas({
       map.off("mousemove", "parcels-fill", onParcelMouseMove);
       map.off("mouseleave", "parcels-fill", onParcelMouseLeave);
       map.off("click", "parcels-fill", onParcelClick);
+      map.off("click", "live-parcel-fill", onLiveParcelClick);
+      map.off("mouseenter", "live-parcel-fill", onLiveParcelEnter);
+      map.off("mouseleave", "live-parcel-fill", onLiveParcelLeave);
       map.off("click", onMapClick);
       map.off("click", "belediye-sinirlari", onMunicipalityClick);
       map.off("mouseenter", "belediye-sinirlari", onMunicipalityEnter);
@@ -1176,8 +1240,10 @@ export function MapCanvas({
         | maplibregl.GeoJSONSource
         | undefined;
       const feature =
-        selectedParcelId && parseBackendParcelId(selectedParcelId) != null
-          ? selectedBackendFeature
+        selectedParcelId &&
+        (selectedParcelId.startsWith("backend:") ||
+          selectedParcelId.startsWith("municipal:"))
+          ? selectedLiveFeature
           : null;
       source?.setData(
         toFeatureCollection(feature as unknown as GeoJSON.Feature | null),
@@ -1202,7 +1268,24 @@ export function MapCanvas({
     };
     if (map.isStyleLoaded()) apply();
     else map.once("idle", apply);
-  }, [selectedBackendFeature, selectedParcelId]);
+  }, [selectedLiveFeature, selectedParcelId]);
+
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      ensureLiveParcelOverlayLayers(map);
+      const source = map.getSource(LIVE_PARCEL_OVERLAY_SOURCE) as
+        | maplibregl.GeoJSONSource
+        | undefined;
+      source?.setData({
+        type: "FeatureCollection",
+        features: liveParcelFeatures as unknown as GeoJSON.Feature[],
+      });
+    };
+    if (map.isStyleLoaded()) apply();
+    else map.once("idle", apply);
+  }, [liveParcelFeatures]);
 
   React.useEffect(() => {
     const map = mapRef.current;
@@ -2129,6 +2212,29 @@ async function showMunicipalLivePopup(map: Map, lng: number, lat: number) {
       row.style.marginTop = "6px";
       popupRoot.append(row);
     });
+    const ada = data.parcelData?.ada;
+    const parsel = data.parcelData?.parsel;
+    if (ada && parsel) {
+      const parcelId = municipalParcelId(municipalityId, ada, parsel);
+      const bbox = props.bbox as [number, number, number, number] | undefined;
+      useBackendParcelStore.getState().upsertOverlayFromSearch({
+        id: parcelId,
+        type: "parcel",
+        primary: `Ada/Parsel ${ada}/${parsel}`,
+        secondary: String(props.name ?? municipalityId),
+        meta: data.parcelData?.imarDurumu ?? "Belediye canlı sorgu",
+        parcelId,
+        zoningType: "Konut",
+        centroid: [lng, lat],
+        bbox: bbox
+          ? { west: bbox[0], south: bbox[1], east: bbox[2], north: bbox[3] }
+          : undefined,
+        municipalityId,
+        sourceStatus: "live",
+      });
+      useMapStore.getState().setSelectedParcelId(parcelId);
+      useUIStore.getState().setRightPanelOpen(true);
+    }
   } else {
     appendMunicipalFallback(
       popupRoot,
@@ -2445,6 +2551,55 @@ function syncActiveWmsLayers(map: Map, layers: ProbedLiveMapLayer[]) {
 
 function activeWmsLayerId(id: string | number) {
   return `active-ogc-wms-${String(id).replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+}
+
+function ensureLiveParcelOverlayLayers(map: Map) {
+  if (!map.getSource(LIVE_PARCEL_OVERLAY_SOURCE)) {
+    map.addSource(LIVE_PARCEL_OVERLAY_SOURCE, {
+      type: "geojson",
+      data: { type: "FeatureCollection", features: [] },
+    });
+  }
+  const beforeId = map.getLayer("parcels-label") ? "parcels-label" : undefined;
+  if (!map.getLayer("live-parcel-fill")) {
+    map.addLayer(
+      {
+        id: "live-parcel-fill",
+        type: "fill",
+        source: LIVE_PARCEL_OVERLAY_SOURCE,
+        minzoom: 8,
+        paint: {
+          "fill-color": [
+            "match",
+            ["get", "sourceStatus"],
+            "live",
+            "#22C55E",
+            "fallback",
+            "#F59E0B",
+            "#38BDF8",
+          ],
+          "fill-opacity": 0.22,
+        },
+      },
+      beforeId,
+    );
+  }
+  if (!map.getLayer("live-parcel-outline")) {
+    map.addLayer(
+      {
+        id: "live-parcel-outline",
+        type: "line",
+        source: LIVE_PARCEL_OVERLAY_SOURCE,
+        minzoom: 8,
+        paint: {
+          "line-color": "#0EA5E9",
+          "line-width": 2,
+          "line-opacity": 0.9,
+        },
+      },
+      beforeId,
+    );
+  }
 }
 
 function ensureBackendSelectedLayer(map: Map) {

@@ -16,6 +16,7 @@ import {
   getParcelsCollection,
   getParcelById
 } from "@/data/parcels";
+import { resolveParcelFeature } from "@/lib/parcel-resolver";
 import { getSnapshotForYear } from "@/data/historical-snapshots";
 import { TURKEY_CENTER } from "@/lib/geo/turkey";
 import { findNearestParcel } from "@/lib/analysis/selected-place-analysis";
@@ -68,7 +69,7 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
     const visibleFeatures = selectedParcelId
       ? fc.features.filter((feature) => {
           const [lng, lat] = feature.properties.centroid ?? [0, 0];
-          const selected = getParcelById(selectedParcelId);
+          const selected = resolveParcelFeature(selectedParcelId);
           const [slng, slat] = selected?.properties.centroid ?? [lng, lat];
           return Math.abs(lng - slng) < 0.018 && Math.abs(lat - slat) < 0.014;
         })
@@ -96,13 +97,25 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
         handles.delete(id);
       }
     }
+    const selectedLive = selectedParcelId
+      ? resolveParcelFeature(selectedParcelId)
+      : null;
+    if (selectedLive && selectedParcelId && !getParcelById(selectedParcelId)) {
+      upsertParcelEntities(Cesium, viewer, selectedLive, handles, {
+        selected: true,
+        snapshot: timelineYear
+          ? getSnapshotForYear(selectedLive.properties.id, timelineYear)
+          : null,
+        emsalWireframe: emsalWireframe,
+      });
+    }
   }, [viewer, Cesium, selectedParcelId, timelineYear, emsalWireframe]);
 
   // Camera flyTo on selection
   React.useEffect(() => {
     if (!viewer || !Cesium || !selectedParcelId) return;
-    const f = getParcelById(selectedParcelId);
-    if (!f) return;
+    const f = resolveParcelFeature(selectedParcelId);
+    if (!f?.geometry?.coordinates?.[0]?.length) return;
     const ring = f.geometry.coordinates[0];
     const b = ringBounds(ring);
     const rectangle = Cesium.Rectangle.fromDegrees(
@@ -147,7 +160,7 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
     viewer.scene.globe.enableLighting = shadowEnabled;
     if (shadowEnabled) {
       const center = selectedParcelId
-        ? getParcelById(selectedParcelId)?.properties.centroid
+        ? resolveParcelFeature(selectedParcelId)?.properties.centroid
         : null;
       const lng = center?.[0] ?? 35;
       const julian = buildJulianDateForLocalSun(
@@ -170,7 +183,7 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
       corridorRef.current = null;
     }
     if (viewCorridor && selectedParcelId) {
-      const p = getParcelById(selectedParcelId);
+      const p = resolveParcelFeature(selectedParcelId);
       if (p?.properties.centroid) {
         corridorRef.current = buildViewCorridor(
           Cesium,
@@ -272,7 +285,7 @@ export function CesiumCanvas({ className }: CesiumCanvasProps) {
       const entity = picked && (picked.id as EntityT | undefined);
       if (entity && entity.properties && entity.properties.parcelId) {
         const id = entity.properties.parcelId.getValue() as string;
-        const parcel = getParcelById(id);
+        const parcel = resolveParcelFeature(id);
         if (parcel) {
           setHoveredParcelId(id);
           if (!activeLabel || activeLabel.id !== `${id}::label`) {

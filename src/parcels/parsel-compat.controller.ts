@@ -259,6 +259,15 @@ export class WatchlistCompatController {
 
 @Controller(['reports', 'api/v1/reports'])
 export class ReportsCompatController {
+  @Get()
+  listReports() {
+    return Array.from(REPORTS.values()).sort((a, b) => {
+      const left = String(b.generated_at ?? "");
+      const right = String(a.generated_at ?? "");
+      return left.localeCompare(right);
+    });
+  }
+
   @Post('generate')
   generateReport(@Body() body: Record<string, unknown>) {
     const id = this.numericId(randomUUID());

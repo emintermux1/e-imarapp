@@ -12,6 +12,7 @@ import {
   listSources,
   probeLiveMapLayer
 } from "@/lib/api/backend-client";
+import { buildWmsTileUrl } from "@/lib/workflow-helpers";
 import type {
   BackendMapLayerResponse,
   MunicipalGISDiscoveryResponse,
@@ -47,6 +48,12 @@ interface SourceState {
   loadLiveLayers: () => Promise<void>;
   probeLayerCatalog: (sourceId: string, endpointUrl?: string) => Promise<void>;
   activateLiveLayer: (sourceId: string, endpointUrl?: string, layerName?: string) => Promise<void>;
+  activateCatalogWmsLayer: (payload: {
+    sourceId: string;
+    endpoint: string;
+    layerName: string;
+    title?: string;
+  }) => void;
   deactivateLiveLayer: (layerId: string | number) => void;
 }
 
@@ -160,6 +167,29 @@ export const useSourceStore = create<SourceState>()((set, get) => ({
   },
   deactivateLiveLayer: (layerId) => {
     set((state) => ({ activeMapLayers: state.activeMapLayers.filter((layer) => String(layer.id) !== String(layerId)) }));
+  },
+  activateCatalogWmsLayer: ({ sourceId, endpoint, layerName, title }) => {
+    const layerId = `catalog-${sourceId}-${layerName}`.replace(/[^a-zA-Z0-9_-]/g, "-");
+    const tileUrl = buildWmsTileUrl(endpoint, layerName);
+    const layer: ProbedLiveMapLayer = {
+      id: layerId,
+      source_id: sourceId,
+      name: title ?? layerName,
+      title: title ?? layerName,
+      tile_url: tileUrl,
+      activatable: true,
+      service_type: "wms",
+      type: "wms",
+      status: "live",
+    };
+    set((state) => ({
+      activeMapLayers: [
+        ...state.activeMapLayers.filter((item) => String(item.id) !== layerId),
+        layer,
+      ],
+      lastChecked: new Date().toISOString(),
+      error: undefined,
+    }));
   }
 }));
 

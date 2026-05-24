@@ -1,13 +1,19 @@
 import 'reflect-metadata';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { NestFactory } from '@nestjs/core';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from '../src/app.module';
+import type { NestFastifyApplication } from '@nestjs/platform-fastify';
+
+process.env.NODE_ENV = process.env.NODE_ENV ?? 'test';
+process.env.OPENAPI_EXPORT = '1';
+process.env.DISCOVERY_AUTO_START = '0';
+delete process.env.REDIS_URL;
 
 async function main() {
-  process.env.NODE_ENV = process.env.NODE_ENV ?? 'test';
+  const { NestFactory } = await import('@nestjs/core');
+  const { FastifyAdapter } = await import('@nestjs/platform-fastify');
+  const { DocumentBuilder, SwaggerModule } = await import('@nestjs/swagger');
+  const { AppModule } = await import('../src/app.module');
+
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({ logger: false }),

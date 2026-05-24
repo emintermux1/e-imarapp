@@ -46,14 +46,26 @@ export class DiscoveryJob implements OnApplicationBootstrap, OnModuleDestroy {
   }
 
   onApplicationBootstrap(): void {
+    if (this.shouldSkipAutoStart()) return;
     void this.refreshAll();
     this.interval = setInterval(() => void this.refreshAll(), TTL_SECONDS * 1000);
     this.interval.unref?.();
   }
 
+  private shouldSkipAutoStart(): boolean {
+    const flag = process.env.DISCOVERY_AUTO_START?.trim().toLowerCase();
+    if (flag === '0' || flag === 'false' || flag === 'off') return true;
+    return process.env.NODE_ENV === 'test';
+  }
+
   async onModuleDestroy(): Promise<void> {
     if (this.interval) clearInterval(this.interval);
-    await this.redis?.quit();
+    if (this.running) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    if (this.redis?.status === 'ready' || this.redis?.status === 'connecting') {
+      await this.redis.quit().catch(() => undefined);
+    }
   }
 
   async refreshAll(): Promise<MunicipalDiscoveryStatus[]> {

@@ -27,7 +27,12 @@ import { WebsiteModule } from './website/website.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, cache: true, validate: validateEnv }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      cache: true,
+      validate: validateEnv,
+      ignoreEnvFile: process.env.OPENAPI_EXPORT === '1'
+    }),
     DatabaseModule,
     ConnectorsModule,
     SourcesModule,

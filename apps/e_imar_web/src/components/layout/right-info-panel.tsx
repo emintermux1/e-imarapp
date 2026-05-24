@@ -105,8 +105,9 @@ export function RightInfoPanel({ floating = false }: { floating?: boolean }) {
 
   const parcelFeature = useParcel(selectedId);
   const parcel = parcelFeature?.properties ?? null;
+  const getBackendFeature = useBackendParcelStore((s) => s.getFeature);
   const comparisonParcels = multiSelectedParcelIds
-    .map((id) => getParcelById(id)?.properties)
+    .map((id) => getParcelById(id)?.properties ?? getBackendFeature(id)?.properties)
     .filter((item): item is NonNullable<typeof parcel> => Boolean(item))
     .slice(0, 4);
   const isWatchlisted = parcel ? watchlistHas(parcel.id) : false;

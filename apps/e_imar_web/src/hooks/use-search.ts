@@ -155,7 +155,7 @@ function backendParcelToResult(
     primary: `Ada/Parsel ${adaParselText(parcel.ada, parcel.parsel)}`,
     secondary: location || "Canlı API parsel sonucu",
     meta: metaBits.join(" · "),
-    parcelId: local?.properties.id ?? backendParcelId(parcel.id),
+    parcelId: backendParcelId(parcel.id),
     zoningType: local?.properties.zoningType ?? "Konut",
     centroid,
     sourceStatus,
@@ -401,6 +401,39 @@ function localResults(opts: SearchOptions, limit: number) {
   return results.slice(0, 12);
 }
 
+function mergeParcelSearchResults(
+  bffResults: SearchResult[],
+  backendResults: SearchResult[],
+): SearchResult[] {
+  const merged = new Map<string, SearchResult>();
+  const put = (result: SearchResult) => {
+    if (result.type !== "parcel") return;
+    const key =
+      result.ambiguityKey ??
+      `${result.parcelId}:${result.secondary ?? result.primary}`;
+    const existing = merged.get(key);
+    if (!existing || existing.type !== "parcel") {
+      merged.set(key, result);
+      return;
+    }
+    const preferNew =
+      Boolean(result.geometryAvailable && !existing.geometryAvailable) ||
+      (result.parcelId.startsWith("backend:") &&
+        existing.parcelId.startsWith("municipal:"));
+    if (preferNew) merged.set(key, result);
+  };
+  bffResults.forEach(put);
+  backendResults.forEach(put);
+  return Array.from(merged.values());
+}
+
+function hydrateSearchMapResults(results: SearchResult[]) {
+  const upsertParcels = useBackendParcelStore.getState().upsertParcels;
+  const upsertOverlaysFromSearch =
+    useBackendParcelStore.getState().upsertOverlaysFromSearch;
+  upsertOverlaysFromSearch(results);
+}
+
 export function useSearch(opts: SearchOptions): SearchState {
   const limit = opts.limit ?? 8;
   const query = opts.query.trim();
@@ -491,19 +524,6 @@ export function useSearch(opts: SearchOptions): SearchState {
             parcels[0].status === "fulfilled" ? parcels[0].value : null;
           const backendParcels =
             parcels[1].status === "fulfilled" ? parcels[1].value : [];
-          if (
-            bff?.results.length &&
-            (bff.results[0]?.type !== "address" || mode === "Hepsi")
-          ) {
-            setState({
-              results: bff.results.slice(0, mode === "Hepsi" ? 12 : limit),
-              loading: false,
-              backendUnavailable: false,
-              usedFallback: false,
-              message: bff.message,
-            });
-            return;
-          }
           const ambiguity = backendParcels.reduce<Record<string, number>>(
             (acc, parcel) => {
               const key = `${parcel.ada}/${parcel.parsel}`;
@@ -522,21 +542,49 @@ export function useSearch(opts: SearchOptions): SearchState {
             .filter((r): r is SearchResult => Boolean(r));
           if (backendResults.length > 0) {
             upsertParcels(backendParcels);
-            const rest =
+          }
+          const bffResults = bff?.results ?? [];
+          const mergedParcels = mergeParcelSearchResults(
+            bffResults,
+            backendResults,
+          );
+          if (mergedParcels.length > 0) {
+            hydrateSearchMapResults(mergedParcels);
+            const nonParcel =
               mode === "Hepsi"
                 ? [
+                    ...bffResults.filter((r) => r.type !== "parcel"),
                     ...searchAddressResults(query, 4),
                     ...searchBelediyeResults(query, 3),
                   ]
-                : [];
+                : bffResults.filter((r) => r.type !== "parcel");
             setState({
-              results: [...backendResults, ...rest].slice(
+              results: [...mergedParcels, ...nonParcel].slice(
                 0,
                 mode === "Hepsi" ? 12 : limit,
               ),
               loading: false,
+              backendUnavailable: backendResults.length === 0,
+              usedFallback: false,
+              message:
+                bff?.message ??
+                (backendResults.length === 0
+                  ? "Belediye canlı sonuçları haritada bbox ile gösteriliyor."
+                  : undefined),
+            });
+            return;
+          }
+          if (
+            bff?.results.length &&
+            (bff.results[0]?.type !== "address" || mode === "Hepsi")
+          ) {
+            hydrateSearchMapResults(bff.results);
+            setState({
+              results: bff.results.slice(0, mode === "Hepsi" ? 12 : limit),
+              loading: false,
               backendUnavailable: false,
               usedFallback: false,
+              message: bff.message,
             });
             return;
           }

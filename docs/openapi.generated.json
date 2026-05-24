@@ -52,6 +52,76 @@
         ]
       }
     },
+    "/connectors/open-public/readiness": {
+      "get": {
+        "operationId": "ConnectorsController_openPublicReadiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/connectors/open-public/e-plan/wms": {
+      "post": {
+        "operationId": "ConnectorsController_probeEPlanWms",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/connectors/open-public/tucbs/catalog": {
+      "post": {
+        "operationId": "ConnectorsController_probeTucbsCatalog",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/connectors/open-public/osm/context": {
+      "post": {
+        "operationId": "ConnectorsController_osmContext",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
+    "/connectors/open-public/municipal/capabilities": {
+      "post": {
+        "operationId": "ConnectorsController_municipalCapabilities",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "connectors"
+        ]
+      }
+    },
     "/connectors/{id}/plugins/plan": {
       "get": {
         "operationId": "ConnectorsController_connectorPlan",
@@ -718,6 +788,34 @@
         ]
       }
     },
+    "/sources/status": {
+      "get": {
+        "operationId": "SourcesController_sourceStatus[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/api/v1/sources/status": {
+      "get": {
+        "operationId": "SourcesController_sourceStatus[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "sources"
+        ]
+      }
+    },
     "/sources/municipalities/{id}/capability": {
       "get": {
         "operationId": "SourcesController_municipalityCapability[0]",
@@ -881,6 +979,34 @@
         },
         "tags": [
           "sources"
+        ]
+      }
+    },
+    "/jobs/status": {
+      "get": {
+        "operationId": "JobsController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/jobs/geo/integrity/daily": {
+      "post": {
+        "operationId": "JobsController_enqueueGeoIntegrity",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "jobs"
         ]
       }
     },
@@ -1545,6 +1671,34 @@
         },
         "tags": [
           "WatchlistCompat"
+        ]
+      }
+    },
+    "/reports": {
+      "get": {
+        "operationId": "ReportsCompatController_listReports[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ReportsCompat"
+        ]
+      }
+    },
+    "/api/v1/reports": {
+      "get": {
+        "operationId": "ReportsCompatController_listReports[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ReportsCompat"
         ]
       }
     },
@@ -2368,34 +2522,6 @@
         ]
       }
     },
-    "/jobs/status": {
-      "get": {
-        "operationId": "JobsController_status",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "jobs"
-        ]
-      }
-    },
-    "/jobs/geo/integrity/daily": {
-      "post": {
-        "operationId": "JobsController_enqueueGeoIntegrity",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "jobs"
-        ]
-      }
-    },
     "/health": {
       "get": {
         "operationId": "HealthController_health[0]",
@@ -2938,6 +3064,20 @@
         ]
       }
     },
+    "/simulation/compliance": {
+      "post": {
+        "operationId": "SimulationController_compliance",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "simulation"
+        ]
+      }
+    },
     "/user-data/{userReference}/history": {
       "get": {
         "operationId": "UserDataController_history",
@@ -3080,6 +3220,20 @@
     "/website/bff/municipal-parcel-workflow": {
       "post": {
         "operationId": "WebsiteController_municipalParcelWorkflow",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "website"
+        ]
+      }
+    },
+    "/website/bff/search": {
+      "post": {
+        "operationId": "WebsiteController_search",
         "parameters": [],
         "responses": {
           "201": {

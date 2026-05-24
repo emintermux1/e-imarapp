@@ -32,4 +32,21 @@ export class SimulationController {
   ) {
     return this.simulation.calculateEmsalShare(body);
   }
+
+  @Post('compliance')
+  compliance(
+    @Body() body: {
+      parcel_id?: number;
+      parcel_area_m2?: number;
+      emsal?: number;
+      kaks?: number;
+      taks?: number;
+      gabari_m?: number;
+      floors?: number;
+      floor_height_m?: number;
+      geometry?: unknown;
+    }
+  ) {
+    return this.simulation.checkCompliance(body);
+  }
 }

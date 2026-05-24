@@ -37,6 +37,7 @@ import type { SearchResult } from "@/types/geo";
 import { cn } from "@/lib/utils";
 import { getLocationBoundary } from "@/data/location-boundaries";
 import { SearchResultSkeleton } from "@/components/search/search-result-skeleton";
+import { useBackendParcelStore } from "@/stores/backend-parcel-store";
 
 const TABS: SearchMode[] = [
   "Hepsi",
@@ -89,6 +90,9 @@ export function GlobalSearch() {
   const { results } = searchState;
   const history = useHistoryStore((s) => s.items);
   const pushHistory = useHistoryStore((s) => s.push);
+  const upsertOverlayFromSearch = useBackendParcelStore(
+    (s) => s.upsertOverlayFromSearch,
+  );
 
   // Cmd/Ctrl+K listener
   React.useEffect(() => {
@@ -133,6 +137,7 @@ export function GlobalSearch() {
     setQuery("");
     if (r.type === "parcel") {
       setSelectedArea(null);
+      upsertOverlayFromSearch(r);
       if (r.municipalityId) {
         setSelectedMunicipality({
           municipalityId: r.municipalityId,
@@ -143,11 +148,29 @@ export function GlobalSearch() {
       setSelectedParcelId(r.parcelId);
       setRightPanelOpen(true);
       if (r.centroid) {
-        flyTo({ center: r.centroid, zoom: 16, parcelId: r.parcelId });
+        flyTo({
+          center: r.centroid,
+          zoom: 16,
+          parcelId: r.parcelId,
+          bounds: r.bbox
+            ? {
+                west: r.bbox.west,
+                south: r.bbox.south,
+                east: r.bbox.east,
+                north: r.bbox.north,
+              }
+            : undefined,
+        });
       }
     } else if (r.type === "coordinate") {
       setSelectedArea(null);
       setSelectedParcelId(null);
+      setSelectedPoint({
+        lng: r.lng,
+        lat: r.lat,
+        source: "search",
+      });
+      setRightPanelOpen(true);
       flyTo({ center: [r.lng, r.lat], zoom: 14 });
       window.dispatchEvent(
         new CustomEvent("eimar:map:coordinate-query", {

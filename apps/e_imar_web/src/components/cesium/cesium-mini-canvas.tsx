@@ -8,7 +8,7 @@ import {
   ringBounds,
   type ParcelEntityHandles
 } from "@/lib/cesium/build-extrusion";
-import { getParcelById } from "@/data/parcels";
+import { resolveParcelFeature } from "@/lib/parcel-resolver";
 
 interface MiniProps {
   parcel: ParcelProps;
@@ -52,8 +52,8 @@ export function CesiumMiniCanvas({
     } catch {
       /* ignore */
     }
-    const f = getParcelById(parcel.id);
-    if (!f) return;
+    const f = resolveParcelFeature(parcel.id);
+    if (!f?.geometry?.coordinates?.[0]?.length) return;
     upsertParcelEntities(Cesium, viewer, f, handlesRef.current, {
       selected: true,
       emsalWireframe
