@@ -154,6 +154,12 @@ export const BASEMAPS: Record<BasemapId, { id: BasemapId; label: string; descrip
 };
 
 export function getStyleForBasemap(id: BasemapId): StyleSpecification {
+  if (id === "voyager") {
+    const maptiler = maptilerRasterStyle();
+    if (maptiler) return maptiler;
+    const mapbox = mapboxRasterStyle();
+    if (mapbox) return mapbox;
+  }
   switch (id) {
     case "dark":
       return cartoDarkStyle();
@@ -164,4 +170,43 @@ export function getStyleForBasemap(id: BasemapId): StyleSpecification {
     default:
       return cartoVoyagerStyle();
   }
+}
+
+function maptilerRasterStyle(): StyleSpecification | null {
+  const key = process.env.NEXT_PUBLIC_MAPTILER_KEY?.trim();
+  if (!key) return null;
+  return {
+    version: 8,
+    glyphs: `https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=${key}`,
+    sources: {
+      maptiler: {
+        type: "raster",
+        tiles: [`https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${key}`],
+        tileSize: 512,
+        attribution:
+          '© <a href="https://www.maptiler.com/copyright/" target="_blank" rel="noreferrer">MapTiler</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
+      }
+    },
+    layers: [{ id: "maptiler-raster", type: "raster", source: "maptiler", minzoom: 0, maxzoom: 22 }]
+  };
+}
+
+function mapboxRasterStyle(): StyleSpecification | null {
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN?.trim();
+  if (!token) return null;
+  return {
+    version: 8,
+    glyphs: "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
+    sources: {
+      mapbox: {
+        type: "raster",
+        tiles: [
+          `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${token}`
+        ],
+        tileSize: 512,
+        attribution: '© <a href="https://www.mapbox.com/about/maps/" target="_blank" rel="noreferrer">Mapbox</a>'
+      }
+    },
+    layers: [{ id: "mapbox-raster", type: "raster", source: "mapbox", minzoom: 0, maxzoom: 22 }]
+  };
 }

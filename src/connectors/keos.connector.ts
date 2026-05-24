@@ -4,6 +4,7 @@ import http from 'node:http';
 import https from 'node:https';
 import { URLSearchParams } from 'node:url';
 import { DatabaseService } from '../database/database.service';
+import { MunicipalOgcDiscoveryResult, OgcDiscoveryService } from './ogc-discovery.service';
 import {
   findMunicipalRegistryEntry,
   MunicipalRegistryEntry,
@@ -20,6 +21,7 @@ export interface ConnectorCapability {
   endpoints: string[];
   status: ConnectorCapabilityStatus;
   discoveredAt: Date;
+  ogc?: MunicipalOgcDiscoveryResult;
 }
 
 export interface KeosParcelQueryInput {
@@ -68,7 +70,10 @@ const SOAP_ACTIONS = ['GetParcelInfo', 'ParselSorgu'];
 export class KeosConnector {
   private readonly capabilityCache = new Map<string, ConnectorCapability>();
 
-  constructor(private readonly database?: DatabaseService) {}
+  constructor(
+    private readonly database?: DatabaseService,
+    private readonly ogc?: OgcDiscoveryService
+  ) {}
 
   async discover(municipality: string | MunicipalRegistryEntry): Promise<ConnectorCapability> {
     const entry = typeof municipality === 'string' ? findMunicipalRegistryEntry(municipality) : municipality;
@@ -94,6 +99,8 @@ export class KeosConnector {
         }
         if (response.status >= 200 && response.status < 400 && candidate.accepts(response)) {
           const capability = this.capability(entry.id, candidate.method, endpoints, 'available');
+          const ogc = candidate.method === 'wms' ? await this.resolveOgc(entry) : undefined;
+          if (ogc) capability.ogc = ogc;
           this.capabilityCache.set(entry.id, capability);
           return capability;
         }
@@ -103,6 +110,13 @@ export class KeosConnector {
     }
 
     const capability = this.capability(entry.id, 'unknown', endpoints, 'unavailable');
+    const ogc = await this.resolveOgc(entry);
+    if (ogc?.status === 'available') {
+      capability.method = 'wms';
+      capability.status = 'available';
+      capability.endpoints = [...new Set([...(ogc.wms_url ? [ogc.wms_url] : []), ...(ogc.wfs_url ? [ogc.wfs_url] : []), ...endpoints])];
+      capability.ogc = ogc;
+    }
     this.capabilityCache.set(entry.id, capability);
     return capability;
   }
@@ -213,7 +227,9 @@ export class KeosConnector {
 
   private async queryWms(entry: MunicipalRegistryEntry, input: KeosParcelQueryInput, capability: ConnectorCapability, cached: boolean): Promise<KeosParcelQueryResult> {
     const bbox = input.bbox ?? this.featureInfoBbox(input.lng, input.lat, entry.bbox);
-    const endpoint = this.wmsFeatureInfoUrl(entry, bbox);
+    const ogc = capability.ogc ?? await this.resolveOgc(entry);
+    const layerName = this.pickParcelLayer(ogc?.available_layers ?? []);
+    const endpoint = this.wmsFeatureInfoUrl(entry, bbox, ogc?.wms_url, layerName);
     try {
       const response = await this.fetchText(endpoint);
       const protectedStatus = this.protectedStatus(response.status, response.text);
@@ -344,23 +360,42 @@ export class KeosConnector {
 </soap:Envelope>`;
   }
 
-  private wmsFeatureInfoUrl(entry: MunicipalRegistryEntry, bbox: [number, number, number, number]): string {
-    const url = new URL('/geoserver/wms', entry.baseUrl);
-    url.searchParams.set('SERVICE', 'WMS');
-    url.searchParams.set('VERSION', '1.1.1');
-    url.searchParams.set('REQUEST', 'GetFeatureInfo');
-    url.searchParams.set('LAYERS', 'parsel');
-    url.searchParams.set('QUERY_LAYERS', 'parsel');
-    url.searchParams.set('INFO_FORMAT', 'application/json');
-    url.searchParams.set('SRS', 'EPSG:4326');
-    url.searchParams.set('BBOX', bbox.join(','));
-    url.searchParams.set('WIDTH', '256');
-    url.searchParams.set('HEIGHT', '256');
-    url.searchParams.set('X', '128');
-    url.searchParams.set('Y', '128');
-    url.searchParams.set('I', '128');
-    url.searchParams.set('J', '128');
-    return url.toString();
+  private wmsFeatureInfoUrl(entry: MunicipalRegistryEntry, bbox: [number, number, number, number], wmsUrl?: string | null, layerName?: string): string {
+    const layer = layerName ?? 'parsel';
+    const base = wmsUrl ? new URL(wmsUrl) : new URL('/geoserver/wms', entry.baseUrl);
+    base.searchParams.set('SERVICE', 'WMS');
+    base.searchParams.set('VERSION', '1.1.1');
+    base.searchParams.set('REQUEST', 'GetFeatureInfo');
+    base.searchParams.set('LAYERS', layer);
+    base.searchParams.set('QUERY_LAYERS', layer);
+    base.searchParams.set('INFO_FORMAT', 'application/json');
+    base.searchParams.set('SRS', 'EPSG:4326');
+    base.searchParams.set('BBOX', bbox.join(','));
+    base.searchParams.set('WIDTH', '256');
+    base.searchParams.set('HEIGHT', '256');
+    base.searchParams.set('X', '128');
+    base.searchParams.set('Y', '128');
+    base.searchParams.set('I', '128');
+    base.searchParams.set('J', '128');
+    return base.toString();
+  }
+
+  private async resolveOgc(entry: MunicipalRegistryEntry): Promise<MunicipalOgcDiscoveryResult | undefined> {
+    if (!this.ogc) return undefined;
+    const seeds = [entry.baseUrl, this.endpoint(entry, '')];
+    return this.ogc.discoverMunicipalEndpoints(seeds);
+  }
+
+  private pickParcelLayer(layers: Array<{ name?: string; title?: string }>): string | undefined {
+    const hints = ['parsel', 'pars_el', 'parcel', 'ada', 'imar_durumu', 'imar'];
+    for (const hint of hints) {
+      const match = layers.find((layer) => {
+        const haystack = `${layer.name ?? ''} ${layer.title ?? ''}`.toLocaleLowerCase('tr-TR');
+        return haystack.includes(hint);
+      });
+      if (match?.name) return match.name;
+    }
+    return layers.find((layer) => layer.name)?.name;
   }
 
   private featureInfoBbox(lng: number | undefined, lat: number | undefined, fallback: [number, number, number, number]): [number, number, number, number] {

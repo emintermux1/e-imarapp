@@ -16,6 +16,52 @@ export interface OgcLayerCatalog {
   provenance: ProvenanceRecord[];
 }
 
+export interface MunicipalOgcDiscoveryResult {
+  status: 'available' | 'captcha_required' | 'rate_limited' | 'requires_credentials' | 'unsupported_format' | 'unavailable' | 'endpoint_changed';
+  base_url: string | null;
+  wms_url: string | null;
+  wms_get_capabilities_url: string | null;
+  wms_version: string | null;
+  wfs_url: string | null;
+  wfs_get_capabilities_url: string | null;
+  available_layers: OgcLayerCatalog['layers'];
+  supported_srs: string[];
+  supported_formats: string[];
+  metadata: Record<string, unknown>;
+  last_error: string | null;
+  tested_urls: string[];
+  discovered_at: string;
+  refresh_after: string;
+}
+
+export const COMMON_WMS_PATHS = [
+  '/wms.ashx',
+  '/webgis_net/wms.ashx',
+  '/netgis7/wms',
+  '/netgis5/wms',
+  '/gisapi/wms',
+  '/WebGIS/wms',
+  '/keos/wms',
+  '/geoserver/ows',
+  '/ows'
+];
+
+export const COMMON_WFS_PATHS = [
+  '/wfs.ashx',
+  '/webgis_net/wfs.ashx',
+  '/netgis7/wfs',
+  '/netgis5/wfs',
+  '/gisapi/wfs',
+  '/WebGIS/wfs',
+  '/keos/wfs',
+  '/geoserver/ows',
+  '/ows'
+];
+
+const WMS_VERSIONS = ['1.3.0', '1.1.1'] as const;
+const WFS_VERSION = '2.0.0';
+const REFRESH_DAYS = 7;
+
 @Injectable()
 export class OgcDiscoveryService {
   private readonly parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
@@ -26,10 +72,119 @@ export class OgcDiscoveryService {
     private readonly probe: HttpProbeService
   ) {}
 
-  buildGetCapabilitiesUrl(base: string, path: string, service = 'WMS'): string {
-    const absolute = new URL(path, base).toString();
-    const delimiter = absolute.includes('?') ? '&' : '?';
-    return `${absolute}${delimiter}request=GetCapabilities&service=${service}`;
+  buildGetCapabilitiesUrl(base: string, path: string, service: 'WMS' | 'WFS' = 'WMS', version?: string): string {
+    const absolute = new URL(path, base.endsWith('/') ? base : `${base}/`).toString();
+    const url = new URL(absolute);
+    url.searchParams.set('service', service);
+    url.searchParams.set('request', 'GetCapabilities');
+    if (version) url.searchParams.set('version', version);
+  return url.toString();
+  }
+
+  buildNetcadCandidateRoots(homepageUrl: string): string[] {
+    try {
+      const homepage = new URL(homepageUrl);
+      return [`${homepage.protocol}//${homepage.host}/`];
+    } catch {
+      return [];
+    }
+  }
+
+  async discoverMunicipalEndpoints(seedUrls: string[]): Promise<MunicipalOgcDiscoveryResult> {
+    const discoveredAt = new Date();
+    const refreshAfter = new Date(discoveredAt.getTime() + REFRESH_DAYS * 86400000);
+    const testedUrls: string[] = [];
+    let lastError: string | null = null;
+    let bestWms: { url: string; capsUrl: string; version: string | null; layers: OgcLayerCatalog['layers']; formats: string[] } | null = null;
+    let bestWfs: { url: string; capsUrl: string; layers: OgcLayerCatalog['layers']; formats: string[] } | null = null;
+    const supportedSrs = new Set<string>();
+    const supportedFormats = new Set<string>();
+    const metadata: Record<string, unknown> = {};
+
+    const baseUrls = [...new Set(seedUrls.map((seed) => this.extractBaseUrl(seed)).filter(Boolean) as string[])];
+    for (const baseUrl of baseUrls) {
+      for (const path of COMMON_WMS_PATHS) {
+        for (const version of WMS_VERSIONS) {
+          const capsUrl = this.buildGetCapabilitiesUrl(baseUrl, path, 'WMS', version);
+          testedUrls.push(capsUrl);
+          const fetched = await this.safeFetchText(capsUrl);
+          if (!fetched) continue;
+          if (fetched.status === 401 || fetched.status === 403 || this.looksProtected(fetched.text)) {
+            lastError = this.classifyHttpError(fetched.status, fetched.text);
+            continue;
+          }
+          if (!this.looksLikeCapabilitiesXml(fetched.text)) {
+            lastError = 'unsupported_format';
+            continue;
+          }
+          const layers = this.parseLayerCatalogXml(fetched.text, 'WMS');
+          const parsed = await this.parseCapabilitiesXml(fetched.text);
+          parsed.srs.forEach((item) => supportedSrs.add(item));
+          const formats = this.extractFormats(fetched.text);
+          formats.forEach((item) => supportedFormats.add(item));
+          bestWms = {
+            url: this.stripGetCapabilities(capsUrl),
+            capsUrl,
+            version,
+            layers,
+            formats
+          };
+          metadata.service = 'WMS';
+          metadata.title = parsed.serviceTitle;
+          metadata.version = version;
+          break;
+        }
+        if (bestWms) break;
+      }
+      if (bestWms) break;
+    }
+
+    for (const baseUrl of baseUrls) {
+      for (const path of COMMON_WFS_PATHS) {
+        const capsUrl = this.buildGetCapabilitiesUrl(baseUrl, path, 'WFS', WFS_VERSION);
+        testedUrls.push(capsUrl);
+        const fetched = await this.safeFetchText(capsUrl);
+        if (!fetched) continue;
+        if (fetched.status === 401 || fetched.status === 403 || this.looksProtected(fetched.text)) {
+          lastError = this.classifyHttpError(fetched.status, fetched.text);
+          continue;
+        }
+        if (!this.looksLikeCapabilitiesXml(fetched.text)) {
+          lastError = 'unsupported_format';
+          continue;
+        }
+        const layers = this.parseLayerCatalogXml(fetched.text, 'WFS');
+        const parsed = await this.parseCapabilitiesXml(fetched.text);
+        parsed.srs.forEach((item) => supportedSrs.add(item));
+        const formats = this.extractFormats(fetched.text);
+        formats.forEach((item) => supportedFormats.add(item));
+        bestWfs = { url: this.stripGetCapabilities(capsUrl), capsUrl, layers, formats };
+        metadata.wfs_title = parsed.serviceTitle;
+        break;
+      }
+      if (bestWfs) break;
+    }
+
+    const mergedLayers = this.mergeLayers(bestWms?.layers ?? [], bestWfs?.layers ?? []);
+    mergedLayers.forEach((layer) => (layer.srs ?? layer.crs ?? []).forEach((item) => supportedSrs.add(item)));
+
+    return {
+      status: this.classifyOgcStatus(bestWms, bestWfs, lastError),
+      base_url: bestWms?.url ? this.extractBaseUrl(bestWms.url) : bestWfs?.url ? this.extractBaseUrl(bestWfs.url) : baseUrls[0] ?? null,
+      wms_url: bestWms?.url ?? null,
+      wms_get_capabilities_url: bestWms?.capsUrl ?? null,
+      wms_version: bestWms?.version ?? null,
+      wfs_url: bestWfs?.url ?? null,
+      wfs_get_capabilities_url: bestWfs?.capsUrl ?? null,
+      available_layers: mergedLayers,
+      supported_srs: [...supportedSrs].sort(),
+      supported_formats: [...supportedFormats].sort(),
+      metadata,
+      last_error: lastError,
+      tested_urls: testedUrls.slice(0, 120),
+      discovered_at: discoveredAt.toISOString(),
+      refresh_after: refreshAfter.toISOString()
+    };
   }
 
   async catalog(sourceId: string, input: { endpoint?: string; service?: 'WMS' | 'WFS' } = {}): Promise<OgcLayerCatalog> {
@@ -167,11 +322,15 @@ export class OgcDiscoveryService {
     return typeof value === 'string' ? value : undefined;
   }
 
-  private async safeFetchText(endpoint: string): Promise<{ text: string; status: number } | null> {
+  private async safeFetchText(endpoint: string, timeoutMs = 8000): Promise<{ text: string; status: number } | null> {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 5000);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetch(endpoint, { redirect: 'follow', signal: controller.signal, headers: { 'User-Agent': 'e-imarapp-ogc-discovery/0.1', Accept: 'application/xml,text/xml,text/html,*/*;q=0.8' } });
+      const response = await fetch(endpoint, {
+        redirect: 'follow',
+        signal: controller.signal,
+        headers: { 'User-Agent': 'e-imarapp-ogc-discovery/0.1 (+https://github.com/emintermux1/e-imarapp)', Accept: 'application/xml,text/xml,text/html,*/*;q=0.8' }
+      });
       const text = await response.text();
       if (response.status === 401 || response.status === 403 || this.looksProtected(text)) return { text, status: response.status };
       if (!response.ok) return null;
@@ -185,5 +344,68 @@ export class OgcDiscoveryService {
 
   private looksProtected(text: string): boolean {
     return /(captcha|recaptcha|g-recaptcha|login|giriş|oturum|unauthorized|forbidden)/iu.test(text);
+  }
+
+  private looksLikeCapabilitiesXml(xml: string): boolean {
+    const sample = xml.slice(0, 5120).toLowerCase();
+    return /wms_capabilities|wmt_ms_capabilities|wfs_capabilities|service|capability|featuretypelist/.test(sample);
+  }
+
+  private extractBaseUrl(candidate: string): string | null {
+    try {
+      const parsed = new URL(candidate);
+      if (!['http:', 'https:'].includes(parsed.protocol)) return null;
+      return `${parsed.protocol}//${parsed.host}/`;
+    } catch {
+      return null;
+    }
+  }
+
+  private stripGetCapabilities(url: string): string {
+    const parsed = new URL(url);
+    ['request', 'service', 'version'].forEach((key) => parsed.searchParams.delete(key));
+    parsed.search = parsed.searchParams.toString();
+    return parsed.toString();
+  }
+
+  private classifyHttpError(status: number, text: string): string {
+    if (status === 429) return 'rate_limited';
+    if (/captcha|recaptcha/i.test(text)) return 'captcha_required';
+    if (/login|signin|giriş|oturum|yetki|unauthorized|forbidden/i.test(text)) return 'requires_credentials';
+    return 'unavailable';
+  }
+
+  private classifyOgcStatus(
+    wms: { url: string } | null,
+    wfs: { url: string } | null,
+    lastError: string | null
+  ): MunicipalOgcDiscoveryResult['status'] {
+    if (wms || wfs) return 'available';
+    if (lastError === 'captcha_required' || lastError === 'rate_limited' || lastError === 'requires_credentials') return lastError;
+    if (lastError === 'unsupported_format') return 'unsupported_format';
+    if (lastError === 'unavailable') return 'unavailable';
+    return 'endpoint_changed';
+  }
+
+  private mergeLayers(wmsLayers: OgcLayerCatalog['layers'], wfsLayers: OgcLayerCatalog['layers']): OgcLayerCatalog['layers'] {
+    const merged = new Map<string, OgcLayerCatalog['layers'][number] & { sources?: string[] }>();
+    for (const layer of [...wmsLayers, ...wfsLayers]) {
+      const key = `${layer.name ?? ''}:${layer.title ?? ''}`;
+      const existing = merged.get(key) ?? { ...layer, sources: [] };
+      if (layer.title && !existing.title) existing.title = layer.title;
+      if (layer.name && !existing.name) existing.name = layer.name;
+      existing.sources = [...new Set([...(existing.sources ?? []), wmsLayers.includes(layer) ? 'WMS' : 'WFS'])];
+      merged.set(key, existing);
+    }
+    return [...merged.values()];
+  }
+
+  private extractFormats(xml: string): string[] {
+    const formats = new Set<string>();
+  for (const match of xml.matchAll(/<(?:[\w:]+:)?Format>([^<]+)<\/(?:[\w:]+:)?Format>/gi)) {
+      const value = match[1]?.trim();
+      if (value) formats.add(value);
+    }
+    return [...formats];
   }
 }
