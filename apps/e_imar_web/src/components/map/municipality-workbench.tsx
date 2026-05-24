@@ -14,6 +14,9 @@ import { NEIGHBORHOODS } from "@/data/neighborhoods";
 import { useMunicipalityStore } from "@/stores/municipality-store";
 import { useMapStore } from "@/stores/map-store";
 import { useUIStore } from "@/stores/ui-store";
+import { useBackendParcelStore } from "@/stores/backend-parcel-store";
+import { useSourceStore } from "@/stores/source-store";
+import { municipalParcelId } from "@/lib/api/parcel-normalizer";
 import { fetchMunicipalParcelWorkflow, fetchMunicipalityCoverage, fetchOgcCatalog } from "@/lib/api/eimar";
 import type { MunicipalParcelWorkflowResponse, MunicipalityCoverageEntry, OgcLayerCatalogResponse, OgcLayerCatalogEntry } from "@/lib/api/types";
 import {
@@ -59,7 +62,11 @@ const FALLBACK_MUNICIPALITIES = BELEDIYE_LIST.slice(0, 10).map((record) => ({
 
 export function MunicipalityWorkbench() {
   const setSelectedParcelId = useMapStore((s) => s.setSelectedParcelId);
+  const flyTo = useMapStore((s) => s.flyTo);
   const setRightPanelOpen = useUIStore((s) => s.setRightPanelOpen);
+  const upsertOverlayFromSearch = useBackendParcelStore((s) => s.upsertOverlayFromSearch);
+  const activateCatalogWmsLayer = useSourceStore((s) => s.activateCatalogWmsLayer);
+  const deactivateLiveLayer = useSourceStore((s) => s.deactivateLiveLayer);
   const selectedMunicipalityId = useMunicipalityStore((s) => s.selectedMunicipalityId);
   const setSelectedMunicipality = useMunicipalityStore((s) => s.setSelectedMunicipality);
   const clearSelectedMunicipality = useMunicipalityStore((s) => s.clearSelectedMunicipality);
@@ -140,8 +147,39 @@ export function MunicipalityWorkbench() {
     });
     if (result.ok) {
       setWorkflow({ loading: false, result: result.data, error: null });
-      setSelectedParcelId(null);
-      setRightPanelOpen(true);
+      const data = result.data;
+      const municipalityId =
+        parcelQuery.municipalityId || selectedMunicipality?.id || data.query.municipalityId;
+      const ada = data.parcelData?.ada ?? parcelQuery.ada;
+      const parsel = data.parcelData?.parsel ?? parcelQuery.parsel;
+      if (municipalityId && ada && parsel) {
+        const parcelId = municipalParcelId(municipalityId, ada, parsel);
+        const belediye = BELEDIYE_LIST.find((entry) => entry.id === municipalityId);
+        const province = belediye
+          ? PROVINCES.find((entry) => entry.slug === belediye.ilSlug)
+          : undefined;
+        const centroid = province?.centroid;
+        upsertOverlayFromSearch({
+          id: parcelId,
+          type: "parcel",
+          primary: `Ada/Parsel ${ada}/${parsel}`,
+          secondary: selectedMunicipality?.name ?? municipalityId,
+          meta: data.parcelData?.imarDurumu ?? "Belediye workflow",
+          parcelId,
+          zoningType: "Konut",
+          municipalityId,
+          sourceStatus: "live",
+          centroid,
+        });
+        setSelectedParcelId(parcelId);
+        setRightPanelOpen(true);
+        if (centroid) {
+          flyTo({ center: centroid, zoom: 16, parcelId });
+        }
+      } else {
+        setSelectedParcelId(null);
+        setRightPanelOpen(true);
+      }
       return;
     }
     setWorkflow({ loading: false, result: null, error: result.error });
@@ -161,11 +199,21 @@ export function MunicipalityWorkbench() {
 
   function toggleLayer(layer: OgcLayerCatalogEntry) {
     const layerName = layer.name ?? layer.title;
-    if (!layerName) return;
-    setActiveLayers((current) => {
-      if (current.includes(layerName)) return current.filter((value) => value !== layerName);
-      return [...current, layerName];
+    if (!layerName || !catalog.result?.endpoint || !selectedMunicipality?.id) return;
+    const layerId = `catalog-${selectedMunicipality.id}-${layerName}`.replace(/[^a-zA-Z0-9_-]/g, "-");
+    const isActive = activeLayers.includes(layerName);
+    if (isActive) {
+      deactivateLiveLayer(layerId);
+      setActiveLayers((current) => current.filter((value) => value !== layerName));
+      return;
+    }
+    activateCatalogWmsLayer({
+      sourceId: selectedMunicipality.id,
+      endpoint: catalog.result.endpoint,
+      layerName,
+      title: layer.title ?? layerName,
     });
+    setActiveLayers((current) => [...current, layerName]);
   }
 
   return (
