@@ -38,8 +38,8 @@ console.log("==> Building production web (demo mode)");
 await run(npmCmd, ["run", "web:build"], ROOT);
 
 console.log(`==> Starting production server on http://${HOST}:${PORT}`);
-const server = spawn(npmCmd, ["run", "web:preview", "--", "-p", String(PORT), "-H", HOST], {
-  cwd: ROOT,
+const server = spawn(npmCmd, ["run", "start"], {
+  cwd: WEB,
   stdio: "inherit",
   shell: isWin,
   env
