@@ -20,6 +20,7 @@ import { Section3DAnalizleri } from "@/components/gis/section-3d-analizleri";
 import { LiveReadinessStrip } from "@/components/product/live-readiness-strip";
 import { LayerCatalogDrawer } from "@/components/map/layer-catalog-drawer";
 import { HomepageQueryCard } from "@/components/product/homepage-query-card";
+import { SkipToMain } from "@/components/a11y/skip-to-main";
 import { useUIStore } from "@/stores/ui-store";
 import { BrandMark } from "./brand-mark";
 import { GlobalSearch } from "@/components/search/global-search";
@@ -67,6 +68,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-bg text-fg-primary">
+      <SkipToMain />
       <div aria-hidden className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_8%_8%,rgb(var(--accent-green)/0.10),transparent_24rem),radial-gradient(circle_at_92%_0%,rgb(var(--accent-blue)/0.06),transparent_26rem)]" />
       <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-0 h-28 border-b border-white/30 bg-[linear-gradient(180deg,rgb(var(--surface-2)/0.45),rgb(var(--bg)/0))]" />
       {!fullscreenMap && <TopBar onOpenMobileMenu={() => setMobileNavOpen(true)} />}
@@ -101,7 +103,9 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
       </Sheet>
 
       <main
-        className="relative z-10 h-dvh overflow-hidden"
+        id="main-map-workspace"
+        tabIndex={-1}
+        className="relative z-10 h-dvh overflow-hidden outline-none"
       >
         {children ? (
           <div className="h-full w-full">{children}</div>
@@ -300,11 +304,11 @@ function DockButton({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "soft-press inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-extrabold transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
+        "soft-press inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-extrabold transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
         active
           ? "bg-[rgb(var(--accent-navy))] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.16)]"
           : "text-fg-secondary hover:bg-surface-1 hover:text-fg-primary",
-        "max-sm:h-10 max-sm:px-3 max-sm:text-xs"
+        "max-sm:min-h-11 max-sm:min-w-11 max-sm:justify-center max-sm:px-3 max-sm:text-xs"
       )}
     >
       <span className={active ? "text-white" : "text-brand-green"}>{icon}</span>

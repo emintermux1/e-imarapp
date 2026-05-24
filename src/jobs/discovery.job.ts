@@ -2,6 +2,7 @@ import { Injectable, OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/com
 import { ConfigService } from '@nestjs/config';
 import IORedis from 'ioredis';
 import { KeosConnector, ConnectorCapability } from '../connectors/keos.connector';
+import { MunicipalGisDiscoveryService } from '../municipalities/municipal-gis-discovery.service';
 import { MunicipalRegistryEntry, MUNICIPAL_REGISTRY } from '../sources/municipal-registry';
 
 export interface MunicipalDiscoveryStatus {
@@ -31,6 +32,7 @@ export class DiscoveryJob implements OnApplicationBootstrap, OnModuleDestroy {
 
   constructor(
     private readonly keos: KeosConnector,
+    private readonly municipalGis: MunicipalGisDiscoveryService,
     config?: ConfigService
   ) {
     const redisUrl = config?.get<string>('REDIS_URL');
@@ -59,7 +61,10 @@ export class DiscoveryJob implements OnApplicationBootstrap, OnModuleDestroy {
     this.running = true;
     try {
       await this.runPool(MUNICIPAL_REGISTRY, async (entry) => {
-        const capability = await this.keos.discover(entry);
+        const [capability] = await Promise.all([
+          this.keos.discover(entry),
+          this.municipalGis.discover(entry.id).catch(() => null)
+        ]);
         this.memory.set(entry.id, capability);
       });
       await this.writeRedis();

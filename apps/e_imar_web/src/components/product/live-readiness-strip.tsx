@@ -6,6 +6,7 @@ import { AlertTriangle, CheckCircle2, Clock3, LockKeyhole, RadioTower } from "lu
 import { getWebsiteLiveReadiness, humanizeApiError } from "@/lib/api/backend-client";
 import type { WebsiteLiveReadinessResponse, WebsiteReadinessSource } from "@/types/api";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function LiveReadinessStrip() {
   const [payload, setPayload] = React.useState<WebsiteLiveReadinessResponse | null>(null);
@@ -42,9 +43,9 @@ export function LiveReadinessStrip() {
   const status = loading ? "loading" : payload?.status ?? "unavailable";
 
   return (
-    <section className="map-glass-shell min-w-[330px] max-w-[520px] rounded-[1.5rem] p-2">
+    <section className="map-glass-shell min-w-[330px] max-w-[520px] rounded-[1.5rem] p-2" aria-busy={loading}>
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className={cn("inline-flex h-8 w-8 items-center justify-center rounded-xl border", statusClass(status))}>
               {status === "ok" ? <CheckCircle2 className="h-4 w-4" /> : status === "loading" ? <Clock3 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
@@ -56,24 +57,40 @@ export function LiveReadinessStrip() {
               </div>
             </div>
           </div>
-          <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-fg-secondary">
-            {error ?? `${configured}/${required} ortam değişkeni hazır · ${readySources} doğrulanmış kaynak · ${metadataSources} metadata kaynağı · ${blockedSources} kontrat/erişim bekliyor.`}
-          </p>
+          {loading ? (
+            <div className="mt-2 space-y-2" aria-hidden>
+              <Skeleton className="h-3 w-[88%]" />
+              <Skeleton className="h-3 w-[62%]" />
+            </div>
+          ) : (
+            <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-fg-secondary">
+              {error ?? `${configured}/${required} ortam değişkeni hazır · ${readySources} doğrulanmış kaynak · ${metadataSources} metadata kaynağı · ${blockedSources} kontrat/erişim bekliyor.`}
+            </p>
+          )}
         </div>
         <Link
           href="/calisma-alani"
-          className="soft-press shrink-0 rounded-full border border-border-subtle bg-surface-1 px-3 py-1.5 text-[11px] font-bold text-fg-primary hover:bg-white"
+          className="soft-press touch-target shrink-0 rounded-full border border-border-subtle bg-surface-1 px-3 text-[11px] font-bold text-fg-primary hover:bg-white"
         >
           Workspace
         </Link>
       </div>
-      {payload?.sources && (
+      {loading ? (
+        <div className="mt-2 grid grid-cols-3 gap-1.5" aria-hidden>
+          {[0, 1, 2].map((index) => (
+            <div key={index} className="rounded-xl border border-border-subtle bg-surface-1/80 px-2 py-1.5">
+              <Skeleton className="h-3 w-[70%]" />
+              <Skeleton className="mt-1.5 h-2.5 w-[55%]" />
+            </div>
+          ))}
+        </div>
+      ) : payload?.sources ? (
         <div className="mt-2 grid grid-cols-3 gap-1.5">
           {payload.sources.slice(0, 3).map((source) => (
             <ReadinessMiniSource key={source.sourceId} source={source} />
           ))}
         </div>
-      )}
+      ) : null}
     </section>
   );
 }

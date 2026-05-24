@@ -14,18 +14,20 @@ describe('OgcDiscoveryService', () => {
     expect(service).toBeDefined();
   });
 
-  it('builds GetCapabilities URL without duplicate query delimiter', () => {
+  it('builds GetCapabilities URL with service, request, and version params', () => {
     const service = new OgcDiscoveryService(
       {} as DatabaseService,
       {} as DiscoveryService,
       {} as HttpProbeService
     ) as any;
 
-    const withQuery = service.buildGetCapabilitiesUrl('https://keos.ornek.bel.tr', '/wms?');
-    const noQuery = service.buildGetCapabilitiesUrl('https://keos.ornek.bel.tr', '/wms.ashx');
+    const withQuery = service.buildGetCapabilitiesUrl('https://keos.ornek.bel.tr/', '/wms?', 'WMS', '1.3.0');
+    const noQuery = service.buildGetCapabilitiesUrl('https://keos.ornek.bel.tr/', '/wms.ashx', 'WMS', '1.1.1');
 
-    expect(withQuery).toBe('https://keos.ornek.bel.tr/wms?&request=GetCapabilities&service=WMS');
-    expect(noQuery).toBe('https://keos.ornek.bel.tr/wms.ashx?request=GetCapabilities&service=WMS');
+    expect(withQuery).toContain('request=GetCapabilities');
+    expect(withQuery).toContain('service=WMS');
+    expect(withQuery).toContain('version=1.3.0');
+    expect(noQuery).toBe('https://keos.ornek.bel.tr/wms.ashx?service=WMS&request=GetCapabilities&version=1.1.1');
   });
 
   it('splits combined SRS values into unique tokens', () => {

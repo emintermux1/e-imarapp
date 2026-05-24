@@ -1,13 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { readPublicSiteUrl } from "@/lib/public-config";
 
-const sourceSans = Plus_Jakarta_Sans({
+const sans = DM_Sans({
   subsets: ["latin", "latin-ext"],
   display: "swap",
   variable: "--font-sans"
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  variable: "--font-mono"
 });
 
 export const metadata: Metadata = {
@@ -60,8 +66,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr" className={sourceSans.variable} suppressHydrationWarning>
-      <body className="font-sans antialiased min-h-screen bg-bg text-fg-primary">
+    <html lang="tr" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
+      <body className="font-sans antialiased min-h-[100dvh] bg-bg text-fg-primary">
         <Providers>{children}</Providers>
       </body>
     </html>
