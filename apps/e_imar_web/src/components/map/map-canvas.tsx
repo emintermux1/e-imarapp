@@ -719,6 +719,45 @@ export function MapCanvas({
       }
     };
 
+    const selectLiveParcelById = (
+      parcelId: string,
+      centroid?: [number, number],
+      shiftKey = false,
+    ) => {
+      if (shiftKey) {
+        toggleMultiSelectedParcelId(parcelId);
+      }
+      setSelectedArea(null);
+      setSelectedParcelId(parcelId);
+      setSelectedPoint(null);
+      setRightPanelOpen(true);
+      if (centroid) {
+        const padding =
+          window.innerWidth >= 1280
+            ? { top: 104, bottom: 96, left: 112, right: 360 }
+            : { top: 86, bottom: 92, left: 24, right: 24 };
+        map.flyTo({
+          center: centroid,
+          zoom: Math.max(map.getZoom(), 16),
+          duration: 600,
+          padding,
+        });
+      }
+    };
+
+    const onLiveParcelClick = (e: maplibregl.MapLayerMouseEvent) => {
+      if (activeDrawingToolRef.current !== "idle") return;
+      const props = e.features?.[0]?.properties as
+        | { id?: string; centroid?: [number, number] }
+        | undefined;
+      if (!props?.id) return;
+      selectLiveParcelById(
+        props.id,
+        Array.isArray(props.centroid) ? props.centroid : undefined,
+        e.originalEvent.shiftKey,
+      );
+    };
+
     const onLocationMouseMove = () => {
       map.getCanvas().style.cursor = "pointer";
     };
@@ -803,6 +842,15 @@ export function MapCanvas({
     map.on("mousemove", "parcels-fill", onParcelMouseMove);
     map.on("mouseleave", "parcels-fill", onParcelMouseLeave);
     map.on("click", "parcels-fill", onParcelClick);
+    map.on("click", "live-parcel-fill", onLiveParcelClick);
+    const onLiveParcelEnter = () => {
+      map.getCanvas().style.cursor = "pointer";
+    };
+    const onLiveParcelLeave = () => {
+      map.getCanvas().style.cursor = "";
+    };
+    map.on("mouseenter", "live-parcel-fill", onLiveParcelEnter);
+    map.on("mouseleave", "live-parcel-fill", onLiveParcelLeave);
 
     let dragStart: { x: number; y: number } | null = null;
     const onMapMouseDown = (e: MapMouseEvent) => {
@@ -845,7 +893,7 @@ export function MapCanvas({
           [minX, minY],
           [maxX, maxY],
         ],
-        { layers: ["parcels-fill"] },
+        { layers: ["parcels-fill", "live-parcel-fill"].filter((layerId) => Boolean(map.getLayer(layerId))) },
       );
       setSelectedArea(null);
       const ids = Array.from(
@@ -854,7 +902,9 @@ export function MapCanvas({
             .map((feature) => {
               const parcel =
                 feature.id == null ? null : getParcelByMapId(feature.id);
-              return parcel?.properties.id;
+              if (parcel) return parcel.properties.id;
+              const props = feature.properties as { id?: string } | undefined;
+              return props?.id ?? null;
             })
             .filter(Boolean) as string[],
         ),
@@ -868,6 +918,7 @@ export function MapCanvas({
       const interactiveFeatures = map.queryRenderedFeatures(e.point, {
         layers: [
           "parcels-fill",
+          "live-parcel-fill",
           "askida-overlay-fill",
           "askida-overlay-line",
           "askida-overlay-hatched",
@@ -1104,6 +1155,9 @@ export function MapCanvas({
       map.off("mousemove", "parcels-fill", onParcelMouseMove);
       map.off("mouseleave", "parcels-fill", onParcelMouseLeave);
       map.off("click", "parcels-fill", onParcelClick);
+      map.off("click", "live-parcel-fill", onLiveParcelClick);
+      map.off("mouseenter", "live-parcel-fill", onLiveParcelEnter);
+      map.off("mouseleave", "live-parcel-fill", onLiveParcelLeave);
       map.off("click", onMapClick);
       map.off("click", "belediye-sinirlari", onMunicipalityClick);
       map.off("mouseenter", "belediye-sinirlari", onMunicipalityEnter);

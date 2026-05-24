@@ -135,4 +135,78 @@ export class SimulationService {
       note: 'Values are engineering estimates and must be validated with current plan notes, municipality constraints, and official licenses.'
     };
   }
+
+  checkCompliance(input: {
+    parcel_id?: number;
+    parcel_area_m2?: number;
+    emsal?: number;
+    kaks?: number;
+    taks?: number;
+    gabari_m?: number;
+    floors?: number;
+    floor_height_m?: number;
+    geometry?: unknown;
+  }): unknown {
+    const area = Number(input.parcel_area_m2 ?? 0);
+    const emsal = Number(input.kaks ?? input.emsal ?? 0);
+    const taks = Number(input.taks ?? 0);
+    const gabari = Number(input.gabari_m ?? 0);
+    const floors = Number(input.floors ?? 0);
+    const floorHeight = Number(input.floor_height_m ?? 3);
+
+    if (area <= 0 || emsal <= 0) {
+      return {
+        status: 'invalid_input',
+        compliant: false,
+        is_compliant: false,
+        violations: ['Parsel alanı ve emsal/KAKS değerleri sıfırdan büyük olmalıdır.'],
+        warnings: []
+      };
+    }
+
+    const maxConstructionAreaM2 = area * emsal;
+    const maxFootprintM2 = taks > 0 ? area * taks : null;
+    const violations: string[] = [];
+    const warnings: string[] = [];
+
+    if (maxFootprintM2 && floors > 0) {
+      const estimatedBuiltArea = maxFootprintM2 * floors;
+      if (estimatedBuiltArea > maxConstructionAreaM2 * 1.08) {
+        violations.push(
+          `Taban alanı × kat sayısı (${Math.round(estimatedBuiltArea)} m²) hesaplanan toplam inşaat alanını (${Math.round(maxConstructionAreaM2)} m²) aşıyor.`
+        );
+      }
+    }
+
+    if (gabari > 0 && floorHeight > 0 && floors > 0) {
+      const totalHeight = floors * floorHeight;
+      if (totalHeight > gabari * 1.05) {
+        violations.push(
+          `Toplam bina yüksekliği (${totalHeight.toFixed(1)} m) gabari sınırını (${gabari.toFixed(1)} m) aşıyor.`
+        );
+      }
+    }
+
+    if (!input.geometry) {
+      warnings.push('Geometri gönderilmedi; yalnızca alan/emsal/taks/gabari kuralları kontrol edildi.');
+    }
+
+    const compliant = violations.length === 0;
+    return {
+      status: 'ok',
+      compliant,
+      is_compliant: compliant,
+      parcel_id: input.parcel_id ?? null,
+      summary: {
+        parcel_area_m2: area,
+        max_construction_area_m2: maxConstructionAreaM2,
+        max_footprint_m2: maxFootprintM2,
+        floors,
+        gabari_m: gabari || null
+      },
+      violations,
+      warnings,
+      note: 'Bu kontrol mühendislik ön doğrulamasıdır; resmi imar durumu yerine geçmez.'
+    };
+  }
 }

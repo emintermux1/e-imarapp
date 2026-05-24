@@ -7,9 +7,9 @@
     "prebuild": "node scripts/copy-cesium-assets.mjs",
     "postinstall": "node scripts/copy-cesium-assets.mjs",
     "copy:cesium": "node scripts/copy-cesium-assets.mjs",
-    "dev": "next dev -H 0.0.0.0 -p 3000",
+    "dev": "next dev -H 0.0.0.0 -p 3001",
     "build": "next build",
-    "start": "next start -H 0.0.0.0 -p 3000",
+    "start": "next start -H 0.0.0.0 -p 3001",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "smoke": "node ../../scripts/web-smoke.mjs"

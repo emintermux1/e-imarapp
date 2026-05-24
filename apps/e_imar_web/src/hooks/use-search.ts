@@ -155,7 +155,7 @@ function backendParcelToResult(
     primary: `Ada/Parsel ${adaParselText(parcel.ada, parcel.parsel)}`,
     secondary: location || "Canlı API parsel sonucu",
     meta: metaBits.join(" · "),
-    parcelId: local?.properties.id ?? backendParcelId(parcel.id),
+    parcelId: backendParcelId(parcel.id),
     zoningType: local?.properties.zoningType ?? "Konut",
     centroid,
     sourceStatus,

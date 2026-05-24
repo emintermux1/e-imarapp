@@ -382,11 +382,24 @@ export function fetchOgcCatalog(
   sourceId: string,
   params?: { endpoint?: string; service?: "WMS" | "WFS" },
 ) {
-  const search = new URLSearchParams();
-  if (params?.endpoint) search.set("endpoint", params.endpoint);
-  if (params?.service) search.set("service", params.service);
-  const query = search.toString();
-  return request<OgcLayerCatalogResponse>(
-    `/connectors/${encodeURIComponent(sourceId)}/ogc/catalog${query ? `?${query}` : ""}`,
-  );
+  return fetch(`/connectors/${encodeURIComponent(sourceId)}/ogc/catalog`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      endpoint: params?.endpoint,
+      service: params?.service ?? "WMS",
+    }),
+    cache: "no-store",
+  })
+    .then(async (response) => {
+      const json = (await response.json()) as OgcLayerCatalogResponse;
+      if (!response.ok) {
+        return { ok: false as const, error: `HTTP ${response.status}` };
+      }
+      return { ok: true as const, data: json };
+    })
+    .catch((error) => ({
+      ok: false as const,
+      error: error instanceof Error ? error.message : "Unknown error",
+    }));
 }
